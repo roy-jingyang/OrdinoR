@@ -43,18 +43,26 @@ for row in ds:
     d[k][r].append(dur)
 
 # We want those with:
-#   count(r2) > 1 so we can compare between distributions;
 #   length([duration time]) > N so we have enough samples.
+#   count(r2) > M so we can compare between distributions;
 
 # It seems that we are not able to perform paired t-test, since the numbers of
 # samples from different distributions are not likely to be equal.
 
+count_r2_M = 1
+length_dur_N = 10
 with open(sys.argv[2], 'w') as fout:
+    fout.write('# (t1, t2, r1)|r2|dur ...\n')
     for k, r_dur in d.items():
-        if len(r_dur.keys()) > 1:
-            for r in r_dur.keys():
-                fout.write(str(k) + '|' + str(r) + '|' + \
-                        ','.join([str(dur) for dur in r_dur[r]]))
-                fout.write('\n')
-            fout.write('@@\n')
+        distributions = list()
+        for r in r_dur.keys():
+            if len(r_dur[r]) > length_dur_N:
+                distributions.append(str(k) + '|' + str(r) + '|' + \
+                        ','.join([str(dur) for dur in r_dur[r]]) + '\n')
+        if len(distributions) > count_r2_M:
+            fout.write('# {} distributions for settings:'.format(len(\
+                    distributions)) + \
+                    '(t1={}, t2={}, r1={})\n'.format(k[0], k[1], k[2]))
+            for dis in distributions:
+                fout.write(dis)
 
