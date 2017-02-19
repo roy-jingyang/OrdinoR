@@ -50,7 +50,7 @@ for row in ds:
 # samples from different distributions are not likely to be equal.
 
 count_r2_M = 1
-length_dur_N = 300
+length_dur_N = 500
 with open(sys.argv[2], 'w') as fout:
     fout.write('# (t1, t2, r1)|r2|dur ...\n')
     for k, r_dur in d.items():
