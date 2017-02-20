@@ -81,7 +81,7 @@ if __name__ == '__main__':
                         alpha) + ' |T| > {}'.format(abs(cv_lower_t))) 
                 else:
                     print(' [Accept] H0 under significance level {}:'.format(
-                        alpha) + ' |T| > {}'.format(abs(cv_lower_t))) 
+                        alpha) + ' |T| <= {}'.format(abs(cv_lower_t))) 
                 print('\n')
                 statistics.append(stat)
                 pvalues.append(pvalue)
