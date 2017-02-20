@@ -42,26 +42,29 @@ if __name__ == '__main__':
     
     # Perform t-test on two independent distributions, assume equal var
     # significance level
-    alpha = 0.01
+    alpha = 0.05
+
+    group_cnt = 0
     for k in ds.keys():
+        group_cnt += 1
         print('-' * 79)
-        print('Examine for settings t1={}, t2={}, r1={}:'.format(k[0], k[1],
-            k[2]), end='')
+        print('Group {} - Examine for settings t1={}, t2={}, r1={}:'.format(
+            group_cnt, k[0], k[1], k[2]), end='')
         r2s = list(ds[k].keys())
         print(' {} distributions of duration time of t2'.format(len(r2s)) + 
                 ' (# of possible values that r2 takes.)')
-        cnt = 0
+        pair_cnt = 0
         statistics = list()
         pvalues = list()
         for i in range(len(r2s)):
             for j in range(i + 1, len(r2s)):
-                cnt += 1
+                pair_cnt += 1
                 str_a = '({}, res={})^({}, res={})'.format(k[0], k[2], k[1],
                         r2s[i])
                 str_b = '({}, res={})^({}, res={})'.format(k[0], k[2], k[1],
                         r2s[j])
-                print('Group {}: ('.format(cnt)+ str_a + ') vs. (' + str_b +
-                        '): ')
+                print('Pair {} - ('.format(pair_cnt)+ str_a + ') vs. (' + str_b 
+                        + '): ')
                 sample_a = ds[k][r2s[i]]
                 sample_b = ds[k][r2s[j]]
                 # degree of freedom
