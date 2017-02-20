@@ -15,7 +15,7 @@
 #   for t2->r''. Either Ca and Cb contains info on the duration of performing
 #   task t2. Test if the two distributions of duration time were similar.
 # Keyword:
-#   resource compatibility, normal distribution, t-test
+#   resource compatibility, normal distribution, hypothesis testing
 
 import sys
 import csv
@@ -50,7 +50,7 @@ for row in ds:
 # samples from different distributions are not likely to be equal.
 
 count_r2_M = 1
-length_dur_N = 500
+length_dur_N = 900
 with open(sys.argv[2], 'w') as fout:
     fout.write('# (t1, t2, r1)|r2|dur ...\n')
     for k, r_dur in d.items():
