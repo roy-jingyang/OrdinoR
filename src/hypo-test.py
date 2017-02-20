@@ -82,8 +82,5 @@ if __name__ == '__main__':
                 print('\n')
                 statistics.append(stat)
                 pvalues.append(pvalue)
-        #print('average statistic: {}, average p-value: {}'.format(
-        #    sum(statistics) / len(statistics),
-        #    sum(pvalues) / len(pvalues)))
         print('\n')
 
