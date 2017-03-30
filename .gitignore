@@ -2,3 +2,6 @@
 /input
 /output
 
+# Ignore the virtualenv directory
+/virtualenv
+
