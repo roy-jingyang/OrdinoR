@@ -1,3 +1,4 @@
-# Ignore dataset directory.
-/data
+# Ignore input/output directory.
+/input
+/output
 
