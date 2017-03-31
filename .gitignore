@@ -6,5 +6,5 @@ output/
 virtualenv/
 
 # Ignore pyc
-**.pyc
+**/__pycache__
 
