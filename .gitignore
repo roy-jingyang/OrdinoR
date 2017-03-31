@@ -1,7 +1,10 @@
 # Ignore input/output directory.
-/input
-/output
+input/
+output/
 
 # Ignore the virtualenv directory
-/virtualenv
+virtualenv/
+
+# Ignore pyc
+**.pyc
 
