@@ -4,7 +4,7 @@
 import copy
 from collections import defaultdict
 
-def WorkingTogether_SAR(cases):
+def SAR(cases):
     print('Working together: simultaneous appearance')
     cnt = 0
     mat = defaultdict(lambda: defaultdict(lambda: 0))

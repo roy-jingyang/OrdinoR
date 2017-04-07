@@ -4,7 +4,7 @@
 import copy
 from collections import defaultdict
 
-def Handover_CCCDCM(cases):
+def CCCDCM(cases):
     print('Handover: consider causality, consider direct succession, consider multiple apperance.')
     cnt = 0
     # TODO: non task-specific now
@@ -22,6 +22,6 @@ def Handover_CCCDCM(cases):
     print('# of cases processed: {}'.format(cnt))
     return copy.deepcopy(mat)
 
-def Handover_CCCDIM(cases):
+def CCCDIM(cases):
     pass
 

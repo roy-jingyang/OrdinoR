@@ -26,7 +26,7 @@ def _SimilarTask_Base(cases):
 
     return copy.deepcopy(profile_mat)
 
-def SimilarTask_ED(cases):
+def ED(cases):
     print('Similar task: ')
     profile_mat = _SimilarTask_Base(cases)
     mat = defaultdict(lambda: defaultdict(lambda: 0))

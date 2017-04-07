@@ -70,29 +70,29 @@ if __name__ == '__main__':
 
     opt = sys.argv[2]
     try:
-        if opt.split('.')[0] == 'Subcontract':
-            from MiningOptions.subcontract import *
+        if opt.split('.')[0] == 'Subcontracting':
+            from MiningOptions import subcontracting
             if opt.split('.')[1] == 'CCCDCM':
                 # TODO
-                result = Subcontract_CCCDCM(cases)
+                result = subcontracting.Subcontracting_CCCDCM(cases)
             else:
                 exit(1)
         elif opt.split('.')[0] == 'Handover':
-            from MiningOptions.handover import *
+            from MiningOptions import handover
             if opt.split('.')[1] == 'CCCDCM':
-                result = Handover_CCCDCM(cases)
+                result = handover.CCCDCM(cases)
             else:
                 exit(1)
         elif opt.split('.')[0] == 'WorkingTogether':
-            from MiningOptions.workingtogether import *
+            from MiningOptions import workingtogether
             if opt.split('.')[1] == 'SAR':
-                result = WorkingTogether_SAR(cases)
+                result = workingtogether.SAR(cases)
             else:
                 exit(1)
         elif opt.split('.')[0] == 'SimilarTask':
-            from MiningOptions.similartask import *
+            from MiningOptions import similartask
             if opt.split('.')[1] == 'ED':
-                result = SimilarTask_ED(cases)
+                result = similartask.ED(cases)
             else:
                 exit(1)
         else:
