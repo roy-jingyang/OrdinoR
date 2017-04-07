@@ -81,6 +81,16 @@ if __name__ == '__main__':
             from MiningOptions import handover
             if opt.split('.')[1] == 'CCCDCM':
                 result = handover.CCCDCM(cases)
+            elif opt.split('.')[1] == 'CCCDIM':
+                result = handover.CCCDIM(cases)
+            elif opt.split('.')[1] == 'ICCDCM':
+                result = handover.ICCDCM(cases)
+            elif opt.split('.')[1] == 'ICCDIM':
+                result = handover.ICCDIM(cases)
+            elif opt.split('.')[1] == 'ICIDCM':
+                result = handover.ICIDCM(cases)
+            elif opt.split('.')[1] == 'ICIDIM':
+                result = handover.ICIDIM(cases)
             else:
                 exit(1)
         elif opt.split('.')[0] == 'WorkingTogether':
