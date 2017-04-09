@@ -16,11 +16,26 @@ def CCCDIM(cases, depth=1, beta=1):
     print('Handover of work: consider real causality, consider direct succession, ignore multiple appearance.')
     return None
 
-def ICCDCM(cases, depth=1, beta=1):
+# Warning: Including real causality into consideration requires support of the process model
+def CCIDCM(cases, depth=1, beta=1):
+    print('# TODO')
+    print('Handover of work: consider real causality, consider indirect succession, consider multiple appearance.')
+    return None
+
+# Warning: Including real causality into consideration requires support of the process model
+def CCIDIM(cases, depth=1, beta=1):
+    print('# TODO')
+    print('Handover of work: consider real causality, consider indirect succession, ignore multiple appearance.')
+    return None
+
+def ICCDCM(cases, is_task_specific=False, depth=1, beta=1):
     print('Handover of work: ignore real causality, consider direct succession, consider multiple appearance.')
     cnt = 0
     # TODO: non task-specific now
-    mat = defaultdict(lambda: defaultdict(lambda: 0))
+    if is_task_specific:
+        mat = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: 0))))
+    else:
+        mat = defaultdict(lambda: defaultdict(lambda: 0))
     # scale_factor: SIGMA_Case c in Log (|c| - 1)
     scale_factor = 0
     for caseid, trace in cases.items():
@@ -32,9 +47,14 @@ def ICCDCM(cases, depth=1, beta=1):
             # within a case
             res_prev = trace[i][2]
             res_next = trace[i+1][2]
-            #dur = trace[i+1][-2] - trace[i][-1]
-            #mat[res_prev][res_next] += dur.total_seconds() / scale_factor
-            mat[res_prev][res_next] += 1 / scale_factor
+            dur = trace[i+1][-2] - trace[i][-1]
+            if is_task_specific:
+                act_prev = trace[i][3]
+                act_next = trace[i+1][3]
+                mat[act_prev][act_next][res_prev][res_next] += dur.total_seconds() / scale_factor
+            else:
+                mat[res_prev][res_next] += dur.total_seconds() / scale_factor
+            #mat[res_prev][res_next] += 1 / scale_factor
 
     print('# of cases processed: {}'.format(cnt))
     return copy.deepcopy(mat)
@@ -84,8 +104,6 @@ def ICCICM(cases, depth, beta):
                 else:
                     res_prev = trace[i][2]
                     res_next = trace[i+n][2]
-                    #dur = trace[i+1][-2] - trace[i][-1]
-                    #mat[res_prev][res_next] += beta ** (n - 1) * dur.total_seconds() / scale_factor
                     mat[res_prev][res_next] += beta ** (n - 1) * 1 / scale_factor
 
     print('# of cases processed: {}'.format(cnt))

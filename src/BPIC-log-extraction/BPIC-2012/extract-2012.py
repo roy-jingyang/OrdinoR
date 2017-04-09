@@ -68,28 +68,29 @@ if __name__ == '__main__':
     print('Average # of activities within each case: {}'.format(sum(
     len(x) for k, x in cases.items()) / len(cases.keys())))
 
-    opt = sys.argv[2]
+    opt = sys.argv[3]
     try:
         if opt.split('.')[0] == 'Subcontracting':
             from MiningOptions import subcontracting
             if opt.split('.')[1] == 'CCCDCM':
                 # TODO
-                result = subcontracting.Subcontracting_CCCDCM(cases)
+                result = subcontracting.CCCDCM(cases)
             else:
                 exit(1)
         elif opt.split('.')[0] == 'Handover':
             from MiningOptions import handover
-            if opt.split('.')[1] == 'CCCDCM':
-                result = handover.CCCDCM(cases)
-            elif opt.split('.')[1] == 'CCCDIM':
-                result = handover.CCCDIM(cases)
-            elif opt.split('.')[1] == 'ICCDCM':
+            if opt.split('.')[1] == 'ICCDCM':
+                # Our main concern now
+                # handover.ICCDCM(cases=list_of_cases, is_task_specific=false)
                 result = handover.ICCDCM(cases)
             elif opt.split('.')[1] == 'ICCDIM':
+                # inapplicable for time based calculation
                 result = handover.ICCDIM(cases)
             elif opt.split('.')[1] == 'ICIDCM':
+                # inapplicable for time based calculation
                 result = handover.ICIDCM(cases)
             elif opt.split('.')[1] == 'ICIDIM':
+                # inapplicable for time based calculation
                 result = handover.ICIDIM(cases)
             else:
                 exit(1)
@@ -110,5 +111,11 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
 
-    print('# of emerged resources: {}'.format(len(result)))
+    # TODO: output the result
+    # output as adjacency list
+    with open(sys.argv[2], 'w') as fout:
+        for row, cols in result.items():
+            for col, val in cols.items():
+                fout.write('({},{},{}) '.format(row, col, val))
+            fout.write('\n')
 
