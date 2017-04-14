@@ -3,6 +3,7 @@
 
 import sys
 import csv
+import pandas as pd
 from collections import defaultdict
 from datetime import datetime
 
@@ -111,11 +112,10 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
 
-    # TODO: output the result
+    print('Exporting data as adjacency list as json format to file: {}'.format(sys.argv[2]))
+    df = pd.DataFrame(result)
     # output as adjacency list
     with open(sys.argv[2], 'w') as fout:
-        for row, cols in result.items():
-            for col, val in cols.items():
-                fout.write('({},{},{}) '.format(row, col, val))
-            fout.write('\n')
+        fout.write(df.to_json())
+        fout.write('\n')
 

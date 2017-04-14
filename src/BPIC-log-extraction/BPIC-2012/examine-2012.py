@@ -22,8 +22,6 @@ mat = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict())
 
 case_id_set = set()
 cases = defaultdict(lambda: list())
-merged_events = list()
-activity = dict()
 
 with open(sys.argv[1], 'r') as f:
     is_header_line = True
@@ -39,30 +37,15 @@ with open(sys.argv[1], 'r') as f:
             status = row[-1] if row[-1] != '' else ''
             #print(row)
             cases[case].append((resource, act, status, timestamp))
-            '''
-            if case not in case_id_set:
-                activity.clear()
-            else:
-                if status == 'START':
-                    merged_events.append([case, variant, act, resource, \
-                    activity['start'], activity['complete']])
-                    activity.clear()
-                    activity['start'] = timestamp
-                    activity['name'] = act
-                    activity['resource'] = resource
-                else:
-                    activity['complete'] = timestamp
-                    if act != activity['name'] or resource != activity['resource']:
-                        print(case)
-                        exit()
-            '''
 
 # Examine data
+cnt_multi_complete = list()
 for case, trace in cases.items():
+    # foreach case
     #activity = deque(list(), maxlen=1)
     #start_activity = list()
     activity = Counter()
-    not_started_activity = list()
+    #not_started_activity = list()
     for i in range(len(trace)):
         if trace[i][2] == 'START':
             '''
@@ -85,6 +68,7 @@ for case, trace in cases.items():
                 activity.pop()
             '''
         else:
+            activity[(trace[i][0], trace[i][1])] -= 1
             '''
             # 3 checking not closed activity
             start_act_index = None
@@ -101,15 +85,20 @@ for case, trace in cases.items():
                 activity.pop()
         else:
             pass
-            '''
             if activity[(trace[i][0], trace[i][1])] < 1:
                 not_started_activity.append((trace[i][0], trace[i][1], i))
+            '''
+
+    for activity_idkey, count in activity.items():
+        if count < 0:
+            cnt_multi_complete.append(case)
+            break
+
 
     '''
     for not_closed_act in start_activity:
         print('Possible not closed activity for Case #{} @ Event #{} {}'.format(case, not_closed_act[-1] + 1, not_closed_act[1]))
-    '''
-    '''
+
     for not_started_act in not_started_activity:
         print('Possible missing start trans for Case # {} @ Event #{} {}'.format(case, not_started_act[-1] + 1, not_started_act[1]))
     '''
@@ -127,3 +116,8 @@ for case, trace in cases.items():
             print(case)
             count += 1
     '''
+
+print('# of cases that contain multi complete TS for one single activity: {} ({:.1%})'.format(len(cnt_multi_complete), len(cnt_multi_complete) / len(cases)))
+for caseid in cnt_multi_complete:
+    print(caseid)
+
