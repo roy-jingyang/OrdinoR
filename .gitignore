@@ -8,3 +8,6 @@ virtualenv/
 # Ignore pyc
 **/__pycache__
 
+# Ignore temp files
+temp-plot.html
+
