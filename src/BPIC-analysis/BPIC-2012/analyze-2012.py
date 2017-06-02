@@ -1,6 +1,10 @@
 #! /usr/bin/env python3
 #! -*- coding: utf-8 -*-
 
+'''
+Provides the functionality of data visualization based on the imported social matrices.
+'''
+
 import sys
 import pandas as pd
 import networkx as nx
@@ -52,11 +56,11 @@ axis=dict(showline=False, # hide axis line, grid, ticklabels and  title
           showticklabels=False,
           title=''
           )
-width=800
-height=800
+width=1600
+height=1200
 layout=Layout(title="",
               font=Font(size=12),
-              showlegend=False,
+              #showlegend=False,
               autosize=False,
               width=width,
               height=height,
@@ -74,7 +78,7 @@ layout=Layout(title="",
 traceE=Scatter(x=Xed,
                y=Yed,
                mode='lines',
-               line=Line(color='rgb(210,210,210)', width=1),
+               line=Line(color='rgb(210,210,210)', width=0.5),
                text=label_e,
                hoverinfo='text'
                )
