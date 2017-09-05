@@ -28,12 +28,11 @@ def CCIDIM(cases, depth=1, beta=1):
     print('Handover of work: consider real causality, consider indirect succession, ignore multiple appearance.')
     return None
 
-# Count-based
+# Frequency-based
 # Time-based
-def ICCDCM(cases, is_task_specific=False, depth=1, beta=1):
+def ICCDCM(cases, is_task_specific=False, depth=1):
     print('Handover of work: ignore real causality, consider direct succession, consider multiple appearance.')
     cnt = 0
-    # TODO: non task-specific now
     if is_task_specific:
         mat = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: 0))))
     else:
@@ -45,25 +44,27 @@ def ICCDCM(cases, is_task_specific=False, depth=1, beta=1):
 
     for caseid, trace in cases.items():
         cnt += 1
+        frequency = 0
         for i in range(len(trace) - 1):
             # within a case
             res_prev = trace[i][2]
             res_next = trace[i+1][2]
-            dur = trace[i+1][-2] - trace[i][-1]
+            #dur = trace[i+1][-2] - trace[i][-1]
             if is_task_specific:
                 act_prev = trace[i][3]
                 act_next = trace[i+1][3]
-                mat[act_prev][act_next][res_prev][res_next] += dur.total_seconds() / scale_factor
+                #mat[act_prev][act_next][res_prev][res_next] += dur.total_seconds() / scale_factor
+                mat[act_prev][act_next][res_prev][res_next] += 1 / scale_factor
             else:
-                mat[res_prev][res_next] += dur.total_seconds() / scale_factor
-            #mat[res_prev][res_next] += 1 / scale_factor
+                #mat[res_prev][res_next] += dur.total_seconds() / scale_factor
+                mat[res_prev][res_next] += 1 / scale_factor
 
     print('# of cases processed: {}'.format(cnt))
     return copy.deepcopy(mat)
 
-# Count-based
+# Frequency-based
 # Warning: Ignoring multiple appearance does NOT apply to time-based calculation
-def ICCDIM(cases, depth=1, beta=1):
+def ICCDIM(cases, depth=1):
     print('Handover of work: ignore real causality, consider direct succession, ignore multiple appearance.')
     cnt = 0
     # TODO: non task-specific now
@@ -85,7 +86,7 @@ def ICCDIM(cases, depth=1, beta=1):
     print('# of cases processed: {}'.format(cnt))
     return copy.deepcopy(mat)
 
-# Count-based
+# Frequency-based
 # Warning: Indirect succession does NOT apply to time-based calculation
 def ICCICM(cases, depth, beta):
     print('Handover of work: ignore real causality, consider indirect succession, consider multiple appearance.')
@@ -115,7 +116,7 @@ def ICCICM(cases, depth, beta):
     return copy.deepcopy(mat)
 
 
-# Count-based
+# Frequency-based
 # Warning: Ignoring multiple appearance does NOT apply to time-based calculation
 def ICCIIM(cases, depth, beta):
     print('Handover of work: ignore real causality, consider indirect succession, ignore multiple appearance.')

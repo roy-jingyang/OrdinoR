@@ -10,6 +10,10 @@ from datetime import datetime
 if __name__ == '__main__':
     cases = defaultdict(lambda: list())
     # The following read-in part is for BPIC 2013 Incident Mngt. logs only
+    # Log format:
+    # SR Number;Change Date+Time;Status;Sub Status;Involved ST Function Div;
+    # Involved Org line 3;Involved ST;SR Latest Impact;
+    # Product;Country;Owner Country;Owner First Name
     with open(sys.argv[1], 'r') as f:
         is_header_line = True
         ln = 0
@@ -18,13 +22,11 @@ if __name__ == '__main__':
             if is_header_line:
                 is_header_line = False
             else:
-                case = int(row[0])
-                variant = int(row[1])
-                resource = int(row[2])
-                activity = row[3]
-                TS_start = datetime.strptime(row[4], '%Y/%m/%d %H:%M:%S.%f')
-                TS_end = datetime.strptime(row[5], '%Y/%m/%d %H:%M:%S.%f')
-                cases[case].append((case, variant, resource, activity, TS_start, TS_end))
+                case = row[0] # SR Number
+                cdatetime = row[1] # Change Date+Time
+                resource = row[-1]
+                activity = row[2] + row[3]
+                cases[case].append((case, cdatetime, resource, activity))
 
     print('Log file loaded successfully. # of cases read: {}'.format(len(cases.keys())))
     print('Average # of activities within each case: {}'.format(sum(
@@ -34,12 +36,16 @@ if __name__ == '__main__':
     opt = sys.argv[3]
     try:
         if opt.split('.')[0] == 'Subcontracting':
+            # TODO
+            print('Under construction: [TODO]')
+            exit(1)
+            '''
             from MiningOptions import subcontracting
             if opt.split('.')[1] == 'CCCDCM':
-                # TODO
                 result = subcontracting.CCCDCM(cases)
             else:
                 exit(1)
+            '''
         elif opt.split('.')[0] == 'Handover':
             from MiningOptions import handover
             if opt.split('.')[1] == 'ICCDCM':

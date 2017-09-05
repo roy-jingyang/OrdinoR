@@ -5,24 +5,34 @@ import copy
 from collections import defaultdict
 from numpy import array, linalg
 
+# Joint activities
+
 def _SimilarTask_Base(cases):
     cnt = 0
-    counting_mat = defaultdict(lambda: defaultdict(lambda: [0, 0]))
-    activity_index = ['W_Valideren aanvraag', 'W_Nabellen offertes', 'W_Nabellen incomplete dossiers', 'W_Afhandelen leads', 'W_Completeren aanvraag']
+    #counting_mat = defaultdict(lambda: defaultdict(lambda: [0, 0]))
+    counting_mat = defaultdict(lambda: defaultdict(lambda: 0))
+    activity_index = []
+
     for caseid, trace in cases.items():
         cnt += 1
         for i in range(len(trace)):
             res = trace[i][2]
             activity = trace[i][3]
-            proc_dur = trace[i][5] - trace[i][4]
-            counting_mat[res][activity][0] += 1
-            counting_mat[res][activity][1] += proc_dur.total_seconds()
+            if activity in activity_index:
+                pass
+            else:
+                activity_index.append(activity)
+            #proc_dur = trace[i][5] - trace[i][4]
+            #counting_mat[res][activity][0] += 1
+            #counting_mat[res][activity][1] += proc_dur.total_seconds()
+            counting_mat[res][activity] += 1
     print('# of cases processed: {}'.format(cnt))
-    profile_mat = defaultdict(lambda: [0] * 5)
+    profile_mat = defaultdict(lambda: [0] * len(activity_index))
     for res, activities in counting_mat.items():
-        for act, counts in activities.items():
+        for act, count in activities.items():
             index = activity_index.index(act)
-            profile_mat[res][index] = counts[1] / counts[0]
+            #profile_mat[res][index] = counts[1] / counts[0]
+            profile_mat[res][index] = count
 
     return copy.deepcopy(profile_mat)
 
