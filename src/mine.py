@@ -7,48 +7,9 @@ import pandas as pd
 from collections import defaultdict
 from datetime import datetime
 
-# AL -> CA -> NO -> VA -> NID
-AL = 'W_Afhandelen leads' # Following up on incomplete initial submissions
-#BF = 'W_Beoordelen fraude' # Investigating suspect fraud cases
-CA = 'W_Completeren aanvraag' # Completing pre-accepted applications
-NO = 'W_Nabellen offertes' # Seeking additional information during assessment phase
-VA = 'W_Valideren aanvraag' # Follow up after transmitting offers to qualified applicants
-NID = 'W_Nabellen incomplete dossiers' #  Assessing the application
-
-# Mining options
-# Possible Metrics to be chosen
-SUBCONTRACTING = 0
-HANDOVER_OF_WORK = 1000
-WORKING_TOGETHER = 2000
-SIMILAR_TASK = 3000
-#REASSIGNMENT = 4000
-#SETTINGS = 5000
-# Constants for 'subcontracting/handover' of work setting
-CONSIDER_CAUSALITY = 100
-CONSIDER_DIRECT_SUCCESSION = 10
-CONSIDER_MULTIPLE_TRANSFERS = 1
-# Constants for 'working together' setting
-SIMULTANEOUS_APPERANCE_RATIO = 0
-DISTANCE_WITHOUT_CAUSALITY = 1
-DISTANCE_WITH_CAUSALITY = 2
-# Constants for 'similar task' setting
-EUCLIDEAN_DISTANCE = 0
-CORRELATION_COEFFICIENT = 1
-SIMILARITY_COEFFICIENT = 2
-HAMMING_DISTANCE = 3
-# Constants for 'reassignment' setting
-'''
-MULTIPLE_REASSIGNMENT = 1
-'''
-# Constants for 'settings_grouping' setting
-'''
-GROUP_BY_ORG_UNIT = 0
-GROUP_BY_ROLE = 1
-GROUP_BY_ORG_UNIT_ROLE = 2
-'''
-
 if __name__ == '__main__':
     cases = defaultdict(lambda: list())
+    # The following read-in part is for BPIC 2013 Incident Mngt. logs only
     with open(sys.argv[1], 'r') as f:
         is_header_line = True
         ln = 0
@@ -68,6 +29,7 @@ if __name__ == '__main__':
     print('Log file loaded successfully. # of cases read: {}'.format(len(cases.keys())))
     print('Average # of activities within each case: {}'.format(sum(
     len(x) for k, x in cases.items()) / len(cases.keys())))
+    # read-in ends
 
     opt = sys.argv[3]
     try:

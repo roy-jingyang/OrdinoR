@@ -1,13 +1,6 @@
-# Ignore input/output directory.
-input/
-output/
-
-# Ignore the virtualenv directory
-virtualenv/
+# Ignore data directory.
+data/
 
 # Ignore pyc
 **/__pycache__
-
-# Ignore temp files
-temp-plot.html
 
