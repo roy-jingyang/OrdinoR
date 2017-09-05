@@ -4,3 +4,6 @@ data/
 # Ignore pyc
 **/__pycache__
 
+# Ignore Vim undo log
+*.un~
+
