@@ -3,9 +3,9 @@
 
 import sys
 import csv
-import pandas as pd
 from collections import defaultdict
 from datetime import datetime
+import networkx as nx
 
 if __name__ == '__main__':
     cases = defaultdict(lambda: list())
@@ -14,14 +14,15 @@ if __name__ == '__main__':
     # SR Number;Change Date+Time;Status;Sub Status;Involved ST Function Div;
     # Involved Org line 3;Involved ST;SR Latest Impact;
     # Product;Country;Owner Country;Owner First Name
-    with open(sys.argv[1], 'r') as f:
+    with open(sys.argv[1], 'r', encoding='windows-1252') as f:
         is_header_line = True
         ln = 0
-        for row in csv.reader(f):
+        for line in f:
             ln += 1
             if is_header_line:
                 is_header_line = False
             else:
+                row = line.split(';')
                 case = row[0] # SR Number
                 cdatetime = row[1] # Change Date+Time
                 resource = row[-1]
@@ -80,10 +81,11 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
 
-    print('Exporting data as adjacency list as json format to file: {}'.format(sys.argv[2]))
-    df = pd.DataFrame(result)
-    # output as adjacency list
-    with open(sys.argv[2], 'w') as fout:
-        fout.write(df.to_json())
-        fout.write('\n')
+    print('Exporting resulting social network as GML format (*.gml) to file: {}'.format(sys.argv[2]))
+    g = nx.DiGraph()
+    for u, conns in result.items():
+        for v, value in conns.items():
+            if value > 0:
+                g.add_edge(u, v, weight=value)
+    nx.write_gml(g, sys.argv[2])
 

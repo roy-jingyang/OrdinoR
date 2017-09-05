@@ -1,5 +1,8 @@
-# Ignore data directory.
+# Ignore data directory
 data/
+
+# Ignore output directory
+output/
 
 # Ignore pyc
 **/__pycache__

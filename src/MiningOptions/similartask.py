@@ -7,6 +7,7 @@ from numpy import array, linalg
 
 # Joint activities
 
+
 def _SimilarTask_Base(cases):
     cnt = 0
     #counting_mat = defaultdict(lambda: defaultdict(lambda: [0, 0]))
@@ -44,7 +45,11 @@ def ED(cases):
         for j in range(i+1, len(profile_mat.keys())):
             res_i = list(profile_mat.keys())[i]
             res_j = list(profile_mat.keys())[j]
-            euclidean_dist = linalg.norm(array(res_i) - array(res_j))
+            profile_i = profile_mat[res_i]
+            profile_j = profile_mat[res_j]
+
+            euclidean_dist = linalg.norm(array(profile_i, dtype=float) -
+                    array(profile_j, dtype=float))
             mat[res_i][res_j] = euclidean_dist
             mat[res_j][res_i] = euclidean_dist
 
