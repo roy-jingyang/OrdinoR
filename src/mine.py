@@ -89,12 +89,27 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
 
-    filetype = '.gml' 
-    print('Exporting resulting social network as format' +
-            ' (*{}) to file:\t{}'.format(filetype, sys.argv[2]) + filetype)
     g = nx.DiGraph()
     for u, conns in result.items():
         for v, value in conns.items():
-            g.add_edge(u, v, weight=value)
+            # omit self-loops
+            if u != v and abs(value) > 0:
+                g.add_edge(u, v, weight=value)
+
+    # plot the node degree distribution (non-weighted)
+    N_nodes = g.number_of_nodes()
+    normalized_node_degree_list = sorted([d / N_nodes for n, d in
+        g.degree_iter()], reverse=True)
+    # TODO: plotting using bar graph
+    # plot the edge weight distribution
+    max_edge_weight = max([wt for u, v, wt in g.edges_iter(data='weight')])
+    normalized_edge_weight_list = sorted([wt / max_edge_weight for u, v, wt in
+        g.edges_iter(data='weight')], reverse=True)
+    # TODO: plotting using line graph
+
+    # write graph
+    filetype = '.gml' 
+    print('Exporting resulting social network as format' +
+            ' (*{}) to file:\t{}'.format(filetype, sys.argv[2]) + filetype)
     nx.write_gml(g, sys.argv[2] + filetype)
 
