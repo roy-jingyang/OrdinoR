@@ -9,30 +9,38 @@ import networkx as nx
 
 if __name__ == '__main__':
     cases = defaultdict(lambda: list())
-    # The following read-in part is for BPIC 2013 Incident Mngt. logs only
-    # Log format:
-    # SR Number;Change Date+Time;Status;Sub Status;Involved ST Function Div;
-    # Involved Org line 3;Involved ST;SR Latest Impact;
-    # Product;Country;Owner Country;Owner First Name
     with open(sys.argv[1], 'r', encoding='windows-1252') as f:
         is_header_line = True
         ln = 0
+        # BPiC 2013 Volvo Service Desk: Incident Mngt. Syst.
+        '''
         for line in f:
             ln += 1
             if is_header_line:
                 is_header_line = False
             else:
                 row = line.split(';')
-                case = row[0] # SR Number
-                cdatetime = row[1] # Change Date+Time
+                caseid = row[0] # SR Number
+                ctimestamp = row[1] # Change Date+Time
                 resource = row[-1]
                 activity = row[2] + row[3]
-                cases[case].append((case, cdatetime, resource, activity))
+                cases[caseid].append((caseid, ctimestamp, resource, activity))
+        '''
+        # BPiC 2015 Building Permit Application: Municiality 3
+        for row in csv.reader(f):
+            ln += 1
+            if is_header_line:
+                is_header_line = False
+            else:
+                caseid = row[0] 
+                ctimestamp = row[3] # Complete timestamp 
+                resource = row[2]
+                activity = row[1] # Activity code
+                cases[caseid].append((caseid, ctimestamp, resource, activity))
 
     print('Log file loaded successfully. # of cases read: {}'.format(len(cases.keys())))
     print('Average # of activities within each case: {}'.format(sum(
     len(x) for k, x in cases.items()) / len(cases.keys())))
-    # read-in ends
 
     opt = sys.argv[3]
     try:
@@ -81,11 +89,12 @@ if __name__ == '__main__':
     except Exception as e:
         print(e)
 
-    print('Exporting resulting social network as GML format (*.gml) to file: {}'.format(sys.argv[2]))
+    filetype = '.gml' 
+    print('Exporting resulting social network as format' +
+            ' (*{}) to file:\t{}'.format(filetype, sys.argv[2]) + filetype)
     g = nx.DiGraph()
     for u, conns in result.items():
         for v, value in conns.items():
-            if value > 0:
-                g.add_edge(u, v, weight=value)
-    nx.write_gml(g, sys.argv[2])
+            g.add_edge(u, v, weight=value)
+    nx.write_gml(g, sys.argv[2] + filetype)
 
