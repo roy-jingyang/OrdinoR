@@ -7,9 +7,13 @@ from collections import defaultdict
 from datetime import datetime
 import networkx as nx
 
+f_event_log = sys.argv[1]
+fout_social_network = sys.argv[2]
+mining_option = sys.argv[3]
+
 if __name__ == '__main__':
     cases = defaultdict(lambda: list())
-    with open(sys.argv[1], 'r', encoding='windows-1252') as f:
+    with open(f_event_log, 'r', encoding='windows-1252') as f:
         is_header_line = True
         ln = 0
         # BPiC 2013 Volvo Service Desk: Incident Mngt. Syst.
@@ -42,34 +46,33 @@ if __name__ == '__main__':
     print('Average # of activities within each case: {}'.format(sum(
     len(x) for k, x in cases.items()) / len(cases.keys())))
 
-    opt = sys.argv[3]
     try:
-        if opt.split('.')[0] == 'pc':
+        if mining_option.split('.')[0] == 'pc':
             from MiningOptions import PossibleCausality
-            if opt.split('.')[1] == 'handover_CDCM':
+            if mining_option.split('.')[1] == 'handover_CDCM':
                 # Our main concern now
                 # handover.ICCDCM(cases=list_of_cases, is_task_specific=false)
                 result = PossibleCausality.handover_CDCM(cases)
-            elif opt.split('.')[1] == 'handover_duration':
+            elif mining_option.split('.')[1] == 'handover_duration':
                 # Our main concern now
                 result = PossibleCausality.handover_duration(cases)
-            elif opt.split('.')[1] == 'handover_CDIM':
+            elif mining_option.split('.')[1] == 'handover_CDIM':
                 result = PossibleCausality.handover_CDIM(cases)
-            elif opt.split('.')[1] == 'handover_CICM':
+            elif mining_option.split('.')[1] == 'handover_CICM':
                 result = PossibleCausality.handover_CICM(cases)
-            elif opt.split('.')[1] == 'handover_CIIM':
+            elif mining_option.split('.')[1] == 'handover_CIIM':
                 result = PossibleCausality.handover_CIIM(cases)
             else:
                 exit(1)
-        elif opt.split('.')[0] == 'mjc':
+        elif mining_option.split('.')[0] == 'mjc':
             from MiningOptions import JointCases
-            if opt.split('.')[1] == 'SA':
+            if mining_option.split('.')[1] == 'SA':
                 result = JointCases.SA(cases)
             else:
                 exit(1)
-        elif opt.split('.')[0] == 'mja':
+        elif mining_option.split('.')[0] == 'mja':
             from MiningOptions import JointActivities
-            if opt.split('.')[1] == 'EuclideanDist':
+            if mining_option.split('.')[1] == 'EuclideanDist':
                 result = JointActivities.EuclideanDist(cases)
             else:
                 exit(1)
@@ -93,12 +96,12 @@ if __name__ == '__main__':
     # plot the edge weight distribution
     max_edge_weight = max([wt for u, v, wt in g.edges_iter(data='weight')])
     normalized_edge_weight_list = sorted([wt / max_edge_weight for u, v, wt in
-        g.edges_iter(data='weight')], reverse=True)
+        g.edges.data('weight')], reverse=True)
     # TODO: plotting using line graph
 
     # write graph
     filetype = '.gml' 
     print('Exporting resulting social network as format' +
-            ' (*{}) to file:\t{}'.format(filetype, sys.argv[2]) + filetype)
-    nx.write_gml(g, sys.argv[2] + filetype)
+            ' (*{}) to file:\t{}'.format(filetype, fout_social_network) + filetype)
+    nx.write_gml(g, fout_social_network + filetype)
 

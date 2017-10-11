@@ -1,3 +1,2 @@
 # LAB-BPM-OrgMining
-#### Discover social networks from business process logs and perform further
-analysis.
+#### Discover social networks from business process logs and perform further analysis.
