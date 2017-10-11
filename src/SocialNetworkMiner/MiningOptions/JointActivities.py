@@ -17,7 +17,7 @@ def _JointActivities_Base(cases):
         cnt += 1
         for i in range(len(trace)):
             res = trace[i][2]
-            activity = trace[i][3]
+            activity = trace[i][1]
             if activity in activity_index:
                 pass
             else:

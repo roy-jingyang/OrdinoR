@@ -28,8 +28,8 @@ def handover_CDCM(cases, is_task_specific=False, depth=1):
             res_prev = trace[i][2]
             res_next = trace[i+1][2]
             if is_task_specific:
-                act_prev = trace[i][3]
-                act_next = trace[i+1][3]
+                act_prev = trace[i][1]
+                act_next = trace[i+1][1]
                 mat[act_prev][act_next][res_prev][res_next] += 1 / scale_factor
             else:
                 mat[res_prev][res_next] += 1 / scale_factor
@@ -57,8 +57,8 @@ def handover_duration(cases, is_task_specific=False, depth=1):
             res_next = trace[i+1][2]
             dur = trace[i+1][-2] - trace[i][-1]
             if is_task_specific:
-                act_prev = trace[i][3]
-                act_next = trace[i+1][3]
+                act_prev = trace[i][1]
+                act_next = trace[i+1][1]
                 mat[act_prev][act_next][res_prev][res_next] += dur.total_seconds() / scale_factor
             else:
                 mat[res_prev][res_next] += dur.total_seconds() / scale_factor

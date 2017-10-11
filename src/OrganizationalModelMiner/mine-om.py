@@ -17,8 +17,8 @@ if __name__ == '__main__':
     with open(f_event_log, 'r', encoding='windows-1252') as f:
         is_header_line = True
         ln = 0
-        # BPiC 2013 Volvo Service Desk: Incident Mngt. Syst.
         '''
+        # BPiC 2013 Volvo Service Desk: Incident Mngt. Syst.
         for line in f:
             ln += 1
             if is_header_line:
@@ -29,8 +29,7 @@ if __name__ == '__main__':
                 ctimestamp = row[1] # Change Date+Time
                 resource = row[-1]
                 activity = row[2] + row[3]
-                cases[caseid].append((caseid, ctimestamp, resource, activity))
-        '''
+                cases[caseid].append((caseid, activity, resource, ctimestamp))
         # BPiC 2015 Building Permit Application: Municiality 3
         for row in csv.reader(f):
             ln += 1
@@ -41,7 +40,19 @@ if __name__ == '__main__':
                 ctimestamp = row[3] # Complete timestamp 
                 resource = row[2]
                 activity = row[1] # Activity code
-                cases[caseid].append((caseid, ctimestamp, resource, activity))
+                cases[caseid].append((caseid, activity, resource, ctimestamp))
+        '''
+        # The 'WABO' event log data
+        for row in csv.reader(f):
+            ln += 1
+            if is_header_line:
+                is_header_line = False
+            else:
+                caseid = row[0]
+                ctimestamp = row[3]
+                resource = row[2]
+                activity = row[1]
+                cases[caseid].append((caseid, activity, resource, ctimestamp))
 
     print('Log file loaded successfully. # of cases read: {}'.format(len(cases.keys())))
     print('Average # of activities within each case: {}'.format(sum(
@@ -91,4 +102,24 @@ if __name__ == '__main__':
         print(e)
 
     # try associating mined entities with tasks (entity assignment)
+    assignments = defaultdict(lambda: set())
+    for case_id, trace in cases.items():
+        for i in range(len(trace)):
+            resource = trace[i][2]
+            activity = trace[i][3]
+            for entity_id, entity in result.items():
+                if resource in entity:
+                    assignment[entity_id].add(activity)
+                else:
+                    pass
+
+    # output to file
+    with open(fout_org_model, 'w') as fout:
+        writer = csv.writer(fout)
+        writer.writerow(['entity_id', 'tasks', 'resources'])
+        for entity_id in result.keys():
+            writer.writerow([
+                entity_id,
+                ';'.join(t for t in assignment[entity_id]),
+                ';'.join(r for r in result[entity_id])])
 

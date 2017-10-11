@@ -16,8 +16,8 @@ if __name__ == '__main__':
     with open(f_event_log, 'r', encoding='windows-1252') as f:
         is_header_line = True
         ln = 0
-        # BPiC 2013 Volvo Service Desk: Incident Mngt. Syst.
         '''
+        # BPiC 2013 Volvo Service Desk: Incident Mngt. Syst.
         for line in f:
             ln += 1
             if is_header_line:
@@ -28,8 +28,7 @@ if __name__ == '__main__':
                 ctimestamp = row[1] # Change Date+Time
                 resource = row[-1]
                 activity = row[2] + row[3]
-                cases[caseid].append((caseid, ctimestamp, resource, activity))
-        '''
+                cases[caseid].append((caseid, activity, resource, ctimestamp))
         # BPiC 2015 Building Permit Application: Municiality 3
         for row in csv.reader(f):
             ln += 1
@@ -40,7 +39,19 @@ if __name__ == '__main__':
                 ctimestamp = row[3] # Complete timestamp 
                 resource = row[2]
                 activity = row[1] # Activity code
-                cases[caseid].append((caseid, ctimestamp, resource, activity))
+                cases[caseid].append((caseid, activity, resource, ctimestamp))
+        '''
+        # The 'WABO' event log data
+        for row in csv.reader(f):
+            ln += 1
+            if is_header_line:
+                is_header_line = False
+            else:
+                caseid = row[0]
+                ctimestamp = row[3]
+                resource = row[2]
+                activity = row[1]
+                cases[caseid].append((caseid, activity, resource, ctimestamp))
 
     print('Log file loaded successfully. # of cases read: {}'.format(len(cases.keys())))
     print('Average # of activities within each case: {}'.format(sum(
