@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-#! -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import sys
 import csv
@@ -44,44 +44,33 @@ if __name__ == '__main__':
 
     opt = sys.argv[3]
     try:
-        if opt.split('.')[0] == 'Subcontracting':
-            # TODO
-            print('Under construction: [TODO]')
-            exit(1)
-            '''
-            from MiningOptions import subcontracting
-            if opt.split('.')[1] == 'CCCDCM':
-                result = subcontracting.CCCDCM(cases)
-            else:
-                exit(1)
-            '''
-        elif opt.split('.')[0] == 'Handover':
-            from MiningOptions import handover
-            if opt.split('.')[1] == 'ICCDCM':
+        if opt.split('.')[0] == 'pc':
+            from MiningOptions import PossibleCausality
+            if opt.split('.')[1] == 'handover_CDCM':
                 # Our main concern now
                 # handover.ICCDCM(cases=list_of_cases, is_task_specific=false)
-                result = handover.ICCDCM(cases)
-            elif opt.split('.')[1] == 'ICCDIM':
-                # inapplicable for time based calculation
-                result = handover.ICCDIM(cases)
-            elif opt.split('.')[1] == 'ICIDCM':
-                # inapplicable for time based calculation
-                result = handover.ICIDCM(cases)
-            elif opt.split('.')[1] == 'ICIDIM':
-                # inapplicable for time based calculation
-                result = handover.ICIDIM(cases)
+                result = PossibleCausality.handover_CDCM(cases)
+            elif opt.split('.')[1] == 'handover_duration':
+                # Our main concern now
+                result = PossibleCausality.handover_duration(cases)
+            elif opt.split('.')[1] == 'handover_CDIM':
+                result = PossibleCausality.handover_CDIM(cases)
+            elif opt.split('.')[1] == 'handover_CICM':
+                result = PossibleCausality.handover_CICM(cases)
+            elif opt.split('.')[1] == 'handover_CIIM':
+                result = PossibleCausality.handover_CIIM(cases)
             else:
                 exit(1)
-        elif opt.split('.')[0] == 'WorkingTogether':
-            from MiningOptions import workingtogether
-            if opt.split('.')[1] == 'SAR':
-                result = workingtogether.SAR(cases)
+        elif opt.split('.')[0] == 'mjc':
+            from MiningOptions import JointCases
+            if opt.split('.')[1] == 'SA':
+                result = JointCases.SA(cases)
             else:
                 exit(1)
-        elif opt.split('.')[0] == 'SimilarTask':
-            from MiningOptions import similartask
-            if opt.split('.')[1] == 'ED':
-                result = similartask.ED(cases)
+        elif opt.split('.')[0] == 'mja':
+            from MiningOptions import JointActivities
+            if opt.split('.')[1] == 'EuclideanDist':
+                result = JointActivities.EuclideanDist(cases)
             else:
                 exit(1)
         else:

@@ -1,12 +1,12 @@
 #! /usr/bin/env python3
-#! -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import copy
 from collections import defaultdict
 
 # Joint cases
-def SAR(cases):
-    print('Working together: simultaneous appearance')
+def SA(cases):
+    print('Metric based on Joint Cases: Simultaneous Appearance')
     cnt = 0
     mat = defaultdict(lambda: defaultdict(lambda: 0))
     for caseid, trace in cases.items():

@@ -1,37 +1,15 @@
 #! /usr/bin/env python3
-#! -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import copy
 from collections import defaultdict
 
 # Warning: Including real causality into consideration requires support of the process model
-def CCCDCM(cases, depth=1, beta=1):
-    print('# TODO')
-    print('Handover of work: consider real causality, consider direct succession, consider multiple appearance.')
-    return None
-
-# Warning: Including real causality into consideration requires support of the process model
-def CCCDIM(cases, depth=1, beta=1):
-    print('# TODO')
-    print('Handover of work: consider real causality, consider direct succession, ignore multiple appearance.')
-    return None
-
-# Warning: Including real causality into consideration requires support of the process model
-def CCIDCM(cases, depth=1, beta=1):
-    print('# TODO')
-    print('Handover of work: consider real causality, consider indirect succession, consider multiple appearance.')
-    return None
-
-# Warning: Including real causality into consideration requires support of the process model
-def CCIDIM(cases, depth=1, beta=1):
-    print('# TODO')
-    print('Handover of work: consider real causality, consider indirect succession, ignore multiple appearance.')
-    return None
 
 # Frequency-based
-# Time-based
-def ICCDCM(cases, is_task_specific=False, depth=1):
-    print('Handover of work: ignore real causality, consider direct succession, consider multiple appearance.')
+def handover_CDCM(cases, is_task_specific=False, depth=1):
+    print('Possible Causality: Handover of work (Ignore real Causality,
+            Consider Direct succession, Consider Multiple appearance.)')
     cnt = 0
     if is_task_specific:
         mat = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: 0))))
@@ -49,25 +27,50 @@ def ICCDCM(cases, is_task_specific=False, depth=1):
             # within a case
             res_prev = trace[i][2]
             res_next = trace[i+1][2]
-            #dur = trace[i+1][-2] - trace[i][-1]
             if is_task_specific:
                 act_prev = trace[i][3]
                 act_next = trace[i+1][3]
-                #mat[act_prev][act_next][res_prev][res_next] += dur.total_seconds() / scale_factor
                 mat[act_prev][act_next][res_prev][res_next] += 1 / scale_factor
             else:
-                #mat[res_prev][res_next] += dur.total_seconds() / scale_factor
                 mat[res_prev][res_next] += 1 / scale_factor
+
+# Duration-time-based
+def handover_duration(cases, is_task_specific=False, depth=1):
+    print('Possible Causality: Handover duration of work (Ignore real Causality,
+            Consider Direct succession, Consider Multiple appearance.)')
+    cnt = 0
+    if is_task_specific:
+        mat = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: 0))))
+    else:
+        mat = defaultdict(lambda: defaultdict(lambda: 0))
+    # scale_factor: SIGMA_Case c in Log (|c| - 1)
+    scale_factor = 0
+    for caseid, trace in cases.items():
+        scale_factor += len(trace) - 1
+
+    for caseid, trace in cases.items():
+        cnt += 1
+        frequency = 0
+        for i in range(len(trace) - 1):
+            # within a case
+            res_prev = trace[i][2]
+            res_next = trace[i+1][2]
+            dur = trace[i+1][-2] - trace[i][-1]
+            if is_task_specific:
+                act_prev = trace[i][3]
+                act_next = trace[i+1][3]
+                mat[act_prev][act_next][res_prev][res_next] += dur.total_seconds() / scale_factor
+            else:
+                mat[res_prev][res_next] += dur.total_seconds() / scale_factor
 
     print('# of cases processed: {}'.format(cnt))
     return copy.deepcopy(mat)
 
 # Frequency-based
-# Warning: Ignoring multiple appearance does NOT apply to time-based calculation
-def ICCDIM(cases, depth=1):
-    print('Handover of work: ignore real causality, consider direct succession, ignore multiple appearance.')
+def handover_CDIM(cases, depth=1):
+    print('Possible Causality: Handover of work (Ignore real Causality,
+            Consider Direct succession, Ignore Multiple appearance.)')
     cnt = 0
-    # TODO: non task-specific now
     mat = defaultdict(lambda: defaultdict(lambda: 0))
     # scale_factor: |L|
     scale_factor = len(cases)
@@ -87,11 +90,11 @@ def ICCDIM(cases, depth=1):
     return copy.deepcopy(mat)
 
 # Frequency-based
-# Warning: Indirect succession does NOT apply to time-based calculation
-def ICCICM(cases, depth, beta):
-    print('Handover of work: ignore real causality, consider indirect succession, consider multiple appearance.')
+def handover_CICM(cases, depth, beta):
+    print('Possible Causality: Handover of work (Ignore real Causality,
+            Consider Indirect succession, Consider Multiple appearance.)')
     cnt = 0
-    # TODO: non task-specific now
+    cnt = 0
     mat = defaultdict(lambda: defaultdict(lambda: 0))
     # scale_factor: SIGMA_Case c in Log (SIGMA_n=1:min(|c| - 1, depth) (beta^n-1 * (|c| - n)))
     scale_factor = 0
@@ -117,11 +120,10 @@ def ICCICM(cases, depth, beta):
 
 
 # Frequency-based
-# Warning: Ignoring multiple appearance does NOT apply to time-based calculation
-def ICCIIM(cases, depth, beta):
-    print('Handover of work: ignore real causality, consider indirect succession, ignore multiple appearance.')
+def handover_CIIM(cases, depth, beta):
+    print('Possible Causality: Handover of work (Ignore real Causality,
+            Consider Indirect succession, Ignore Multiple appearance.)')
     cnt = 0
-    # TODO: non task-specific now
     mat = defaultdict(lambda: defaultdict(lambda: 0))
     # scale_factor: SIGMA_Case c in Log (SIGMA_n=1:min(|c| - 1, depth) (beta^n-1))
     scale_factor = 0

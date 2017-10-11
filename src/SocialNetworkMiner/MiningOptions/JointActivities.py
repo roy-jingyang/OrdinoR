@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-#! -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import copy
 from collections import defaultdict
@@ -7,8 +7,7 @@ from numpy import array, linalg
 
 # Joint activities
 
-
-def _SimilarTask_Base(cases):
+def _JointActivities_Base(cases):
     cnt = 0
     #counting_mat = defaultdict(lambda: defaultdict(lambda: [0, 0]))
     counting_mat = defaultdict(lambda: defaultdict(lambda: 0))
@@ -37,9 +36,9 @@ def _SimilarTask_Base(cases):
 
     return copy.deepcopy(profile_mat)
 
-def ED(cases):
-    print('Similar task: ')
-    profile_mat = _SimilarTask_Base(cases)
+def EuclideanDist(cases):
+    print('Metric based on Joint Activities: Euclidean Distance')
+    profile_mat = _JointActivities_Base(cases)
     mat = defaultdict(lambda: defaultdict(lambda: 0))
     for i in range(len(profile_mat.keys()) - 1):
         for j in range(i+1, len(profile_mat.keys())):
