@@ -3,11 +3,15 @@
 
 import copy
 import networkx as nx
+import matplotlib.pyplot as plt
 from collections import defaultdict
+from scipy.spatial.distance import squareform
+from scipy.cluster import hierarchy
 
-# TODO: need to re-name according to the clustering strategy
+# [Deprecated] self-implemented hierarchical clustering algorithm
 def cluster(graph, k_clusters):
     print('Applying Agglomerative Hierarchical Clustering:')
+    graph = graph.to_undirected()
     k = len(graph.nodes)
     if k_clusters > k:
         print('Error: Desired #clusters > #nodes.')
@@ -58,4 +62,66 @@ def cluster(graph, k_clusters):
                 entities[entity_id].add(n)
         print('{} organizational entities extracted.'.format(len(entities)))
         return copy.deepcopy(entities)
+
+def single_linkage(graph, k_clusters):
+    print('Applying Hierarchical Clustering - single linkage (Nearest Point):')
+    graph = graph.to_undirected()
+    k = len(graph.nodes)
+    resources = list(graph)
+    if k_clusters > k:
+        print('Error: Desired #clusters > #nodes.')
+        exit(1)
+    else:
+        # compute distance matrix (i.e. the adjacency matrix of input graph)
+        # keep the resource index order
+        dist_matrix = nx.to_numpy_matrix(graph, nodelist=resources, nonedge=0.0)
+        # convert to pdist vector
+        pdist = squareform(dist_matrix)
+        # perform single linkage clustering
+        Z = hierarchy.linkage(pdist, method='single', metric=None)
+
+
+        # cut the tree to obtain k clusters
+        entities = defaultdict(lambda: set())
+        cuttree = hierarchy.cut_tree(Z)[:,k - k_clusters]
+        for i in range(len(cuttree)):
+            c = cuttree[i]
+            entities[c].add(resources[i])
+
+        # plot dendrogram
+        plt.figure()
+        dn = hierarchy.dendrogram(Z, labels=resources,
+                color_threshold=(k - k_clusters))
+        plt.show()
+
+        print('{} organizational entities extracted.'.format(len(entities)))
+        return copy.deepcopy(entities)
+
+def complete_linkage(graph, k_clusters):
+    print('Applying Hierarchical Clustering - complete linkage (Farthest Point):')
+    pass
+
+def average_linkage(graph, k_clusters):
+    print('Applying Hierarchical Clustering - average linkage (UPGMA):')
+    pass
+
+def weighted_linkage(graph, k_clusters):
+    print('Applying Hierarchical Clustering - weighted linkage (WPGMA):')
+    pass
+
+# EuclideanDistance only
+def centroid_linkage(graph, k_clusters):
+    print('Applying Hierarchical Clustering - centroid linkage (UPGMC):')
+    pass
+
+# EuclideanDistance only
+def median_linkage(graph, k_clusters):
+    print('Applying Hierarchical Clustering - median linkage (WPGMC):')
+    pass
+
+# EuclideanDistance only
+def ward_linkage(graph, k_clusters):
+    print('Applying Hierarchical Clustering - Ward linkage (incremental):')
+    pass
+
 

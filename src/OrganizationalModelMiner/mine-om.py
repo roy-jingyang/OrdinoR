@@ -78,7 +78,8 @@ if __name__ == '__main__':
         elif mining_option.split('.')[1] == 'AHC':
             from MiningOptions import AHC
             k_clusters = int(additional_params[5])
-            result = AHC.cluster(g, k_clusters)
+            #result = AHC.cluster(g, k_clusters)
+            result = AHC.single_linkage(g, k_clusters)
         else:
             exit(1)
     elif mining_option.split('.')[0] == 'case':
