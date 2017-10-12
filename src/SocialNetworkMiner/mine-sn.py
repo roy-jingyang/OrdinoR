@@ -57,57 +57,48 @@ if __name__ == '__main__':
     print('Average # of activities within each case: {}'.format(sum(
     len(x) for k, x in cases.items()) / len(cases.keys())))
 
-    try:
-        if mining_option.split('.')[0] == 'pc':
-            from MiningOptions import PossibleCausality
-            if mining_option.split('.')[1] == 'handover_CDCM':
-                # Our main concern now
-                # handover.ICCDCM(cases=list_of_cases, is_task_specific=false)
-                result = PossibleCausality.handover_CDCM(cases)
-            elif mining_option.split('.')[1] == 'handover_duration':
-                # Our main concern now
-                result = PossibleCausality.handover_duration(cases)
-            elif mining_option.split('.')[1] == 'handover_CDIM':
-                result = PossibleCausality.handover_CDIM(cases)
-            elif mining_option.split('.')[1] == 'handover_CICM':
-                result = PossibleCausality.handover_CICM(cases)
-            elif mining_option.split('.')[1] == 'handover_CIIM':
-                result = PossibleCausality.handover_CIIM(cases)
-            else:
-                exit(1)
-        elif mining_option.split('.')[0] == 'mjc':
-            from MiningOptions import JointCases
-            if mining_option.split('.')[1] == 'SA':
-                result = JointCases.SA(cases)
-            else:
-                exit(1)
-        elif mining_option.split('.')[0] == 'mja':
-            from MiningOptions import JointActivities
-            if mining_option.split('.')[1] == 'EuclideanDist':
-                result = JointActivities.EuclideanDist(cases)
-            else:
-                exit(1)
+    if mining_option.split('.')[0] == 'pc':
+        from MiningOptions import PossibleCausality
+        if mining_option.split('.')[1] == 'handover_CDCM':
+            # Our main concern now
+            # handover.ICCDCM(cases=list_of_cases, is_task_specific=false)
+            result = PossibleCausality.handover_CDCM(cases)
+        elif mining_option.split('.')[1] == 'handover_duration':
+            # Our main concern now
+            result = PossibleCausality.handover_duration(cases)
+        elif mining_option.split('.')[1] == 'handover_CDIM':
+            result = PossibleCausality.handover_CDIM(cases)
+        elif mining_option.split('.')[1] == 'handover_CICM':
+            result = PossibleCausality.handover_CICM(cases)
+        elif mining_option.split('.')[1] == 'handover_CIIM':
+            result = PossibleCausality.handover_CIIM(cases)
         else:
             exit(1)
-    except Exception as e:
-        print(e)
+    elif mining_option.split('.')[0] == 'mjc':
+        from MiningOptions import JointCases
+        if mining_option.split('.')[1] == 'SA':
+            result = JointCases.SA(cases)
+        else:
+            exit(1)
+    elif mining_option.split('.')[0] == 'mja':
+        from MiningOptions import JointActivities
+        if mining_option.split('.')[1] == 'EuclideanDist':
+            result = JointActivities.EuclideanDist(cases)
+        else:
+            exit(1)
+    else:
+        exit(1)
 
     g = nx.DiGraph()
     for u, conns in result.items():
         for v, value in conns.items():
             # omit self-loops
-            if u != v and abs(value) > 0:
+            if u != v:
                 g.add_edge(u, v, weight=value)
 
-    # plot the node degree distribution (non-weighted)
-    N_nodes = g.number_of_nodes()
-    normalized_node_degree_list = sorted([d / N_nodes for n, d in
-        g.degree_iter()], reverse=True)
+    # TODO: plot the node degree distribution (non-weighted)
     # TODO: plotting using bar graph
     # plot the edge weight distribution
-    max_edge_weight = max([wt for u, v, wt in g.edges_iter(data='weight')])
-    normalized_edge_weight_list = sorted([wt / max_edge_weight for u, v, wt in
-        g.edges.data('weight')], reverse=True)
     # TODO: plotting using line graph
 
     # write graph

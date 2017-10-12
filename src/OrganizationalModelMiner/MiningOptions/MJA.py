@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import copy
-import networx as nx
+import networkx as nx
 from collections import defaultdict
 
 def threshold(graph, threshold_value):
+    graph = graph.to_undirected()
     print('Applying Metrics based on Joint Activities:')
     num_edges_old = len(graph.edges)
     # iterate through all edges
@@ -15,8 +16,8 @@ def threshold(graph, threshold_value):
         if wt < threshold_value:
             edges_to_remove.append((u, v))
     graph.remove_edges_from(edges_to_remove)
-    print('{:.2%}% edges have been filtered by threshold
-            {}.'.format(len(edges_to_remove) / num_edges_old), threshold_value) 
+    print('{:.2%}% edges'.format(len(edges_to_remove) / num_edges_old) +
+            ' have been filtered by threshold {}.'.format(threshold_value)) 
     # obtain the connected components as discovered results
     entities = defaultdict(lambda: set())
     entity_id = -1 # consecutive numbers as entity id

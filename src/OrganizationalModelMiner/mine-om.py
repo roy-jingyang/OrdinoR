@@ -4,12 +4,13 @@
 import sys
 import csv
 import networkx as nx
+from collections import defaultdict
 
 f_event_log = sys.argv[1]
 f_social_network = sys.argv[2]
 fout_org_model = sys.argv[3]
 mining_option = sys.argv[4]
-additional_params = sys.argv**
+additional_params = sys.argv
 
 if __name__ == '__main__':
     # read event log as input
@@ -65,51 +66,48 @@ if __name__ == '__main__':
         g = nx.read_gml(f_social_network)
     
     # try mining organizational entities
-    try:
-        if mining_option.split('.')[0] == 'task':
-            if mining_option.split('.')[1] == 'defaultmining':
-                # default mining requires original event log as the only input
-                from MiningOptions import DefaultMining
-                result = DefaultMining.mine(cases)
-            elif mining_option.split('.').[1] == 'mja':
-                from MiningOptions import MJA
-                threshold_value = float(additional_params[5])
-                result = MJA.threshold(g, threshold_value)
-            elif mining_option.split('.')[1] == 'AHC':
-                from MiningOptions import AHC
-                k_clusters = int(additional_params[5])
-                result = AHC.cluster(g, k_clusters)
-            else:
-                exit(1)
-        elif mining_option.split('.')[0] == 'case':
-            from MiningOptions import MJC
-            if mining_option.split('.')[1] == 'mjc_threshold':
-                threshold_value = float(additional_params[5])
-                result = MJC.threshold(g, threshold_value)
-            else mining_option.split('.')[1] == 'mjc_remove':
-                min_centrality = float(additional_params[5])
-                if mining_option.split('.')[2] == 'degree':
-                    result = MJC.remove_by_degree(g, min_centrality)
-                elif mining_option.split('.')[2] == 'betweenness':
-                    result = MJC.remove_by_betweenness(g, min_centrality)
-                else:
-                    exit(1)
+    if mining_option.split('.')[0] == 'task':
+        if mining_option.split('.')[1] == 'defaultmining':
+            # default mining requires original event log as the only input
+            from MiningOptions import DefaultMining
+            result = DefaultMining.mine(cases)
+        elif mining_option.split('.')[1] == 'mja':
+            from MiningOptions import MJA
+            threshold_value = float(additional_params[5])
+            result = MJA.threshold(g, threshold_value)
+        elif mining_option.split('.')[1] == 'AHC':
+            from MiningOptions import AHC
+            k_clusters = int(additional_params[5])
+            result = AHC.cluster(g, k_clusters)
+        else:
+            exit(1)
+    elif mining_option.split('.')[0] == 'case':
+        from MiningOptions import MJC
+        if mining_option.split('.')[1] == 'mjc_threshold':
+            threshold_value = float(additional_params[5])
+            result = MJC.threshold(g, threshold_value)
+        elif mining_option.split('.')[1] == 'mjc_remove':
+            min_centrality = float(additional_params[5])
+            if mining_option.split('.')[2] == 'degree':
+                result = MJC.remove_by_degree(g, min_centrality)
+            elif mining_option.split('.')[2] == 'betweenness':
+                result = MJC.remove_by_betweenness(g, min_centrality)
             else:
                 exit(1)
         else:
             exit(1)
-    except Exception as e:
-        print(e)
+    else:
+        exit(1)
 
     # try associating mined entities with tasks (entity assignment)
     assignments = defaultdict(lambda: set())
     for case_id, trace in cases.items():
         for i in range(len(trace)):
             resource = trace[i][2]
-            activity = trace[i][3]
+            activity = trace[i][1]
             for entity_id, entity in result.items():
                 if resource in entity:
-                    assignment[entity_id].add(activity)
+                    assignments[entity_id].add(activity)
                 else:
                     pass
 
@@ -120,6 +118,6 @@ if __name__ == '__main__':
         for entity_id in result.keys():
             writer.writerow([
                 entity_id,
-                ';'.join(t for t in assignment[entity_id]),
+                ';'.join(t for t in assignments[entity_id]),
                 ';'.join(r for r in result[entity_id])])
 

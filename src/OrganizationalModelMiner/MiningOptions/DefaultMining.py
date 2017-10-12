@@ -13,7 +13,7 @@ def mine(cases):
         cnt += 1
         for i in range(len(trace)):
             resource = trace[i][2]
-            activity = trace[i][3]
+            activity = trace[i][1]
             entities[activity].add(resource)
     print('# of cases processed: {}'.format(cnt))
     print('{} organizational entities extracted.'.format(len(entities)))
