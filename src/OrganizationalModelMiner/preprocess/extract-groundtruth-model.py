@@ -56,6 +56,19 @@ if __name__ == '__main__':
                 org_group = row[13]
                 model[org_group].add(resource)
     
+    # check overlapping
+    size = 0
+    resources = set()
+    for entity_id in model.keys():
+        print('#resource in {}:\t{}'.format(entity_id, len(model[entity_id])))
+        for r in model[entity_id]:
+            resources.add(r)
+        size += len(model[entity_id])
+    print('Total# of resources:\t{}'.format(len(resources)))
+    print('Sum of sizes:\t{}'.format(size))
+    print('Overlapping:\t', end='')
+    print(len(resources) != size)
+
     # output to file
     with open(fout_org_model, 'w') as fout:
         writer = csv.writer(fout)

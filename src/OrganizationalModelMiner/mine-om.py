@@ -72,18 +72,22 @@ if __name__ == '__main__':
             from MiningOptions import DefaultMining
             result = DefaultMining.mine(cases)
         elif mining_option.split('.')[1] == 'mja':
-            from MiningOptions import MJA
+            from MiningOptions.hard_clustering import MJA
             threshold_value = float(additional_params[5])
             result = MJA.threshold(g, threshold_value)
         elif mining_option.split('.')[1] == 'AHC':
-            from MiningOptions import AHC
+            from MiningOptions.hierarchical import AHC
             k_clusters = int(additional_params[5])
-            #result = AHC.cluster(g, k_clusters)
             result = AHC.single_linkage(g, k_clusters)
+        elif mining_option.split('.')[1] == 'GMM':
+            from MiningOptions.soft_clustering import GMM
+            k_clusters = int(additional_params[5])
+            threshold_value = float(additional_params[6])
+            result = GMM.mine(cases, k_clusters, threshold_value)
         else:
             exit(1)
     elif mining_option.split('.')[0] == 'case':
-        from MiningOptions import MJC
+        from MiningOptions.hard_clustering import MJC
         if mining_option.split('.')[1] == 'mjc_threshold':
             threshold_value = float(additional_params[5])
             result = MJC.threshold(g, threshold_value)
