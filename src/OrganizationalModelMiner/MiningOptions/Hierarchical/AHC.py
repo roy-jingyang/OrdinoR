@@ -63,6 +63,7 @@ def cluster(graph, k_clusters):
         print('{} organizational entities extracted.'.format(len(entities)))
         return copy.deepcopy(entities)
 
+#TODO
 def single_linkage(graph, k_clusters):
     print('Applying Hierarchical Clustering - single linkage (Nearest Point):')
     graph = graph.to_undirected()
@@ -97,28 +98,34 @@ def single_linkage(graph, k_clusters):
         print('{} organizational entities extracted.'.format(len(entities)))
         return copy.deepcopy(entities)
 
+#TODO
 def complete_linkage(graph, k_clusters):
     print('Applying Hierarchical Clustering - complete linkage (Farthest Point):')
     pass
 
+#TODO
 def average_linkage(graph, k_clusters):
     print('Applying Hierarchical Clustering - average linkage (UPGMA):')
     pass
 
+#TODO
 def weighted_linkage(graph, k_clusters):
     print('Applying Hierarchical Clustering - weighted linkage (WPGMA):')
     pass
 
+#TODO
 # EuclideanDistance only
 def centroid_linkage(graph, k_clusters):
     print('Applying Hierarchical Clustering - centroid linkage (UPGMC):')
     pass
 
+#TODO
 # EuclideanDistance only
 def median_linkage(graph, k_clusters):
     print('Applying Hierarchical Clustering - median linkage (WPGMC):')
     pass
 
+#TODO
 # EuclideanDistance only
 def ward_linkage(graph, k_clusters):
     print('Applying Hierarchical Clustering - Ward linkage (incremental):')

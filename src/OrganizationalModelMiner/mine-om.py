@@ -7,14 +7,14 @@ import networkx as nx
 from collections import defaultdict
 
 f_event_log = sys.argv[1]
-f_social_network = sys.argv[2]
-fout_org_model = sys.argv[3]
-mining_option = sys.argv[4]
-additional_params = sys.argv
+fout_org_model = sys.argv[2]
+mining_option = sys.argv[3]
+additional_params = sys.argv[4:] if len(sys.argv) > 4 else None
 
 if __name__ == '__main__':
     # read event log as input
     cases = defaultdict(lambda: list())
+    resources = set()
     with open(f_event_log, 'r', encoding='windows-1252') as f:
         is_header_line = True
         ln = 0
@@ -54,16 +54,12 @@ if __name__ == '__main__':
                 resource = row[2]
                 activity = row[1]
                 cases[caseid].append((caseid, activity, resource, ctimestamp))
+                resources.add(resource)
 
     print('Log file loaded successfully. # of cases read: {}'.format(len(cases.keys())))
     print('Average # of activities within each case: {}'.format(sum(
     len(x) for k, x in cases.items()) / len(cases.keys())))
 
-    # read social network (if provided) as input
-    if f_social_network == 'none':
-        g = None
-    else:
-        g = nx.read_gml(f_social_network)
     
     # try mining organizational entities
     if mining_option.split('.')[0] == 'task':
@@ -72,37 +68,44 @@ if __name__ == '__main__':
             from MiningOptions import DefaultMining
             result = DefaultMining.mine(cases)
         elif mining_option.split('.')[1] == 'mja':
-            from MiningOptions.hard_clustering import MJA
-            threshold_value = float(additional_params[5])
-            result = MJA.threshold(g, threshold_value)
-        elif mining_option.split('.')[1] == 'AHC':
-            from MiningOptions.hierarchical import AHC
-            k_clusters = int(additional_params[5])
-            result = AHC.single_linkage(g, k_clusters)
-        elif mining_option.split('.')[1] == 'GMM':
-            from MiningOptions.soft_clustering import GMM
-            k_clusters = int(additional_params[5])
-            threshold_value = float(additional_params[6])
-            result = GMM.mine(cases, k_clusters, threshold_value)
+            threshold_value_step = float(additional_params[0])
+            from MiningOptions.HardClustering import MJA
+            result = MJA.threshold(cases, threshold_value_step)
+        elif mining_option.split('.')[1] == 'ahc':
+            raise Exception('Hierarchical mining under construction!')
+            #TODO
+            '''
+            k_cluster_step = 1
+            from MiningOptions.Hierarchical import AHC
+            result = AHC.single_linkage(cases, k_cluster_step)
+            '''
+        elif mining_option.split('.')[1] == 'gmm':
+            threshold_value = float(additional_params[0]) # TODO
+            k_cluster_step = 1
+            from MiningOptions.SoftClustering import GMM
+            result = GMM.mine(cases, threshold_value, k_cluster_step)
         else:
-            exit(1)
+            raise Exception('Option for task-based mining invalid.')
     elif mining_option.split('.')[0] == 'case':
-        from MiningOptions.hard_clustering import MJC
+        raise Exception('Case-based mining under construction!')
+        '''
+        from MiningOptions.HardClustering import MJC
         if mining_option.split('.')[1] == 'mjc_threshold':
-            threshold_value = float(additional_params[5])
-            result = MJC.threshold(g, threshold_value)
+            threshold_value = float(additional_params[0])
+            result = MJC.threshold(cases, threshold_value)
         elif mining_option.split('.')[1] == 'mjc_remove':
-            min_centrality = float(additional_params[5])
+            min_centrality = float(additional_params[0])
             if mining_option.split('.')[2] == 'degree':
-                result = MJC.remove_by_degree(g, min_centrality)
+                result = MJC.remove_by_degree(cases, min_centrality)
             elif mining_option.split('.')[2] == 'betweenness':
-                result = MJC.remove_by_betweenness(g, min_centrality)
+                result = MJC.remove_by_betweenness(cases, min_centrality)
             else:
-                exit(1)
+                raise Exception('Option for case-based mining invalid.')
         else:
-            exit(1)
+            raise Exception('Option for case-based mining invalid.')
+        '''
     else:
-        exit(1)
+        raise Exception('Failed to recognize input parameter!')
 
     # try associating mined entities with tasks (entity assignment)
     assignments = defaultdict(lambda: set())

@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.mixture import GaussianMixture
 import copy
 
-def mine(cases, k_clusters, threshold):
+def mine(cases, threshold, k_cluster_step):
     print('Applying Gaussian Mixture Model:')
     # Again, constructing the performer-activity matrix from event logs
     counting_mat = defaultdict(lambda: defaultdict(lambda: 0))
@@ -48,14 +48,21 @@ def mine(cases, k_clusters, threshold):
         # shape: (n_samples, k_clusters)
         labels = np.array([np.nonzero(row)[0] for row in determined])
 
-    entities = defaultdict(lambda: set())
+    clusters = defaultdict(lambda: set())
     for i in range(len(resource_index)):
         resource = resource_index[i]
         if len(np.shape(labels[i])) == 0: # shape: (n_samples,)
-            entities[labels[i]].add(resource)
+            clusters[labels[i]].add((resource, profile_mat[i]))
         else: # shape: (n_samples, k_clusters)
             for l in labels[i]:
-                entities[l].add(resource)
+                clusters[l].add((resource, profile_mat[i]))
+
+    # evaluation goes here
+
+    entities = defaultdict(lambda: set())
+    for cluster_id, resources in clusters.items():
+        for resource_description in resources:
+            entities[cluster_id].add(resource_description[0])
 
     print('{} organizational entities extracted.'.format(len(entities)))
     return copy.deepcopy(entities)
