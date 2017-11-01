@@ -5,14 +5,13 @@ import copy
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial.distance import pdist, squareform
-from scipy.interpolate import spline
+from scipy.spatial.distance import pdist, squareform, cdist
 from collections import defaultdict
-from sklearn.metrics import silhouette_score
+from EvaluationOptions import Unsupervised
 
-#TODO
 def threshold(cases, threshold_value_step):
     print('Applying Metrics based on Joint Activities:')
+
     # constructing the performer-activity matrix from event logs
     counting_mat = defaultdict(lambda: defaultdict(lambda: 0))
     activity_index = list()
@@ -35,9 +34,12 @@ def threshold(cases, threshold_value_step):
             j = activity_index.index(act)
             profile_mat[i][j] = count
 
-    # build resource social network G (with scaling) with same indexing
+    # logrithm preprocessing (van der Aalst, 2005)
+    profile_mat = np.log(profile_mat + 1)
+
+    # build resource social network G (with linear tf.) with same indexing
     G = squareform(pdist(profile_mat, metric='euclidean'))
-    G = (G - G.min()) / (G.max() - G.min())
+    G = 1 - ((G - G.min()) / (G.max() - G.min()))
     G = nx.from_numpy_matrix(G)
     num_edges_old = len(G.edges)
 
@@ -46,7 +48,10 @@ def threshold(cases, threshold_value_step):
     threshold_value_MAX = 1.0
     threshold_value = threshold_value_MIN
     search_range = list()
-    scoring_results = defaultdict(lambda: list())
+    scoring_results = list()
+
+    print('Grid search applied, searching range [{}, {}] with step {}'.format(
+        threshold_value_MIN, threshold_value_MAX, threshold_value_step))
 
     while threshold_value <= threshold_value_MAX:
         # perform graph cutting for clustering:
@@ -72,46 +77,54 @@ def threshold(cases, threshold_value_step):
         labels = labels.ravel()
 
         # evaluation (unsupervised) goes here
-        score = np.nan if len(np.unique(labels)) < 2 else silhouette_score(
-                profile_mat, labels.ravel(), metric='euclidean')
-        scoring_results['silhouette_score'].append(
-                (threshold_value, score, labels))
+        # only account for valid solution
+        if len(np.unique(labels)) > 1:
+            # calculating within-cluster variance
+            total_within_cluster_var = Unsupervised.within_cluster_variance(
+                    profile_mat, labels, is_overlapped=False)
 
-        search_range.append(threshold_value)
+            search_range.append(len(np.unique(labels)))
+            #TODO: remove silhouette score
+            scoring_results.append((
+                threshold_value,
+                (total_within_cluster_var),
+                labels))
+                #Unsupervised.silhouette_score_raw(profile_mat, labels)))
+        else:
+            pass
         threshold_value += threshold_value_step
 
 
+    print('Warning: ONLY VALID solutions are accounted.')
+
     # visualizing the results
 
+    #f, axarr = plt.subplots(1, sharex=True)
     plt.figure(0)
-    plt.title('threshold value of MJA -- Score')
-    plt.xlabel('threshold value')
-    plt.ylabel('Score')
-    y = np.array([sr[1] for sr in scoring_results['silhouette_score']])
-    # filter out the invalid (nan) scores
-    index = ~np.isnan(y)
-    y = y[index]
-    x = np.array(search_range)[index]
-    # smoothing the line
-    x_new = np.linspace(min(x), max(x), 1000 * len(x))
-    y_smooth = spline(x, y, x_new)
-    plt.plot(x_new, y_smooth)
+    plt.xlabel('#clusters')
+    plt.ylabel('Score - within cluster variance var(#clusters)')
+    x = np.array(search_range)
+    y = np.array([sr[1] for sr in scoring_results])
     # highlight the original data points
-    plt.plot(x, y, 'ro')
+    plt.plot(x, y, 'b*-')
     for i in range(len(x)):
-        plt.annotate(str(x[i]), xy=(x[i], y[i]))
+        plt.annotate('[{}]'.format(i), xy=(x[i], y[i]))
     plt.show()
 
     # select a solution as output
-    print('Select the result under the desired settings:')
-    threshold_value = float(input())
+    print('Select the result (by solution_id) under the desired settings:')
+    solution_id = int(input())
+    solution = scoring_results[solution_id]
+    print('Solution [{}] selected:'.format(solution_id))
+    print('threshold = {}, '.format(solution[0]))
+    print('score: var(k) = {}'.format(solution[1]))
+    #TODO
+    #print('Silhouette score = {}'.format(solution[3]))
 
     entities = defaultdict(lambda: set())
-    for result in scoring_results['silhouette_score']: 
-        if threshold_value == result[0]:
-            for i in range(len(result[2])):
-                entity_id = int(result[2][i])
-                entities[entity_id].add(resource_index[i])
+    for i in range(len(solution[2])):
+        entity_id = int(solution[2][i])
+        entities[entity_id].add(resource_index[i])
 
     print('{} organizational entities extracted.'.format(len(entities)))
     return copy.deepcopy(entities)

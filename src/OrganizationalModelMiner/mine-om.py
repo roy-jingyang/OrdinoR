@@ -80,10 +80,9 @@ if __name__ == '__main__':
             result = AHC.single_linkage(cases, k_cluster_step)
             '''
         elif mining_option.split('.')[1] == 'gmm':
-            threshold_value = float(additional_params[0]) # TODO
-            k_cluster_step = 1
+            threshold_value = float(additional_params[0])
             from MiningOptions.SoftClustering import GMM
-            result = GMM.mine(cases, threshold_value, k_cluster_step)
+            result = GMM.mine(cases, threshold_value)
         else:
             raise Exception('Option for task-based mining invalid.')
     elif mining_option.split('.')[0] == 'case':

@@ -17,6 +17,7 @@ with open(f_event_log, 'r') as f, open(fout_event_log, 'w') as fout:
             is_header_line = False
         else:
             case_id = row[0]
+            '''
             case_group = row[8]
             if case_group == '':
                 case_to_filter.add(case_id)
@@ -28,7 +29,6 @@ with open(f_event_log, 'r') as f, open(fout_event_log, 'w') as fout:
                 case_to_filter.add(case_id)
             else:
                 pass
-            '''
 
     print(len(case_to_filter))
 
@@ -36,6 +36,7 @@ with open(f_event_log, 'r') as f, open(fout_event_log, 'w') as fout:
     is_header_line = True
     for row in csv.reader(f):
         if is_header_line:
+            writer.writerow(row)
             is_header_line = False
         else:
             case_id = row[0]
