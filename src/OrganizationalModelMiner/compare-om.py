@@ -55,42 +55,24 @@ if __name__ == '__main__':
             f_org_model_reference, len(ref_model)))
         print('\n')
 
-        from EvaluationOptions.Supervised import \
-                entropy_measure, conditional_entropy_measure, purity_measure, \
-                similarity_matrix_metrics
+        from EvaluationOptions.Supervised import report_set_matching
+        from EvaluationOptions.Supervised import report_counting_pairs
+        from EvaluationOptions.Supervised import report_entropy_based
+        from EvaluationOptions.Supervised import report_BCubed_metrics
 
         if opt_measure == 'all':
-            print('Supervised evaluation:')
-            print('\tClassification-oriented:', end='\n\t\t')
-            value, string = entropy_measure(model_resource, model, ref_model)
-            print(string.format(value), end='\n\t\t')
-            value_h, value_c, value_v, string = conditional_entropy_measure(
-                    model_resource, model, ref_model)
-            print(string.format(value_h, value_c, value_v), end='\n\t\t')
-            value, string = purity_measure(model_resource, model, ref_model)
-            print(string.format(value))
-            print('\tSimilarity-oriented:', end='\n\t\t')
-            value_corr, value_p, value_Rand, value_ARI, value_ji, string = \
-                    similarity_matrix_metrics(model_resource, model, ref_model)
-            print(string.format(
-                value_corr, value_p,
-                value_Rand, value_ARI, value_ji))
-        elif opt_measure == 'entropy':
-            value, string = entropy_measure(model_resource, model, ref_model)
-            print(string.format(value))
-        elif opt_measure == 'cond_entropy':
-            value_h, value_c, value_v, string = conditional_entropy_measure(
-                    model_resource, model, ref_model)
-            print(string.format(value_h, value_c, value_v))
-        elif opt_measure == 'purity':
-            value, string = purity_measure(model_resource, model, ref_model)
-            print(string.format(value))
-        elif opt_measure == 'similarity':
-            value_corr, value_p, value_Rand, value_ARI, value_ji, string = \
-                    similarity_matrix_metrics(model_resource, model, ref_model)
-            print(string.format(
-                value_corr, value_p,
-                value_Rand, value_ARI, value_ji))
+            report_set_matching(model_resource, model, ref_model)
+            report_counting_pairs(model_resource, model, ref_model)
+            report_entropy_based(model_resource, model, ref_model)
+            report_BCubed_metrics(model_resource, model, ref_model)
+        elif opt_measure == 'set_matching':
+            report_set_matching(model_resource, model, ref_model)
+        elif opt_measure == 'counting_pairs':
+            report_counting_pairs(model_resource, model, ref_model)
+        elif opt_measure == 'entropy_based':
+            report_entropy_based(model_resource, model, ref_model)
+        elif opt_measure == 'BCubed':
+            report_BCubed_metrics(model_resource, model, ref_model)
         else:
             pass
         print('\n')

@@ -9,4 +9,5 @@ output/
 
 # Ignore Vim undo log
 *.un~
+*.swp
 

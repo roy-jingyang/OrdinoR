@@ -38,12 +38,18 @@ def threshold(cases, threshold_value_step):
     profile_mat = np.log(profile_mat + 1)
 
     # build resource social network G (with linear tf.) with same indexing
-    G = squareform(pdist(profile_mat, metric='euclidean'))
-    G = 1 - ((G - G.min()) / (G.max() - G.min()))
+    # TODO: Euclidean Distance / PCC Dist ('Correlation distance')
+    # Distance -> Similarity
+    #G = squareform(pdist(profile_mat, metric='euclidean'))
+    #G = 1 - ((G - G.min()) / (G.max() - G.min())) # 1 - MinMaxScaled
+    # Distance -> Correlation
+    G = squareform(pdist(profile_mat, metric='correlation'))
+    G = 1 - G
+
     G = nx.from_numpy_matrix(G)
     num_edges_old = len(G.edges)
 
-    # search settings
+    # search settings: threshold for cutting
     threshold_value_MIN = 0.0
     threshold_value_MAX = 1.0
     threshold_value = threshold_value_MIN
@@ -88,8 +94,8 @@ def threshold(cases, threshold_value_step):
             scoring_results.append((
                 threshold_value,
                 (total_within_cluster_var),
-                labels))
-                #Unsupervised.silhouette_score_raw(profile_mat, labels)))
+                #labels))
+                labels, Unsupervised.silhouette_score(profile_mat, labels)))
         else:
             pass
         threshold_value += threshold_value_step
@@ -117,9 +123,9 @@ def threshold(cases, threshold_value_step):
     solution = scoring_results[solution_id]
     print('Solution [{}] selected:'.format(solution_id))
     print('threshold = {}, '.format(solution[0]))
-    print('score: var(k) = {}'.format(solution[1]))
-    #TODO
-    #print('Silhouette score = {}'.format(solution[3]))
+    print('score: var(k) = {:.3f}'.format(solution[1]))
+    #TODO: remove silhouette score
+    print('Silhouette score = {:.3f}'.format(solution[3]))
 
     entities = defaultdict(lambda: set())
     for i in range(len(solution[2])):

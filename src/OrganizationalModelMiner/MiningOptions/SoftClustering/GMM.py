@@ -9,13 +9,15 @@ from sklearn.mixture import GaussianMixture
 from scipy.spatial.distance import cdist
 from EvaluationOptions import Unsupervised
 
-def mine(cases, threshold):
+def mine(cases):
     print('Applying Gaussian Mixture Model:')
+    '''
     if threshold < 0 or threshold >= 1:
         print('Threshold for converting to determined clustering must value' +\
                 ' between [0, 1) !')
         print('Warning: Disjoint clustering option unavailable!')
         exit(1)
+    '''
 
     # constructing the performer-activity matrix from event logs
     counting_mat = defaultdict(lambda: defaultdict(lambda: 0))
@@ -42,109 +44,153 @@ def mine(cases, threshold):
     # logrithm preprocessing (van der Aalst, 2005)
     profile_mat = np.log(profile_mat + 1)
 
-    # search settings: k_cluster
-    k_cluster_MIN = 1
-    k_cluster_MAX = len(resource_index)
-    k_cluster_step = 1
-    k_cluster = k_cluster_MIN
-    search_range = list()
-    scoring_results = list()
-    # search settings: threshold_value
-
     # Use GMM for probabilistic cluster assignments
-    while k_cluster <= k_cluster_MAX:
-        gmm = GaussianMixture(
-            n_components=k_cluster,
-            init_params='random').fit(profile_mat)
+    # Searching for an appropriate model among settings of:
+    # n_components, covariance_type; init_params (manually adjust)
+    # Note: Fit only, not ready for predicting yet
+    # search settings (1): k_cluster
+    k_cluster_MIN = 2
+    k_cluster_MAX = len(resource_index) - 1
+    #k_cluster_MAX = 27
+    k_cluster_step = 1
+    # search settings (2): covariance_type (default: full)
+    #cv_types = ['spherical', 'tied', 'diag', 'full']
+    cv_types = ['spherical']
 
-        if threshold == 1:
-            print('Warning: Disjoint clustering option unavailable!')
-            exit()
-            # shape: (n_samples,)
-            #labels = gmm.predict(profile_mat) 
-        else:
-            #TODO
-            resp = gmm.predict_proba(profile_mat)
-            determined = resp >= threshold
-            # shape: (n_samples,)
-            labels = list()
-            for row in determined:
-                labels.append(tuple(l for l in np.nonzero(row)[0]))
-            labels = np.array(labels).ravel()
+    gmm_models = list()
+    gmm_models_flattened = list()
+    for cv_type in cv_types: # search 1
+        k_cluster = k_cluster_MIN
+        models_by_cv_type = list()
+        while k_cluster <= k_cluster_MAX: # search 2
+            gmm = GaussianMixture(
+                    n_components=k_cluster,
+                    n_init=20,
+                    covariance_type=cv_type,
+                    #init_params='random').fit(profile_mat)
+                    init_params='kmeans').fit(profile_mat)
+            bic_score = gmm.bic(profile_mat)
+            models_by_cv_type.append((gmm, bic_score))
+            gmm_models_flattened.append((gmm, bic_score))
+            k_cluster += k_cluster_step
+        gmm_models.append(models_by_cv_type)
 
-        # evaluation (unsupervised) goes here
-        # only account for valid solution
-        is_overlapped = labels.dtype != np.int64
-        if is_overlapped or len(np.unique(labels)) > 1:
-            total_within_cluster_var = Unsupervised.within_cluster_variance(
-                    profile_mat, labels, is_overlapped)
-            search_range.append(k_cluster)
-            scoring_results.append((
-                k_cluster,
-                (gmm.score(profile_mat),
-                    total_within_cluster_var,
-                    gmm.bic(profile_mat)),
-                labels,
-                is_overlapped))
-
-        k_cluster += k_cluster_step
-
-    print('Warning: ONLY VALID solutions are accounted.')
-
-    # visualizing the results
-
-    #plt.figure(0)
-    f, axarr = plt.subplots(3, sharex=True)
+    # Visualizing the results (1): Select an appropriate model (cv_type)
+    #f, axarr = plt.subplots(2, sharex=True)
+    plt.figure(0)
+    #color_types = ['blue', 'green', 'red', 'orange']
+    color_types = ['blue']
     plt.xlabel('#clusters')
-    #plt.ylabel('Score - likelihood')
-    axarr[0].set_ylabel('Score - likelihood')
-    axarr[1].set_ylabel('Score - within cluster variance var(#clusters)')
-    axarr[2].set_ylabel('Score - BIC')
-    x = np.array(search_range)
-    #y = np.array([sr[1] for sr in scoring_results])
-    y0 = np.array([sr[1][0] for sr in scoring_results])
-    y1 = np.array([sr[1][1] for sr in scoring_results])
-    y1 = np.array([sr[1][2] for sr in scoring_results])
-    # highlight the original data points
-    #plt.plot(x, y, 'b*-')
-    axarr[0].plot(x, y0, 'b*-')
-    axarr[1].plot(x, y1, 'b*-')
-    axarr[2].plot(x, y1, 'b*-')
-    for i in range(len(x)):
-        #plt.annotate('[{}]'.format(i), xy=(x[i], y[i]))
-        axarr[0].annotate('[{}]'.format(i), xy=(x[i], y0[i]))
-        axarr[1].annotate('[{}]'.format(i), xy=(x[i], y1[i]))
-        axarr[2].annotate('[{}]'.format(i), xy=(x[i], y1[i]))
-        if scoring_results[i][3] == True: # is overlapped
-            #plt.plot(x[i], y[i], marker='o', markeredgecolor='r')
-            axarr[0].plot(x[i], y0[i], marker='o', markeredgecolor='r')
-            axarr[1].plot(x[i], y1[i], marker='o', markeredgecolor='r')
-            axarr[2].plot(x[i], y1[i], marker='o', markeredgecolor='r')
+    x = np.arange(k_cluster_MIN, k_cluster_MAX + k_cluster_step) # #clusters
+    plt.xticks(x)
+
+    # bar chart for BIC score
+    plt.ylabel('Score - BIC')
+    y = list()
+    for i, (cv_type, color_type) in enumerate(zip(cv_types, color_types)):
+        xpos = x + 0.2 * (i - 2)
+        y.append(plt.bar(
+            xpos, np.array([m[1] for m in gmm_models[i]]),
+            width=0.2, color=color_type))
+        lowest = np.min([m[1] for m in gmm_models[i]])
+        average = np.mean([m[1] for m in gmm_models[i]])
+        argmin = np.argmin([m[1] for m in gmm_models[i]])
+        plt.plot(x[argmin], 0,
+                color=color_type, marker='x', markersize=15, markeredgewidth=2)
+        print('{}: Suggested #cluster = {} with BIC = {}; Avg. = {}'.format(
+            cv_type, x[argmin], lowest, average))
+    plt.legend([b[0] for b in y], cv_types)
+    #plt.show()
+    
+    print('Top-5 models with lower BIC suggested:')
+    gmm_models_flattened.sort(key=lambda m: m[1])
+    for i in range(5):
+        print('\tcv_type = {}, #cluster = {}, BIC = {}'.format(
+            gmm_models_flattened[i][0].covariance_type,
+            gmm_models_flattened[i][0].n_components,
+            gmm_models_flattened[i][1]))
+
+    # select a covariance type
+    print('Select an appropriate model: covariance_type')
+    choice_cv_type = str(input())
+
+    # Visualizing the results (2): Select an appropriate model (#clusters)
+    plt.figure(1)
+    plt.xlabel('#clusters')
+    x = np.arange(k_cluster_MIN, k_cluster_MAX + k_cluster_step) # #clusters
+    plt.xticks(x)
+
+    # line chart for likelihood score (goal of maximization)
+    plt.ylabel('Score - likelihood')
+    i = cv_types.index(choice_cv_type)
+    plt.plot(x, np.array([m[0].score(profile_mat) for m in gmm_models[i]]),
+        color=color_types[i], linestyle='dashed', marker='*',
+        label=choice_cv_type)
+    plt.legend()
     plt.show()
 
-    # select a solution as output
-    print('Select the result (by solution_id) under the desired settings:')
-    solution_id = int(input())
-    solution = scoring_results[solution_id]
-    print('Solution [{}] selected:'.format(solution_id))
-    print('#clusters = {}, '.format(solution[0]))
-    #print('score: likelihood = {}'.format(solution[1]))
-    print('score: likelihood = {}, var(k) = {}, BIC = {}'.format(
-        solution[1][0], solution[1][1], solution[1][2]))
+    # select #clusters
+    print('Select an appropriate model: #components')
+    choice_k_cluster = int(input())
+    i = list(range(k_cluster_MIN, k_cluster_MAX + k_cluster_step,
+        k_cluster_step)).index(choice_k_cluster)
+    choice_gmm = gmm_models[cv_types.index(choice_cv_type)][i][0]
+    print(choice_gmm.n_components)
 
-    entities = defaultdict(lambda: set())
-    for i in range(len(solution[2])):
-        if solution[3] == True: # overlapped
-            for l in solution[2][i]:
-                entity_id = l
-                entities[l].add(resource_index[i])
-        else:
-            # only 1 cluster assigned for each
-            entity_id = int(solution[2][i])
-            entities[entity_id].add(resource_index[i])
+    # search settings (3): cut threshold
+    resp = choice_gmm.predict_proba(profile_mat)
+    # TODO: these lines help select the cut_threshold
+    print('For the current fit: #cluster = {}'.format(choice_k_cluster),
+            end='\n\t')
+    print('------Include 0s------', end='\n\t')
+    print('MIN(Pr) = {}'.format(np.min(resp)), end=', ')
+    print('MAX(Pr) = {}'.format(np.max(resp)), end=', ')
+    print('Mean(Pr) = {}'.format(np.mean(resp)), end=', ')
+    print('Median(Pr) = {}'.format(np.median(resp)))
+    print('\n\t------Exclude 0s------', end='\n\t')
+    print('{} of non-0s'.format(np.count_nonzero(resp)), end='\n\t')
+    print('MIN(Pr) = {}'.format(np.min(resp[resp > 0])), end=', ')
+    print('MAX(Pr) = {}'.format(np.max(resp[resp > 0])), end=', ')
+    print('Mean(Pr) = {}'.format(np.mean(resp[resp > 0])), end=', ')
+    print('Median(Pr) = {}'.format(np.median(resp[resp > 0])))
 
-    print('Clustering results are ' + \
-            ('overlapped.' if solution[3] == True else 'disjoint.'))
-    print('{} organizational entities extracted.'.format(len(entities)))
-    return copy.deepcopy(entities)
+    # Visualizing the results (3): Select a threshold lambda for cutting
+    # TODO: choice of threshold
+    threshold = 0
+    determined = resp > threshold
+    # shape: (n_samples,)
+    labels = list()
+    for row in determined:
+        labels.append(tuple(l for l in np.nonzero(row)[0]))
+    labels = np.array(labels).ravel()
+
+    # evaluation (unsupervised) goes here
+    # only account for valid solution
+    is_overlapped = labels.dtype != np.int64
+    if is_overlapped or len(np.unique(labels)) > 1:
+        print('Warning: ONLY VALID solutions are accounted.')
+        total_within_cluster_var = Unsupervised.within_cluster_variance(
+                profile_mat, labels, is_overlapped)
+        solution = (labels, total_within_cluster_var)
+
+        print('score: var(k) = {:.3f}'.format(solution[1]))
+
+        entities = defaultdict(lambda: set())
+        for i in range(len(solution[0])):
+            if is_overlapped: # overlapped
+                for l in solution[0][i]:
+                    entity_id = l
+                    entities[l].add(resource_index[i])
+            else:
+                # only 1 cluster assigned for each
+                entity_id = int(solution[0][i])
+                entities[entity_id].add(resource_index[i])
+
+        print('Clustering results are ' + \
+                ('overlapped.' if is_overlapped else 'disjoint.'))
+        print('{} organizational entities extracted.'.format(len(entities)))
+        return copy.deepcopy(entities)
+    else:
+        print('Unexpected solution: is_overlapped = {}'.format(is_overlapped))
+        exit()
 

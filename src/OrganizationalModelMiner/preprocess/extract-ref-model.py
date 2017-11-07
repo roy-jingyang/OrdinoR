@@ -49,11 +49,8 @@ if __name__ == '__main__':
                 is_header_line = False
             else:
                 resource = row[2]
-                #case_dept = row[7]
-                #model[case_dept].add(resource)
-                #case_group = row[8]
-                #model[case_group].add(resource)
                 org_group = row[13]
+                # aggregate by 'org_group'
                 model[org_group].add(resource)
     
     # check overlapping
