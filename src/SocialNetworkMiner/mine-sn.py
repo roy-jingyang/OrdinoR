@@ -10,12 +10,37 @@ import networkx as nx
 f_event_log = sys.argv[1]
 fout_social_network = sys.argv[2]
 mining_option = sys.argv[3]
+additional_params = sys.argv[4:] if len(sys.argv) > 4 else None
 
 if __name__ == '__main__':
     cases = defaultdict(lambda: list())
     with open(f_event_log, 'r', encoding='windows-1252') as f:
-        is_header_line = True
+        is_header_line = False
         ln = 0
+        # BPiC 2011
+        for row in csv.reader(f):
+            ln += 1
+            if is_header_line:
+                is_header_line = False
+            else:
+                caseid = row[0]
+                ctimestamp = row[2]
+                resource = row[-1] # only 'org:group' provided
+                activity = row[1]
+                cases[caseid].append((caseid, activity, resource, ctimestamp))
+        '''
+        # BPiC 2012
+        for row in csv.reader(f):
+            ln += 1
+            if is_header_line:
+                is_header_line = False
+            else:
+                caseid = row[0]
+                ctimestamp = row[3]
+                resource = 'EMPTY' if row[2] == '' else row[2]
+                activity = row[1]
+                cases[caseid].append((caseid, activity, resource, ctimestamp))
+        '''
         '''
         # BPiC 2013 Volvo Service Desk: Incident Mngt. Syst.
         for line in f:
@@ -40,7 +65,6 @@ if __name__ == '__main__':
                 resource = row[2]
                 activity = row[1] # Activity code
                 cases[caseid].append((caseid, activity, resource, ctimestamp))
-        '''
         # The 'WABO' event log data
         for row in csv.reader(f):
             ln += 1
@@ -52,6 +76,7 @@ if __name__ == '__main__':
                 resource = row[2]
                 activity = row[1]
                 cases[caseid].append((caseid, activity, resource, ctimestamp))
+        '''
 
     print('Log file loaded successfully. # of cases read: {}'.format(len(cases.keys())))
     print('Average # of activities within each case: {}'.format(sum(
@@ -84,18 +109,31 @@ if __name__ == '__main__':
         from MiningOptions import JointActivities
         if mining_option.split('.')[1] == 'EuclideanDist':
             result = JointActivities.EuclideanDist(cases)
+        elif mining_option.split('.')[1] == 'CorrelationCoefficient':
+            threshold_value = float(additional_params[0])
+            result = JointActivities.CorrelationCoefficient(cases, threshold_value)
         else:
             exit(1)
     else:
         exit(1)
 
-    g = nx.DiGraph()
+    # TODO: directed/undirected, depending on the types of relationships
+    #g = nx.DiGraph()
+    g = nx.Graph()
     for u, conns in result.items():
         for v, value in conns.items():
             # omit self-loops
             if u != v:
-                g.add_edge(u, v, weight=value)
+                g.add_node(u)
+                g.add_node(v)
+                if value is not None:
+                    g.add_edge(u, v, weight=value)
 
+    print('#Nodes = {}'.format(len(g)))
+    print('{} ({:.2%}) edges'.format(
+        len(g.edges), len(g.edges) / (len(g) * (len(g) - 1))))
+    import numpy as np
+    print('<k> = {:.2f}'.format(np.mean([x[1] for x in g.degree()])))
     # TODO: plot the node degree distribution (non-weighted)
     # TODO: plotting using bar graph
     # plot the edge weight distribution

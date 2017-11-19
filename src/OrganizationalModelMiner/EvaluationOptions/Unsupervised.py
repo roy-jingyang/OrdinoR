@@ -47,7 +47,6 @@ def silhouette_score(X, labels, is_overlapped=False):
     else:
         #TODO
         exit()
-        mlb = MultiLabelBinarizer()
 
 def calinski_harabaz_score(X, labels, is_overlapped=False):
     if not is_overlapped:
@@ -55,5 +54,47 @@ def calinski_harabaz_score(X, labels, is_overlapped=False):
     else:
         #TODO
         exit()
-        pass
+
+def extended_modularity(resources, org_model, sn_model):
+    resources = list(resources)
+    N = len(resources)
+
+    labels = defaultdict(lambda: set())
+    mat_cluster = np.eye(N) # diag set to 1
+    for entity_id, entity in org_model.items():
+        # build the labels (for Oi, Oj)
+        for res in entity:
+            labels[res].add(entity_id)
+
+        # build the similarity matrix (for the delta function)
+        # avoid repeatedly counting the simultaneous appearance
+        for i in range(len(entity) - 1):
+            u = resources.index(entity[i])
+            for j in range(i + 1, len(entity)):
+                v = resources.index(entity[j])
+                # symmetric
+                mat_cluster[u][v] = 1
+                mat_cluster[v][u] = 1
+
+    m = len(sn_model.edges)
+    modularity = 0.0
+    for i in range(N - 1):
+        for j in range(i + 1, N): # for any two different items
+            res_i = resources.index(i)
+            res_j = resources.index(j)
+
+            delta = mat_cluster[i][j] # delta(C^i, C^j)
+            Oi = len(labels[res_i])
+            Oj = len(labels[res_j])
+            Aij = sn_model[res_i][res_j]['weight'] \
+                    if sn_model.has_edge(res_i, res_j) else 0
+            deg_i = sn_model.degree(res_i)
+            deg_j = sn_model.degree(res_j)
+
+            modularity += 1 / (Oi * Oj) * (
+                    (Aij - deg_i * deg_j / (2 * m)) * delta)
+
+    modularity *= 1 / (2 * m)
+
+    return modularity
 

@@ -3,7 +3,7 @@
 
 import copy
 from collections import defaultdict
-from numpy import array, linalg
+import numpy as np
 
 # Joint activities
 
@@ -47,10 +47,48 @@ def EuclideanDist(cases):
             profile_i = profile_mat[res_i]
             profile_j = profile_mat[res_j]
 
-            euclidean_dist = linalg.norm(array(profile_i, dtype=float) -
-                    array(profile_j, dtype=float))
+            euclidean_dist = np.linalg.norm(
+                    np.array(profile_i, dtype=np.float64) -
+                    np.array(profile_j, dtype=np.float64))
             mat[res_i][res_j] = euclidean_dist
             mat[res_j][res_i] = euclidean_dist
+
+    return copy.deepcopy(mat)
+
+def CorrelationCoefficient(cases, threshold_top_pct):
+    print('Metric based on Joint Activities: Correlation (PCC)')
+    from scipy.stats import pearsonr
+    profile_mat = _JointActivities_Base(cases)
+    resource_index = list(profile_mat.keys())
+    mat_pcc = np.zeros((len(profile_mat.keys()), len(profile_mat.keys())))
+    for i in range(len(resource_index) - 1):
+        for j in range(i + 1, len(resource_index)):
+            res_i = resource_index[i]
+            res_j = resource_index[j]
+            profile_i = profile_mat[res_i]
+            profile_j = profile_mat[res_j]
+
+            cc = pearsonr(
+                    np.array(profile_i, dtype=np.float64),
+                    np.array(profile_j, dtype=np.float64))
+            mat_pcc[i][j] = cc[0]
+            mat_pcc[j][i] = cc[0]
+
+    threshold = np.percentile(mat_pcc[mat_pcc > 0.0], 
+            (1 - threshold_top_pct) * 100)
+    #mat = defaultdict(lambda: defaultdict(lambda: 0))
+    mat = defaultdict(lambda: defaultdict(lambda: None))
+    for i in range(len(resource_index) - 1):
+        for j in range(i + 1, len(resource_index)):
+            res_i = resource_index[i]
+            res_j = resource_index[j]
+
+            if mat_pcc[i][j] >= threshold:
+                mat[res_i][res_j] = mat_pcc[i][j]
+                mat[res_j][res_i] = mat_pcc[j][i]
+            else:
+                mat[res_i][res_j] = None
+                mat[res_j][res_i] = None
 
     return copy.deepcopy(mat)
 

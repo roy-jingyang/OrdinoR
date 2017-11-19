@@ -65,10 +65,10 @@ def mine(cases):
         while k_cluster <= k_cluster_MAX: # search 2
             gmm = GaussianMixture(
                     n_components=k_cluster,
-                    n_init=20,
+                    n_init=50,
                     covariance_type=cv_type,
-                    #init_params='random').fit(profile_mat)
-                    init_params='kmeans').fit(profile_mat)
+                    init_params='random').fit(profile_mat)
+                    #init_params='kmeans').fit(profile_mat)
             bic_score = gmm.bic(profile_mat)
             models_by_cv_type.append((gmm, bic_score))
             gmm_models_flattened.append((gmm, bic_score))
@@ -112,7 +112,8 @@ def mine(cases):
 
     # select a covariance type
     print('Select an appropriate model: covariance_type')
-    choice_cv_type = str(input())
+    #choice_cv_type = str(input())
+    choice_cv_type = 'spherical'
 
     # Visualizing the results (2): Select an appropriate model (#clusters)
     plt.figure(1)
@@ -123,6 +124,7 @@ def mine(cases):
     # line chart for likelihood score (goal of maximization)
     plt.ylabel('Score - likelihood')
     i = cv_types.index(choice_cv_type)
+    #TODO: try to add in var(k) score instead of likelihood
     plt.plot(x, np.array([m[0].score(profile_mat) for m in gmm_models[i]]),
         color=color_types[i], linestyle='dashed', marker='*',
         label=choice_cv_type)

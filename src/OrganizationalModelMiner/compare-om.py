@@ -61,8 +61,8 @@ if __name__ == '__main__':
         from EvaluationOptions.Supervised import report_BCubed_metrics
 
         if opt_measure == 'all':
-            report_set_matching(model_resource, model, ref_model)
-            report_counting_pairs(model_resource, model, ref_model)
+            #report_set_matching(model_resource, model, ref_model)
+            #report_counting_pairs(model_resource, model, ref_model)
             report_entropy_based(model_resource, model, ref_model)
             report_BCubed_metrics(model_resource, model, ref_model)
         elif opt_measure == 'set_matching':

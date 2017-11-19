@@ -34,7 +34,7 @@ def threshold(cases, threshold_value_step):
             j = activity_index.index(act)
             profile_mat[i][j] = count
 
-    # logrithm preprocessing (van der Aalst, 2005)
+    # TODO: logrithm preprocessing (van der Aalst, 2005)
     profile_mat = np.log(profile_mat + 1)
 
     # build resource social network G (with linear tf.) with same indexing

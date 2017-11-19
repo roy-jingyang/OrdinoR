@@ -14,6 +14,7 @@ if __name__ == '__main__':
     # assign according to 'org:group' field
 
     model = defaultdict(lambda: set())
+    performer_task = defaultdict(lambda: set())
     with open(f_event_log, 'r', encoding='windows-1252') as f:
         is_header_line = True
         ln = 0
@@ -48,10 +49,12 @@ if __name__ == '__main__':
             if is_header_line:
                 is_header_line = False
             else:
+                activity = row[1]
                 resource = row[2]
                 org_group = row[13]
                 # aggregate by 'org_group'
                 model[org_group].add(resource)
+                performer_task[resource].add(activity)
     
     # check overlapping
     size = 0
@@ -71,8 +74,12 @@ if __name__ == '__main__':
         writer = csv.writer(fout)
         writer.writerow(['entity_id', 'tasks', 'resources'])
         for entity_id in model.keys():
+            entity_assignment = set()
+            for r in model[entity_id]:
+                for a in performer_task[r]:
+                    entity_assignment.add(a)
             writer.writerow([
                 'NULL' if entity_id == '' else entity_id,
-                'N/A',
+                ';'.join(a for a in entity_assignment),
                 ';'.join(r for r in model[entity_id])])
 

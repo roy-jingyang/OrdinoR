@@ -14,11 +14,32 @@ additional_params = sys.argv[4:] if len(sys.argv) > 4 else None
 if __name__ == '__main__':
     # read event log as input
     cases = defaultdict(lambda: list())
-    resources = set()
     with open(f_event_log, 'r', encoding='windows-1252') as f:
         is_header_line = True
         ln = 0
+        # BPiC 2011
+        for row in csv.reader(f):
+            ln += 1
+            if is_header_line:
+                is_header_line = False
+            else:
+                caseid = row[0]
+                ctimestamp = row[2]
+                resource = row[-1] # only 'org:group' provided
+                activity = row[1]
+                cases[caseid].append((caseid, activity, resource, ctimestamp))
         '''
+        # BPiC 2012
+        for row in csv.reader(f):
+            ln += 1
+            if is_header_line:
+                is_header_line = False
+            else:
+                caseid = row[0]
+                ctimestamp = row[3]
+                resource = 'EMPTY' if row[2] == '' else row[2]
+                activity = row[1]
+                cases[caseid].append((caseid, activity, resource, ctimestamp))
         # BPiC 2013 Volvo Service Desk: Incident Mngt. Syst.
         for line in f:
             ln += 1
@@ -42,7 +63,6 @@ if __name__ == '__main__':
                 resource = row[2]
                 activity = row[1] # Activity code
                 cases[caseid].append((caseid, activity, resource, ctimestamp))
-        '''
         # The 'WABO' event log data
         for row in csv.reader(f):
             ln += 1
@@ -54,7 +74,7 @@ if __name__ == '__main__':
                 resource = row[2]
                 activity = row[1]
                 cases[caseid].append((caseid, activity, resource, ctimestamp))
-                resources.add(resource)
+        '''
 
     print('Log file loaded successfully. # of cases read: {}'.format(len(cases.keys())))
     print('Average # of activities within each case: {}'.format(sum(
