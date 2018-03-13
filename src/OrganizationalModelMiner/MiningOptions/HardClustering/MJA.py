@@ -9,7 +9,8 @@ from scipy.spatial.distance import pdist, squareform, cdist
 from collections import defaultdict
 from EvaluationOptions import Unsupervised
 
-def threshold(cases, threshold_value_step):
+#def threshold(cases, threshold_value_step):
+def threshold(cases):
     print('Applying Metrics based on Joint Activities:')
 
     # constructing the performer-activity matrix from event logs
@@ -34,7 +35,7 @@ def threshold(cases, threshold_value_step):
             j = activity_index.index(act)
             profile_mat[i][j] = count
 
-    # TODO: logrithm preprocessing (van der Aalst, 2005)
+    # TODO: logarithm preprocessing (van der Aalst, 2005)
     profile_mat = np.log(profile_mat + 1)
 
     # build resource social network G (with linear tf.) with same indexing
@@ -50,8 +51,9 @@ def threshold(cases, threshold_value_step):
     num_edges_old = len(G.edges)
 
     # search settings: threshold for cutting
-    threshold_value_MIN = 0.0
-    threshold_value_MAX = 1.0
+    threshold_value_MIN = 0.10
+    threshold_value_MAX = 0.99
+    threshold_value_step = 0.01
     threshold_value = threshold_value_MIN
     search_range = list()
     scoring_results = list()
@@ -76,6 +78,8 @@ def threshold(cases, threshold_value_step):
         labels = np.empty((len(G), 1))
         # obtain the connected components as discovered results
         cluster_id = -1 # consecutive numbers as entity id
+        print('#Connected Components = {}'.format(len(
+            list(nx.connected_components(graph)))))
         for comp in nx.connected_components(graph):
             cluster_id += 1
             for u in list(comp):
@@ -87,15 +91,16 @@ def threshold(cases, threshold_value_step):
         if len(np.unique(labels)) > 1:
             # calculating within-cluster variance
             total_within_cluster_var = Unsupervised.within_cluster_variance(
-                    profile_mat, labels, is_overlapped=False)
+                    profile_mat, labels, False)
 
             search_range.append(len(np.unique(labels)))
-            #TODO: remove silhouette score
             scoring_results.append((
                 threshold_value,
-                (total_within_cluster_var),
-                #labels))
-                labels, Unsupervised.silhouette_score(profile_mat, labels)))
+                len(list(nx.connected_components(graph))),
+                labels,
+                total_within_cluster_var,
+                Unsupervised.silhouette_score(
+                    profile_mat, labels, False)))
         else:
             pass
         threshold_value += threshold_value_step
@@ -104,26 +109,30 @@ def threshold(cases, threshold_value_step):
     print('Warning: ONLY VALID solutions are accounted.')
 
     # visualizing the results
-
     #f, axarr = plt.subplots(1, sharex=True)
     plt.figure(0)
     plt.xlabel('#clusters')
     plt.ylabel('Score - within cluster variance var(#clusters)')
     x = np.array(search_range)
-    y = np.array([sr[1] for sr in scoring_results])
+    y = np.array([sr[-2] for sr in scoring_results])
     # highlight the original data points
     plt.plot(x, y, 'b*-')
     for i in range(len(x)):
         plt.annotate('[{}]'.format(i), xy=(x[i], y[i]))
     plt.show()
 
+    for i in range(len(scoring_results)):
+        print('[{}] threshold = {}, k = {}'.format(
+            i, scoring_results[i][0], scoring_results[i][1]))
+
+
     # select a solution as output
     print('Select the result (by solution_id) under the desired settings:')
     solution_id = int(input())
     solution = scoring_results[solution_id]
     print('Solution [{}] selected:'.format(solution_id))
-    print('threshold = {}, '.format(solution[0]))
-    print('score: var(k) = {:.3f}'.format(solution[1]))
+    #print('threshold = {}, '.format(solution[0]))
+    #print('score: var(k) = {:.3f}'.format(solution[1]))
     #TODO: remove silhouette score
     print('Silhouette score = {:.3f}'.format(solution[3]))
 

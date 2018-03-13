@@ -9,7 +9,8 @@ from sklearn.mixture import GaussianMixture
 from scipy.spatial.distance import cdist
 from EvaluationOptions import Unsupervised
 
-def mine(cases):
+#def mine(cases):
+def mine(cases, num_c):
     print('Applying Gaussian Mixture Model:')
     '''
     if threshold < 0 or threshold >= 1:
@@ -49,13 +50,29 @@ def mine(cases):
     # n_components, covariance_type; init_params (manually adjust)
     # Note: Fit only, not ready for predicting yet
     # search settings (1): k_cluster
-    k_cluster_MIN = 2
-    k_cluster_MAX = len(resource_index) - 1
-    #k_cluster_MAX = 27
+    #k_cluster_MIN = 2
+    #k_cluster_MAX = len(resource_index) - 1
+    k_cluster_MIN = k_cluster_MAX = int(num_c)
     k_cluster_step = 1
     # search settings (2): covariance_type (default: full)
     #cv_types = ['spherical', 'tied', 'diag', 'full']
     cv_types = ['spherical']
+
+    # Read in initialized membership if warm start
+    #print('Filename for warm-start input (enter if none):', end=' ')
+    #f_membership = input()
+    f_membership = ''
+    dict_membership = defaultdict(lambda: set())
+    if f_membership is not '':
+        with open(f_membership, 'r') as f:
+            for line in f:
+                line = line.strip()
+                i = resource_index.index(line.split(',')[0])
+                j = int(line.split(',')[1])
+                dict_membership[j].add(i)
+        gmm_warm_start = True
+    else:
+        gmm_warm_start = False
 
     gmm_models = list()
     gmm_models_flattened = list()
@@ -63,18 +80,36 @@ def mine(cases):
         k_cluster = k_cluster_MIN
         models_by_cv_type = list()
         while k_cluster <= k_cluster_MAX: # search 2
-            gmm = GaussianMixture(
-                    n_components=k_cluster,
-                    n_init=50,
-                    covariance_type=cv_type,
-                    init_params='random').fit(profile_mat)
-                    #init_params='kmeans').fit(profile_mat)
+            if gmm_warm_start and k_cluster == len(dict_membership):
+                print('warm-start allowed')
+                weights = [1.0 / k_cluster] * k_cluster
+                means = list()
+                for k in sorted(dict_membership.keys()):
+                    xs = dict_membership[k]
+                    means.append(np.mean(
+                        [profile_mat[x] for x in xs], axis=0))
+                gmm = GaussianMixture(
+                        random_state=0,
+                        weights_init=weights,
+                        means_init=means,
+                        n_components=k_cluster,
+                        covariance_type=cv_type).fit(profile_mat)
+                        #init_params='kmeans').fit(profile_mat)
+            else:
+                gmm = GaussianMixture(
+                        n_components=k_cluster,
+                        n_init=100,
+                        covariance_type=cv_type,
+                        init_params='random').fit(profile_mat)
+                        #init_params='kmeans').fit(profile_mat)
+
             bic_score = gmm.bic(profile_mat)
             models_by_cv_type.append((gmm, bic_score))
             gmm_models_flattened.append((gmm, bic_score))
             k_cluster += k_cluster_step
         gmm_models.append(models_by_cv_type)
 
+    '''
     # Visualizing the results (1): Select an appropriate model (cv_type)
     #f, axarr = plt.subplots(2, sharex=True)
     plt.figure(0)
@@ -101,7 +136,9 @@ def mine(cases):
             cv_type, x[argmin], lowest, average))
     plt.legend([b[0] for b in y], cv_types)
     #plt.show()
+    '''
     
+    '''
     print('Top-5 models with lower BIC suggested:')
     gmm_models_flattened.sort(key=lambda m: m[1])
     for i in range(5):
@@ -109,9 +146,11 @@ def mine(cases):
             gmm_models_flattened[i][0].covariance_type,
             gmm_models_flattened[i][0].n_components,
             gmm_models_flattened[i][1]))
+    '''
 
+    '''
     # select a covariance type
-    print('Select an appropriate model: covariance_type')
+    #print('Select an appropriate model: covariance_type')
     #choice_cv_type = str(input())
     choice_cv_type = 'spherical'
 
@@ -129,7 +168,7 @@ def mine(cases):
         color=color_types[i], linestyle='dashed', marker='*',
         label=choice_cv_type)
     plt.legend()
-    plt.show()
+    #plt.show()
 
     # select #clusters
     print('Select an appropriate model: #components')
@@ -139,8 +178,11 @@ def mine(cases):
     choice_gmm = gmm_models[cv_types.index(choice_cv_type)][i][0]
     print(choice_gmm.n_components)
 
+    '''
     # search settings (3): cut threshold
+    choice_gmm = gmm_models[0][0][0]
     resp = choice_gmm.predict_proba(profile_mat)
+    '''
     # TODO: these lines help select the cut_threshold
     print('For the current fit: #cluster = {}'.format(choice_k_cluster),
             end='\n\t')
@@ -155,27 +197,49 @@ def mine(cases):
     print('MAX(Pr) = {}'.format(np.max(resp[resp > 0])), end=', ')
     print('Mean(Pr) = {}'.format(np.mean(resp[resp > 0])), end=', ')
     print('Median(Pr) = {}'.format(np.median(resp[resp > 0])))
+    '''
 
     # Visualizing the results (3): Select a threshold lambda for cutting
     # TODO: choice of threshold
-    threshold = 0
-    determined = resp > threshold
+    print('Input a threshold value [0, 1) to determine the resource membership:', end=' ')
+    threshold = float(input())
+    #determined = resp > threshold
+    determined = list()
+    for row in resp:
+        #threshold = np.random.choice(row)
+
+        # Constrained
+        # WABO: round = ceil = 4
+        # BPIC Open: round = 1, ceil = 2
+        # BPIC Closed: round = 1, ceil = 2
+        #threshold = np.random.choice(sorted(row, reverse=True)[:2])
+        #threshold = sorted(row, reverse=True)[2-1]
+
+        #threshold = np.amax(row) # disjoint
+
+        determined.append([(x >= threshold) for x in row])
+    determined = np.array(determined)
     # shape: (n_samples,)
     labels = list()
     for row in determined:
         labels.append(tuple(l for l in np.nonzero(row)[0]))
-    labels = np.array(labels).ravel()
+    labels = np.array(labels)
 
     # evaluation (unsupervised) goes here
     # only account for valid solution
-    is_overlapped = labels.dtype != np.int64
+    is_overlapped = type(labels[0]) != np.int64
     if is_overlapped or len(np.unique(labels)) > 1:
         print('Warning: ONLY VALID solutions are accounted.')
-        total_within_cluster_var = Unsupervised.within_cluster_variance(
-                profile_mat, labels, is_overlapped)
-        solution = (labels, total_within_cluster_var)
+        #total_within_cluster_var = Unsupervised.within_cluster_variance(
+        #        profile_mat, labels, is_overlapped)
+        #silhouette_score = Unsupervised.silhouette_score(
+        #        profile_mat, labels, is_overlapped)
+        total_within_cluster_var = -1
+        silhouette_score = -1
+        solution = (labels, total_within_cluster_var, silhouette_score)
 
-        print('score: var(k) = {:.3f}'.format(solution[1]))
+        #print('score: var(k) = {:.3f}'.format(solution[1]))
+        #print('score: silhouette = {:.3f}'.format(solution[2]))
 
         entities = defaultdict(lambda: set())
         for i in range(len(solution[0])):
@@ -185,7 +249,7 @@ def mine(cases):
                     entities[l].add(resource_index[i])
             else:
                 # only 1 cluster assigned for each
-                entity_id = int(solution[0][i])
+                entity_id = int(solution[0])
                 entities[entity_id].add(resource_index[i])
 
         print('Clustering results are ' + \

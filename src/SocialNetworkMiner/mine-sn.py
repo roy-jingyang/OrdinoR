@@ -14,69 +14,25 @@ additional_params = sys.argv[4:] if len(sys.argv) > 4 else None
 
 if __name__ == '__main__':
     cases = defaultdict(lambda: list())
-    with open(f_event_log, 'r', encoding='windows-1252') as f:
-        is_header_line = False
-        ln = 0
-        # BPiC 2011
-        for row in csv.reader(f):
-            ln += 1
-            if is_header_line:
-                is_header_line = False
-            else:
-                caseid = row[0]
-                ctimestamp = row[2]
-                resource = row[-1] # only 'org:group' provided
-                activity = row[1]
-                cases[caseid].append((caseid, activity, resource, ctimestamp))
-        '''
-        # BPiC 2012
-        for row in csv.reader(f):
-            ln += 1
-            if is_header_line:
-                is_header_line = False
-            else:
-                caseid = row[0]
-                ctimestamp = row[3]
-                resource = 'EMPTY' if row[2] == '' else row[2]
-                activity = row[1]
-                cases[caseid].append((caseid, activity, resource, ctimestamp))
-        '''
-        '''
-        # BPiC 2013 Volvo Service Desk: Incident Mngt. Syst.
-        for line in f:
-            ln += 1
-            if is_header_line:
-                is_header_line = False
-            else:
-                row = line.split(';')
-                caseid = row[0] # SR Number
-                ctimestamp = row[1] # Change Date+Time
-                resource = row[-1]
-                activity = row[2] + row[3]
-                cases[caseid].append((caseid, activity, resource, ctimestamp))
-        # BPiC 2015 Building Permit Application: Municiality 3
-        for row in csv.reader(f):
-            ln += 1
-            if is_header_line:
-                is_header_line = False
-            else:
-                caseid = row[0] 
-                ctimestamp = row[3] # Complete timestamp 
-                resource = row[2]
-                activity = row[1] # Activity code
-                cases[caseid].append((caseid, activity, resource, ctimestamp))
-        # The 'WABO' event log data
-        for row in csv.reader(f):
-            ln += 1
-            if is_header_line:
-                is_header_line = False
-            else:
-                caseid = row[0]
-                ctimestamp = row[3]
-                resource = row[2]
-                activity = row[1]
-                cases[caseid].append((caseid, activity, resource, ctimestamp))
-        '''
+    if f_event_log != 'none':
+        with open(f_event_log, 'r', encoding='windows-1252') as f:
+            is_header_line = True
+            ln = 0
+            # Exported from Disco:
+            # BPiC 2013 Volvo VINST: Incident Mngt.
+            # BPiC 2013 Volvo VINST: Problem Mngt. Open problem
+            # BPiC 2013 Volvo VINST: Problem Mngt. Closed problem
+            # The 'WABO' event log data
+            for row in csv.reader(f):
+                ln += 1
+                if is_header_line:
+                    is_header_line = False
+                else:
+                    caseid = row[0]
+                    ctimestamp = row[3]
+                    resource = row[2]
+                    activity = row[1]
+                    cases[caseid].append((caseid, activity, resource, ctimestamp))
 
     print('Log file loaded successfully. # of cases read: {}'.format(len(cases.keys())))
     print('Average # of activities within each case: {}'.format(sum(
@@ -107,11 +63,11 @@ if __name__ == '__main__':
             exit(1)
     elif mining_option.split('.')[0] == 'mja':
         from MiningOptions import JointActivities
-        if mining_option.split('.')[1] == 'EuclideanDist':
-            result = JointActivities.EuclideanDist(cases)
-        elif mining_option.split('.')[1] == 'CorrelationCoefficient':
+        if mining_option.split('.')[1] == 'euclidean':
+            result = JointActivities.mine(cases, 'euclidean')
+        elif mining_option.split('.')[1] == 'pcc':
             threshold_value = float(additional_params[0])
-            result = JointActivities.CorrelationCoefficient(cases, threshold_value)
+            result = JointActivities.mine(cases, 'pcc', threshold_value)
         else:
             exit(1)
     else:
@@ -142,6 +98,6 @@ if __name__ == '__main__':
     # write graph
     filetype = '.gml' 
     print('Exporting resulting social network as format' +
-            ' (*{}) to file:\t{}'.format(filetype, fout_social_network) + filetype)
-    nx.write_gml(g, fout_social_network + filetype)
+            ' (*{}) to file:\t{}'.format(filetype, fout_social_network))
+    nx.write_gml(g, fout_social_network)
 

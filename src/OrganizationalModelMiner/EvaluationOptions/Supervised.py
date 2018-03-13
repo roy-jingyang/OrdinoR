@@ -238,7 +238,7 @@ def report_BCubed_metrics(resources, model, ref_model):
 
 def _multiplicity_matrices(resources, model, ref_model):
     # calculate the matrices
-    resources = list(resources)
+    resources = sorted(list(resources))
     N = len(resources)
 
     # both mat_cluster_multi & mat_category_multi use the same indexing

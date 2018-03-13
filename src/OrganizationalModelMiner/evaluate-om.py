@@ -4,6 +4,8 @@
 import csv
 import sys
 import networkx as nx
+from collections import defaultdict
+from EvaluationOptions import Unsupervised
 
 f_org_model = sys.argv[1]
 f_sn_model = sys.argv[2]
@@ -22,8 +24,10 @@ if __name__ == '__main__':
     model_resource = set()
     for k, x in org_model.items():
         model_resource = model_resource.union(x)
+
     # read social network model
     sn_model = nx.read_gml(f_sn_model)
 
-    print(len(model_resource) == len(sn_model))
+    print('Extended Modularity = {:.3f}'.format(
+        Unsupervised.extended_modularity(model_resource, org_model, sn_model)))
 
