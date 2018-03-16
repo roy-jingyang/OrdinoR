@@ -3,11 +3,10 @@
 
 import numpy as np
 import copy
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from collections import defaultdict
 from sklearn.mixture import GaussianMixture
-from scipy.spatial.distance import cdist
-from EvaluationOptions import Unsupervised
+#from EvaluationOptions import Unsupervised
 
 #def mine(cases):
 def mine(cases, num_c):

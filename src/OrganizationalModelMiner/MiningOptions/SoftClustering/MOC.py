@@ -155,9 +155,8 @@ class MOC:
         return score
 
 import copy
-import matplotlib.pyplot as plt
 from collections import defaultdict
-from EvaluationOptions import Unsupervised
+#from EvaluationOptions import Unsupervised
 
 #def mine(cases):
 def mine(cases, num_c):
@@ -218,10 +217,11 @@ def mine(cases, num_c):
     is_overlapped = type(labels[0]) != np.int64
     if is_overlapped or len(np.unique(labels)) > 1:
         print('Warning: ONLY VALID solutions are accounted.')
-        total_within_cluster_var = Unsupervised.within_cluster_variance(
-                profile_mat, labels, is_overlapped)
+        #total_within_cluster_var = Unsupervised.within_cluster_variance(
+        #        profile_mat, labels, is_overlapped)
         #silhouette_score = Unsupervised.silhouette_score(
         #        profile_mat, labels, is_overlapped)
+        total_within_cluster_var = -1
         silhouette_score = -1
         solution = (labels, total_within_cluster_var, silhouette_score)
 
