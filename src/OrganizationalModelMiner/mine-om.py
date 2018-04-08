@@ -38,15 +38,29 @@ if __name__ == '__main__':
         len(x) for k, x in cases.items()) / len(cases.keys())))
 
 
-    print('Input the number to choose a solution:\n\t1. GMM\n\t2. MOC')
+    print('Input the number to choose a solution:')
+    print('\t0. Default Mining (Song)')
+    print('\t1. Metric based on Joint Activities (Song)')
+    print('\t2. Agglomerative Hierarchical Clustering (Song)')
+    print('\t3. Overlapping Community Detection (Appice)')
+    print('\t4. Gaussian Mixture Model')
+    print('\t5. Model based Overlapping Clustering')
     print('Option: ', end='')
     mining_option = int(input())
-    if mining_option == 1:
+
+    if mining_option in [0, 1, 3]:
+        print('Warning: These options are closed for now. Activate them when necessary.')
+        exit(1)
+    elif mining_option == 2:
+        k_cluster_step = 1
+        from MiningOptions.Hierarchical import AHC
+        result = AHC.single_linkage(cases, k_cluster_step)
+    elif mining_option == 4:
         from MiningOptions.SoftClustering import GMM
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = input()
         result = GMM.mine(cases, num_groups)
-    elif mining_option == 2:
+    elif mining_option == 5:
         from MiningOptions.SoftClustering import MOC
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = input()
@@ -56,7 +70,6 @@ if __name__ == '__main__':
         exit(1)
 
     '''
-    # try mining organizational entities
     if mining_option.split('.')[0] == 'task':
         if mining_option.split('.')[1] == 'defaultmining':
             exit(1)
@@ -69,23 +82,6 @@ if __name__ == '__main__':
             from MiningOptions.HardClustering import MJA
             result = MJA.threshold(cases)
             #result = MJA.threshold(cases, threshold_value_step)
-        elif mining_option.split('.')[1] == 'ahc':
-            raise Exception('Hierarchical mining under construction!')
-            exit(1)
-            #TODO
-            k_cluster_step = 1
-            from MiningOptions.Hierarchical import AHC
-            result = AHC.single_linkage(cases, k_cluster_step)
-        elif mining_option.split('.')[1] == 'gmm':
-            from MiningOptions.SoftClustering import GMM
-            print('Input a integer for the desired number of groups to be discovered:', end=' ')
-            num_groups = input()
-            result = GMM.mine(cases, num_groups)
-        elif mining_option.split('.')[1] == 'moc':
-            from MiningOptions.SoftClustering import MOC
-            print('Input a integer for the desired number of groups to be discovered:', end=' ')
-            num_groups = input()
-            result = MOC.mine(cases, num_groups)
         elif mining_option.split('.')[1] == 'community':
             exit(1)
             from MiningOptions.SoftClustering import Community
@@ -94,6 +90,8 @@ if __name__ == '__main__':
         else:
             raise Exception('Option for task-based mining invalid.')
             exit(1)
+    '''
+    '''
     elif mining_option.split('.')[0] == 'case':
         raise Exception('Case-based mining under construction!')
         exit(1)
