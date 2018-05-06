@@ -25,12 +25,13 @@ if __name__ == '__main__':
                 case_id = row[0]
                 activity = row[1]
                 resource = row[2]
-                org_group = row[-1] # wabo
+                #org_group = row[-1] # wabo
                 #org_group = row[10] # bpic2013_open
-                #org_group = row[9] # bpic2013_closed
+                org_group = row[9] # bpic2013_closed
                 model[org_group].add(resource)
                 performer_task[resource].add(activity)
     
+    '''
     # eliminate sub-groups
     group_ids = sorted(model.keys())
     sub_group_ids = set()
@@ -48,6 +49,7 @@ if __name__ == '__main__':
     print('{}: {} eliminated'.format(sub_group_ids, len(sub_group_ids)))
     for sg_id in sub_group_ids:
         del model[sg_id]
+    '''
 
     # check overlapping
     size = 0

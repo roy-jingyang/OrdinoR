@@ -22,7 +22,6 @@ def handover_CDCM(cases, is_task_specific=False, depth=1):
 
     for caseid, trace in cases.items():
         cnt += 1
-        frequency = 0
         for i in range(len(trace) - 1):
             # within a case
             res_prev = trace[i][2]
@@ -50,7 +49,6 @@ def handover_duration(cases, is_task_specific=False, depth=1):
 
     for caseid, trace in cases.items():
         cnt += 1
-        frequency = 0
         for i in range(len(trace) - 1):
             # within a case
             res_prev = trace[i][2]

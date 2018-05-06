@@ -1,6 +1,8 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Build resource social network depending on group membership. 
+
 import csv
 import sys
 import networkx as nx
