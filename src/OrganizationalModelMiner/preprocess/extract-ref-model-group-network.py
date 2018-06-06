@@ -13,8 +13,8 @@ f_event_log = sys.argv[1]
 f_out_network = sys.argv[2]
 
 if __name__ == '__main__':
-    # read organizational model
     '''
+    # read organizational model
     org_model = defaultdict(lambda: set())
     with open(f_org_model, 'r') as f:
         is_header_line = True
@@ -27,6 +27,7 @@ if __name__ == '__main__':
     '''
 
     mat_info_flow = defaultdict(lambda: defaultdict(lambda: {'weight': 0.0}))
+    #mat_info_flow = defaultdict(lambda: defaultdict(lambda: 0.0))
 
     cases = defaultdict(lambda: list())
     with open(f_event_log, 'r') as f:
@@ -51,13 +52,21 @@ if __name__ == '__main__':
     for caseid, trace in cases.items():
         scale_factor += len(trace) - 1
 
+    G = nx.DiGraph()
     for caseid, trace in cases.items():
         for i in range(len(trace) - 1):
             # within a case
             group_prev = trace[i][-1]
             group_next = trace[i + 1][-1]
             mat_info_flow[group_prev][group_next]['weight'] += 1 / scale_factor
+            #mat_info_flow[group_prev][group_next] += 1 / scale_factor
+    ''' 
+    for ix, iys in mat_info_flow.items():
+        for iy, wt in iys.items():
+            G.add_edge(ix, iy, weight=wt)
+    ''' 
 
     G = nx.from_dict_of_dicts(mat_info_flow)
+    print(G.is_directed())
     nx.write_graphml(G, f_out_network)
 
