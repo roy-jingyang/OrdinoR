@@ -52,9 +52,10 @@ if __name__ == '__main__':
         print('Warning: These options are closed for now. Activate them when necessary.')
         exit(1)
     elif mining_option == 2:
-        k_cluster_step = 1
         from MiningOptions.Hierarchical import AHC
-        result = AHC.single_linkage(cases, k_cluster_step)
+        print('Input a integer for the desired number of groups to be discovered:', end=' ')
+        num_groups = input()
+        result = AHC.single_linkage(cases, num_groups)
     elif mining_option == 4:
         from MiningOptions.SoftClustering import GMM
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
