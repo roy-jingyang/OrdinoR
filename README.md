@@ -1,4 +1,4 @@
-## Organizatonal Mining: Process Mining on the organizational perspective
+## Organizational Mining: Process Mining on the organizational perspective
 
 Whereas lion's share of research in process mining has been devoted to the control-flow perspective of business processes, event log data may also contain a wealth of information related to other pespectives, e.g. organizational perspective, time perspective \[1\]. 
 
