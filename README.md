@@ -1,2 +1,1 @@
-# LAB-BPM-OrgMining
-#### Discover social networks from business process logs and perform further analysis.
+## Organizatonal Mining: Process Mining on the organizational perspective
