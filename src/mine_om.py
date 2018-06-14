@@ -95,15 +95,6 @@ if __name__ == '__main__':
 
     # save the mining og to a file
     from IO.writer import write_om_csv
-    #from IO.writer import write_om_omml
     write_om_csv(fnout_org_model, og, assignment)
-
-    with open(fout_org_model, 'w') as fout:
-        writer = csv.writer(fout)
-        writer.writerow(['entity_id', 'tasks', 'resources'])
-        for entity_id in og.keys():
-            writer.writerow([
-                entity_id,
-                ';'.join(t for t in assignments[entity_id]),
-                ';'.join(r for r in og[entity_id])])
+    #from IO.writer import write_om_omml
 

@@ -40,11 +40,11 @@ def _describe_event_log(D):
     Returns:
 
     '''
-    print('-' * 30)
+    print('-' * 80)
 
     print('Number of cases:\t\t{}'.format(len(D)))
 
-    print('-' * 30)
+    print('-' * 80)
     return
 
 # 1. Disco-exported CSV format event log file
@@ -66,7 +66,7 @@ def read_disco_csv(fn, header=True, encoding='utf-8'):
             'timestamp'
             ]
 
-    D = defaultdict(lambda: pd.DataFrame(index=fields))
+    D = defaultdict(lambda: pd.DataFrame(columns=fields))
 
     with open(fn, 'r', encoding=encoding) as f:
         is_header_line = True
@@ -79,17 +79,20 @@ def read_disco_csv(fn, header=True, encoding='utf-8'):
                 pass
             else:
                 case_id = row[0]
+                e = pd.Series(row[1:4])
 
-                e = pd.Series(row[1:4], index=fields)
-                D[case_id] = D[case_id].append(e)
+                D[case_id] = D[case_id].append(e, ignore_index=True)
 
-    print('"{}" imported successfully. {} lines scanned'.format(fn, line_count))
+    print('"{}" imported successfully. {} lines scanned.'.format(fn, line_count))
 
     _describe_event_log(D)
     return D
 
 # TODO 2. XES format event log file.
 def read_xes(fn, encoding='utf-8'):
+    pass
+
 # TODO 3. MXML format event log file.
 def read_mxml(fn, encoding='utf-8'):
+    pass
 
