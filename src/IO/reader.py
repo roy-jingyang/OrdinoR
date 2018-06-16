@@ -10,17 +10,18 @@ This module contains methods for importing event log data. Currently supporting
 
 '''
 Data exchange format for an event log - all methods in this module MUST return
-the successfully imported event log as a Python dict of pandas DataFrames:
-    [case_id]: {  'activity', 'resource', 'timestamp',
-                 0
-                 1
-                 .
-                 .
-                 .
-                 n                                           }
-    [case_id]: ...
+the successfully imported event log as a pandas DataFrames:
+    'case_id', 'activity', 'resource', 'timestamp',
+ 0
+ 1
+ .
+ .
+ .
+ n                                           }
 
 Note: 
+    The indices are created using integers increasing from 0, each of which
+corresponds to one event.
     The original event log data should at least provide the information of the
 activity ids. It is expected that the resource ids and timestamps are presented
 as well (not mandotory though).
@@ -31,18 +32,18 @@ purposes of working projects and the event log(s) acquired.
 import sys
 import csv
 import pandas as pd
-from collections import defaultdict
 
-def _describe_event_log(D):
+def _describe_event_log(df):
     '''
     Params:
-        D: dict of DataFrames
+        df: DataFrame
     Returns:
 
     '''
     print('-' * 80)
 
-    print('Number of cases:\t\t{}'.format(len(D)))
+    print('Number of events:\t\t{}'.format(len(df)))
+    print('Number of cases:\t\t{}'.format(len(df.groupby('case_id'))))
 
     print('-' * 80)
     return
@@ -58,16 +59,10 @@ def read_disco_csv(fn, header=True, encoding='utf-8'):
         encoding: str, optional
             Encoding of the event log file being imported.
     Returns:
-        D: dict of DataFrames 
+        df: DataFrame
     '''
-    fields = [
-            'activity',
-            'resource',
-            'timestamp'
-            ]
 
-    D = defaultdict(lambda: pd.DataFrame(columns=fields))
-
+    ld = list()
     with open(fn, 'r', encoding=encoding) as f:
         is_header_line = True
         line_count = 0
@@ -78,15 +73,21 @@ def read_disco_csv(fn, header=True, encoding='utf-8'):
                 is_header_line = False
                 pass
             else:
-                case_id = row[0]
-                e = pd.Series(row[1:4])
+                # the mapping is defined as below
+                e = {
+                        'case_id': row[0],
+                        'activity': row[1],
+                        'resource': row[2],
+                        'timestamp': row[3]
+                }
+                ld.append(e)
 
-                D[case_id] = D[case_id].append(e, ignore_index=True)
+    df = pd.DataFrame(ld)
 
     print('"{}" imported successfully. {} lines scanned.'.format(fn, line_count))
 
-    _describe_event_log(D)
-    return D
+    _describe_event_log(df)
+    return df
 
 # TODO 2. XES format event log file.
 def read_xes(fn, encoding='utf-8'):

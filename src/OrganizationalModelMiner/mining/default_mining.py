@@ -1,21 +1,31 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import copy
-from collections import defaultdict
+'''
+This module contains the implementation of the 'default mining' method proposed
+by Song & van der Aalst (ref. Song & van der Aalst, DSS 2008).
+'''
 
-def mine(cases):
+import copy
+from numpy import unique
+
+def mine(c):
+    '''
+    The 'default mining' method.
+    Params:
+        c: DataFrame
+            The imported event log.
+    Returns:
+        og: dict of sets
+            The mined organizational groups.
+    '''
+
     print('Applying Default Mining:')
-    # entity: task_name => [involved originators]
-    entities = defaultdict(lambda: set())
-    cnt = 0
-    for caseid, trace in cases.items():
-        cnt += 1
-        for i in range(len(trace)):
-            resource = trace[i][2]
-            activity = trace[i][1]
-            entities[activity].add(resource)
-    print('# of cases processed: {}'.format(cnt))
-    print('{} organizational entities extracted.'.format(len(entities)))
-    return copy.deepcopy(entities)
+    print('{} cases to be processed.'.format(len(c.groupby('case_id'))))
+    # group: task_name => [involved originators]
+    og = dict()
+    for activity, events in c.groupby('activity'):
+        og[activity] = set(events['resource'])
+    print('{} organizational entities extracted.'.format(len(og)))
+    return copy.deepcopy(og)
 

@@ -11,7 +11,14 @@ from IO.reader import read_disco_csv
 filename_event_log = sys.argv[1]
 
 if __name__ == '__main__':
-    d = read_disco_csv(filename_event_log)
-    print(type(d))
-    print(sum(len(df) for k, df in d.items()))
+    c = read_disco_csv(filename_event_log)
+    #print(c)
+    print(type(c))
+    # TODO
+    # iterate by each case and then by each event within the current case (as
+    # Series)
+    for case_id, events in c.groupby('case_id'):
+        for index, e in events.iterrows():
+            print(e.loc['resource'])
+            exit()
 

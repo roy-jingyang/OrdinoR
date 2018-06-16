@@ -21,13 +21,14 @@ def write_om_csv(fn, og, a):
     Returns:
     '''
     with open(fn, 'w') as f:
-        writer = csv.writer(fn)
+        writer = csv.writer(f)
         writer.writerow(['group id', 'tasks', 'resources'])
         for gid in og.keys():
             writer.writerow([
                 gid,
-                ';'.join(t for t in a[gid]),
-                ';'.join(r for r in og[gid]))
+                ';'.join(sorted(t for t in a[gid])),
+                ';'.join(sorted(r for r in og[gid]))
+            ])
 
     return
 

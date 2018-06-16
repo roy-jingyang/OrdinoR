@@ -8,28 +8,31 @@ tasks, i.e. entity assignment (ref. Song & van der Aalst, DSS 2008).
 
 from collections import defaultdict
 
-def assign(og, D):
+def assign(og, c):
     '''
     This is the default method proposed by Song & van der Aalst, DSS 2008.
 
     Params:
-        D: dict of DataFrames
-            The imported event log.
         og: dict of sets
             The mined organizational groups.
+        c: DataFrame
+            The imported event log.
     Returns:
         a: dict of sets
             The entity assignment result (group => task(s)).
     '''
-    a = defaultdict(lambda: set())
-    # for each case
-    for case_id, trace in D.items():
-        # for each event
-        for e in trace.itertuples():
-            # check if resource in specific group
-            for gid, g in og.items():
-                if e.resource in g:
-                    a[gid].add(e.activity)
+
+    a = dict()
+    grouped_by_resource = c.groupby('resource')
+
+    # for each organizational group
+    for gid, g in og.items():
+        # for each resource in the group
+        associated_tasks = set()
+        for r in g:
+            associated_tasks.update(
+                    set(grouped_by_resource.get_group(r)['activity']))
+        a[gid] = associated_tasks
 
     return a
 
