@@ -37,7 +37,7 @@ def build_performer_activity_matrix(c, use_log_scale):
         from numpy import log
         return DataFrame(pam).apply(lambda x: log(x + 1))
 
-def distance(c,
+def distance(c, 
         use_log_scale=False,
         metric='euclidean'):
     '''
