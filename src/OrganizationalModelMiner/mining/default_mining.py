@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 
 '''
-This module contains the implementation of the 'default mining' method proposed
+This module contains the implementation of the default mining method proposed
 by Song & van der Aalst (ref. Song & van der Aalst, DSS 2008).
 '''
 
 import copy
-from numpy import unique
 
 def mine(c):
     '''
-    The 'default mining' method.
+    The default mining method.
+
     Params:
         c: DataFrame
             The imported event log.

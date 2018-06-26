@@ -38,23 +38,27 @@ def _describe_event_log(df):
     Params:
         df: DataFrame
     Returns:
-
     '''
+
     print('-' * 80)
 
     print('Number of events:\t\t{}'.format(len(df)))
     print('Number of cases:\t\t{}'.format(len(df.groupby('case_id'))))
+    print('Event log attributes:\n\t') # TODO
 
     print('-' * 80)
     return
 
 # 1. Disco-exported CSV format event log file
-def read_disco_csv(fn, header=True, encoding='utf-8'):
+def read_disco_csv(fn, mapping=None, header=True, encoding='utf-8'):
     '''
     Params:
         fn: str
             Filename of the event log file being imported.
-        header: Boolean, optional
+        mapping: dict, optional
+            A python dictionary that denotes the mapping from CSV column
+            numbers to event log attributes.
+        header: boolean, optional
             True if the event log file contains a header line, False otherwise.
         encoding: str, optional
             Encoding of the event log file being imported.
@@ -73,18 +77,25 @@ def read_disco_csv(fn, header=True, encoding='utf-8'):
                 is_header_line = False
                 pass
             else:
-                # the mapping is defined as below
+                # the default mapping is defined as below
                 e = {
                         'case_id': row[0],
                         'activity': row[1],
                         'resource': row[2],
                         'timestamp': row[3]
                 }
+                # add addtional attributes mapping specified
+                if mapping:
+                    for attr, col_num in mapping.items():
+                        if attr not in e:
+                            e[attr] = row[col_num]
+
                 ld.append(e)
 
     df = pd.DataFrame(ld)
 
-    print('"{}" imported successfully. {} lines scanned.'.format(fn, line_count))
+    print('"{}" imported successfully. {} lines scanned.'.format(
+        fn, line_count))
 
     _describe_event_log(df)
     return df

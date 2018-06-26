@@ -7,16 +7,12 @@ import csv
 fn_event_log = sys.argv[1]
 fnout_org_model = sys.argv[2]
 
-
-#mining_option = sys.argv[3]
-#additional_params = sys.argv[4:] if len(sys.argv) > 4 else None
-
 if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
     cases = read_disco_csv(fn_event_log)
 
-    print('Input the number to choose a solution:')
+    print('Input a number to choose a solution:')
     print('\t0. Default Mining (Song)')
     print('\t1. Metric based on Joint Activities (Song)')
     print('\t2. Agglomerative Hierarchical Clustering (Song)')
@@ -93,7 +89,7 @@ if __name__ == '__main__':
     from OrganizationalModelMiner import entity_assignment
     assignment = entity_assignment.assign(og, cases)
 
-    # save the mining og to a file
+    # save the mined organizational model to a file
     from IO.writer import write_om_csv
     write_om_csv(fnout_org_model, og, assignment)
     #from IO.writer import write_om_omml

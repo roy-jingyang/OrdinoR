@@ -1,9 +1,11 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Ref: Amigó, E., Gonzalo, J., Artiles, J., & Verdejo, F. (2009). A comparison
-# of extrinsic clustering evaluation metrics based on formal constraints.
-# Information retrieval, 12(4), 461-486.
+'''
+Ref: Amigó, E., Gonzalo, J., Artiles, J., & Verdejo, F. (2009). A comparison
+of extrinsic clustering evaluation metrics based on formal constraints.
+Information retrieval, 12(4), 461-486.
+'''
 
 import math
 import numpy as np
