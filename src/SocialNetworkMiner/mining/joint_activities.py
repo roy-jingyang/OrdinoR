@@ -28,14 +28,15 @@ def build_performer_activity_matrix(c, use_log_scale):
     pam = defaultdict(lambda: defaultdict(lambda: 0))
     for case_id, trace in c.groupby('case_id'):
         for event in trace.itertuples():
-            pam[event.activity][event.resource] += 1
+            pam[event.resource][event.activity] += 1
 
     from pandas import DataFrame
     if use_log_scale: 
-        return DataFrame(pam)
-    else:
         from numpy import log
-        return DataFrame(pam).apply(lambda x: log(x + 1))
+        return DataFrame.from_dict(pam, orient='index').fillna(0).apply(
+                lambda x: log(x + 1))
+    else:
+        return DataFrame.from_dict(pam, orient='index').fillna(0)
 
 def distance(c, 
         use_log_scale=False,

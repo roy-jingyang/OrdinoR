@@ -32,6 +32,8 @@ def ahc(profiles,
             linkage. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
     Returns:
+        og: dict of sets
+            The mined organizational groups.
         og_hcy: DataFrame
             The hierarchical structure as a pandas DataFrame, with resource ids
             as indices, levels of the hierarchy as columns, and group ids as
@@ -41,6 +43,7 @@ def ahc(profiles,
             range of 0 to 7.
     '''
 
+    print('Applying hierarchical organizational mining using AHC:')
     from scipy.cluster import hierarchy
     Z = hierarchy.linkage(profiles, method=method, metric=metric)
     # the hierachical tree as a matrix where each column corresponds to a
@@ -48,5 +51,13 @@ def ahc(profiles,
     mx_tree = hierarchy.cut_tree(Z, n_clusters=range(1, n_groups + 1))
     # wrap as DataFrame og_hcy
     from pandas import DataFrame
-    return DataFrame(mx_tree, index=profiles.index)
+    og_hcy = DataFrame(mx_tree, index=profiles.index)
+
+    from collections import defaultdict
+    og = defaultdict(lambda: set())
+    for i in range(len(og_hcy.index)):
+        og[mx_tree[i, -1]].add(og_hcy.index[i]) # TODO
+    print('{} organizational entities extracted.'.format(len(og)))
+    from copy import deepcopy
+    return deepcopy(og), og_hcy
 

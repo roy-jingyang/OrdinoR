@@ -8,7 +8,8 @@ methods, based on the use of community detection techniques. Methods include:
 '''
 
 def betweenness(sn,
-        n_groups):
+        n_groups,
+        weight=None):
     '''
     This method implements the traditional Girvan-Newman algorithm designed for
     community detection, in which the edge with the highest betweenness is re-
@@ -25,6 +26,8 @@ def betweenness(sn,
             The number of groups to be discovered.
 
     Returns:
+        og: dict of sets
+            The mined organizational groups.
         og_hcy: DataFrame
             The hierarchical structure as a pandas DataFrame, with resource ids
             as indices, levels of the hierarchy as columns, and group ids as
@@ -38,14 +41,22 @@ def betweenness(sn,
     from numpy import zeros
     # this algorithm removes one edge at each step
     resource_idx = sorted(sn.nodes)
-    mx_tree = zeros(shape=(len(resource_idx), n_groups))
+    mx_tree = zeros(shape=(len(resource_idx), n_groups), dtype=int)
     from networkx.algorithms.community.centrality import girvan_newman
-    from itertools import takewhile
+    # TODO
+    if weight:
+        from networkx import edge_betweenness_centrality
+        def most_central_edge(G):
+            centrality = edge_betweenness_centrality(G, weight=weight)
+            return max(centrality, key=centrality.get)
+        comp = girvan_newman(sn, most_valuable_edge=most_central_edge)
+    else:
+        comp = girvan_newman(sn)
     level = 0 # the first column (level) of mx_tree is all 0s
     # obtain communities at each level until the specific number of group found
+    from itertools import takewhile
     for communities in takewhile(
-            lambda communities: len(communities) <= n_groups,
-            girvan_newman(sn)):
+            lambda communities: len(communities) <= n_groups, comp):
         level += 1
         community_idx = 0 # count from 0
         for c in communities:
@@ -54,5 +65,13 @@ def betweenness(sn,
             community_idx += 1 # move to the next community
     # convert to a matrix and wrap as DataFrame og_hcy
     from pandas import DataFrame
-    return DataFrame(mx_tree, index=resource_idx) # preserve indices
+    og_hcy = DataFrame(mx_tree, index=resource_idx) # preserve indices
+
+    from collections import defaultdict
+    og = defaultdict(lambda: set())
+    for i in range(len(og_hcy.index)):
+        og[mx_tree[i, -1]].add(og_hcy.index[i]) # TODO
+    print('{} organizational entities extracted.'.format(len(og)))
+    from copy import deepcopy
+    return deepcopy(og), og_hcy
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import csv
+sys.path.append('./src/')
 
 fn_event_log = sys.argv[1]
 fnout_org_model = sys.argv[2]
@@ -15,35 +15,51 @@ if __name__ == '__main__':
     print('Input a number to choose a solution:')
     print('\t0. Default Mining (Song)')
     print('\t1. Metric based on Joint Activities (Song)')
-    print('\t2. Agglomerative Hierarchical Clustering (Song)')
+    print('\t2. Hierarchical Organizational Mining')
     print('\t3. Overlapping Community Detection (Appice)')
     print('\t4. Gaussian Mixture Model')
     print('\t5. Model based Overlapping Clustering')
     print('Option: ', end='')
     mining_option = int(input())
 
-    from OrganizationalModelMiner.mining import *
 
-    if mining_option in [3]:
+    if mining_option in [3, 4, 5]:
         print('Warning: These options are closed for now. Activate them when necessary.')
         exit(1)
     elif mining_option == 0:
+        from OrganizationalModelMiner.mining import default_mining
         og = default_mining.mine(cases)
 
     elif mining_option == 2:
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
-        num_groups = input()
-        og = hierarchical.AHC.single_linkage(cases)
+        num_groups = int(input())
 
-    elif mining_option == 4:
-        print('Input a integer for the desired number of groups to be discovered:', end=' ')
-        num_groups = input()
-        og = overlap.GMM.mine(cases)
-
-    elif mining_option == 5:
-        print('Input a integer for the desired number of groups to be discovered:', end=' ')
-        num_groups = input()
-        og = overlap.MOC.mine(cases)
+        print('Input a number to choose a method:')
+        print('\t0. Mining using cluster analysis')
+        print('\t1. Mining using community detection')
+        method_option = int(input())
+        if method_option == 0:
+            from OrganizationalModelMiner.mining.hierarchical import cluster
+            # build profiles
+            from SocialNetworkMiner.mining.joint_activities import \
+                    build_performer_activity_matrix
+            profiles = build_performer_activity_matrix(
+                    cases, use_log_scale=False)
+            og, og_hcy = cluster.ahc(profiles, num_groups)
+        elif method_option == 1:
+            from OrganizationalModelMiner.mining.hierarchical import \
+                    community_detection
+            # build social network
+            #from SocialNetworkMiner.mining.causality import handover
+            from SocialNetworkMiner.mining.joint_activities import distance
+            sn = distance(cases)
+            og, og_hcy = community_detection.betweenness(sn, num_groups,
+                    weight='weight') # consider edge weight
+        else:
+            raise Exception('Failed to recognize input option!')
+            exit(1)
+                
+        og_hcy.to_csv(fnout_org_model + '_hierarchy')
 
     else:
         raise Exception('Failed to recognize input option!')
@@ -93,4 +109,7 @@ if __name__ == '__main__':
     from IO.writer import write_om_csv
     write_om_csv(fnout_org_model, og, assignment)
     #from IO.writer import write_om_omml
+
+    # if hierarchical organizational mining, save the hierarchy as well
+    
 

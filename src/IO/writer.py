@@ -8,7 +8,7 @@ import sys
 import csv
 
 # 1. OrganizationModelMiner-related
-def _describe_om(og, a):
+def _describe_om(og):
     '''
     Params:
         og: dict of sets
