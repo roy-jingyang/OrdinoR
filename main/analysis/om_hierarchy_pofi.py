@@ -6,11 +6,11 @@ sys.path.append('./src/')
 
 fn_event_log = sys.argv[1]
 fn_org_model_hcy = sys.argv[2]
+fnout_result = sys.argv[3]
 
 if __name__ == '__main__':
     from pandas import read_csv
-    og_hcy = read_csv(fn_org_model_hcy) # TODO: index issue
-    og_hcy.index = og_hcy['Unnamed: 0']
+    og_hcy = read_csv(fn_org_model_hcy, header=0, index_col=0)
     n_resources = len(og_hcy.index)
     n_levels = len(og_hcy.columns)
 
@@ -32,18 +32,23 @@ if __name__ == '__main__':
                 break
 
     # calculate the (normalized) index using the event log
-    pofi_total = 0
+    pofi_values = list()
     from IO.reader import read_disco_csv
     cases = read_disco_csv(fn_event_log)
-    cnt = 0
     for case_id, trace in cases.groupby('case_id'):
+        pofi_case = 0
         for i in range(len(trace) - 1):
             res_prev = trace.iloc[i]['resource']
             res_next = trace.iloc[i + 1]['resource']
-            cnt += 1
             if res_prev != res_next: # self-loop ignored
-                pofi_total += hcy_distance[res_prev][res_next]
+                pofi_case += hcy_distance[res_prev][res_next]
+        if len(trace) > 1:
+            pofi_values.append((case_id, pofi_case / (len(trace) - 1)))
+        else:
+            pofi_values.append((case_id, 0))
 
-    print('The (normalized) POFI is {:.6f}'.format(pofi_total / cnt))
-
+    from csv import writer
+    with open(fnout_result, 'w') as f:
+        writer(f).writerow(['case_id', 'pofi (case)'])
+        writer(f).writerows(pofi_values)
 
