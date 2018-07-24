@@ -23,7 +23,7 @@ if __name__ == '__main__':
     mining_option = int(input())
 
 
-    if mining_option in [3, 4, 5]:
+    if mining_option in [1, 3]:
         print('Warning: These options are closed for now. Activate them when necessary.')
         exit(1)
     elif mining_option == 0:
@@ -60,6 +60,46 @@ if __name__ == '__main__':
             exit(1)
                 
         og_hcy.to_csv(fnout_org_model + '_hierarchy')
+
+    elif mining_option == 4:
+        from OrganizationalModelMiner.mining.overlap import GMM
+        print('Input a integer for the desired number of groups to be discovered:', end=' ')
+        num_groups = int(input())
+        # build profiles
+        from SocialNetworkMiner.mining.joint_activities import \
+                build_performer_activity_matrix
+        profiles = build_performer_activity_matrix(cases, use_log_scale=False)
+
+        print('Input a number to choose a specific covariance type:')
+        print('\t0. full 1. tied 2. diag 3. spherical (default)')
+        cov_types = ['full', 'tied', 'diag', 'spherical']
+        cov_type_option = int(input())
+
+        print('Input a relative path to the file to be used for warm start: ' +
+                '(Enter if None)')
+        ws_fn = input()
+        ws_fn = None if ws_fn == '' else ws_fn
+
+        og = GMM.mine(profiles, num_groups,
+                cov_type=cov_types[cov_type_option],
+                warm_start_input_fn=ws_fn)
+
+    elif mining_option == 5:
+        from OrganizationalModelMiner.mining.overlap import MOC
+        print('Input a integer for the desired number of groups to be discovered:', end=' ')
+        num_groups = int(input())
+        # build profiles
+        from SocialNetworkMiner.mining.joint_activities import \
+                build_performer_activity_matrix
+        profiles = build_performer_activity_matrix(cases, use_log_scale=False)
+
+        print('Input a relative path to the file to be used for warm start: ' +
+                '(Enter if None)')
+        ws_fn = input()
+        ws_fn = None if ws_fn == '' else ws_fn
+
+        og = MOC.mine(profiles, num_groups,
+                warm_start_input_fn=ws_fn)
 
     else:
         raise Exception('Failed to recognize input option!')
