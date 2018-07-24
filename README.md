@@ -17,4 +17,4 @@ My current research interest lies in developing techniques to support a more com
 ##### References:
 ##### 1. Van der Aalst, W. M. P. (2016). Process Mining: Data Science in Action (2nd ed.). Springer.
 ##### 2. Song, M., & van der Aalst, W. M. P. (2008). Towards comprehensive support for organizational mining. Decision Support Systems, 46(1), 300–317.
-##### 3. Yang, J., Ouyang, C., Pan, M., Yu, Y., & ter Hofstede, A. H. M. (2018). Finding the Liberos: Discover Organizational Models with Overlaps. Proceedings of the 16th International Conference on Business Process Management (BPM 2018). In press.
+##### 3. Yang, J., Ouyang, C., Pan, M., Yu, Y., & ter Hofstede, A. H. M. (2018). Finding the Liberos: Discover Organizational Models with Overlaps. Proceedings of the 16th International Conference on Business Process Management (BPM 2018).
