@@ -1,6 +1,31 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+'''
+This module contains the implementation of the method of mining overlapping
+orgnizational models using Gaussian Mixture Model, proposed by Yang et al.
+(ref. J.Yang et al., BPM 2018).
+'''
+
+def mine(profiles,
+        n_groups=None): 
+    '''
+    This function implements the main algorithm of using Gaussian Mixture Model
+    for mining an overlapping organizational model from the given event log.
+
+    Params:
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
+        n_groups: int, optional
+            The number of groups to be discovered. The default is 'None', which
+            implies that user should select the appropriate number of groups by
+            using the visualizing tools provided.
+    Returns:
+        og: dict of sets
+            The mined organizational groups.
+    '''
+
 import numpy as np
 import copy
 #import matplotlib.pyplot as plt
