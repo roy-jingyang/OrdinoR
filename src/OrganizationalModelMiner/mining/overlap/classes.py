@@ -1,11 +1,4 @@
-#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-'''
-This module contains the implementation of the method of mining overlapping
-organizational models using Model-based Overlapping Clustering, proposed by
-Yang et al. (ref. J.Yang et al., BPM 2018).
-'''
 
 # Class definition
 class MOC:
@@ -93,8 +86,8 @@ class MOC:
             current_log_likelihood = self.score(X, M, A)
             print('score = {:.3f}'.format(current_log_likelihood))
             if prev_log_likelihood is not None: # if not the initial run
-                delta_log_likelihood = \
-                        current_log_likelihood - prev_log_likelihood
+                delta_log_likelihood = (current_log_likelihood
+                        - prev_log_likelihood)
         print('Model fitted in {} iterations.'.format(iteration))
         return M
 
@@ -108,8 +101,8 @@ class MOC:
             pie_j = (1.0 / X.shape[0]) * len(M_j[M_j == True])
             for i in range(M.shape[0]): # n
                 # Bernoulli
-                alpha_ij = power(pie_j, M[i,j]) * \
-                        power((1 - pie_j), (1 - M[i,j]))
+                alpha_ij = (power(pie_j, M[i,j])
+                        * power((1 - pie_j), (1 - M[i,j])))
                 score_alpha += log(alpha_ij)
 
         # calculate the Bregman divergence
@@ -163,75 +156,4 @@ class MOC:
     # TODO
     def _dynamicm(self, x, m0, A, k):
         pass
-
-
-def mine(profiles,
-        n_groups,
-        warm_start_input_fn=None):
-    '''
-    This method implements the algorithm of using Gaussian Mixture Model
-    for mining an overlapping organizational model from the given event log.
-
-    Params:
-        profiles: DataFrame
-            With resource ids as indices and activity names as columns, this
-            DataFrame contains profiles of the specific resources.
-        n_groups: int
-            The number of groups to be discovered.
-        warm_start_input_fn: str, optional
-            Filename of the initial guess of clustering. The file should be
-            formatted as:
-                Group ID, resource; resource; ...
-            with each line in the CSV file representing a group.
-            The default is None, meaning warm start is NOT used.
-    Returns:
-        og: dict of sets
-            The mined organizational groups.
-    '''
-
-    print('Applying overlapping organizational model mining using ' + 
-            'clustering-based MOC:')
-    # step 1. Importing warm-start (initial guess of clustering from file
-    moc_warm_start = (warm_start_input_fn is not None)
-    if moc_warm_start:
-        from numpy import zeros
-        from pandas import DataFrame
-        m = DataFrame(zeros((len(profiles), n_groups)), index=profiles.index)
-        from csv import reader
-        with open(warm_start_input_fn, 'r') as f:
-            count_groups = 0
-            for row in reader(f):
-                for r in row[1].split(';'):
-                    m.loc[r][count_groups] = 1 # equals to m[i,j]
-                count_groups += 1
-        if n_groups != count_groups:
-            exit('Invalid initial guess detected. Exit with error.')
-        else:
-            print('Initial guess imported from file "{}".'.format(
-                warm_start_input_fn))
-
-    # step 2. Training the model
-    if moc_warm_start:
-        moc_model = MOC(n_components=n_groups, M_init=m.values)
-    else:
-        moc_model = MOC(n_components=n_groups)
-    mat_membership = moc_model.fit_predict(profiles.values)
-
-    # step 3. Deriving the clusters as the end result
-    from numpy import nonzero
-    from collections import defaultdict
-    og = defaultdict(lambda: set())
-    # TODO: more pythonic way required
-    for i in range(len(mat_membership)):
-        # check if any valid membership exists for the resource based on
-        # the results predicted by the obtained MOC model
-        if len(nonzero(mat_membership[i,:])[0]) > 0: # valid
-            for j in nonzero(mat_membership[i,:])[0]:
-                og[j].add(profiles.index[i])
-        else: # invalid (unexpected exit)
-            exit('[Fatal error] MOC failed to produce a valid result')
-
-    print('{} organizational entities extracted.'.format(len(og)))
-    from copy import deepcopy
-    return deepcopy(og)
 

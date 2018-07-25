@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -69,8 +68,8 @@ def handover(c,
         sf = 0
         for case_id, trace in c.groupby('case_id'):
             num_events = len(trace)
-            sf += sum(beta ** (n - 1) * (num_events - n) \
-                    for n in range(1, min(num_events - 1, depth)))
+            sf += (sum(beta ** (n - 1) * (num_events - n) 
+                for n in range(1, min(num_events - 1, depth))))
         for case_id, trace in c.groupby('case_id'):
             # for each case
             num_events = len(trace)
@@ -81,16 +80,16 @@ def handover(c,
                         res_prev = trace.iloc[i]['resource']
                         res_next = trace.iloc[i + 1]['resource']
                         if res_prev != res_next: # self-loop ignored
-                            mat[res_prev][res_next]['weight'] += \
-                                    beta ** (n - 1) * 1 / sf
+                            mat[res_prev][res_next]['weight'] += (beta
+                                    ** (n - 1) * 1 / sf)
 
     else: # CIIM
         # scale_factor: SIGMA_Case c in Log (SIGMA_n=1:min(|c| - 1, depth) (beta^n-1))
         sf = 0
         for case_id, trace in c.groupby('case_id'):
             num_events = len(trace)
-            sf += sum(beta ** (n - 1) \
-                    for n in range(1, min(num_events - 1, depth)))
+            sf += (sum(beta ** (n - 1) 
+                for n in range(1, min(num_events - 1, depth))))
         for case_id, trace in c.groupby('case_id'):
             # for each case
             handovered_pairs = set()

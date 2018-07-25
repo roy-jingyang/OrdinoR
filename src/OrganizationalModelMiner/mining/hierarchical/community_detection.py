@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -24,7 +23,10 @@ def betweenness(sn,
             actions, etc.
         n_groups: int
             The number of groups to be discovered.
-
+        weight: str, optional
+            String specifiying the name of the weight attribute in the NetworkX
+            graph to be recognized as weight values. The default is None, i.e.
+            the graph is considered as unweighted.
     Returns:
         og: dict of sets
             The mined organizational groups.

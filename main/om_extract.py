@@ -22,7 +22,6 @@ if __name__ == '__main__':
     print('Option: ', end='')
     mining_option = int(input())
 
-
     if mining_option in [1, 3]:
         print('Warning: These options are closed for now. Activate them when necessary.')
         exit(1)
@@ -41,20 +40,18 @@ if __name__ == '__main__':
         if method_option == 0:
             from OrganizationalModelMiner.mining.hierarchical import cluster
             # build profiles
-            from SocialNetworkMiner.mining.joint_activities import \
-                    build_performer_activity_matrix
+            from SocialNetworkMiner.mining.joint_activities import build_performer_activity_matrix
             profiles = build_performer_activity_matrix(
                     cases, use_log_scale=False)
             og, og_hcy = cluster.ahc(profiles, num_groups)
         elif method_option == 1:
-            from OrganizationalModelMiner.mining.hierarchical import \
-                    community_detection
+            from OrganizationalModelMiner.mining.hierarchical import community_detection
             # build social network
             #from SocialNetworkMiner.mining.causality import handover
             from SocialNetworkMiner.mining.joint_activities import distance
             sn = distance(cases)
             og, og_hcy = community_detection.betweenness(sn, num_groups,
-                    weight='weight') # consider edge weight
+                    weight='weight') # consider edge weight, optional
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
@@ -62,12 +59,11 @@ if __name__ == '__main__':
         og_hcy.to_csv(fnout_org_model + '_hierarchy')
 
     elif mining_option == 4:
-        from OrganizationalModelMiner.mining.overlap import GMM
+        from OrganizationalModelMiner.mining.overlap.cluster import gmm
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = int(input())
         # build profiles
-        from SocialNetworkMiner.mining.joint_activities import \
-                build_performer_activity_matrix
+        from SocialNetworkMiner.mining.joint_activities import build_performer_activity_matrix
         profiles = build_performer_activity_matrix(cases, use_log_scale=False)
 
         print('Input a number to choose a specific covariance type:')
@@ -80,17 +76,16 @@ if __name__ == '__main__':
         ws_fn = input()
         ws_fn = None if ws_fn == '' else ws_fn
 
-        og = GMM.mine(profiles, num_groups,
+        og = gmm(profiles, num_groups,
                 cov_type=cov_types[cov_type_option],
                 warm_start_input_fn=ws_fn)
 
     elif mining_option == 5:
-        from OrganizationalModelMiner.mining.overlap import MOC
+        from OrganizationalModelMiner.mining.overlap.cluster import moc
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = int(input())
         # build profiles
-        from SocialNetworkMiner.mining.joint_activities import \
-                build_performer_activity_matrix
+        from SocialNetworkMiner.mining.joint_activities import build_performer_activity_matrix
         profiles = build_performer_activity_matrix(cases, use_log_scale=False)
 
         print('Input a relative path to the file to be used for warm start: ' +
@@ -98,7 +93,7 @@ if __name__ == '__main__':
         ws_fn = input()
         ws_fn = None if ws_fn == '' else ws_fn
 
-        og = MOC.mine(profiles, num_groups,
+        og = moc(profiles, num_groups, 
                 warm_start_input_fn=ws_fn)
 
     else:
