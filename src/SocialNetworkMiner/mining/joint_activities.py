@@ -39,13 +39,14 @@ def build_performer_activity_matrix(c, use_log_scale):
 
 def distance(c, 
         use_log_scale=False,
-        metric='euclidean'):
+        metric='euclidean',
+        convert=False):
     '''
     This method implements the mining based on metrics based on joint activi-
     ties where distance-related measures are used. Notice that the weight
     values correspond to the distances between the "profiles", thus:
-        1. A higher weight value means farther relationships, which is
-        different with other metrics, and
+        1. A HIGHER weight value means FARTHER relationships, which is
+        DIFFERENT with other metrics, and
         2. The generated network is naturally a undirected graph.
 
     Params:
@@ -58,6 +59,11 @@ def distance(c,
                 - 'cityblock': the Manhattan (Rectilinear) distance
                 - 'euclidean': the Euclidean distance, default
                 - 'hamming': the Hamming distance (the default threshold is 0).
+        convert: boolean, optional
+            Boolean flag to determine whether the weight values of the edges in
+            the mined network should be converted to similarity flavored (i.e.
+            first reverse the sign, and scale to range from 0 to 1). The 
+            default is to keep the original distance values.
     Returns:
         sn: NetworkX Graph
             The mined social network as a Network Graph object.
@@ -66,6 +72,12 @@ def distance(c,
     pam = build_performer_activity_matrix(c, use_log_scale)
     from scipy.spatial.distance import squareform, pdist
     x = squareform(pdist(pam, metric=metric)) # preserve index
+
+    if convert:
+        print('[Warning] Distance measure has been converted.')
+        x = 0 - x
+        x -= x.min()
+        x /= x.max() - x.min() 
     # convert to Graph
     from networkx import Graph, relabel_nodes
     from numpy import fill_diagonal

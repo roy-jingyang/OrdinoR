@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     print('Input a number to choose a solution:')
     print('\t0. Default Mining (Song)')
-    print('\t1. Metric based on Joint Activities (Song)')
+    print('\t1. Metric based on Joint Activities/Cases (Song)')
     print('\t2. Hierarchical Organizational Mining')
     print('\t3. Overlapping Community Detection (Appice)')
     print('\t4. Gaussian Mixture Model')
@@ -22,9 +22,31 @@ if __name__ == '__main__':
     print('Option: ', end='')
     mining_option = int(input())
 
-    if mining_option in [1, 3]:
+    if mining_option in [3]:
         print('Warning: These options are closed for now. Activate them when necessary.')
         exit(1)
+    elif mining_option == 1:
+        from OrganizationalModelMiner.mining.disjoint import partition
+        print('Input a number to choose a metric:')
+        print('\t0. MJA')
+        print('\t1. MJC')
+        print('Option: ', end='')
+        metric_option = int(input())
+        if metric_option == 0:
+            from SocialNetworkMiner.mining.joint_activities import distance
+            sn = distance(cases, convert=True)
+        elif metric_option == 1:
+            from SocialNetworkMiner.mining.joint_cases import working_together
+            sn = working_together(cases)
+        else:
+            raise Exception('Failed to recognize input option!')
+            exit(1)
+
+        print('Input a value as threshold:', end=' ')
+        threshold = float(input())
+
+        og = partition.remove_edges(sn, threshold)
+
     elif mining_option == 0:
         from OrganizationalModelMiner.mining import default_mining
         og = default_mining.mine(cases)
@@ -36,6 +58,7 @@ if __name__ == '__main__':
         print('Input a number to choose a method:')
         print('\t0. Mining using cluster analysis')
         print('\t1. Mining using community detection')
+        print('Option: ', end='')
         method_option = int(input())
         if method_option == 0:
             from OrganizationalModelMiner.mining.hierarchical import cluster
@@ -49,7 +72,7 @@ if __name__ == '__main__':
             # build social network
             #from SocialNetworkMiner.mining.causality import handover
             from SocialNetworkMiner.mining.joint_activities import distance
-            sn = distance(cases)
+            sn = distance(cases, convert=True)
             og, og_hcy = community_detection.betweenness(sn, num_groups,
                     weight='weight') # consider edge weight, optional
         else:
@@ -69,6 +92,7 @@ if __name__ == '__main__':
         print('Input a number to choose a specific covariance type:')
         print('\t0. full 1. tied 2. diag 3. spherical (default)')
         cov_types = ['full', 'tied', 'diag', 'spherical']
+        print('Option: ', end='')
         cov_type_option = int(input())
 
         print('Input a relative path to the file to be used for warm start: ' +
