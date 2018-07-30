@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 '''
@@ -38,7 +37,7 @@ def purity(resources, model, ref_model):
         model_purity += p_i * entity_purity_i
 
     string = 'The total purity of the loaded model compared to' + \
-            ' the reference model is p =\t\t\t{:.3f}'
+            ' the reference model is p = {:.3f}'
     return (model_purity, string)
 
 def inverse_purity(resources, model, ref_model):
@@ -56,7 +55,7 @@ def inverse_purity(resources, model, ref_model):
         model_inverse_purity += p_i * entity_inverse_purity_i
 
     string = 'The total inverse purity of the loaded model compared to' + \
-            ' the reference model is inv_p =\t\t\t{:.3f}'
+            ' the reference model is inv_p = {:>.3f}'
     return (model_inverse_purity, string)
 
 # Van Rijsbergen's F measure, combining Purity and Inverse Purity
@@ -81,7 +80,7 @@ def F_measure(resources, model, ref_model):
         model_F_value += p_i * entity_F_value
 
     string = 'The total F measure value of the loaded model compared to' + \
-            ' the reference model is F =\t\t\t{:.3f}'
+            ' the reference model is F = {:.3f}'
     return (model_F_value, string)
 
 # 2. Metrics based on counting pairs
@@ -157,21 +156,21 @@ def _counting_pairs(resources, model, ref_model):
 def Rand_stat(resources, model, ref_model):
     ss, sd, ds, dd = _counting_pairs(resources, model, ref_model)
     string = 'The Rand statistic of the loaded model compared to' + \
-            ' the reference model is R =\t\t\t{:.3f}'
+            ' the reference model is R = {:.3f}'
     R = (ss + dd) / (ss + sd + ds + dd)
     return (R, string)
 
 def Jaccard_coef(resources, model, ref_model):
     ss, sd, ds, dd = _counting_pairs(resources, model, ref_model)
     string = 'The Jaccard Coefficient of the loaded model compared to' + \
-            ' the reference model is J =\t\t\t{:.3f}'
+            ' the reference model is J = {:.3f}'
     J = ss / (ss + sd + ds)
     return (J, string)
 
 def Folkes_and_Mallows(resources, model, ref_model):
     ss, sd, ds, dd = _counting_pairs(resources, model, ref_model)
     string = 'The Folkes and Mallows score of the loaded model compared to' + \
-            ' the reference model is FM =\t\t\t{:.3f}'
+            ' the reference model is FM = {:.3f}'
     J = ss / (ss + sd + ds)
     FM = math.sqrt((ss / (ss + sd)) * (ss / (ss + ds)))
     return (FM, string)
@@ -201,7 +200,7 @@ def entropy_measure(resources, model, ref_model):
         model_entropy += p_j * entity_entropy_j
 
     string = 'The total entropy of the loaded model compared to' + \
-            ' the reference model is e =\t\t\t{:.3f}'
+            ' the reference model is e = {:.3f}'
     return (model_entropy, string)
 
 # 4. (Original) BCubed metrics: NOT implemented
@@ -343,7 +342,7 @@ def bcubed_precision(resources, model, ref_model):
     # Avg_e
     precision_bcubed /= (N - 1)
     string = 'The Precision BCubed of the loaded model compared to' + \
-            ' the reference model is Precision BCubed =\t\t\t{:.3f}'
+            ' the reference model is Precision BCubed = {:.3f}'
     return (precision_bcubed, string)
 
 def bcubed_recall(resources, model, ref_model):
@@ -368,7 +367,7 @@ def bcubed_recall(resources, model, ref_model):
     # Avg_e
     recall_bcubed /= (N - 1)
     string = 'The Recall BCubed of the loaded model compared to' + \
-            ' the reference model is Recall BCubed =\t\t\t{:.3f}'
+            ' the reference model is Recall BCubed = {:.3f}'
     return (recall_bcubed, string)
 
 def bcubed_F_measure(resources, model, ref_model):
@@ -377,6 +376,6 @@ def bcubed_F_measure(resources, model, ref_model):
     F_score = 2 * \
             (bc_precision * bc_recall) / (bc_precision + bc_recall)
     string = 'The F-measure (BCubed) of the loaded model compared to' + \
-            ' the reference model is F(BCubed) =\t\t\t{:.3f}'
+            ' the reference model is F(BCubed) = {:.3f}'
     return (F_score, string)
 

@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import copy
@@ -17,11 +16,12 @@ def mine(f_sn_model):
     with open('linear_network.tmp.net', 'w') as f_pajek:
         f_pajek.write('*Vertices {}\n'.format(len(edges)))
 
-        # create nodes in linear network
+        # create nodes in linear network (corresponding to edges)
         for i in range(len(edges)):
             e = edges[i]
             u = e[0]
             v = e[1]
+            # the "><" deliminator is used to distinguish the original nodes
             f_pajek.write('{} "{}><{}"\n'.format(
                 i + 1, str(u), str(v)))
 

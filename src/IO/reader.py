@@ -78,10 +78,10 @@ def read_disco_csv(fn, mapping=None, header=True, encoding='utf-8'):
             else:
                 # the default mapping is defined as below
                 e = {
-                        'case_id': row[0],
-                        'activity': row[1],
-                        'resource': row[2],
-                        'timestamp': row[3]
+                    'case_id': row[0],
+                    'activity': row[1],
+                    'resource': row[2],
+                    'timestamp': row[3]
                 }
                 # add addtional attributes mapping specified
                 if mapping:

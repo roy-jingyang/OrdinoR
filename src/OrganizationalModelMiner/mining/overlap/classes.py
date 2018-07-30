@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
-
-# TODO: in the current implementation, we assume a Gaussian distribution for
+# -*- coding: utf-8 -*- # TODO: in the current implementation, we assume a Gaussian distribution for
 # the latent categories of the data samples, thus the Bregman divergence is the
-# sqaure Euclidean distance.
+# square Euclidean distance.
 class MOC:
     '''
     Class variables:
@@ -24,14 +22,21 @@ class MOC:
         The user-provided initial membership matrix M, defaults to None.
         If None, random initialization is used.
 
+    is_disjoint: Boolean, defaults to False
+        The Boolean flag indicating whether a disjoint result (the reduced
+        case) is required.
+
     '''
     def __init__(self, 
-            n_components=1, tol=1e-6, n_init=1, max_iter=10, M_init=None):
+            n_components=1, tol=1e-6, n_init=1, max_iter=100, M_init=None,
+            #is_disjoint=True):
+            is_disjoint=False):
         self.n_components = n_components
         self.tol = tol
         self.n_init = n_init
         self.max_iter = max_iter
         self.M_init = M_init
+        self.is_disjoint = is_disjoint
     
     def fit_predict(self, X):
         '''Fit and then predict labels for samples.
@@ -44,7 +49,7 @@ class MOC:
         -------
         C : array-like, shape (n_samples, n_components), component membership
         '''
-        from numpy import array, dot, infty
+        from numpy import array, dot, infty, zeros
         from numpy.random import randint
         from numpy.linalg import pinv
 
@@ -53,7 +58,12 @@ class MOC:
         else:
             # Initialize a random guess of membership M
             # Random initialization of a binary matrix
-            M = randint(2, size=(len(X), self.n_components))
+            if self.is_disjoint:
+                M = zeros((len(X), self.n_components))
+                for row in M:
+                    row[randint(self.n_components)] = 1 # only 1
+            else:
+                M = randint(2, size=(len(X), self.n_components)) # arbitrary
             
         iteration = -1
         new_M = None
@@ -63,7 +73,8 @@ class MOC:
         while delta_log_likelihood > self.tol: # while not converged
             if iteration >= self.max_iter:
                 print('[Warning] Model did not converged within a max. of ' +
-                        '{} iterations (delta= {:.4f}).'.format(max_iter, tol))
+                        '{} iterations (delta= {:.4f}).'.format(
+                            self.max_iter, self.tol))
                 return M
 
             iteration += 1
@@ -75,18 +86,20 @@ class MOC:
             # update A: assume loss function sqaured Euclidean Distance
             pinv_M = pinv(M) 
             A = dot(pinv_M, X)
+            #print(A)
 
             # update M: for each row, apply appropriate search algorithms
             new_M = list()
             for i in range(X.shape[0]):
                 #m_best = self._enumerate(X[i,:], M[i,:], A)
-                m_best = self._dynamicm(X[i,:], M[i,:], A) #TODO
+                m_best = self._dynamicm(X[i,:], M[i,:], A)
                 new_M.append(m_best)
             M = array(new_M)
+            #print(M)
 
             # calculate new log-likelihood:
             current_log_likelihood = self.score(X, M, A)
-            print('score = {:.3f}'.format(current_log_likelihood))
+            print('score = {}'.format(current_log_likelihood))
             if prev_log_likelihood is not None: # if not the initial run
                 delta_log_likelihood = (current_log_likelihood
                         - prev_log_likelihood)
@@ -138,16 +151,25 @@ class MOC:
         '''
         # Exhaustively enumerate all possible settings sum_{i = 1 to k} C^i_k
         # start from 1 ensures that at least one scalar with value True
-        for i in range(1, k + 1):
-            for index in combinations(range(k), i):
-                m = array([0] * k)
-                m[[index]] = 1
-                L = sqeuclidean(x, dot(m, A))
+        if self.is_disjoint:
+            for i in range(k):
+                m = np.array([0] * k)
+                m[i] = 1
+                L = sqeuclidean(x, np.dot(m, A))
                 if L < Lmin:
                     Lmin = L
                     m_best = m
+        else:
+            for i in range(1, k + 1):
+                for index in combinations(range(k), i):
+                    m = array([0] * k)
+                    m[[index]] = 1
+                    L = sqeuclidean(x, dot(m, A))
+                    if L < Lmin:
+                        Lmin = L
+                        m_best = m
+
         '''
-        # Disjoint: reduced case
         for i in range(k):
             m = np.array([0] * k)
             m[i] = 1
@@ -161,64 +183,77 @@ class MOC:
     # search on each separate threads with different initial setting
     # greedily proceed on the fly (idea similar to DP)
     def _dynamicm(self, x, m0, A):
-        from threading import Thread
+        from threading import Thread, local
         from numpy import array, dot, infty, where
         from scipy.spatial.distance import sqeuclidean
         from copy import copy
-        class SearchThread(Thread):
-            def __init__(self, x, m, A):
-                Thread.__init__(self)
-                self.x = x
-                self.A = A
-                self.m = m # the guess (per thread)
-                self.L = sqeuclidean(x, dot(m, A))
-            def run(self):
-                # TODO
-                # no need for any messy procedure!
-                # just:
-                # (1) start with the local copy (with 1 cluster turned on)
-                # (2) generate the combinations as candidate positions
-                # (3) evaluate by level, with 2 turned on, then 3 ...
-                # (4) at each level, see if better results come out
-                #       continue to next level if there are;
-                #       return if NOT!
-                # Let's just do this after the test.
-                while True:
-                    # if the thread is still active:
-                    # find the next best cluster to be "turned on", i.e.
-                    # the one resulting in smaller value of L
-                    next_on = None
-                    next_min_L = infty
-                    for i in where(m == 0):
-                        cand_m = copy(self.m)
-                        cand_m[i] = 1
-                        cand_L = sqeuclidean(self.x, dot(cand_m, self.A))
-                        if cand_L < next_min_L:
-                            next_min_L = cand_L
-                            next_on = i
-                    if next_min_L < self.L:
-                        # update the guess if turnining on a next cluster
-                        # makes the loss smaller
-                        self.L = next_min_L
-                        self.m[next_on] = 1
-                    else:
-                        return
+        from itertools import combinations
 
-        k = len(m0)
-        separate_search_threads = list()
-        for h in range(k):
-            m = array([0] * k)
-            m[h] = 1
-            s = SearchThread(x, m, A)
-            s.start()
-            separate_search_threads.append(s)
+        class SearchThread(Thread):
+            def __init__(self, params):
+                Thread.__init__(self)
+                self.x = params.x
+                self.A = params.A
+                self.m = params.m # the guess (per thread) with 1 "turned on"
+            def run(self):
+                # generate the combinations as candidate positions
+                L_min = sqeuclidean(self.x, dot(self.m, self.A))
+
+                is_active = True
+                while is_active:
+                    best_candidate = None
+                    # choose a best candidate to "turn on" from the rest
+                    for i in where(self.m == 0)[0]:
+                        candidate_m = copy(self.m)
+                        candidate_m[i] = 1 # try turning on 1 cluster
+                        candidate_L = sqeuclidean(
+                                self.x, dot(candidate_m, self.A))
+                        if candidate_L < L_min:
+                            # update if better than the current one
+                            best_candidate = i
+                            L_min = candidate_L
+                    if best_candidate:
+                        is_active = True
+                        self.m[best_candidate] = 1
+                    else:
+                        # if no better frontier could be found, set inactive
+                        is_active = False # break
+                return
+
+        n_components = len(m0)
         L0 = sqeuclidean(x, dot(m0, A))
         m_best = m0
-        for h in range(k):
-            separate_search_threads[h].join()
-            if separate_search_threads[h].L < L0:
-                L0 = separate_search_threads[h].L
-                m_best = separate_search_threads[h].m
 
-        return m0
+        separate_search_threads = list()
+        if self.is_disjoint:
+            for h in range(n_components): # init each search thread
+                m = array([0] * n_components)
+                m[h] = 1
+                L = sqeuclidean(x, dot(m, A))
+                if L < L0:
+                    L0 = L
+                    m_best = m
+        else:
+            for h in range(n_components): # init each search thread
+                m = array([0] * n_components)
+                m[h] = 1
+                # create thread local data
+                local_data = local()
+                local_data.x = x
+                local_data.A = A
+                local_data.m = m
+
+                s = SearchThread(local_data)
+                s.start() # run 
+                separate_search_threads.append(s)
+
+            for h in range(n_components): # collect results and select
+                separate_search_threads[h].join()
+                thread_result_L = sqeuclidean(x,
+                        dot(separate_search_threads[h].m, A))
+                if thread_result_L < L0:
+                    L0 = thread_result_L
+                    m_best = separate_search_threads[h].m
+
+        return m_best
 

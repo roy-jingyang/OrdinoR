@@ -66,7 +66,7 @@ def distance(c,
             default is to keep the original distance values.
     Returns:
         sn: NetworkX Graph
-            The mined social network as a Network Graph object.
+            The mined social network as a NetworkX Graph object.
     '''
 
     pam = build_performer_activity_matrix(c, use_log_scale)
@@ -109,7 +109,7 @@ def correlation(c,
                 - 'pearson': the Pearson Correlation Coefficient (PCC), default
     Returns:
         sn: NetworkX Graph
-            The mined social network as a Network Graph object.
+            The mined social network as a NetworkX Graph object.
     '''
     
     pam = build_performer_activity_matrix(c, use_log_scale)

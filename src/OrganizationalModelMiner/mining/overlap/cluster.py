@@ -4,6 +4,7 @@
 This module contains the implementation of methods of mining overlapping orga-
 nizational models, based on the use of clustering techniques. These methods are
 "profile-based", meaning that resource profiles should be used as input.
+
 Methods include:
     1. GMM (Gaussian Mixture Model) (J.Yang et al.)
     2. MOC (Model-based Overlapping Clusttering) (J.Yang et al.)
@@ -37,7 +38,6 @@ def gmm(profiles,
         og: dict of sets
             The mined organizational groups.
     '''
-    from collections import defaultdict
 
     print('Applying overlapping organizational model mining using ' +
             'clustering-based GMM:')
@@ -83,7 +83,7 @@ def gmm(profiles,
     posterior_pr = gmm_model.predict_proba(profiles)
     print('Input a threshold value [0, 1), in order to determine the ' +
             'resource membership (Enter to choose the max., ' + 
-            'creating disjoint groups:', end=' ')
+            'creating disjoint groups):', end=' ')
     from numpy import amax
     user_selected_threshold = input()
     user_selected_threshold = (float(user_selected_threshold)
@@ -91,11 +91,12 @@ def gmm(profiles,
 
     # step a4. Deriving the clusters as the end result
     from numpy import nonzero, argmax
+    from collections import defaultdict
     og = defaultdict(lambda: set())
     # TODO: more pythonic way required
     for i in range(len(posterior_pr)):
         resource_postpr = posterior_pr[i]
-        if not user_selected_threshold:
+        if user_selected_threshold is None:
             user_selected_threshold = amax(resource_postpr)
         membership = [p >= user_selected_threshold for p in resource_postpr]
         # check if any valid membership exists for the resource based on
