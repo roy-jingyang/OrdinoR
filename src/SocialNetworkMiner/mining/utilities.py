@@ -42,14 +42,14 @@ def select_edges_by_weight(sn, weight='weight',
     psn = deepcopy(sn)
     n_edges_old = len(psn.edges)
     edges_to_be_removed = list()
-    if low or high:
-        test_lower_bound = lambda wt: wt >= low if low else True
-        test_upper_bound = lambda wt: wt < high if high else True
+    if low is not None or high is not None:
+        test_lower_bound = lambda wt: wt >= low if low is not None else True
+        test_upper_bound = lambda wt: wt < high if high is not None else True
         print('\tOnly values within [{}, {}) are kept.'.format(low, high))
         for u, v, wt in psn.edges.data(weight):
             if not (test_lower_bound(wt) and test_upper_bound(wt)):
                 edges_to_be_removed.append((u, v))
-    elif percentage:
+    elif percentage is not None:
         from numpy import percentile
         if percentage[0] == '+':
             # keep the top p ranked edges

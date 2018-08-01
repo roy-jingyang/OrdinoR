@@ -35,10 +35,23 @@ def ln_louvain(sn):
 
     # step 1. Build the linear network using the original network
     edges = sorted(list(sn.edges.data('weight')))
+
+    # distinguish the isolated nodes in the original network first
+    from networkx import isolates
+    original_isolates = list(isolates(sn))
+    if len(original_isolates) > 0:
+        print('[Warning] There exist {} ISOLATED NODES in the original network.'
+                .format(len(original_isolates)), end=' ')
+        print('This indicates that when using any external tools to discover ' +
+                'communities from the linear network, you should specify the ' +
+                'target number of communities as:\n\tN\' = N - {},'.format(
+                    len(original_isolates)), end=' ')
+        print('where N is the actual target number to be obtained in the ' +
+                'final result.')
+
     with open('tmp_ln.net', 'w') as f_pajek_net:
         # header
         f_pajek_net.write('*Vertices {}\n'.format(len(edges)))
-
         # create nodes of the linear network (corresponding to edges)
         for i in range(len(edges)):
             e = edges[i]
@@ -54,7 +67,6 @@ def ln_louvain(sn):
         # header
         f_pajek_net.write('*arcs\n')
         cnt = 0
-        l_str_edges = list()
         for i in range(len(edges) - 1):
             ei = edges[i]
             for j in range(i + 1, len(edges)):
@@ -75,20 +87,11 @@ def ln_louvain(sn):
                             sn.degree(nbunch=x, weight='weight') - ei[2])
 
                     # precision of the edge weight value is 1e-9
-                    '''
                     f_pajek_net.write('{} {} {:.9f}\n'.format(
                         i + 1, j + 1, w_l))
                     f_pajek_net.write('{} {} {:.9f}\n'.format(
-                        j + 1, i + 1, w_r))
-                    '''
-                    l_str_edges.append('{} {} {:.9f}\n'.format(
-                        i + 1, j + 1, w_l))
-                    l_str_edges.append('{} {} {:.9f}\n'.format(
                         j + 1, i + 1, w_r))
                     cnt += 2
-
-        for i in range(cnt):
-            f_pajek_net.write(l_str_edges[i])
 
         print('{} edges have been added to the linear network.'.format(cnt))
 
@@ -125,6 +128,8 @@ def ln_louvain(sn):
                 og[label].add(u)
                 og[label].add(v)
                 cnt += 1
+        for i in range(len(original_isolates)):
+            og['ISOLATE #{}'.format(i)].add(original_isolates[i])
 
     print('{} organizational entities extracted.'.format(len(og)))
     from copy import deepcopy

@@ -131,7 +131,8 @@ if __name__ == '__main__':
             if type(threshold) == float:
                 sn = select_edges_by_weight(sn, low=threshold)
             else:
-                sn = select_edges_by_weight(sn, low=1e-256) # TODO: Appice only keeps the top positive values
+                eps = sys.float_info.epsilon
+                sn = select_edges_by_weight(sn, low=eps) # TODO: Appice only keeps the top positive values
                 sn = select_edges_by_weight(sn, percentage=threshold)
 
             og = ln_louvain(sn)
