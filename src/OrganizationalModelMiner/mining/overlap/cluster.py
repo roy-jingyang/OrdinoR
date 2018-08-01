@@ -91,13 +91,17 @@ def gmm(profiles,
 
     # step a4. Deriving the clusters as the end result
     from numpy import nonzero, argmax
+    from numpy.random import choice
     from collections import defaultdict
     og = defaultdict(lambda: set())
     # TODO: more pythonic way required
     for i in range(len(posterior_pr)):
         resource_postpr = posterior_pr[i]
         if user_selected_threshold is None:
-            user_selected_threshold = amax(resource_postpr)
+            # TODO: is_disjoint option
+            #user_selected_threshold = amax(resource_postpr)
+            user_selected_threshold = choice(
+                    resource_postpr[resource_postpr != 0])
         membership = [p >= user_selected_threshold for p in resource_postpr]
         # check if any valid membership exists for the resource based on
         # the selection of the threshold
@@ -161,6 +165,8 @@ def moc(profiles,
     if moc_warm_start:
         moc_model = MOC(n_components=n_groups, M_init=m.values)
     else:
+        # TODO: is_disjoint option
+        #moc_model = MOC(n_components=n_groups, is_disjoint=True)
         moc_model = MOC(n_components=n_groups)
     mat_membership = moc_model.fit_predict(profiles.values)
 

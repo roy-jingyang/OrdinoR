@@ -44,7 +44,7 @@ def ln_louvain(sn):
             e = edges[i]
             u = e[0]
             v = e[1]
-            # the "><" deliminator is used to distinguish the original nodes
+            # "><" is used as deliminator to distinguish between nodes
             f_pajek_net.write('{} "{}><{}"\n'.format(i + 1, str(u), str(v)))
 
         print('{} nodes have been added to the linear network.'.format(
@@ -54,6 +54,7 @@ def ln_louvain(sn):
         # header
         f_pajek_net.write('*arcs\n')
         cnt = 0
+        l_str_edges = list()
         for i in range(len(edges) - 1):
             ei = edges[i]
             for j in range(i + 1, len(edges)):
@@ -64,6 +65,7 @@ def ln_louvain(sn):
                     x = ei[0]
                 elif ei[1] == ej[0] or ei[1] == ej[1]:
                     x = ei[1]
+
                 if x is not None:
                     # i -> j
                     w_l = ei[2] / (
@@ -71,15 +73,24 @@ def ln_louvain(sn):
                     # i <- j
                     w_r = ej[2] / (
                             sn.degree(nbunch=x, weight='weight') - ei[2])
+
                     # precision of the edge weight value is 1e-9
+                    '''
                     f_pajek_net.write('{} {} {:.9f}\n'.format(
                         i + 1, j + 1, w_l))
                     f_pajek_net.write('{} {} {:.9f}\n'.format(
                         j + 1, i + 1, w_r))
+                    '''
+                    l_str_edges.append('{} {} {:.9f}\n'.format(
+                        i + 1, j + 1, w_l))
+                    l_str_edges.append('{} {} {:.9f}\n'.format(
+                        j + 1, i + 1, w_r))
                     cnt += 2
-    
-        print('{} edges have been added to the linear network.'.format(
-            cnt))
+
+        for i in range(cnt):
+            f_pajek_net.write(l_str_edges[i])
+
+        print('{} edges have been added to the linear network.'.format(cnt))
 
     print('Transformed linear network exported to "tmp_ln.net".')
     print('Use an external SNA tool to discover communities:')
@@ -91,7 +102,7 @@ def ln_louvain(sn):
     print('Path to the community detection result file (*.clu) as input: ', 
             end='')
     fn_pajek_net_communities = input()
-    print('Linear network with detected communities imported from {}.'.format(
+    print('Detected communities imported from "{}":'.format(
         fn_pajek_net_communities))
 
     # 3. Map communities onto the original network to get the results

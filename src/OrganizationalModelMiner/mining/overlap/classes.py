@@ -29,7 +29,6 @@ class MOC:
     '''
     def __init__(self, 
             n_components=1, tol=1e-6, n_init=1, max_iter=100, M_init=None,
-            #is_disjoint=True):
             is_disjoint=False):
         self.n_components = n_components
         self.tol = tol

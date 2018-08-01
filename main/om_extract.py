@@ -35,16 +35,30 @@ if __name__ == '__main__':
 
     elif mining_option == 1:
         from OrganizationalModelMiner.mining.disjoint import partition
-        # select relationship metric (MJA/MJC)
-        print('Input a number to choose a metric:')
+        # select method (MJA/MJC)
+        print('Input a number to choose a method:')
         print('\t0. MJA')
         print('\t1. MJC')
         print('Option: ', end='')
-        metric_option = int(input())
-        if metric_option == 0:
-            from SocialNetworkMiner.mining.joint_activities import distance
-            sn = distance(cases, use_log_scale=True, convert=True)
-        elif metric_option == 1:
+        method_option = int(input())
+        if method_option == 0:
+            # MJA -> select metric (ED-distance/PCC)
+            from SocialNetworkMiner.mining import joint_activities
+            print('Input a number to choose a metric:')
+            print('\t0. Distance (Euclidean)')
+            print('\t1. PCC')
+            print('Option: ', end='')
+            metric_option = int(input())
+            if metric_option == 0:
+                sn = joint_activities.distance(
+                        cases, use_log_scale=True, convert=True)
+            elif metric_option == 1:
+                sn = joint_activities.correlation(
+                        cases, use_log_scale=True)
+            else:
+                raise Exception('Failed to recognize input option!')
+                exit(1)
+        elif method_option == 1:
             from SocialNetworkMiner.mining.joint_cases import working_together
             sn = working_together(cases)
             print('[Warning] DiGraph casted to Graph.')
@@ -137,7 +151,8 @@ if __name__ == '__main__':
         print('\t0. full 1. tied 2. diag 3. spherical (default)')
         cov_types = ['full', 'tied', 'diag', 'spherical']
         print('Option: ', end='')
-        cov_type_option = int(input())
+        cov_type_option = input()
+        cov_type_option = 3 if cov_type_option == '' else int(cov_type_option)
 
         print('Input a relative path to the file to be used for warm start: ' +
                 '(Enter if None)')
