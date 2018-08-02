@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*- # TODO: in the current implementation, we assume a Gaussian distribution for
+# -*- coding: utf-8 -*-
+
+# TODO: in the current implementation, we assume a Gaussian distribution for
 # the latent categories of the data samples, thus the Bregman divergence is the
 # square Euclidean distance.
 class MOC:
@@ -10,10 +12,6 @@ class MOC:
 
     tol: float, defaults to 1e-6.
         The convergence threshold.
-
-    #TODO: for the moment, NO need to perform multiple initialization.
-    n_init: int, defaults to 1.
-        The number of initializations to perform. The best results are kept.
 
     max_iter: int, defaults to 10.
         The number of iterative alternating updates to run.
@@ -28,11 +26,10 @@ class MOC:
 
     '''
     def __init__(self, 
-            n_components=1, tol=1e-6, n_init=1, max_iter=100, M_init=None,
+            n_components=1, tol=1e-6, max_iter=100, M_init=None,
             is_disjoint=False):
         self.n_components = n_components
         self.tol = tol
-        self.n_init = n_init
         self.max_iter = max_iter
         self.M_init = M_init
         self.is_disjoint = is_disjoint
@@ -48,7 +45,7 @@ class MOC:
         -------
         C : array-like, shape (n_samples, n_components), component membership
         '''
-        from numpy import array, dot, infty, zeros
+        from numpy import array, dot, infty, zeros, ones
         from numpy.random import randint
         from numpy.linalg import pinv
 
@@ -62,8 +59,18 @@ class MOC:
                 for row in M:
                     row[randint(self.n_components)] = 1 # only 1
             else:
-                M = randint(2, size=(len(X), self.n_components)) # arbitrary
-            
+                #M = ones((len(X), self.n_components))
+                while True:
+                    M = randint(2, size=(len(X), self.n_components))
+                    # check validity by each row
+                    is_valid = True
+                    for row in M:
+                        if not row.any(): # if all zeros
+                            is_valid = False
+                            break # continue until a valid one generated
+                    if is_valid:
+                        break
+
         iteration = -1
         new_M = None
         current_log_likelihood = None

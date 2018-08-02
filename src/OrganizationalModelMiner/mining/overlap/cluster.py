@@ -76,7 +76,7 @@ def gmm(profiles,
         gmm_model = GaussianMixture(
                 n_components=n_groups,
                 covariance_type=cov_type,
-                n_init=100,
+                n_init=500,
                 init_params='random').fit(profiles.values)
 
     # step a3. Setting thresholds to determine membership for each data point
@@ -105,7 +105,7 @@ def gmm(profiles,
         membership = [p >= user_selected_threshold for p in resource_postpr]
         # check if any valid membership exists for the resource based on
         # the selection of the threshold
-        if len(nonzero(membership)[0]) > 0: # valid
+        if membership.any():
             for j in nonzero(membership)[0]:
                 og[j].add(profiles.index[i])
         else: # invalid, have to choose the maximum one or missing the resource
@@ -178,7 +178,7 @@ def moc(profiles,
     for i in range(len(mat_membership)):
         # check if any valid membership exists for the resource based on
         # the results predicted by the obtained MOC model
-        if len(nonzero(mat_membership[i,:])[0]) > 0: # valid
+        if mat_membership[i,:].any(): # valid if at least belongs to 1 group
             for j in nonzero(mat_membership[i,:])[0]:
                 og[j].add(profiles.index[i])
         else: # invalid (unexpected exit)
