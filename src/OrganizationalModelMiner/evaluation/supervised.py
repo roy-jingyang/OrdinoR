@@ -9,7 +9,7 @@ Information retrieval, 12(4), 461-486.
 import math
 import numpy as np
 
-# 1. Evaluation by set matching
+# 1. Evaluation by set matching: purity, inverse purity and F measure of them
 def report_set_matching(resources, model, ref_model):
     sc_purity, str_purity = purity(resources, model, ref_model)
     sc_inv_purity, str_inv_purity = inverse_purity(resources, model, ref_model)
@@ -283,9 +283,9 @@ def _pairwise_multiplicity_precision(resources, model, ref_model):
             # Min(|C(e) n C(e')|, |L(e) n L(e')|) / |C(e) n C(e')|
             if mat_cluster_multi[i][j] > 0:
                 # defined only when sharing at least 1 cluster
-                pw_multi_precision = min(
-                        mat_cluster_multi[i][j], mat_category_multi[i][j]) / \
-                                mat_cluster_multi[i][j]
+                pw_multi_precision = (min(
+                        mat_cluster_multi[i][j], mat_category_multi[i][j])
+                        / mat_cluster_multi[i][j])
             else:
                 # -1 otherwise
                 pw_multi_precision = -1
@@ -373,8 +373,7 @@ def bcubed_recall(resources, model, ref_model):
 def bcubed_F_measure(resources, model, ref_model):
     bc_precision = bcubed_precision(resources, model, ref_model)[0]
     bc_recall = bcubed_recall(resources, model, ref_model)[0]
-    F_score = 2 * \
-            (bc_precision * bc_recall) / (bc_precision + bc_recall)
+    F_score = 2 * (bc_precision * bc_recall) / (bc_precision + bc_recall)
     string = 'The F-measure (BCubed) of the loaded model compared to' + \
             ' the reference model is F(BCubed) = {:.3f}'
     return (F_score, string)

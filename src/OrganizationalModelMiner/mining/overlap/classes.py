@@ -13,6 +13,10 @@ class MOC:
     tol: float, defaults to 1e-6.
         The convergence threshold.
 
+    n_init: int, defaults to 1.
+        The number of initializations to perform. The best results are kept.
+        This parameter would be override if M_init is present.
+
     max_iter: int, defaults to 10.
         The number of iterative alternating updates to run.
 
@@ -26,10 +30,11 @@ class MOC:
 
     '''
     def __init__(self, 
-            n_components=1, tol=1e-6, max_iter=100, M_init=None,
+            n_components=1, tol=1e-6, n_init=1, max_iter=100, M_init=None,
             is_disjoint=False):
         self.n_components = n_components
         self.tol = tol
+        self.n_init = n_init if M_init is None else 1
         self.max_iter = max_iter
         self.M_init = M_init
         self.is_disjoint = is_disjoint
@@ -49,68 +54,83 @@ class MOC:
         from numpy.random import randint
         from numpy.linalg import pinv
 
-        if self.M_init is not None:
-            M = self.M_init
-        else:
-            # Initialize a random guess of membership M
-            # Random initialization of a binary matrix
-            if self.is_disjoint:
-                M = zeros((len(X), self.n_components))
-                for row in M:
-                    row[randint(self.n_components)] = 1 # only 1
+        best_score = None
+        best_M = None
+        init = 0
+        while init < self.n_init:
+            if self.M_init is not None:
+                M = self.M_init
             else:
-                #M = ones((len(X), self.n_components))
-                while True:
-                    M = randint(2, size=(len(X), self.n_components))
-                    # check validity by each row
-                    is_valid = True
+                # Initialize a random guess of membership M
+                # Random initialization of a binary matrix
+                if self.is_disjoint:
+                    M = zeros((len(X), self.n_components))
                     for row in M:
-                        if not row.any(): # if all zeros
-                            is_valid = False
-                            break # continue until a valid one generated
-                    if is_valid:
-                        break
+                        row[randint(self.n_components)] = 1 # only 1
+                else:
+                    while True:
+                        M = randint(2, size=(len(X), self.n_components))
+                        # check validity by each row
+                        is_valid = True
+                        for row in M:
+                            if not row.any(): # if all zeros
+                                is_valid = False
+                                break # continue until a valid one generated
+                        if is_valid:
+                            break
 
-        iteration = -1
-        new_M = None
-        current_log_likelihood = None
-        delta_log_likelihood = infty
-        print('Fitting MOC model:')
-        while delta_log_likelihood > self.tol: # while not converged
-            if iteration >= self.max_iter:
-                print('[Warning] Model did not converged within a max. of ' +
-                        '{} iterations (delta= {:.4f}).'.format(
-                            self.max_iter, self.tol))
-                return M
+            iteration = -1
+            new_M = None
+            current_log_likelihood = None
+            delta_log_likelihood = infty
+            print('Fitting MOC model-{}:'.format(init + 1), end=' ')
+            while delta_log_likelihood > self.tol: # while not converged
+                if iteration >= self.max_iter:
+                    print('[Warning] Model did not converged within a max. of '
+                            + '{} iterations (delta= {:.4f}).'.format(
+                                self.max_iter, self.tol))
+                    return M
 
-            iteration += 1
-            print('Iteration {}:'.format(iteration))
-            prev_log_likelihood = current_log_likelihood
+                iteration += 1
+                #print('Iteration {}:'.format(iteration))
+                prev_log_likelihood = current_log_likelihood
 
-            # Alternate between updating M and A
+                # Alternate between updating M and A
+                # update A: assume loss function sqaured Euclidean Distance
+                pinv_M = pinv(M) 
+                A = dot(pinv_M, X)
+                # update M: for each row, apply appropriate search algorithms
+                new_M = list()
+                for i in range(X.shape[0]):
+                    #m_best = self._enumerate(X[i,:], M[i,:], A)
+                    m_best = self._dynamicm(X[i,:], M[i,:], A)
+                    new_M.append(m_best)
+                M = array(new_M)
 
-            # update A: assume loss function sqaured Euclidean Distance
-            pinv_M = pinv(M) 
-            A = dot(pinv_M, X)
-            #print(A)
+                # calculate new log-likelihood:
+                current_log_likelihood = self.score(X, M, A)
+                #print('score = {}'.format(current_log_likelihood))
+                if prev_log_likelihood is not None: # if not the initial run
+                    delta_log_likelihood = (current_log_likelihood
+                            - prev_log_likelihood)
 
-            # update M: for each row, apply appropriate search algorithms
-            new_M = list()
-            for i in range(X.shape[0]):
-                #m_best = self._enumerate(X[i,:], M[i,:], A)
-                m_best = self._dynamicm(X[i,:], M[i,:], A)
-                new_M.append(m_best)
-            M = array(new_M)
-            #print(M)
+            # check if solution is valid
+            is_valid = True
+            for j in range(self.n_components):
+                if not M[:,j].any(): # invalid, final #cluster not as expected
+                    is_valid = False
 
-            # calculate new log-likelihood:
-            current_log_likelihood = self.score(X, M, A)
-            print('score = {}'.format(current_log_likelihood))
-            if prev_log_likelihood is not None: # if not the initial run
-                delta_log_likelihood = (current_log_likelihood
-                        - prev_log_likelihood)
-        print('Model fitted in {} iterations.'.format(iteration))
-        return M
+            if is_valid:
+                print('Final score =\t{:.8f}'.format(current_log_likelihood))
+                if best_score is None or current_log_likelihood > best_score:
+                    best_score = current_log_likelihood
+                    best_M = M
+                init += 1
+            else:
+                print('(Result invalid. Re-run the fitting.)')
+                pass
+
+        return best_M
 
     # Definition of the likelihood function: log p(X, M, A) to be maximized
     def score(self, X, M, A):
