@@ -8,3 +8,6 @@ output/
 *.un~
 *.swp
 
+# Ignore old README
+README.md.old
+
