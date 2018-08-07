@@ -163,11 +163,12 @@ def moc(profiles,
     # step 2. Training the model
     from .classes import MOC
     if moc_warm_start:
-        moc_model = MOC(n_components=n_groups, n_init=1, M_init=m.values)
+        moc_model = MOC(n_components=n_groups, M_init=m.values)
     else:
         # TODO: is_disjoint option
-        moc_model = MOC(n_components=n_groups, n_init=500, is_disjoint=True)
-        #moc_model = MOC(n_components=n_groups, n_init=500)
+        #moc_model = MOC(n_components=n_groups, n_init=500, is_disjoint=True)
+        moc_model = MOC(n_components=n_groups, n_init=1)
+
     mat_membership = moc_model.fit_predict(profiles.values)
 
     # step 3. Deriving the clusters as the end result

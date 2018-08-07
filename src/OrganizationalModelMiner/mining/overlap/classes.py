@@ -50,40 +50,46 @@ class MOC:
         -------
         C : array-like, shape (n_samples, n_components), component membership
         '''
-        from numpy import array, dot, infty, zeros, ones
-        from numpy.random import randint
+        from numpy import array, dot, infty, zeros, absolute
+        from numpy.random import randint, choice
         from numpy.linalg import pinv
+        from copy import deepcopy
 
+        M_init_values_visited = set() # pool for storing used seeds
         best_score = None
         best_M = None
         init = 0
         while init < self.n_init:
+            # Do initialization based on selected setting
             if self.M_init is not None:
                 M = self.M_init
             else:
                 # Initialize a random guess of membership M
                 # Random initialization of a binary matrix
-                if self.is_disjoint:
+                while True:
                     M = zeros((len(X), self.n_components))
-                    for row in M:
-                        row[randint(self.n_components)] = 1 # only 1
-                else:
-                    while True:
-                        M = randint(2, size=(len(X), self.n_components))
-                        # check validity by each row
-                        is_valid = True
+                    if self.is_disjoint:
                         for row in M:
-                            if not row.any(): # if all zeros
-                                is_valid = False
-                                break # continue until a valid one generated
-                        if is_valid:
-                            break
+                            row[randint(self.n_components)] = 1 # only 1
+                    else:
+                        for row in M:
+                            row[choice(range(self.n_components),
+                                size=randint(1, self.n_components + 1),
+                                replace=False)] = 1
 
+                    M.flags.writeable = False # set RO, entries immutable
+                    bM = M.data.tobytes()
+                    if bM not in M_init_values_visited:
+                        # if seed unused before
+                        M_init_values_visited.add(bM)
+                        break
+
+            # Start fitting with valid initialized value of M
             iteration = -1
             new_M = None
             current_log_likelihood = None
             delta_log_likelihood = infty
-            print('Fitting MOC model-{}:'.format(init + 1), end=' ')
+            print('Fitting MOC model-{}:'.format(init + 1))
             while delta_log_likelihood > self.tol: # while not converged
                 if iteration >= self.max_iter:
                     print('[Warning] Model did not converged within a max. of '
@@ -92,33 +98,34 @@ class MOC:
                     return M
 
                 iteration += 1
-                #print('Iteration {}:'.format(iteration))
+                print('\tIteration {}:'.format(iteration), end=' ')
                 prev_log_likelihood = current_log_likelihood
 
                 # Alternate between updating M and A
                 # update A: assume loss function sqaured Euclidean Distance
                 pinv_M = pinv(M) 
                 A = dot(pinv_M, X)
+
                 # update M: for each row, apply appropriate search algorithms
                 new_M = list()
                 for i in range(X.shape[0]):
-                    #m_best = self._enumerate(X[i,:], M[i,:], A)
                     m_best = self._dynamicm(X[i,:], M[i,:], A)
                     new_M.append(m_best)
                 M = array(new_M)
 
-                # calculate new log-likelihood:
+                # Calculate new log-likelihood:
                 current_log_likelihood = self.score(X, M, A)
-                #print('score = {}'.format(current_log_likelihood))
+                print('score = {}'.format(current_log_likelihood))
                 if prev_log_likelihood is not None: # if not the initial run
-                    delta_log_likelihood = (current_log_likelihood
+                    delta_log_likelihood = absolute(current_log_likelihood
                             - prev_log_likelihood)
 
-            # check if solution is valid
+            # check if the solution is valid
             is_valid = True
             for j in range(self.n_components):
-                if not M[:,j].any(): # invalid, final #cluster not as expected
+                if not M[:,j].any(): # invalid, an empty cluster found
                     is_valid = False
+                    break
 
             if is_valid:
                 print('Final score =\t{:.8f}'.format(current_log_likelihood))
@@ -226,7 +233,7 @@ class MOC:
                 L_min = sqeuclidean(self.x, dot(self.m, self.A))
 
                 is_active = True
-                while is_active:
+                while is_active: # search each "level"
                     best_candidate = None
                     # choose a best candidate to "turn on" from the rest
                     for i in where(self.m == 0)[0]:
@@ -238,7 +245,7 @@ class MOC:
                             # update if better than the current one
                             best_candidate = i
                             L_min = candidate_L
-                    if best_candidate:
+                    if best_candidate is not None:
                         is_active = True
                         self.m[best_candidate] = 1
                     else:
@@ -252,7 +259,7 @@ class MOC:
 
         separate_search_threads = list()
         if self.is_disjoint:
-            for h in range(n_components): # init each search thread
+            for h in range(n_components):
                 m = array([0] * n_components)
                 m[h] = 1
                 L = sqeuclidean(x, dot(m, A))

@@ -96,7 +96,9 @@ if __name__ == '__main__':
             from SocialNetworkMiner.mining.joint_activities import build_performer_activity_matrix
             profiles = build_performer_activity_matrix(
                     cases, use_log_scale=True)
-            og, og_hcy = cluster.ahc(profiles, num_groups)
+            #og, og_hcy = cluster.ahc(profiles, num_groups)
+            og, og_hcy = cluster.ahc(profiles, num_groups,
+                    method='ward')
         elif method_option == 1:
             from OrganizationalModelMiner.mining.hierarchical import community_detection
             # build social network

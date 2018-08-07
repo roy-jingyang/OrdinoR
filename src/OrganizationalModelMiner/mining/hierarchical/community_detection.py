@@ -46,7 +46,7 @@ def betweenness(sn,
     mx_tree = zeros(shape=(len(resource_idx), n_groups), dtype=int)
     from networkx.algorithms.community.centrality import girvan_newman
     # TODO
-    if weight:
+    if weight is not None:
         from networkx import edge_betweenness_centrality
         def most_central_edge(G):
             centrality = edge_betweenness_centrality(G, weight=weight)
