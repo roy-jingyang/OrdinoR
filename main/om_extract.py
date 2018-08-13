@@ -22,6 +22,7 @@ if __name__ == '__main__':
     print('\t3. Overlapping Community Detection (Appice)')
     print('\t4. Gaussian Mixture Model')
     print('\t5. Model based Overlapping Clustering')
+    print('\t6. Fuzzy c-means')
     print('Option: ', end='')
     mining_option = int(input())
 
@@ -96,7 +97,6 @@ if __name__ == '__main__':
             from SocialNetworkMiner.mining.joint_activities import build_performer_activity_matrix
             profiles = build_performer_activity_matrix(
                     cases, use_log_scale=True)
-            #og, og_hcy = cluster.ahc(profiles, num_groups)
             og, og_hcy = cluster.ahc(profiles, num_groups,
                     method='ward')
         elif method_option == 1:
@@ -149,6 +149,14 @@ if __name__ == '__main__':
         # build profiles
         from SocialNetworkMiner.mining.joint_activities import build_performer_activity_matrix
         profiles = build_performer_activity_matrix(cases, use_log_scale=True)
+        #profiles = build_performer_activity_matrix(cases, use_log_scale=False)
+
+        print('Input a threshold value [0, 1), in order to determine the ' +
+                'resource membership (Enter to choose the max., ' + 
+                'creating disjoint groups):', end=' ')
+        user_selected_threshold = input()
+        user_selected_threshold = (float(user_selected_threshold)
+                if user_selected_threshold != '' else None)
 
         print('Input a number to choose a specific covariance type:')
         print('\t0. full 1. tied 2. diag 3. spherical (default)')
@@ -164,6 +172,7 @@ if __name__ == '__main__':
 
         tm_start = time()
         og = gmm(profiles, num_groups,
+                threshold=user_selected_threshold,
                 cov_type=cov_types[cov_type_option],
                 warm_start_input_fn=ws_fn)
         print('-' * 10
@@ -177,6 +186,7 @@ if __name__ == '__main__':
         # build profiles
         from SocialNetworkMiner.mining.joint_activities import build_performer_activity_matrix
         profiles = build_performer_activity_matrix(cases, use_log_scale=True)
+        #profiles = build_performer_activity_matrix(cases, use_log_scale=False)
 
         print('Input a relative path to the file to be used for warm start: ' +
                 '(Enter if None)')
@@ -190,46 +200,38 @@ if __name__ == '__main__':
                 + ' Execution time {:.3f} s. '.format(time() - tm_start)
                 + '-' * 10)
 
+    elif mining_option == 6:
+        from OrganizationalModelMiner.mining.overlap.cluster import fcm
+        print('Input a integer for the desired number of groups to be discovered:', end=' ')
+        num_groups = int(input())
+        # build profiles
+        from SocialNetworkMiner.mining.joint_activities import build_performer_activity_matrix
+        profiles = build_performer_activity_matrix(cases, use_log_scale=True)
+        #profiles = build_performer_activity_matrix(cases, use_log_scale=False)
+
+        print('Input a threshold value [0, 1), in order to determine the ' +
+                'resource membership (Enter to choose the max., ' + 
+                'creating disjoint groups):', end=' ')
+        user_selected_threshold = input()
+        user_selected_threshold = (float(user_selected_threshold)
+                if user_selected_threshold != '' else None)
+
+        print('Input a relative path to the file to be used for warm start: ' +
+                '(Enter if None)')
+        ws_fn = input()
+        ws_fn = None if ws_fn == '' else ws_fn
+
+        tm_start = time()
+        og = fcm(profiles, num_groups,
+                threshold=user_selected_threshold,
+                warm_start_input_fn=ws_fn)
+        print('-' * 10
+                + ' Execution time {:.3f} s. '.format(time() - tm_start)
+                + '-' * 10)
+
     else:
         raise Exception('Failed to recognize input option!')
         exit(1)
-
-    '''
-    if mining_option.split('.')[0] == 'task':
-        elif mining_option.split('.')[1] == 'mja':
-            exit(1)
-            #threshold_value_step = float(additional_params[0])
-            from mining.HardClustering import MJA
-            og = MJA.threshold(cases)
-            #og = MJA.threshold(cases, threshold_value_step)
-        elif mining_option.split('.')[1] == 'community':
-            exit(1)
-            from mining.SoftClustering import Community
-            f_sn_model = additional_params[0]
-            og = Community.mine(f_sn_model)
-    '''
-    '''
-    elif mining_option.split('.')[0] == 'case':
-        raise Exception('Case-based mining under construction!')
-        exit(1)
-        from mining.HardClustering import MJC
-        if mining_option.split('.')[1] == 'mjc_threshold':
-            threshold_value = float(additional_params[0])
-            og = MJC.threshold(cases, threshold_value)
-        elif mining_option.split('.')[1] == 'mjc_remove':
-            min_centrality = float(additional_params[0])
-            if mining_option.split('.')[2] == 'degree':
-                og = MJC.remove_by_degree(cases, min_centrality)
-            elif mining_option.split('.')[2] == 'betweenness':
-                og = MJC.remove_by_betweenness(cases, min_centrality)
-            else:
-                raise Exception('Option for case-based mining invalid.')
-        else:
-            raise Exception('Option for case-based mining invalid.')
-    else:
-        raise Exception('Failed to recognize input parameter!')
-        exit(1)
-    '''
 
     from OrganizationalModelMiner import entity_assignment
     assignment = entity_assignment.assign(og, cases)

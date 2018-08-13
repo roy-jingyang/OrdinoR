@@ -17,11 +17,11 @@ class MOC:
         The number of initializations to perform. The best results are kept.
         This parameter would be override if M_init is present.
 
-    max_iter: int, defaults to 10.
+    max_iter: int, defaults to 100.
         The number of iterative alternating updates to run.
 
     M_init: array-like, shape (n_samples, n_components), optional
-        The user-provided initial membership matrix M, defaults to None.
+        The user-provided initial membership matrix M (binary), defaults to None.
         If None, random initialization is used.
 
     is_disjoint: Boolean, defaults to False
@@ -48,12 +48,12 @@ class MOC:
 
         Returns
         -------
-        C : array-like, shape (n_samples, n_components), component membership
+        best_m : array-like, shape (n_samples, n_components), component membership
         '''
-        from numpy import array, dot, infty, zeros, absolute
+
+        from numpy import array, dot, infty, zeros
         from numpy.random import randint, choice
         from numpy.linalg import pinv
-        from copy import deepcopy
 
         M_init_values_visited = set() # pool for storing used seeds
         best_score = None
@@ -86,19 +86,20 @@ class MOC:
 
             # Start fitting with valid initialized value of M
             iteration = -1
-            new_M = None
             current_log_likelihood = None
             delta_log_likelihood = infty
-            print('Fitting MOC model-{}:'.format(init + 1))
-            while delta_log_likelihood > self.tol: # while not converged
+            converged = False
+
+            print('Fitting MOC model-{}:'.format(init + 1), end=' ')
+            while not converged:
+                iteration += 1
                 if iteration >= self.max_iter:
                     print('[Warning] Model did not converged within a max. of '
                             + '{} iterations (delta= {:.4f}).'.format(
                                 self.max_iter, self.tol))
                     return M
 
-                iteration += 1
-                print('\tIteration {}:'.format(iteration), end=' ')
+                #print('\n\tIteration {}:'.format(iteration), end=' ')
                 prev_log_likelihood = current_log_likelihood
 
                 # Alternate between updating M and A
@@ -111,14 +112,27 @@ class MOC:
                 for i in range(X.shape[0]):
                     m_best = self._dynamicm(X[i,:], M[i,:], A)
                     new_M.append(m_best)
+                prev_M = M.copy()
                 M = array(new_M)
 
                 # Calculate new log-likelihood:
                 current_log_likelihood = self.score(X, M, A)
-                print('score = {}'.format(current_log_likelihood))
+                #print('score = {:.8f}'.format(current_log_likelihood), end='')
+
                 if prev_log_likelihood is not None: # if not the initial run
-                    delta_log_likelihood = absolute(current_log_likelihood
+                    delta_log_likelihood = (current_log_likelihood
                             - prev_log_likelihood)
+
+                if delta_log_likelihood < self.tol:
+                    converged = True
+                    if delta_log_likelihood >= 0:
+                        pass
+                    else:
+                        # current solution is worse (maximizing), use the last one
+                        #print('\tDELTA < 0: Pick the last solution instead.')
+                        current_log_likelihood = prev_log_likelihood
+                        M = prev_M.copy()
+                    #print('\nModel converged with ', end='')
 
             # check if the solution is valid
             is_valid = True
@@ -131,12 +145,11 @@ class MOC:
                 print('Final score =\t{:.8f}'.format(current_log_likelihood))
                 if best_score is None or current_log_likelihood > best_score:
                     best_score = current_log_likelihood
-                    best_M = M
+                    best_M = M.copy()
                 init += 1
             else:
                 print('(Result invalid. Re-run the fitting.)')
                 pass
-
         return best_M
 
     # Definition of the likelihood function: log p(X, M, A) to be maximized
@@ -219,7 +232,6 @@ class MOC:
         from threading import Thread, local
         from numpy import array, dot, infty, where
         from scipy.spatial.distance import sqeuclidean
-        from copy import copy
         from itertools import combinations
 
         class SearchThread(Thread):
@@ -237,7 +249,7 @@ class MOC:
                     best_candidate = None
                     # choose a best candidate to "turn on" from the rest
                     for i in where(self.m == 0)[0]:
-                        candidate_m = copy(self.m)
+                        candidate_m = self.m.copy()
                         candidate_m[i] = 1 # try turning on 1 cluster
                         candidate_L = sqeuclidean(
                                 self.x, dot(candidate_m, self.A))
@@ -289,4 +301,196 @@ class MOC:
                     m_best = separate_search_threads[h].m
 
         return m_best
+
+
+class FCM:
+    '''
+    Class variables:
+
+    n_components: int, defaults to 1.
+        The number of clusters expected to be found.
+
+    tol: float, defaults to 1e-6.
+        The convergence threshold.
+
+    p: float, defaults to 2.0.
+        The exponentiation value for updating equations.
+        When p = 1, fuzzy c-means reduces to traditional K-means algorithm;
+        When p gets larger, the partitions grow fuzzier (approaching global
+        centroid).
+
+    threshold: float, or str, optional
+        The threshold value for converting the output result as a crisp
+        assignment. The default is None, meaning that a fuzzy assignment will
+        be returned.
+        The valid input value for threshold should be in range [0, 1].
+        User can also leave the choice of threshold to be randomly generated,
+        by specifying this parameter as a string 'random'; or can specifying it
+        as a string 'disjoint', which results in the reduced disjoint results.
+
+    n_init: int, defaults to 1.
+        The number of initializations to perform. The best results are kept.
+        This parameter would be override if w_init is present.
+
+    max_iter: int, defaults to 10e4.
+        The number of iterative alternating updates to run.
+
+    w_init: array-like, shape (n_samples, n_components), optional
+        The user-provided initial guess of weights for the pseudo-partition.
+        If None, random initialization is used.
+
+    '''
+    def __init__(self,
+            n_components=1, tol=1e-6, p=2, threshold=None,
+            n_init=1, max_iter=10e4, w_init=None):
+        self.n_components = n_components
+        self.tol = tol
+        self.p = p
+        self.threshold = threshold
+        self.n_init = n_init if w_init is None else 1
+        self.max_iter = max_iter
+        self.w_init = w_init
+
+    def fit_predict(self, X):
+        '''Fit and then predict labels for samples.
+
+        Parameters
+        __________
+        X : array-like, shape (n_samples, n_features)
+
+        Returns
+        -------
+        w : array-like, shape (n_samples, n_components), weights
+        '''
+
+        from numpy import array, infty, zeros, sum, power, dot, amax
+        from numpy.random import randint, choice
+        from scipy.spatial.distance import euclidean as dist
+
+        best_sse = None
+        best_w = None
+        init = 0
+        while init < self.n_init:
+            # Select an initial fuzzy pseudo-partition, i.e. the values for weights
+            if self.w_init is not None:
+                w = self.w_init
+            else:
+                # random init, constraint: row sum = 1.0
+                w = list()
+                for i in range(len(X)):
+                    weights = randint(1, 10, self.n_components) 
+                    weights = weights / sum(weights)
+                    w.append(weights)
+                w = array(w)
+
+            # Start fitting with valid initialized value of w
+            iteration = -1
+            current_sse = None
+            delta_sse = infty
+            converged = False
+
+            print('Fitting FCM model-{}:'.format(init + 1), end=' ')
+            while not converged:
+                if iteration >= self.max_iter:
+                    iteration += 1
+                    print('[Warning] Model did not converged within a max. of '
+                            + '{} iterations (delta= {:.4f}).'.format(
+                                self.max_iter, self.tol))
+                    return w
+
+                #print('\n\tIteration {}:'.format(iteration), end=' ')
+                prev_sse = current_sse
+
+                # Compute the centroid for each cluster using the pseudo-partition
+                # (eq. 9.2)
+                cntr = dot(power(w.T, self.p), X) # shape = (n_comp, n_features)
+                for j in range(self.n_components):
+                    cntr[j,:] /= sum([power(w[i,j], self.p) 
+                        for i in range(len(X))])
+                
+
+                # Recompute the fuzzy psuedo-partition (eq. 9.3)
+                exp = 1 / (self.p - 1)
+                for i in range(len(X)):
+                    for j in range(self.n_components):
+                        sqd_xi_cj = power(dist(X[i,:], cntr[j,:]), 2)
+                        w[i,j] = (
+                                power((1 / sqd_xi_cj), exp)
+                                /
+                                sum([power(
+                                    (1 / power(dist(X[i,:], cntr[q,:]), 2)), 
+                                    exp) for q in range(self.n_components)])
+                                )
+
+                # Calculate the new SSE:
+                current_sse = self.error(X, cntr, w)
+
+                if prev_sse is not None:
+                    delta_sse = current_sse - prev_sse
+
+                # until: change in SSE is below certain threshold
+                if delta_sse < self.tol:
+                    converged = True
+                    if delta_sse <= 0:
+                        pass
+                    else:
+                        # current solution is worse (minimizing)
+                        print('\tDELTA > 0: Pick the last solution instead.')
+                        current_sse = prev_sse
+                        w = prev_w.copy()
+                    #print('\nModel converged with ', end='')
+
+            # determine crisp/fuzzy assignment
+            if self.threshold is None:
+                # fuzzy output
+                pass
+            else:
+                crisp_w = list()
+                # crisp output
+                if self.threshold == 'random':
+                    # randomly determined
+                    for i in range(len(w)):
+                        w_row = w[i,:]
+                        th = choice(w_row[w_row != 0])
+                        crisp_w.append(array([p >= th for p in w_row]))
+                elif self.threshold == 'disjoint':
+                    # the reduced case
+                    for i in range(len(w)):
+                        th = amax(w[i,:])
+                        crisp_w.append(array([p >= th for p in w[i,:]]))
+                else:
+                    th = float(self.threshold)
+                    for i in range(len(w)):
+                        crisp_w.append(array([p >= th for p in w[i,:]]))
+                w = array(crisp_w)
+                    
+            is_valid = True
+            for j in range(self.n_components):
+                if not w[:,j].any():
+                    is_valid = False
+                    break
+
+            if is_valid:
+                print('Final SSE =\t{:.8f}'.format(current_sse))
+                if best_sse is None or current_sse < best_sse:
+                    best_sse = current_sse
+                    best_w = w.copy()
+                init += 1
+            else:
+                print('(Result invalid. Re-run the fitting.)')
+                pass
+
+        return best_w
+    
+    # (eq. 9.1)
+    def error(self, X, centroids, weights):
+        from numpy import dot, power
+        from scipy.spatial.distance import euclidean as dist
+
+        total_sse = 0.0
+        for j in range(self.n_components):
+            for i in range(len(X)):
+                sqd_xi_cj = power(dist(X[i,:], centroids[j,:]), 2)
+                total_sse += power(weights[i,j], self.p) * sqd_xi_cj
+        return total_sse
 
