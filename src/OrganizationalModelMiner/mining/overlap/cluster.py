@@ -228,15 +228,41 @@ def fcm(profiles,
     print('Applying overlapping organizational model mining using ' +
             'clustering-based FCM:')
 
+    from collections import defaultdict
+
     # step 1. Importing warm-start (initial guess of clustering) from file
     fcm_warm_start = (warm_start_input_fn is not None)
     if fcm_warm_start:
-        pass # TODO
+        from csv import reader
+        with open(warm_start_input_fn, 'r') as f:
+            is_header = True
+            init_groups = defaultdict(lambda: set())
+            count_groups = 0
+            for row in reader(f):
+                if is_header:
+                    is_header = False
+                else:
+                    group_id = row[0]
+                    for r in row[-1].split(';'):
+                        init_groups[group_id].add(r)
+                    count_groups += 1
+
+        if n_groups != count_groups:
+            print('[Warning] Inequal group size {} != {}.'.format(
+                n_groups, count_groups))
+        else:
+            print('Initial guess imported from file "{}".'.format(
+                warm_start_input_fn))
 
     # step 2. Training the model and obtain the results
     from .classes import FCM
     if fcm_warm_start:
-        fcm_model = FCM(n_components=n_groups, w_init=w.values,
+        from numpy import array, mean, nonzero
+        init_means = list()
+        for k in sorted(init_groups.keys()):
+            init_means.append(mean(
+                profiles.loc[list(init_groups[k])].values, axis=0))
+        fcm_model = FCM(n_components=n_groups, means_init=array(init_means),
                 threshold='random')
     else:
         fcm_model = FCM(n_components=n_groups, n_init=500, threshold='random')
@@ -246,7 +272,6 @@ def fcm(profiles,
     # step 3. Deriving the clusters as the end result
     from numpy import array, amax, nonzero, argmax
     from numpy.random import choice
-    from collections import defaultdict
     og = defaultdict(lambda: set())
     for i in range(len(fpp)):
         # check if any valid membership exists for the resource based on

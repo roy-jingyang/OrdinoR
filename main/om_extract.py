@@ -122,7 +122,7 @@ if __name__ == '__main__':
             from OrganizationalModelMiner.mining.overlap.community_detection import ln_louvain
             # build social network
             from SocialNetworkMiner.mining.joint_activities import correlation
-            sn = correlation(cases)
+            sn = correlation(cases, use_log_scale=True)
 
             # edge filtering
             print('Input a value as threshold:', end=' ')
@@ -233,7 +233,7 @@ if __name__ == '__main__':
         raise Exception('Failed to recognize input option!')
         exit(1)
 
-    from OrganizationalModelMiner import entity_assignment
+    from OrganizationalModelMiner.enriching import entity_assignment
     assignment = entity_assignment.assign(og, cases)
 
     # save the mined organizational model to a file

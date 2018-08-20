@@ -330,26 +330,27 @@ class FCM:
 
     n_init: int, defaults to 1.
         The number of initializations to perform. The best results are kept.
-        This parameter would be override if w_init is present.
+        This parameter would be override if means_init is present.
 
     max_iter: int, defaults to 10e4.
         The number of iterative alternating updates to run.
 
-    w_init: array-like, shape (n_samples, n_components), optional
-        The user-provided initial guess of weights for the pseudo-partition.
-        If None, random initialization is used.
+    means_init: array-like, shape (n_components, n_features), optional
+        The user-provided initial guess of centroids.
+        If None, random initialization is used and assigns random-valued 
+        weights for samples.
 
     '''
     def __init__(self,
             n_components=1, tol=1e-6, p=2, threshold=None,
-            n_init=1, max_iter=10e4, w_init=None):
+            n_init=1, max_iter=10e4, means_init=None):
         self.n_components = n_components
         self.tol = tol
         self.p = p
         self.threshold = threshold
-        self.n_init = n_init if w_init is None else 1
+        self.n_init = n_init if means_init is None else 1
         self.max_iter = max_iter
-        self.w_init = w_init
+        self.means_init = means_init
 
     def fit_predict(self, X):
         '''Fit and then predict labels for samples.
@@ -372,8 +373,24 @@ class FCM:
         init = 0
         while init < self.n_init:
             # Select an initial fuzzy pseudo-partition, i.e. the values for weights
-            if self.w_init is not None:
-                w = self.w_init
+            if self.means_init is not None:
+                # if initial centroids provided, compute initial fuzzy partition
+                w = zeros((len(X), self.n_components))
+                exp = 1 / (self.p - 1)
+                for i in range(len(X)):
+                    for j in range(self.n_components):
+                        sqd_xi_cj = power(dist(X[i,:], self.means_init[j,:]), 2)
+                        if sqd_xi_cj == 0:
+                            # special case: current data point is the centroid
+                            w[i,j] = 1.0
+                        else:
+                            w[i,j] = (
+                                    power((1 / sqd_xi_cj), exp)
+                                    /
+                                    sum([power(
+                                        (1 / power(dist(X[i,:], self.means_init[q,:]), 2)), 
+                                        exp) for q in range(self.n_components)])
+                                    )
             else:
                 # random init, constraint: row sum = 1.0
                 w = list()
@@ -407,7 +424,7 @@ class FCM:
                 for j in range(self.n_components):
                     cntr[j,:] /= sum([power(w[i,j], self.p) 
                         for i in range(len(X))])
-                
+
 
                 # Recompute the fuzzy psuedo-partition (eq. 9.3)
                 exp = 1 / (self.p - 1)

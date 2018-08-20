@@ -4,7 +4,9 @@
 This module contains methods for importing event log data. Currently supporting
     [√] Disco-exported CSV format (https://fluxicon.com/disco/)
     [ ] (TODO) eXtensible Event Stream (XES) (http://xes-standard.org/)
+    (Solution: opyenxes)
     [ ] (TODO) MXML (ProM 5)
+    (Solution: opyenxes)
 '''
 
 '''
