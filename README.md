@@ -12,7 +12,7 @@ The organizational mining research topic was first proposed by Song and van der 
 * *Conformance (Alignment)*: examine whether the modeled behaviour matches the observed.
 * *Extension*: enrich an existing model by extending it through the projection of information extracted from the logs onto the initial model.
 
-My current research aims at gaining a more comprehensive understanding of organizational mining, and project *ProMorg* is a prototype implementing the related tools and techniques related to this research topic.
+My current research aims at gaining a more comprehensive understanding of organizational mining, and project *ProMorg* is a prototype implementing the tools and techniques related to this research topic.
 
 ##### References:
 ###### 1. Van der Aalst, W. M. P. (2016). Process Mining: Data Science in Action (2nd ed.). Springer.
