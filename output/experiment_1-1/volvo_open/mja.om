@@ -1,0 +1,12 @@
+group id,tasks,resources
+0,Accepted-Assigned;Accepted-In Progress;Accepted-Wait;Completed-Closed;Queued-Awaiting Assignment,Andreas;Ian;Piotr;Sandeep;Valter;Venkata
+1,Accepted-Assigned;Accepted-In Progress;Accepted-Wait;Completed-Closed;Queued-Awaiting Assignment,Agneta;Alain;Ann-Charlotte;Anson;Arun;Aurelie;Bhaskar;Britt;Bruno;Börje;Carlos;Celine;Conny;Craig;Cyril;Els;Emil;Eva;Frederic;Fredrik;Ganesh;Gitt;Grzegorz;Gunilla;Henrik;Henrique;Ilona;Ing-Marie;Inger;Jari;Joakim;John;Katia;Kymaria;Leif;Marc;Marilyn;Martin;Michael;Miroslaw;Mohsin;Olivier;Patrick;Paulina;Peter;Prasad;Pratap;Praveen;Rakesh;Richard;Robert;Ryouhei;Shamna;Srinivasan;Stefan;Sten;Stephen;Steven;Susan;Tomas;Vesa;Viktoria;Vinodhkumar;Wim
+2,Accepted-Assigned;Accepted-In Progress;Accepted-Wait;Completed-Closed;Queued-Awaiting Assignment,Adam;Alice;Amar;Amit;Amitabh;Anandgiri;Andrew;Aneesh V;Anna;Anup;Arup;Astrid;Atul;Aurelien;Avronil;Avvaru;Bartlomiej;Bharath;Bikshamaiah;Björn;Carla;Christer;Christian;Christoffer;Christophe;Cindy;David;Devakumar;Dusan;Emmanuel;Eric;Erik;Ewa;Fabrice;Fiona;Freddy;Gaurav;Göran;Hampus;Hanna;Harshavardhan;Hicham;Himanshu;Hineesh;Håkan;Ingela;Jagannath;James;Janusz;Jay;Jenny;Jerker;Jesper;Jimmy;Jitender;Jo;Joacim;Joey;Johnny;Jonas;Jonathan;Joris;Jörgen;Katarina;Katarzyna;Kenneth;Kjell;Kreeti;Kristina;Krzysztof;Kåre;Lars;Lars-Göran;Lars-Ove;Laurens;Lennart;Linda;Lotta;Louis;Ludwig;Maciej;Manisha;Marcin;Marco;Maria;Marianne;Marise;Mariusz;Mathias;Mats;Mattias;Michal;Michel;Mikael;Murali;Neeraj;Nicolas;Olle;Olof;Panigrahy;Pankaj;Parbhat;Pascal;Per;Przemyslaw;Radoslaw;Rajendra;Rajkishore;Ramith;Ranveer;Raphael;Ratikanta;Rickard;Rijin;Rohan;Rohit;Roland;Rolf;Rosemary;Ryou;Sachin;Saki;Sameer;Samira;Sophie;Stephane;Steve;Sumesh;Tarun;Thiago;Thomas;Timothy;Tomasz;Umar Farooque;Urban;Vaibhav;Vikrant;Yu;Åsa
+3,Accepted-Assigned;Accepted-In Progress;Accepted-Wait;Completed-Closed;Queued-Awaiting Assignment,Charlotta;Flavio;Habib;Hongming;Johan;Jubin;Kell;Kim;Niklas;Partha;Pawel;Raja;Santosh;Tonie
+4,Accepted-Assigned;Accepted-In Progress;Accepted-Wait,Sujith
+5,Accepted-Wait;Completed-Closed,Alan;Pramod;Vijayakumar
+6,Accepted-Assigned,Ankit;Diogo;Jennifer;Jon;Krystian;Marie;Milos;Ruhi
+7,Accepted-Assigned;Accepted-In Progress;Completed-Closed;Queued-Awaiting Assignment,Lena
+8,Accepted-Assigned;Queued-Awaiting Assignment,William
+9,Accepted-Assigned;Accepted-In Progress;Completed-Closed;Queued-Awaiting Assignment,Rajesh Kumar
+10,Accepted-Assigned;Accepted-In Progress;Queued-Awaiting Assignment,Daniel

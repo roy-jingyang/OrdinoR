@@ -1,0 +1,12 @@
+group id,tasks,resources
+0,Accepted-In Progress;Completed-Closed,Adam;Amit;Anandgiri;Arup;Atul;Avvaru;Bartlomiej;Björn;Christian;Cindy;Emmanuel;Eric;Fiona;Göran;Hanna;Hicham;Ingela;Jagannath;James;Janusz;Jay;Jenny;Jerker;Jesper;Jimmy;Joey;Johnny;Jonathan;Joris;Katarzyna;Kjell;Kreeti;Lars-Göran;Lars-Ove;Laurens;Linda;Lotta;Louis;Ludwig;Manisha;Marcin;Marianne;Marise;Mariusz;Mathias;Michel;Nicolas;Parbhat;Rajendra;Raphael;Rolf;Ryou;Sachin;Sophie;Stephane;Thomas;Umar Farooque;Yu
+1,Accepted-Assigned;Accepted-In Progress;Accepted-Wait;Completed-Closed;Queued-Awaiting Assignment,Agneta;Ann-Charlotte;Anson;Arun;Bruno;Celine;Daniel;Els;Emil;Frederic;Fredrik;Ing-Marie;Joakim;John;Leif;Lena;Marc;Olivier;Paulina;Prasad;Praveen;Rajesh Kumar;Rakesh;Ryouhei;Srinivasan;Stephen;Vesa;Viktoria
+2,Accepted-In Progress;Accepted-Wait;Completed-Closed;Queued-Awaiting Assignment,Alain;Aurelie;Bhaskar;Carlos;Conny;Craig;Cyril;Ganesh;Gitt;Grzegorz;Henrik;Henrique;Ilona;Inger;Jari;Katia;Marilyn;Pratap;Richard;Shamna;Steven;Susan;Vinodhkumar
+3,Accepted-In Progress;Accepted-Wait;Completed-Closed,Alan;Amitabh;Astrid;Aurelien;Avronil;Carla;Christoffer;Christophe;Devakumar;Dusan;Hampus;Himanshu;Joacim;Kenneth;Kåre;Maciej;Neeraj;Olof;Panigrahy;Pankaj;Pramod;Przemyslaw;Ranveer;Ratikanta;Rosemary;Saki;Sameer;Sumesh;Tomasz;Vijayakumar
+4,Accepted-Assigned;Accepted-In Progress;Accepted-Wait;Completed-Closed,Alice;Andreas;Anup;Charlotta;Fabrice;Flavio;Gaurav;Habib;Hongming;Jo;Johan;Jubin;Kell;Kim;Lennart;Michal;Olle;Partha;Pawel;Radoslaw;Raja;Rohan;Rohit;Sandeep;Santosh;Sujith;Tonie;Urban;Valter;Venkata
+5,Accepted-Assigned;Accepted-In Progress;Accepted-Wait;Completed-Closed,Amar;Bharath;Bikshamaiah;Christer;Erik;Freddy;Harshavardhan;Håkan;Jörgen;Kristina;Maria;Mats;Mattias;Ramith;Rickard;Thiago;Vaibhav;Vikrant;Åsa
+6,Accepted-Assigned;Accepted-In Progress;Accepted-Wait;Completed-Closed;Queued-Awaiting Assignment,Andrew;Aneesh V;Anna;Börje;Jonas;Krzysztof;Kymaria;Marco;Miroslaw;Mohsin;Murali;Niklas;Piotr;Rajkishore;Stefan;Steve;Tarun;Timothy;Wim
+7,Accepted-Assigned;Queued-Awaiting Assignment,Ankit;Diogo;Eva;Gunilla;Jennifer;Jon;Krystian;Marie;Michael;Milos;Patrick;Ruhi;Sten;William
+8,Accepted-Assigned;Accepted-In Progress;Accepted-Wait;Completed-Closed;Queued-Awaiting Assignment,Britt;Martin;Peter;Robert;Tomas
+9,Accepted-Assigned;Accepted-In Progress;Accepted-Wait;Completed-Closed;Queued-Awaiting Assignment,David;Ewa;Hineesh;Jitender;Katarina;Lars;Mikael;Pascal;Per;Rijin;Roland;Samira
+10,Accepted-Assigned;Accepted-In Progress;Accepted-Wait,Ian
