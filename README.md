@@ -15,6 +15,6 @@ The organizational mining research topic was first proposed by Song and van der 
 My current research aims at gaining a more comprehensive understanding of organizational mining, and project *ProMorg* is a prototype implementing the related tools and techniques related to this research topic.
 
 ##### References:
-##### 1. Van der Aalst, W. M. P. (2016). Process Mining: Data Science in Action (2nd ed.). Springer.
-##### 2. Song, M., & van der Aalst, W. M. P. (2008). Towards comprehensive support for organizational mining. Decision Support Systems, 46(1), 300–317.
-##### 3. Yang, J., Ouyang, C., Pan, M., Yu, Y., & ter Hofstede, A. H. M. (2018). Finding the “Liberos”: Discover Organizational Models with Overlaps. In M. Weske, M. Montali, I. Weber, & J. vom Brocke (Eds.), Business Process Management (pp. 339–355). Cham: Springer International Publishing.
+###### 1. Van der Aalst, W. M. P. (2016). Process Mining: Data Science in Action (2nd ed.). Springer.
+###### 2. Song, M., & van der Aalst, W. M. P. (2008). Towards comprehensive support for organizational mining. Decision Support Systems, 46(1), 300–317.
+###### 3. Yang, J., Ouyang, C., Pan, M., Yu, Y., & ter Hofstede, A. H. M. (2018). Finding the “Liberos”: Discover Organizational Models with Overlaps. In M. Weske, M. Montali, I. Weber, & J. vom Brocke (Eds.), Business Process Management (pp. 339–355). Cham: Springer International Publishing.
