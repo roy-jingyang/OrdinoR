@@ -1,4 +1,4 @@
-## Organizational Mining: Process Mining on the organizational perspective
+## Organizational Mining: Process Mining on organizational perspective
 
 Whereas lion's share of research in process mining has been devoted to the control-flow perspective of business processes, event log data may also contain a wealth of information related to other pespectives, e.g. organizational perspective, time perspective \[1\]. 
 
@@ -12,7 +12,7 @@ The organizational mining research topic was first proposed by Song and van der 
 * *Conformance (Alignment)*: examine whether the modeled behaviour matches the observed.
 * *Extension*: enrich an existing model by extending it through the projection of information extracted from the logs onto the initial model.
 
-My current research aims at gaining a more comprehensive understanding of organizational mining.
+My current research aims at gaining a more comprehensive understanding of organizational mining, and project *ProMorg* is a prototype implementing the related tools and techniques related to this research topic.
 
 ##### References:
 ##### 1. Van der Aalst, W. M. P. (2016). Process Mining: Data Science in Action (2nd ed.). Springer.
