@@ -2,12 +2,12 @@
 
 '''
 This module contains methods for associating mined organizational groups with
-tasks, i.e. entity assignment (ref. Song & van der Aalst, DSS 2008).
+tasks.
 '''
 
 from collections import defaultdict
 
-def assign(og, c):
+def entity_assignment(og, c):
     '''
     This is the default method proposed by Song & van der Aalst, DSS 2008.
 

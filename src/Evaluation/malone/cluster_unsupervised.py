@@ -6,7 +6,7 @@ from sklearn.preprocessing import MultiLabelBinarizer
 from scipy.spatial.distance import cdist
 from collections import defaultdict
 
-# Unsupervised evaluation requires the description matrix as input
+# Unsupervised evaluation requires the resource profile matrix as input
 
 def within_cluster_variance(X, labels, is_overlapped=False):
     total_within_cluster_var = 0

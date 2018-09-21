@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
             print('\n')
 
-            from OrganizationalModelMiner.evaluation.supervised import (
+            from Evaluation.m2m.cluster_comparison import (
                     report_set_matching, report_counting_pairs,
                     report_entropy_based, report_BCubed_metrics)
 

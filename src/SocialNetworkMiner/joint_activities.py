@@ -6,37 +6,6 @@ event log, using metrics based on joint activities (ref. van der Aalst et.
 al, CSCW 2005).
 '''
 
-def build_performer_activity_matrix(c, use_log_scale):
-    '''
-    This method builds a "profile" based on how frequent individuals conduct
-    specific activities. The "performer by activity matrix" is used to repre-
-    sent these profiles.
-
-    Params:
-        c: DataFrame
-            The imported event log.
-        use_log_scale: boolean
-            Use the logrithm scale if the volume of work varies significantly.
-    Returns:
-        pam: DataFrame
-            The constructed performer by activity matrix as a pandas DataFrame,
-            with resource ids as indices and activity names as columns.
-    '''
-
-    from collections import defaultdict
-    pam = defaultdict(lambda: defaultdict(lambda: 0))
-    for case_id, trace in c.groupby('case_id'):
-        for event in trace.itertuples():
-            pam[event.resource][event.activity] += 1
-
-    from pandas import DataFrame
-    if use_log_scale: 
-        from numpy import log
-        return DataFrame.from_dict(pam, orient='index').fillna(0).apply(
-                lambda x: log(x + 1))
-    else:
-        return DataFrame.from_dict(pam, orient='index').fillna(0)
-
 def distance(c, 
         use_log_scale=False,
         metric='euclidean',
@@ -68,8 +37,9 @@ def distance(c,
         sn: NetworkX Graph
             The mined social network as a NetworkX Graph object.
     '''
-
-    pam = build_performer_activity_matrix(c, use_log_scale)
+    
+    from ..ResourceProfiler.raw_profiler import performer_activity_frequency
+    pam = performer_activity_frequency(c, use_log_scale)
     from scipy.spatial.distance import squareform, pdist
     x = squareform(pdist(pam, metric=metric)) # preserve index
 
@@ -112,7 +82,8 @@ def correlation(c,
             The mined social network as a NetworkX Graph object.
     '''
     
-    pam = build_performer_activity_matrix(c, use_log_scale)
+    from ..ResourceProfiler.raw_profiler import performer_activity_frequency
+    pam = performer_activity_frequency(c, use_log_scale)
     from scipy.spatial.distance import squareform, pdist
     if metric == 'pearson':
         x = squareform(pdist(pam, metric='correlation')) # preserve index

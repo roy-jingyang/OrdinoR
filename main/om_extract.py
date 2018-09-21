@@ -94,9 +94,8 @@ if __name__ == '__main__':
         if method_option == 0:
             from OrganizationalModelMiner.mining.hierarchical import cluster
             # build profiles
-            from SocialNetworkMiner.mining.joint_activities import build_performer_activity_matrix
-            profiles = build_performer_activity_matrix(
-                    cases, use_log_scale=True)
+            from ResourceProfiler import performer_activity_frequency
+            profiles = performer_activity_frequency(cases, use_log_scale=True)
             og, og_hcy = cluster.ahc(profiles, num_groups,
                     method='ward')
         elif method_option == 1:
@@ -147,9 +146,9 @@ if __name__ == '__main__':
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = int(input())
         # build profiles
-        from SocialNetworkMiner.mining.joint_activities import build_performer_activity_matrix
-        profiles = build_performer_activity_matrix(cases, use_log_scale=True)
-        #profiles = build_performer_activity_matrix(cases, use_log_scale=False)
+        from ResourceProfiler import performer_activity_frequency
+        profiles = performer_activity_frequency(cases, use_log_scale=True)
+        #profiles = performer_activity_frequency(cases, use_log_scale=False)
 
         print('Input a threshold value [0, 1), in order to determine the ' +
                 'resource membership (Enter to choose the max., ' + 
@@ -184,9 +183,9 @@ if __name__ == '__main__':
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = int(input())
         # build profiles
-        from SocialNetworkMiner.mining.joint_activities import build_performer_activity_matrix
-        profiles = build_performer_activity_matrix(cases, use_log_scale=True)
-        #profiles = build_performer_activity_matrix(cases, use_log_scale=False)
+        from ResourceProfiler import performer_activity_frequency
+        profiles = performer_activity_frequency(cases, use_log_scale=True)
+        #profiles = performer_activity_frequency(cases, use_log_scale=False)
 
         print('Input a relative path to the file to be used for warm start: ' +
                 '(Enter if None)')
@@ -205,9 +204,9 @@ if __name__ == '__main__':
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = int(input())
         # build profiles
-        from SocialNetworkMiner.mining.joint_activities import build_performer_activity_matrix
-        profiles = build_performer_activity_matrix(cases, use_log_scale=True)
-        #profiles = build_performer_activity_matrix(cases, use_log_scale=False)
+        from ResourceProfiler import performer_activity_frequency
+        profiles = performer_activity_frequency(cases, use_log_scale=True)
+        #profiles = performer_activity_frequency(cases, use_log_scale=False)
 
         print('Input a threshold value [0, 1), in order to determine the ' +
                 'resource membership (Enter to choose the max., ' + 
@@ -233,8 +232,8 @@ if __name__ == '__main__':
         raise Exception('Failed to recognize input option!')
         exit(1)
 
-    from OrganizationalModelMiner.enriching import entity_assignment
-    assignment = entity_assignment.assign(og, cases)
+    from OrganizationalModelMiner.mining import mode_assignment
+    assignment = mode_assignment.entity_assignment(og, cases)
 
     # save the mined organizational model to a file
     from IO.writer import write_om_csv

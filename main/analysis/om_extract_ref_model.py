@@ -24,10 +24,44 @@ if __name__ == '__main__':
     og = dict()
     for group_name, events in cases.groupby('org:group'):
         og[group_name] = set(events['resource'])
-    print('{} ground-truth organizational groups extracted.'.format(len(og)))
+    print('{} (projected) official groups extracted.'.format(len(og)))
 
-    from OrganizationalModelMiner import entity_assignment
-    a = entity_assignment.assign(og, cases)
+    '''
+    # eliminate sub-groups
+    group_ids = sorted(og.keys())
+    sub_group_ids = set()
+    for i in range(len(group_ids) - 1):
+        group_i = og[group_ids[i]]
+        for j in range(i + 1, len(group_ids)):
+            group_j = og[group_ids[j]]
+
+            if group_i <= group_j: # subset
+                sub_group_ids.add(group_ids[i])
+
+            if group_j < group_i:
+                sub_group_ids.add(group_ids[j])
+
+    print('{}: {} eliminated'.format(sub_group_ids, len(sub_group_ids)))
+    for sg_id in sub_group_ids:
+        del og[sg_id]
+
+    # check overlapping
+    size = 0
+    resources = set()
+    for gid in sorted(og.keys()):
+        print('#resource in {}:\t{}'.format(gid, len(og[gid])))
+        for r in og[gid]:
+            resources.add(r)
+        size += len(og[gid])
+    print('{} groups'.format(len(og)))
+    print('Total# of resources:\t{}'.format(len(resources)))
+    print('Sum of sizes:\t{}'.format(size))
+    print('Overlapping:\t', end='')
+    print(len(resources) != size)
+    '''
+
+    from OrganizationalModelMiner.mining import mode_assignment
+    a = mode_assignment.entity_assignment(og, cases)
 
     from IO.writer import write_om_csv
     write_om_csv(fnout_ref_org_model, og, a)
