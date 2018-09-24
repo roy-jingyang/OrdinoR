@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
+# TODO This module needs to be rewritten.
+
 import numpy as np
-from sklearn import metrics
-from sklearn.preprocessing import MultiLabelBinarizer
 from scipy.spatial.distance import cdist
 from collections import defaultdict
 
 # Unsupervised evaluation requires the resource profile matrix as input
-
 def within_cluster_variance(X, labels, is_overlapped=False):
     total_within_cluster_var = 0
     if is_overlapped:
@@ -36,15 +35,6 @@ def within_cluster_variance(X, labels, is_overlapped=False):
                     metric='euclidean')
             total_within_cluster_var += np.var(dist_to_cent, dtype=np.float64)
     return total_within_cluster_var
-
-def silhouette_score(X, labels, is_overlapped=False):
-    if not is_overlapped:
-        if len(np.unique(labels)) > X.shape[0] - 1:
-            return np.nan
-        else:
-            return metrics.silhouette_score(X, labels, metric='euclidean')
-    else:
-        exit()
 
 def extended_modularity(resources, org_model, sn_model):
     resources = sorted(list(resources))

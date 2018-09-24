@@ -10,7 +10,7 @@ fnout_org_model = sys.argv[2]
 if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
-    cases = read_disco_csv(fn_event_log)
+    el = read_disco_csv(fn_event_log)
 
     from time import time
     print('Timer active.')
@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     elif mining_option == 0:
         from OrganizationalModelMiner.mining import default_mining
-        og = default_mining.mine(cases)
+        og = default_mining.mine(el)
 
     elif mining_option == 1:
         from OrganizationalModelMiner.mining.disjoint import partition
@@ -52,16 +52,16 @@ if __name__ == '__main__':
             metric_option = int(input())
             if metric_option == 0:
                 sn = joint_activities.distance(
-                        cases, use_log_scale=True, convert=True)
+                        el, use_log_scale=True, convert=True)
             elif metric_option == 1:
                 sn = joint_activities.correlation(
-                        cases, use_log_scale=True)
+                        el, use_log_scale=True)
             else:
                 raise Exception('Failed to recognize input option!')
                 exit(1)
         elif method_option == 1:
             from SocialNetworkMiner.mining.joint_cases import working_together
-            sn = working_together(cases)
+            sn = working_together(el)
             print('[Warning] DiGraph casted to Graph.')
             sn = sn.to_undirected()
         else:
@@ -95,7 +95,7 @@ if __name__ == '__main__':
             from OrganizationalModelMiner.mining.hierarchical import cluster
             # build profiles
             from ResourceProfiler import performer_activity_frequency
-            profiles = performer_activity_frequency(cases, use_log_scale=True)
+            profiles = performer_activity_frequency(el, use_log_scale=True)
             og, og_hcy = cluster.ahc(profiles, num_groups,
                     method='ward')
         elif method_option == 1:
@@ -103,7 +103,7 @@ if __name__ == '__main__':
             # build social network
             #from SocialNetworkMiner.mining.causality import handover
             from SocialNetworkMiner.mining.joint_activities import distance
-            sn = distance(cases, use_log_scale=True, convert=True)
+            sn = distance(el, use_log_scale=True, convert=True)
             og, og_hcy = community_detection.betweenness(sn, num_groups,
                     weight='weight') # consider edge weight, optional
         else:
@@ -121,7 +121,7 @@ if __name__ == '__main__':
             from OrganizationalModelMiner.mining.overlap.community_detection import ln_louvain
             # build social network
             from SocialNetworkMiner.mining.joint_activities import correlation
-            sn = correlation(cases, use_log_scale=True)
+            sn = correlation(el, use_log_scale=True)
 
             # edge filtering
             print('Input a value as threshold:', end=' ')
@@ -147,8 +147,8 @@ if __name__ == '__main__':
         num_groups = int(input())
         # build profiles
         from ResourceProfiler import performer_activity_frequency
-        profiles = performer_activity_frequency(cases, use_log_scale=True)
-        #profiles = performer_activity_frequency(cases, use_log_scale=False)
+        profiles = performer_activity_frequency(el, use_log_scale=True)
+        #profiles = performer_activity_frequency(el, use_log_scale=False)
 
         print('Input a threshold value [0, 1), in order to determine the ' +
                 'resource membership (Enter to choose the max., ' + 
@@ -184,8 +184,8 @@ if __name__ == '__main__':
         num_groups = int(input())
         # build profiles
         from ResourceProfiler import performer_activity_frequency
-        profiles = performer_activity_frequency(cases, use_log_scale=True)
-        #profiles = performer_activity_frequency(cases, use_log_scale=False)
+        profiles = performer_activity_frequency(el, use_log_scale=True)
+        #profiles = performer_activity_frequency(el, use_log_scale=False)
 
         print('Input a relative path to the file to be used for warm start: ' +
                 '(Enter if None)')
@@ -205,8 +205,8 @@ if __name__ == '__main__':
         num_groups = int(input())
         # build profiles
         from ResourceProfiler import performer_activity_frequency
-        profiles = performer_activity_frequency(cases, use_log_scale=True)
-        #profiles = performer_activity_frequency(cases, use_log_scale=False)
+        profiles = performer_activity_frequency(el, use_log_scale=True)
+        #profiles = performer_activity_frequency(el, use_log_scale=False)
 
         print('Input a threshold value [0, 1), in order to determine the ' +
                 'resource membership (Enter to choose the max., ' + 
@@ -233,7 +233,7 @@ if __name__ == '__main__':
         exit(1)
 
     from OrganizationalModelMiner.mining import mode_assignment
-    assignment = mode_assignment.entity_assignment(og, cases)
+    assignment = mode_assignment.entity_assignment(og, el)
 
     # save the mined organizational model to a file
     from IO.writer import write_om_csv

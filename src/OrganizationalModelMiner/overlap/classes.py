@@ -5,7 +5,7 @@
 # square Euclidean distance.
 class MOC:
     '''
-    Class variables:
+    This class implements the method of Model-based Overlapping Clustering.
 
     n_components: int, defaults to 1.
         The number of components in the model.
