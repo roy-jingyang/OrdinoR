@@ -9,7 +9,8 @@ class ExecutionModeMap:
     '''
     The class implements the definition of case/activity/time types, which
     contains the following mappings from the universes of case identifiers,
-    activity identifiers and time identifiers: C -> CT, A -> AT and T -> TT.
+    activity identifiers and time identifiers to corresponding types (in rather
+    a reversed way).
     '''
     def __init__(self):
         self.ctypes = dict()
@@ -118,7 +119,7 @@ class ExecutionModeMap:
         ----------
         el : DataFrame
             The event log in pandas DataFrame form, from which the current
-            execution mode is learned.
+            execution mode is discovered.
 
         Returns
         -------
@@ -145,6 +146,47 @@ class ExecutionModeMap:
 
         self.is_verified = (c_valid and a_valid and t_valid)
         return
+
+    def convert_event_log(self, el):
+        '''Create a new log given the original log after the execution
+        modes have been discovered and verified. The collections of case/
+        activity/time identifiers in the original event log will be mapped
+        onto the execution modes using the ExecutionModeMap.
+
+        Parameters
+        ----------
+        el : DataFrame
+            The event log in pandas DataFrame form, from which the current
+            execution mode is discovered.
+
+        Returns
+        -------
+        rl: DataFrame
+            The converted log in pandas DataFrame form.
+        '''
+
+        # verify the execution mode
+        if self.is_verified:
+            # create reverse dicts
+            rev_ctypes = dict()
+            for type_name, identifiers in self.ctypes.items():  
+                for i in identifiers:
+                    rev_ctypes[i] = type_name
+
+            rev_atypes = dict()
+            for type_name, identifiers in self.atypes.items():  
+                for i in identifiers:
+                    rev_atypes[i] = type_name
+
+            rev_ttypes = dict()
+            for type_name, identifiers in self.ttypes.items():  
+                for i in identifiers:
+                    rev_ttypes[i] = type_name
+
+            # iterate through all events in the original log and convert
+            # TODO
+        else:
+            exit('ExecutionModeMap not yet verified')
 
 
 def naive_miner(el):

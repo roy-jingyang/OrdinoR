@@ -27,7 +27,7 @@ def _describe_exec_mode_map(exec_mode_map):
     print('-' * 80)
     return
 
-def write_exec_mode_map_csv(fn, exec_mode_map):
+def write_exec_mode_csv(fn, exec_mode_map):
     '''
     Params:
         exec_mode_map: an object of class ExecutionModeMap.

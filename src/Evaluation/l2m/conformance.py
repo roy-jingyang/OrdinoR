@@ -19,7 +19,3 @@ def count_event_candidates(c, om, exec_mode):
 def precision(c, om, exec_mode):
     pass
 
-# TODO Generalization related
-def generalization(c, future_c, om, exec_mode):
-    pass
-
