@@ -10,7 +10,7 @@ process model (related to the event log). Ignore this option for now.
 '''
 
 # Handover of work metric
-def handover(c,
+def handover(el,
         real_causality, direct_succession, multiple_transfers,
         depth=1, beta=1):
     '''
@@ -19,7 +19,7 @@ def handover(c,
     sequent activities in process execution.
 
     Params:
-        c: DataFrame
+        el: DataFrame
             The imported event log.
         real_causality: boolean
             Consider arbitrary transfers of work OR only those where there is a
@@ -42,8 +42,8 @@ def handover(c,
     mat = defaultdict(lambda: defaultdict(lambda: {'weight': 0.0}))
     if direct_succession and multiple_transfers: # CDCM
         # scale_factor: SIGMA_Case c in Log (|c| - 1)
-        sf = sum(len(trace) - 1 for case_id, trace in c.groupby('case_id'))
-        for case_id, trace in c.groupby('case_id'):
+        sf = sum(len(trace) - 1 for case_id, trace in el.groupby('case_id'))
+        for case_id, trace in el.groupby('case_id'):
             for i in range(len(trace) - 1):
                 res_prev = trace.iloc[i]['resource']
                 res_next = trace.iloc[i + 1]['resource']
@@ -52,8 +52,8 @@ def handover(c,
 
     elif direct_succession and not multiple_transfers: # CDIM
         # scale_factor: |L|
-        sf = len(c.groupby('case_id'))
-        for case_id, trace in c.groupby('case_id'):
+        sf = len(el.groupby('case_id'))
+        for case_id, trace in el.groupby('case_id'):
             handovered_pairs = set()
             for i in range(len(trace) - 1):
                 res_prev = trace.iloc[i]['resource']
@@ -66,11 +66,11 @@ def handover(c,
     elif not direct_succession and multiple_transfers: # CICM 
         # scale_factor: SIGMA_Case c in Log (SIGMA_n=1:min(|c| - 1, depth) (beta^n-1 * (|c| - n)))
         sf = 0
-        for case_id, trace in c.groupby('case_id'):
+        for case_id, trace in el.groupby('case_id'):
             num_events = len(trace)
             sf += (sum(beta ** (n - 1) * (num_events - n) 
                 for n in range(1, min(num_events - 1, depth))))
-        for case_id, trace in c.groupby('case_id'):
+        for case_id, trace in el.groupby('case_id'):
             # for each case
             num_events = len(trace)
             for i in range(num_events - 1):
@@ -86,11 +86,11 @@ def handover(c,
     else: # CIIM
         # scale_factor: SIGMA_Case c in Log (SIGMA_n=1:min(|c| - 1, depth) (beta^n-1))
         sf = 0
-        for case_id, trace in c.groupby('case_id'):
+        for case_id, trace in el.groupby('case_id'):
             num_events = len(trace)
             sf += (sum(beta ** (n - 1) 
                 for n in range(1, min(num_events - 1, depth))))
-        for case_id, trace in c.groupby('case_id'):
+        for case_id, trace in el.groupby('case_id'):
             # for each case
             handovered_pairs = set()
             num_events = len(trace)
@@ -108,7 +108,7 @@ def handover(c,
 
     from networkx import DiGraph
     sn = DiGraph(mat)
-    sn.add_nodes_from(c.groupby('resource').groups.keys())
+    sn.add_nodes_from(el.groupby('resource').groups.keys())
     return sn
 
 # TODO

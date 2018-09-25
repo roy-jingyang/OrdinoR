@@ -7,51 +7,6 @@ This module contains methods for exporting models/results.
 import sys
 import csv
 
-# 0. ExecutionModeMiner-related
-# 0.1. Write the corresponding map of execution modes to file as "plain" CSV
-
-def _describe_exec_mode_map(exec_mode_map):
-    '''
-    Params:
-        exec_mode_map: an object of class ExecutionModeMap.
-    Returns:
-    '''
-
-    print('-' * 80)
-
-    print('Count of Types:')
-    print('Number of Case Types:\t\t{}'.format(len(exec_mode_map.ctypes)))
-    print('Number of Activity Types:\t{}'.format(len(exec_mode_map.atypes)))
-    print('Number of Time Types:\t\t{}'.format(len(exec_mode_map.ttypes)))
-        
-    print('-' * 80)
-    return
-
-def write_exec_mode_csv(fn, exec_mode_map):
-    '''
-    Params:
-        exec_mode_map: an object of class ExecutionModeMap.
-    Returns:
-    '''
-
-    _describe_exec_mode_map(exec_mode_map)
-    with open(fn, 'w') as f:
-        writer = csv.writer(f)
-        for type_name, identifiers in exec_mode_map.ctypes.items():
-            writer.writerow([
-                    type_name,
-                    ';'.join(sorted(identifiers))])
-        for type_name, identifiers in exec_mode_map.atypes.items():
-            writer.writerow([
-                    type_name,
-                    ';'.join(sorted(identifiers))])
-        for type_name, identifiers in exec_mode_map.ttypes.items():
-            writer.writerow([
-                    type_name,
-                    ';'.join(sorted(identifiers))])
-    print('Execution Mode Map exported.')
-    return
-
 # 1. OrganizationModelMiner-related
 # TODO Rewrite after the class definition of OrgnizationalModel is done.
 # This part is merely a wrap-up for the related class methods.

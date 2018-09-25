@@ -12,7 +12,7 @@ fnout_social_network = sys.argv[2]
 if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
-    cases = read_disco_csv(fn_event_log)
+    el = read_disco_csv(fn_event_log)
 
     print('Input a number to choose a solution:')
     print('\t0. Metrics based on possible causality (van der Aalst)')
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
         print('Ignore real Causality dependencies by default.')
 
-        from SocialNetworkMiner.mining import causality
+        from SocialNetworkMiner import causality
 
         print('Input a number to specify a metric:')
         print('\t0. Handover of work')
@@ -64,18 +64,18 @@ if __name__ == '__main__':
             if not cds:
                 print('Warning: These options are closed for now. Activate them when necessary.')
                 exit(1)
-            sn = causality.handover(cases, real_causality=False,
+            sn = causality.handover(el, real_causality=False,
                     direct_succession=cds, multiple_transfers=cmt)
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
 
     elif mining_option == 1:
-        from SocialNetworkMiner.mining import joint_cases 
-        sn = joint_cases.working_together(cases)
+        from SocialNetworkMiner import joint_cases 
+        sn = joint_cases.working_together(el)
 
     elif mining_option == 2:
-        from SocialNetworkMiner.mining import joint_activities
+        from SocialNetworkMiner import joint_activities
         print('Should log scale be used? y/N NO by default: ', end='')
         opt_ls = input()
         if opt_ls in ['y', 'Y']:
@@ -98,12 +98,12 @@ if __name__ == '__main__':
                     'euclidean',
                     'cityblock',
                     'hamming']
-            sn = joint_activities.distance(cases, use_log_scale=ls,
+            sn = joint_activities.distance(el, use_log_scale=ls,
                     metric=distance_metrics[metric_option])
         elif metric_option in [3]: # correlation metrics
             correlation_metrics = [
                     'pearson']
-            sn = joint_activities.correlation(cases, use_log_scale=ls,
+            sn = joint_activities.correlation(el, use_log_scale=ls,
                     metric=correlation_metrics[metric_option - 3])
         else:
             raise Exception('Failed to recognize input option!')

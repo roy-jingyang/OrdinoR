@@ -7,7 +7,7 @@ event log, using metrics based on joint cases (ref. van der Aalst et. al, CSCW
 '''
 
 # Working together metric
-def working_together(c):
+def working_together(el):
     '''
     This method implements the mining based on working together metric, which
     considers how often two individuals are performing activities for the same
@@ -15,7 +15,7 @@ def working_together(c):
     expected to be returned).
 
     Params:
-        c: DataFrame
+        el: DataFrame
             The imported event log.
     Returns:
         sn: NetworkX DiGraph
@@ -25,7 +25,7 @@ def working_together(c):
     from collections import defaultdict
     mat = defaultdict(lambda: defaultdict(lambda: {'weight': 0.0}))
     from itertools import permutations
-    for case_id, trace in c.groupby('case_id'):
+    for case_id, trace in el.groupby('case_id'):
         performers = set(trace['resource'])
         for pair in permutations(performers, r=2): # ignore self-loops
             mat[pair[0]][pair[1]]['weight'] += 1
@@ -38,6 +38,6 @@ def working_together(c):
 
     from networkx import DiGraph
     sn = DiGraph(mat)
-    sn.add_nodes_from(c.groupby('resource').groups.keys())
+    sn.add_nodes_from(el.groupby('resource').groups.keys())
     return sn
 

@@ -6,7 +6,39 @@ event log, using metrics based on joint activities (ref. van der Aalst et.
 al, CSCW 2005).
 '''
 
-def distance(c, 
+def performer_activity_matrix(el, use_log_scale):
+    '''
+    This method builds a "profile" based on how frequent individuals originate
+    events with specific activity names, i.e. the performer-by-activity matrix.
+
+    Params:
+        rl: DataFrame
+            The resource log.
+        use_log_scale: boolean
+            Use the logrithm scale if the volume of work varies significantly.
+    Returns:
+        pam: DataFrame
+            The constructed performer by activity matrix as a pandas DataFrame,
+            with resource ids as indices and activity names as columns.
+        X: DataFrame
+            The contructed resource profiles.
+    '''
+
+    from collections import defaultdict
+    pam = defaultdict(lambda: defaultdict(lambda: 0))
+    for res, trace in el.groupby('resource'):
+        for event in trace.itertuples():
+            pam[res][event.activity] += 1
+
+    from pandas import DataFrame
+    if use_log_scale: 
+        from numpy import log
+        return DataFrame.from_dict(pam, orient='index').fillna(0).apply(
+                lambda x: log(x + 1))
+    else:
+        return DataFrame.from_dict(pam, orient='index').fillna(0)
+
+def distance(el, 
         use_log_scale=False,
         metric='euclidean',
         convert=False):
@@ -19,7 +51,7 @@ def distance(c,
         2. The generated network is naturally a undirected graph.
 
     Params:
-        c: DataFrame
+        el: DataFrame
             The imported event log.
         use_log_scale: boolean
             Use the logrithm scale if the volume of work varies significantly.
@@ -38,8 +70,7 @@ def distance(c,
             The mined social network as a NetworkX Graph object.
     '''
     
-    from ..ResourceProfiler.raw_profiler import performer_activity_frequency
-    pam = performer_activity_frequency(c, use_log_scale)
+    pam = performer_activity_matrix(el, use_log_scale)
     from scipy.spatial.distance import squareform, pdist
     x = squareform(pdist(pam, metric=metric)) # preserve index
 
@@ -59,10 +90,10 @@ def distance(c,
     for i in range(len(x)):
         node_mapping[nodes[i]] = pam.index[i] 
     sn = relabel_nodes(G, node_mapping)
-    sn.add_nodes_from(c.groupby('resource').groups.keys())
+    sn.add_nodes_from(el.groupby('resource').groups.keys())
     return sn
 
-def correlation(c,
+def correlation(el,
         use_log_scale=False,
         metric='pearson'):
     '''
@@ -70,7 +101,7 @@ def correlation(c,
     ties where correlation-related measures are used.
 
     Params:
-        c: DataFrame
+        el: DataFrame
             The imported event log.
         use_log_scale: boolean
             Use the logrithm scale if the volume of work varies significantly.
@@ -82,8 +113,7 @@ def correlation(c,
             The mined social network as a NetworkX Graph object.
     '''
     
-    from ..ResourceProfiler.raw_profiler import performer_activity_frequency
-    pam = performer_activity_frequency(c, use_log_scale)
+    pam = performer_activity_matrix(el, use_log_scale)
     from scipy.spatial.distance import squareform, pdist
     if metric == 'pearson':
         x = squareform(pdist(pam, metric='correlation')) # preserve index
@@ -101,6 +131,6 @@ def correlation(c,
     for i in range(len(x)):
         node_mapping[nodes[i]] = pam.index[i] 
     sn = relabel_nodes(G, node_mapping)
-    sn.add_nodes_from(c.groupby('resource').groups.keys())
+    sn.add_nodes_from(el.groupby('resource').groups.keys())
     return sn
 

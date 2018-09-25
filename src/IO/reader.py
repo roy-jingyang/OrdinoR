@@ -31,10 +31,6 @@ as well (not mandatory though).
 purposes of working projects and the event log(s) acquired.
 
 2.
-This module contains methods for importing collections of case/activity/time
-types as an object of the ExecutionModeMap.
-
-3.
 This module contains methods for importing an organizational model.
 '''
 
@@ -117,48 +113,7 @@ def read_xes(fn, encoding='utf-8'):
 def read_mxml(fn, encoding='utf-8'):
     pass
 
-# 2. Import a definition of executions modes
-def read_exec_mode_csv(fn, encoding='utf-8'):
-    from ExecutionModeMiner.base import ExecutionModeMap
-    exec_mode_map = ExecutionModeMap()
-    ct_index = list()
-    cts = list()
-    at_index = list()
-    ats = list()
-    tt_index = list()
-    tts = list()
-
-    line_count = 0
-    with open(fn, 'r', encoding=encoding) as f:
-        for row in csv.reader(f):
-            line_count += 1
-            index = row[0]
-            type_def = row[1].split(';')
-            if index.split('.')[0] == 'CT':
-                ct_index.append(index)
-                cts.append({x for x in type_def})
-            elif index.split('.')[0] == 'AT':
-                at_index.append(index)
-                ats.append({x for x in type_def})
-            elif index.split('.')[0] == 'TT':
-                tt_index.append(index)
-                tts.append({x for x in type_def})
-            else:
-                exit('[Error] Unknown execution mode definition')
-
-    if len(cts) > 0:
-        exec_mode_map.set_c_types(cts, index=ct_index)
-    if len(ats) > 0:
-        exec_mode_map.set_a_types(ats, index=at_index)
-    if len(tts) > 0:
-        exec_mode_map.set_t_types(tts, index=tt_index)
-
-    print('"{}" imported successfully. {} lines scanned.'.format(
-        fn, line_count))
-
-    return exec_mode_map
-
-# 3. Import an organizational model
+# 2. Import an organizational model
 # TODO
 def read_org_model_csv(fn, encoding='utf-8'):
     with open(fn, 'r', encoding=encoding) as f:
