@@ -21,13 +21,14 @@ def _describe_om(om):
 
     print('-' * 80)
 
-    print('Number of organizational groups:\t\t{}'.format(len(og)))
+    print('Number of organizational groups:\t\t{}'.format(om.size()))
 
     print('-' * 80)
     return
 
 # 1.1. Write organizational model to file as "plain" CSV
-def write_om_csv(fn, og, a):
+# TODO [Deprecated]
+def write_om_csv_old(fn, og, a):
     '''
     Params:
         fn: str
@@ -52,7 +53,22 @@ def write_om_csv(fn, og, a):
     print('Organizational model exported.')
     return
 
-# 1.2. Write organizational model to file as OMML format (see DSS 2008)
+def write_om_csv(fn, om):
+    '''
+    Params:
+        fn: str
+            Filename of the file to be exported.
+        om: OrganizationalModel object
+            The discovered organizational model.
+
+    Returns:
+    '''
+    _describe_om(om)
+    # TODO
+    print('Organizational model exported.')
+    return
+
+# TODO 1.2. Write organizational model to file as OMML format (see DSS 2008)
 
 # 2. SocialNetworkMiner-related 
 def _describe_sn(sn):

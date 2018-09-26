@@ -7,17 +7,17 @@ from csv import reader
 from collections import defaultdict
 from numpy import mean, std
 
-from IO.reader import read_org_model_csv
+from IO.reader import read_org_model_csv_old
 
 fn_org_model = sys.argv[1]
 fn_org_ref_model = sys.argv[2] if len(sys.argv) >= 3 else None
 
 if __name__ == '__main__':
     # read target model as input
-    model = read_org_model_csv(fn_org_model)
+    model = read_org_model_csv_old(fn_org_model)
 
     # read reference model as input
-    ref_model = read_org_model_csv(fn_org_ref_model)
+    ref_model = read_org_model_csv_old(fn_org_ref_model)
 
     # compare model using entropy measure
     model_resource = set()

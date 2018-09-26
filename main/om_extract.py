@@ -12,8 +12,15 @@ if __name__ == '__main__':
     from IO.reader import read_disco_csv
     el = read_disco_csv(fn_event_log)
 
+    # learn execution modes and convert to resource log
+    naive_exec_mode_miner = NaiveActivityNameExecutionModeMiner(el)
+    rl = naive_exec_mode_miner.convert_event_log(el)
+
+    # TODO: Timer related
+    '''
     from time import time
     print('Timer active.')
+    '''
 
     print('Input a number to choose a solution:')
     print('\t0. Default Mining (Song)')
@@ -31,11 +38,10 @@ if __name__ == '__main__':
         exit(1)
 
     elif mining_option == 0:
-        from OrganizationalModelMiner.mining import default_mining
-        og = default_mining.mine(el)
+        from OrganizationalModelMiner.base import default_mining
+        om = default_mining(rl)
 
     elif mining_option == 1:
-        from OrganizationalModelMiner.mining.disjoint import partition
         # select method (MJA/MJC)
         print('Input a number to choose a method:')
         print('\t0. MJA')
@@ -44,7 +50,7 @@ if __name__ == '__main__':
         method_option = int(input())
         if method_option == 0:
             # MJA -> select metric (ED-distance/PCC)
-            from SocialNetworkMiner.mining import joint_activities
+            from SocialNetworkMiner import joint_activities
             print('Input a number to choose a metric:')
             print('\t0. Distance (Euclidean)')
             print('\t1. PCC')
@@ -60,7 +66,7 @@ if __name__ == '__main__':
                 raise Exception('Failed to recognize input option!')
                 exit(1)
         elif method_option == 1:
-            from SocialNetworkMiner.mining.joint_cases import working_together
+            from SocialNetworkMiner.joint_cases import working_together
             sn = working_together(el)
             print('[Warning] DiGraph casted to Graph.')
             sn = sn.to_undirected()
@@ -73,14 +79,15 @@ if __name__ == '__main__':
         threshold = input()
         threshold = (threshold if threshold[0] in ['+', '-']
                 else float(threshold))
-        from SocialNetworkMiner.mining.utilities import select_edges_by_weight
+        from SocialNetworkMiner.utilities import select_edges_by_weight
         if type(threshold) == float:
             sn = select_edges_by_weight(sn, low=threshold)
         else:
             sn = select_edges_by_weight(sn, percentage=threshold)
 
         # partitioning
-        og = partition.connected_comp(sn)
+        from OrganizationalModelMiner.disjoint import graph_partitioning
+        om = graph_partitioning.connected_components(sn, rl)
 
     elif mining_option == 2:
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
@@ -169,6 +176,8 @@ if __name__ == '__main__':
         ws_fn = input()
         ws_fn = None if ws_fn == '' else ws_fn
 
+        # TODO: Timer related
+        '''
         tm_start = time()
         og = gmm(profiles, num_groups,
                 threshold=user_selected_threshold,
@@ -177,6 +186,7 @@ if __name__ == '__main__':
         print('-' * 10
                 + ' Execution time {:.3f} s. '.format(time() - tm_start)
                 + '-' * 10)
+        '''
 
     elif mining_option == 5:
         from OrganizationalModelMiner.mining.overlap.cluster import moc
@@ -192,12 +202,15 @@ if __name__ == '__main__':
         ws_fn = input()
         ws_fn = None if ws_fn == '' else ws_fn
 
+        # TODO: Timer related
+        '''
         tm_start = time()
         og = moc(profiles, num_groups, 
                 warm_start_input_fn=ws_fn)
         print('-' * 10
                 + ' Execution time {:.3f} s. '.format(time() - tm_start)
                 + '-' * 10)
+        '''
 
     elif mining_option == 6:
         from OrganizationalModelMiner.mining.overlap.cluster import fcm
@@ -220,6 +233,8 @@ if __name__ == '__main__':
         ws_fn = input()
         ws_fn = None if ws_fn == '' else ws_fn
 
+        # TODO: Timer related
+        '''
         tm_start = time()
         og = fcm(profiles, num_groups,
                 threshold=user_selected_threshold,
@@ -227,6 +242,7 @@ if __name__ == '__main__':
         print('-' * 10
                 + ' Execution time {:.3f} s. '.format(time() - tm_start)
                 + '-' * 10)
+        '''
 
     else:
         raise Exception('Failed to recognize input option!')

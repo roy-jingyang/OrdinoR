@@ -2,8 +2,12 @@
 
 '''
 This module contains the definition of the abstract class
-'BaseExecutionModeMiner', as well as the definition of a class which is a naive
-implementation of the baseline execution model mining approach.
+'BaseExecutionModeMiner', which is the base class for any approach on
+discovering execution modes.
+
+An execution mode miner class inherited from the BaseExecutionModeMiner should
+learn and store the mappings C -> CT, A -> AT, T -> TT. More importantly, it
+should allow the conversion from a source event log to a resource log.
 '''
 
 from abc import ABC, abstractmethod
@@ -111,5 +115,4 @@ class BaseExecutionModeMiner(ABC):
             print('-' * 80)
         else:
             exit('[Error] Failed to verify the collected execution modes')
-
     

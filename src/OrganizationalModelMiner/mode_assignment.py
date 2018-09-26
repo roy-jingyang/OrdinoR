@@ -7,31 +7,28 @@ tasks.
 
 from collections import defaultdict
 
-def entity_assignment(og, c):
+def default_assign(group, rl):
     '''
-    This is the default method proposed by Song & van der Aalst, DSS 2008.
+    This is the default method proposed by Song & van der Aalst, DSS 2008,
+    namely "entity_assignment".
 
     Params:
-        og: dict of sets
-            The mined organizational groups.
-        c: DataFrame
-            The imported event log.
+        group: iterator
+            The ids of resources as a resource group.
+        rl: DataFrame
+            The resource log.
     Returns:
-        a: dict of sets
-            The entity assignment result (group => task(s)).
+        modes: iterator
+            The execution modes corresponding to the resources.
     '''
 
-    a = dict()
-    grouped_by_resource = c.groupby('resource')
+    modes = set()
+    grouped_by_resource = rl.groupby('resource')
 
-    # for each organizational group
-    for gid, g in og.items():
-        # for each resource in the group
-        associated_tasks = set()
-        for r in g:
-            associated_tasks.update(
-                    set(grouped_by_resource.get_group(r)['activity']))
-        a[gid] = associated_tasks
-
-    return a
+    # for each resource in the group
+    for r in group:
+        for event in grouped_by_resource.get_group(r)[
+                ['case_type', 'activity_type', 'time_type']].itertuples():
+            modes.add((event.case_type, event.activity_type, event.time_type))
+    return modes
 
