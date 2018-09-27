@@ -98,7 +98,7 @@ class OrganizationalModel:
         '''
         return set(self._rmem.keys())
 
-    def find_group(self, r):
+    def find_groups(self, r):
         '''Query the membership (i.e. belonging to which groups) of a resource
         given its identifier.
 
@@ -127,9 +127,9 @@ class OrganizationalModel:
         '''
         return [g for g in self._mem.values()]
     
-    def get_candidates(self, exec_mode):
-        '''Query the capability (i.e. execution modes allowed by the model) 
-        of a resource given its identifier.
+    def get_candidate_groups(self, exec_mode):
+        '''Query the capable groups (i.e. groups that can perform the execution
+        mode according to the model) given an execution mode.
 
         Parameters
         ----------
