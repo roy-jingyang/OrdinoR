@@ -6,31 +6,75 @@ sys.path.append('./src/')
 
 # import methods to be tested below
 from IO.reader import read_disco_csv
-from IO.writer import write_om_csv
 
 from ExecutionModeMiner.naive_miner import NaiveActivityNameExecutionModeMiner
 
-#from OrganizationalModelMiner.base import default_mining
+from OrganizationalModelMiner.base import default_mining
 
 from OrganizationalModelMiner.disjoint import graph_partitioning
 from SocialNetworkMiner.joint_activities import distance, correlation
 from SocialNetworkMiner.utilities import select_edges_by_weight
 
+from ResourceProfiler.raw_profiler import performer_activity_frequency
+
+from OrganizationalModelMiner.hierarchical import cluster
+from OrganizationalModelMiner.hierarchical import community_detection
+
+from OrganizationalModelMiner.overlap import gmm
+from OrganizationalModelMiner.overlap import moc
+from OrganizationalModelMiner.overlap import fcm
+
+from OrganizationalModelMiner.base import OrganizationalModel
+
+from OrganizationalModelMiner.mode_assignment import default_assign
+
 # List input parameters from shell
-filename_event_log = sys.argv[1]
+filename_input = sys.argv[1]
 filename_result = sys.argv[2]
 
 if __name__ == '__main__':
-    el = read_disco_csv(filename_event_log)
+    with open(filename_input, 'r', encoding='utf-8') as f:
+        el = read_disco_csv(f)
+        #om = OrganizationalModel.from_file_csv(f)
     naive_exec_mode_miner = NaiveActivityNameExecutionModeMiner(el)
-    rl = naive_exec_mode_miner.convert_event_log(el)
+    rl = naive_exec_mode_miner.derive_resource_log(el)
 
-    #om = default_mining(rl)
+    # default mining
+    ogs = default_mining(rl)
 
+    '''
+    # MJA/MJC
+    sn = correlation(el, use_log_scale=False)
+    sn = select_edges_by_weight(sn, low=0.7235)
+
+    ogs = graph_partitioning.connected_components(sn)
+    '''
+
+    '''
+    # AHC
+    profiles = performer_activity_frequency(rl, use_log_scale=True)
+    ogs, og_hcy = cluster.ahc(profiles, 9, method='ward')
+    '''
+
+    '''
+    # HC (by community detection)
+    from SocialNetworkMiner.joint_activities import distance
     sn = distance(el, use_log_scale=True, convert=True)
-    sn = select_edges_by_weight(sn, low=0.9)
+    ogs, og_hcy = community_detection.betweenness(sn, 9, weight='weight')
+    '''
 
-    om = graph_partitioning.connected_components(sn, rl)
+    '''
+    # Sent to 'field test':
+    # GMM
+    # MOC
+    # FCM
+    # Appice
+    '''
 
-    write_om_csv(filename_result, om)    
+    om = OrganizationalModel()
+    for og in ogs:
+        om.add_group(og, default_assign(og, rl))
+
+    with open(filename_result, 'w', encoding='utf-8') as f:
+        om.to_file_csv(f)
 

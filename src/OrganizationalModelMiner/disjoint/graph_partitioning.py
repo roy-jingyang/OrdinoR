@@ -11,10 +11,7 @@ Method 1 and 2 vary only in terms of the input graph, therefore the method
 'connected_comp' should be used for implementing both algorithms.
 '''
 
-from ..base import OrganizationalModel
-from ..mode_assignment import default_assign
-
-def connected_components(sn, rl):
+def connected_components(sn):
     '''
     This method finds connected components in a given graph and derives the
     organizational model.
@@ -25,12 +22,9 @@ def connected_components(sn, rl):
             and the edges could be connections built on similarties, inter-
             actions, etc.
 
-        rl: DataFrame
-            The resource log.
-
     Returns:
-        om: OrganizationalModel object
-            The discovered organizational model.
+        ogs: list of sets
+            A list of organizational groups.
     '''
 
     print('Applying disjoint organizational model mining using' +
@@ -39,12 +33,10 @@ def connected_components(sn, rl):
     from networkx import connected_components, number_connected_components
     print('Found {} connected components in total.'.format(
         number_connected_components(sn)))
-    # step 2. derive the organizational model from the connected components
-    om = OrganizationalModel()
+    # step 2. derive the organizational groups from the connected components
+    ogs = list()
     for comp in connected_components(sn):
-        group = set(comp)
-        exec_modes = default_assign(group, rl)
-        om.add_group(group, exec_modes)
-    print('{} organizational groups discovered.'.format(om.size()))
-    return om
+        ogs.append(set(comp))
+    print('{} organizational groups discovered.'.format(len(ogs)))
+    return ogs
 

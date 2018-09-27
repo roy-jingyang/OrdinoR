@@ -26,8 +26,8 @@ def ln_louvain(sn):
             and the edges could be connections built on similarties, inter-
             actions, etc.
     Returns:
-        og: dict of sets
-            The mined organizational groups.
+        list of sets
+            A list of organizational groups.
     '''
 
     print('Applying overlapping organizational model mining using ' +
@@ -111,7 +111,7 @@ def ln_louvain(sn):
     # 3. Map communities onto the original network to get the results
     # Derive the orgnizational model
     from collections import defaultdict
-    og = defaultdict(lambda: set())
+    groups = defaultdict(lambda: set())
     cnt = 0
     with open(fn_pajek_net_communities, 'r') as f:
         is_header_line = True
@@ -125,13 +125,12 @@ def ln_louvain(sn):
                 label = line.strip()
                 u = edges[cnt][0]
                 v = edges[cnt][1]
-                og[label].add(u)
-                og[label].add(v)
+                groups[label].add(u)
+                groups[label].add(v)
                 cnt += 1
         for i in range(len(original_isolates)):
-            og['ISOLATE #{}'.format(i)].add(original_isolates[i])
+            groups['ISOLATE #{}'.format(i)].add(original_isolates[i])
 
-    print('{} organizational entities extracted.'.format(len(og)))
-    from copy import deepcopy
-    return deepcopy(og)
+    print('{} organizational groups discovered.'.format(len(groups.values())))
+    return [set(g) for g in groups.values()]
 

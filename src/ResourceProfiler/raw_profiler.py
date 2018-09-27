@@ -16,9 +16,6 @@ def performer_activity_frequency(rl, use_log_scale):
         use_log_scale: boolean
             Use the logrithm scale if the volume of work varies significantly.
     Returns:
-        pam: DataFrame
-            The constructed performer by activity matrix as a pandas DataFrame,
-            with resource ids as indices and activity names as columns.
         X: DataFrame
             The contructed resource profiles.
     '''

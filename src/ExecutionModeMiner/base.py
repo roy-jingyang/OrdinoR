@@ -77,11 +77,15 @@ class BaseExecutionModeMiner(ABC):
         pass
 
     @abstractmethod
-    def convert_event_log(self, el):
-        '''Create a new log given the original log after the execution
+    def derive_resource_log(self, el):
+        '''Create a 'resource log' given the original log after the execution
         modes have been discovered and verified. The collections of case/
         activity/time identifiers in the original event log will be mapped
         onto the corresponding execution modes.
+
+        Each 'resource event' in the derived resource log is corresponded with
+        an event in the source event log exactly (even if the resource log is a
+        multiset).
 
         Parameters
         ----------
@@ -92,7 +96,7 @@ class BaseExecutionModeMiner(ABC):
         Returns
         -------
         rl: DataFrame
-            The converted log in pandas DataFrame form.
+            The derived resource log in pandas DataFrame form.
         '''
         pass
 

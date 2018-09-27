@@ -42,15 +42,15 @@ class OrganizationalModel:
     def __init__(self):
         self._rg_id = -1
     
-    def add_group(self, resources, exec_modes):
+    def add_group(self, og, exec_modes):
         '''Add a new group into the organizational model.
 
         Parameters
         ----------
-        resources: iterator
+        og: iterator
             The ids of resources to be added as a resource group.
         exec_modes: iterator
-            The execution modes corresponding to the resources.
+            The execution modes corresponding to the og.
 
         Returns
         -------
@@ -60,7 +60,7 @@ class OrganizationalModel:
 
         self._mem[self._rg_id] = set()
         # two-way dict here
-        for r in resources:
+        for r in og:
             self._mem[self._rg_id].add(r)
             self._rmem[r].add(self._rg_id)
 
@@ -145,11 +145,62 @@ class OrganizationalModel:
 
     # IO related methods
     # TODO 
-    def to_csv(self, f):
-        pass
+    def to_file_csv(self, f):
+        '''Export and write the current organizational model to a csv file.
 
-    def from_csv(self, fn):
-        pass
+        Data exchange format in the csv file (each row):
+        Resource Group id, [Resource x; ...], [CTx|ATx|TTx; ...]
+
+        Parameters
+        ----------
+        f: file object
+            The destination csv file to be written.
+
+        Returns
+        -------
+        '''
+        from csv import writer
+        writer = writer(f)
+
+        rows = list()
+        for rg_id in sorted(self._rg.keys()):
+            str_rg_id = str(rg_id)
+            str_members = ';'.join(sorted(str(r) for r in self._mem[rg_id]))
+            str_exec_modes = ';'.join(sorted(
+                    '|'.join(str(t) for t in mode)
+                    for mode in self._cap[rg_id]))
+
+            rows.append([str_rg_id, str_members, str_exec_modes])
+
+        writer.writerows(rows)
+
+    @classmethod
+    def from_file_csv(cls, f):
+        '''Read from a csv file and return an organizational model.
+
+        Data exchange format in the csv file (each row):
+        Resource Group id, [Resource x; ...], [CTx|ATx|TTx; ...]
+
+        Parameters
+        ----------
+        f: file object
+            The sourcd csv file to be read from.
+
+        Returns
+        -------
+        '''
+        from csv import reader
+        om_obj = cls()
+        for row in reader(f):
+            group = row[1].split(';')
+            # keep order: we assume the imported model is generated from
+            # applying the method 'to_file_csv'
+            exec_modes = list()
+            for str_mode in row[2].split(';'):
+                exec_modes.append(tuple(str_mode.split('|')))
+            om_obj.add_group(group, exec_modes)
+        return om_obj
+
 
 # Note: this method does not require explicitly discovered resource profiles to
 # be used.
@@ -167,16 +218,14 @@ def default_mining(rl):
     Returns:
         om: OrganizationalModel object
             The discovered organizational model.
+        ogs: list of sets
+            A list of organizational groups.
     '''
 
-    from .mode_assignment import default_assign
-
     print('Applying Default Mining:')
-    om = OrganizationalModel()
+    ogs = list()
     for atype, events in rl.groupby('activity_type'):
-        group = set(events['resource'])
-        exec_modes = default_assign(group, rl)
-        om.add_group(group, exec_modes)
-    print('{} organizational groups discovered.'.format(om.size()))
-    return om
+        ogs.append(set(events['resource']))
+    print('{} organizational groups discovered.'.format(len(ogs)))
+    return ogs
 

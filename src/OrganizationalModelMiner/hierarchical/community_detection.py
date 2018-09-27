@@ -6,8 +6,8 @@ methods, based on the use of community detection techniques. Methods include:
     1. The Girvan-Newman algorithm
 '''
 
-def betweenness(sn,
-        n_groups,
+def betweenness(
+        sn, n_groups,
         weight=None):
     '''
     This method implements the traditional Girvan-Newman algorithm designed for
@@ -69,11 +69,14 @@ def betweenness(sn,
     from pandas import DataFrame
     og_hcy = DataFrame(mx_tree, index=resource_idx) # preserve indices
 
+    print(og_hcy)
+
     from collections import defaultdict
-    og = defaultdict(lambda: set())
+    groups = defaultdict(lambda: set())
+    # add by each resource
     for i in range(len(og_hcy.index)):
-        og[mx_tree[i, -1]].add(og_hcy.index[i]) # TODO
-    print('{} organizational entities extracted.'.format(len(og)))
-    from copy import deepcopy
-    return deepcopy(og), og_hcy
+        groups[og_hcy.iloc[i,-1]].add(og_hcy.index[i])
+
+    print('{} organizational groups discovered.'.format(len(groups.values())))
+    return [set(g) for g in groups.values()], og_hcy
 

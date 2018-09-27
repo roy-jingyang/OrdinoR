@@ -55,62 +55,58 @@ def _describe_event_log(el):
     print('-' * 80)
     return
 
-def read_disco_csv(fn, mapping=None, header=True, encoding='utf-8'):
+def read_disco_csv(f, mapping=None, header=True):
     '''
     Params:
-        fn: str
-            Filename of the event log file being imported.
+        f: file object
+            File object of the event log being imported.
         mapping: dict, optional
             A python dictionary that denotes the mapping from CSV column
             numbers to event log attributes.
         header: boolean, optional
             True if the event log file contains a header line, False otherwise.
-        encoding: str, optional
-            Encoding of the event log file being imported.
     Returns:
         el: DataFrame
             The event log in pandas DataFrame form.
     '''
 
     ld = list()
-    with open(fn, 'r', encoding=encoding) as f:
-        is_header_line = True
-        line_count = 0
+    is_header_line = True
+    line_count = 0
 
-        for row in csv.reader(f):
-            line_count += 1
-            if is_header_line:
-                is_header_line = False
-                pass
-            else:
-                # the default mapping is defined as below
-                e = {
-                    'case_id': row[0],
-                    'activity': row[1],
-                    'resource': row[2],
-                    'timestamp': row[3]
-                }
-                # add addtional attributes mapping specified
-                if mapping:
-                    for attr, col_num in mapping.items():
-                        if attr not in e:
-                            e[attr] = row[col_num]
+    for row in csv.reader(f):
+        line_count += 1
+        if is_header_line:
+            is_header_line = False
+            pass
+        else:
+            # the default mapping is defined as below
+            e = {
+                'case_id': row[0],
+                'activity': row[1],
+                'resource': row[2],
+                'timestamp': row[3]
+            }
+            # add addtional attributes mapping specified
+            if mapping:
+                for attr, col_num in mapping.items():
+                    if attr not in e:
+                        e[attr] = row[col_num]
 
-                ld.append(e)
+            ld.append(e)
 
     from pandas import DataFrame
     el = DataFrame(ld)
 
-    print('"{}" imported successfully. {} lines scanned.'.format(
-        fn, line_count))
+    print('Imported successfully. {} lines scanned.'.format(line_count))
 
     _describe_event_log(el)
     return el
 
-def read_xes(fn, encoding='utf-8'):
+def read_xes(f):
     pass
 
-def read_mxml(fn, encoding='utf-8'):
+def read_mxml(f):
     pass
 
 # 2. Import an organizational model
@@ -128,8 +124,4 @@ def read_org_model_csv_old(fn, encoding='utf-8'):
                     model[row[0]].add(r)
 
     return model
-
-def read_org_model_csv(fn, encoding='utf-8'):
-    # TODO
-    return om
 

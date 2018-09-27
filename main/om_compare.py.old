@@ -8,14 +8,20 @@ from collections import defaultdict
 from numpy import mean, std
 
 from IO.reader import read_org_model_csv_old
+from OrganizationalModelMiner.base import OrganizationalModel
 
 fn_org_model = sys.argv[1]
 fn_org_ref_model = sys.argv[2] if len(sys.argv) >= 3 else None
 
 if __name__ == '__main__':
     # read target model as input
-    model = read_org_model_csv_old(fn_org_model)
+    with open(fn_org_model, 'r', encoding='utf-8') as f:
+        om = OrganizationalModel.from_file_csv(f)
 
+    groups = om.find_all_groups()
+    model = dict()
+    for i, group in enumerate(groups):
+        model[i] = group
     # read reference model as input
     ref_model = read_org_model_csv_old(fn_org_ref_model)
 

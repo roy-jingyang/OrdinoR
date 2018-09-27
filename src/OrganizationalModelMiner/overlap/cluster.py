@@ -11,11 +11,9 @@ Methods include:
     3. FCM (Fuzzy c-Means)
 '''
 
-def gmm(profiles,
-        n_groups,
-        threshold=None,
-        cov_type='spherical',
-        warm_start_input_fn=None): 
+def gmm(
+        profiles, n_groups,
+        threshold=None, cov_type='spherical', warm_start_input_fn=None): 
     '''
     This method implements the algorithm of using Gaussian Mixture Model
     for mining an overlapping organizational model from the given event log.
@@ -38,8 +36,8 @@ def gmm(profiles,
             Filename of the initial guess of clustering.
             The default is None, meaning warm start is NOT used.
     Returns:
-        og: dict of sets
-            The mined organizational groups.
+        list of sets
+            A list of organizational groups.
     '''
 
     from collections import defaultdict
@@ -96,7 +94,7 @@ def gmm(profiles,
     posterior_pr = gmm_model.predict_proba(profiles)
     from numpy import array, amax, nonzero, argmax
     from numpy.random import choice
-    og = defaultdict(lambda: set())
+    groups = defaultdict(lambda: set())
     # TODO: more pythonic way required
     for i in range(len(posterior_pr)):
         resource_postpr = posterior_pr[i]
@@ -111,16 +109,15 @@ def gmm(profiles,
         # the selection of the threshold
         if membership.any():
             for j in nonzero(membership)[0]:
-                og[j].add(profiles.index[i])
+                groups[j].add(profiles.index[i])
         else: # invalid, have to choose the maximum one or missing the resource
-            og[argmax(resource_postpr)].add(profiles.index[i])
+            groups[argmax(resource_postpr)].add(profiles.index[i])
 
-    print('{} organizational entities extracted.'.format(len(og)))
-    from copy import deepcopy
-    return deepcopy(og)
+    print('{} organizational groups discovered.'.format(len(groups.values())))
+    return [set(g) for g in groups.values()]
 
-def moc(profiles,
-        n_groups,
+def moc(
+        profiles, n_groups,
         warm_start_input_fn=None):
     '''
     This method implements the algorithm of using Model-based Overlapping
@@ -137,8 +134,8 @@ def moc(profiles,
             Filename of the initial guess of clustering.
             The default is None, meaning warm start is NOT used.
     Returns:
-        og: dict of sets
-            The mined organizational groups.
+        list of sets
+            A list of organizational groups.
     '''
 
     print('Applying overlapping organizational model mining using ' + 
@@ -181,26 +178,24 @@ def moc(profiles,
     # step 3. Deriving the clusters as the end result
     from numpy import nonzero
     from collections import defaultdict
-    og = defaultdict(lambda: set())
+    groups = defaultdict(lambda: set())
     # TODO: more pythonic way required
     for i in range(len(mat_membership)):
         # check if any valid membership exists for the resource based on
         # the results predicted by the obtained MOC model
         if mat_membership[i,:].any(): # valid if at least belongs to 1 group
             for j in nonzero(mat_membership[i,:])[0]:
-                og[j].add(profiles.index[i])
+                groups[j].add(profiles.index[i])
         else: # invalid (unexpected exit)
             exit('[Fatal error] MOC failed to produce a valid result')
 
-    print('{} organizational entities extracted.'.format(len(og)))
-    from copy import deepcopy
-    return deepcopy(og)
+    print('{} organizational groups discovered.'.format(len(groups.values())))
+    return [set(g) for g in groups.values()]
 
 # TODO
-def fcm(profiles,
-        n_groups,
-        threshold=None,
-        warm_start_input_fn=None):
+def fcm(
+        profiles, n_groups,
+        threshold=None, warm_start_input_fn=None):
     '''
     This method implements the algorithm of using Fuzzy c-Means for mining an
     overlapping organizational model from the given event log.
@@ -222,8 +217,8 @@ def fcm(profiles,
             with each line in the CSV file representing a group.
             The default is None, meaning warm start is NOT used.
     Returns:
-        og: dict of sets
-            The mined organizational groups.
+        list of sets
+            A list of organizational groups.
     '''
     print('Applying overlapping organizational model mining using ' +
             'clustering-based FCM:')
@@ -272,18 +267,17 @@ def fcm(profiles,
     # step 3. Deriving the clusters as the end result
     from numpy import array, amax, nonzero, argmax
     from numpy.random import choice
-    og = defaultdict(lambda: set())
+    groups = defaultdict(lambda: set())
     for i in range(len(fpp)):
         # check if any valid membership exists for the resource based on
         # the selection of the threshold
         membership = fpp[i,:]
         if membership.any():
             for j in nonzero(membership)[0]:
-                og[j].add(profiles.index[i])
+                groups[j].add(profiles.index[i])
         else: # invalid, have to choose the maximum one or missing the resource
-            og[argmax(resource_wt)].add(profiles.index[i])
+            groups[argmax(resource_wt)].add(profiles.index[i])
 
-    print('{} organizational entities extracted.'.format(len(og)))
-    from copy import deepcopy
-    return deepcopy(og)
+    print('{} organizational groups discovered.'.format(len(groups.values())))
+    return [set(g) for g in groups.values()]
 

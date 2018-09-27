@@ -18,8 +18,8 @@ if __name__ == '__main__':
     el = read_disco_csv(filename_input)
     naive_exec_mode_miner = NaiveActivityNameExecutionModeMiner(el)
 
-    # convert to resource log
-    rl = naive_exec_mode_miner.convert_event_log(el)
+    # derive resource log
+    rl = naive_exec_mode_miner.derive_resource_log(el)
 
     X = performer_activity_frequency(rl, use_log_scale=False)
     print(X)

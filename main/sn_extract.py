@@ -114,6 +114,6 @@ if __name__ == '__main__':
         exit(1)
 
     # save the mined social network to a file
-    from IO.writer import write_sn_graphml
-    write_sn_graphml(fnout_social_network, sn)
+    from networkx import write_graphml
+    write_graphml(sn, fnout_social_network)
 

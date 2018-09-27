@@ -8,10 +8,9 @@ Methods include:
     1. Agglomerative Hierarchical Clustering (Song & van der Aalst)
 '''
 
-def ahc(profiles,
-        n_groups,
-        method='single',
-        metric='euclidean'):
+def ahc(
+        profiles, n_groups,
+        method='single', metric='euclidean'):
     '''
     This method implements the basic agglomerative hierarchical clustering
     algorithm in clustering analysis, proposed by Song & van der Aalst.
@@ -31,8 +30,8 @@ def ahc(profiles,
             linkage. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
     Returns:
-        og: dict of sets
-            The mined organizational groups.
+        list of sets
+            A list of organizational groups.
         og_hcy: DataFrame
             The hierarchical structure as a pandas DataFrame, with resource ids
             as indices, levels of the hierarchy as columns, and group ids as
@@ -53,10 +52,11 @@ def ahc(profiles,
     og_hcy = DataFrame(mx_tree, index=profiles.index)
 
     from collections import defaultdict
-    og = defaultdict(lambda: set())
+    groups = defaultdict(lambda: set())
+    # add by each resource
     for i in range(len(og_hcy.index)):
-        og[mx_tree[i, -1]].add(og_hcy.index[i]) # TODO
-    print('{} organizational entities extracted.'.format(len(og)))
-    from copy import deepcopy
-    return deepcopy(og), og_hcy
+        groups[og_hcy.iloc[i,-1]].add(og_hcy.index[i])
+
+    print('{} organizational groups discovered.'.format(len(groups.values())))
+    return [set(g) for g in groups.values()], og_hcy
 

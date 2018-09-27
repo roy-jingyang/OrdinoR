@@ -10,17 +10,21 @@ fnout_org_model = sys.argv[2]
 if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
-    el = read_disco_csv(fn_event_log)
+    with open(fn_event_log, 'r', encoding='utf-8') as f:
+        el = read_disco_csv(f)
 
     # learn execution modes and convert to resource log
+    from ExecutionModeMiner.naive_miner import NaiveActivityNameExecutionModeMiner
     naive_exec_mode_miner = NaiveActivityNameExecutionModeMiner(el)
-    rl = naive_exec_mode_miner.convert_event_log(el)
+    rl = naive_exec_mode_miner.derive_resource_log(el)
 
     # TODO: Timer related
     '''
     from time import time
     print('Timer active.')
     '''
+
+    # discover organizational groups
 
     print('Input a number to choose a solution:')
     print('\t0. Default Mining (Song)')
@@ -39,7 +43,7 @@ if __name__ == '__main__':
 
     elif mining_option == 0:
         from OrganizationalModelMiner.base import default_mining
-        om = default_mining(rl)
+        ogs = default_mining(rl)
 
     elif mining_option == 1:
         # select method (MJA/MJC)
@@ -87,7 +91,7 @@ if __name__ == '__main__':
 
         # partitioning
         from OrganizationalModelMiner.disjoint import graph_partitioning
-        om = graph_partitioning.connected_components(sn, rl)
+        ogs = graph_partitioning.connected_components(sn)
 
     elif mining_option == 2:
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
@@ -99,20 +103,20 @@ if __name__ == '__main__':
         print('Option: ', end='')
         method_option = int(input())
         if method_option == 0:
-            from OrganizationalModelMiner.mining.hierarchical import cluster
             # build profiles
-            from ResourceProfiler import performer_activity_frequency
-            profiles = performer_activity_frequency(el, use_log_scale=True)
-            og, og_hcy = cluster.ahc(profiles, num_groups,
-                    method='ward')
+            from ResourceProfiler.raw_profiler import performer_activity_frequency
+            profiles = performer_activity_frequency(rl, use_log_scale=True)
+            from OrganizationalModelMiner.hierarchical import cluster
+            ogs, og_hcy = cluster.ahc(
+                    profiles, num_groups, method='ward')
         elif method_option == 1:
-            from OrganizationalModelMiner.mining.hierarchical import community_detection
             # build social network
-            #from SocialNetworkMiner.mining.causality import handover
-            from SocialNetworkMiner.mining.joint_activities import distance
+            #from SocialNetworkMiner.causality import handover
+            from SocialNetworkMiner.joint_activities import distance
             sn = distance(el, use_log_scale=True, convert=True)
-            og, og_hcy = community_detection.betweenness(sn, num_groups,
-                    weight='weight') # consider edge weight, optional
+            from OrganizationalModelMiner.hierarchical import community_detection
+            ogs, og_hcy = community_detection.betweenness(
+                    sn, num_groups, weight='weight') # consider edge weight, optional
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
@@ -125,9 +129,9 @@ if __name__ == '__main__':
         print('Option: ', end='')
         method_option = int(input())
         if method_option == 0:
-            from OrganizationalModelMiner.mining.overlap.community_detection import ln_louvain
+            from OrganizationalModelMiner.overlap.community_detection import ln_louvain
             # build social network
-            from SocialNetworkMiner.mining.joint_activities import correlation
+            from SocialNetworkMiner.joint_activities import correlation
             sn = correlation(el, use_log_scale=True)
 
             # edge filtering
@@ -135,7 +139,7 @@ if __name__ == '__main__':
             threshold = input()
             threshold = (threshold if threshold[0] in ['+', '-']
                     else float(threshold))
-            from SocialNetworkMiner.mining.utilities import select_edges_by_weight
+            from SocialNetworkMiner.utilities import select_edges_by_weight
             if type(threshold) == float:
                 sn = select_edges_by_weight(sn, low=threshold)
             else:
@@ -143,19 +147,18 @@ if __name__ == '__main__':
                 sn = select_edges_by_weight(sn, low=eps) # TODO: Appice only keeps the top positive values
                 sn = select_edges_by_weight(sn, percentage=threshold)
 
-            og = ln_louvain(sn)
+            ogs = ln_louvain(sn)
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
 
     elif mining_option == 4:
-        from OrganizationalModelMiner.mining.overlap.cluster import gmm
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = int(input())
         # build profiles
-        from ResourceProfiler import performer_activity_frequency
-        profiles = performer_activity_frequency(el, use_log_scale=True)
-        #profiles = performer_activity_frequency(el, use_log_scale=False)
+        from ResourceProfiler.raw_profiler import performer_activity_frequency
+        profiles = performer_activity_frequency(rl, use_log_scale=True)
+        #profiles = performer_activity_frequency(rl, use_log_scale=False)
 
         print('Input a threshold value [0, 1), in order to determine the ' +
                 'resource membership (Enter to choose the max., ' + 
@@ -176,31 +179,37 @@ if __name__ == '__main__':
         ws_fn = input()
         ws_fn = None if ws_fn == '' else ws_fn
 
+        from OrganizationalModelMiner.overlap.cluster import gmm
+        ogs = gmm(
+                profiles, num_groups, threshold=user_selected_threshold,
+                cov_type=cov_types[cov_type_option], warm_start_input_fn=ws_fn)
+
         # TODO: Timer related
         '''
         tm_start = time()
-        og = gmm(profiles, num_groups,
-                threshold=user_selected_threshold,
-                cov_type=cov_types[cov_type_option],
-                warm_start_input_fn=ws_fn)
+        # execute
         print('-' * 10
                 + ' Execution time {:.3f} s. '.format(time() - tm_start)
                 + '-' * 10)
         '''
 
     elif mining_option == 5:
-        from OrganizationalModelMiner.mining.overlap.cluster import moc
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = int(input())
         # build profiles
-        from ResourceProfiler import performer_activity_frequency
-        profiles = performer_activity_frequency(el, use_log_scale=True)
-        #profiles = performer_activity_frequency(el, use_log_scale=False)
+        from ResourceProfiler.raw_profiler import performer_activity_frequency
+        profiles = performer_activity_frequency(rl, use_log_scale=True)
+        #profiles = performer_activity_frequency(rl, use_log_scale=False)
 
         print('Input a relative path to the file to be used for warm start: ' +
                 '(Enter if None)')
         ws_fn = input()
         ws_fn = None if ws_fn == '' else ws_fn
+
+        from OrganizationalModelMiner.overlap.cluster import moc
+        ogs = moc(
+                profiles, num_groups, 
+                warm_start_input_fn=ws_fn)
 
         # TODO: Timer related
         '''
@@ -213,13 +222,12 @@ if __name__ == '__main__':
         '''
 
     elif mining_option == 6:
-        from OrganizationalModelMiner.mining.overlap.cluster import fcm
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = int(input())
         # build profiles
-        from ResourceProfiler import performer_activity_frequency
-        profiles = performer_activity_frequency(el, use_log_scale=True)
-        #profiles = performer_activity_frequency(el, use_log_scale=False)
+        from ResourceProfiler.raw_profiler import performer_activity_frequency
+        profiles = performer_activity_frequency(rl, use_log_scale=True)
+        #profiles = performer_activity_frequency(rl, use_log_scale=False)
 
         print('Input a threshold value [0, 1), in order to determine the ' +
                 'resource membership (Enter to choose the max., ' + 
@@ -232,6 +240,12 @@ if __name__ == '__main__':
                 '(Enter if None)')
         ws_fn = input()
         ws_fn = None if ws_fn == '' else ws_fn
+
+        from OrganizationalModelMiner.overlap.cluster import fcm
+        ogs = fcm(
+                profiles, num_groups,
+                threshold=user_selected_threshold,
+                warm_start_input_fn=ws_fn)
 
         # TODO: Timer related
         '''
@@ -248,11 +262,15 @@ if __name__ == '__main__':
         raise Exception('Failed to recognize input option!')
         exit(1)
 
-    from OrganizationalModelMiner.mining import mode_assignment
-    assignment = mode_assignment.entity_assignment(og, el)
+    from OrganizationalModelMiner.base import OrganizationalModel
+    om = OrganizationalModel()
+
+    # assign execution modes to groups
+    from OrganizationalModelMiner.mode_assignment import default_assign
+    for og in ogs:
+        om.add_group(og, default_assign(og, rl))
 
     # save the mined organizational model to a file
-    from IO.writer import write_om_csv
-    write_om_csv(fnout_org_model, og, assignment)
-    #from IO.writer import write_om_omml
+    with open(fnout_org_model, 'w', encoding='utf-8') as fout:
+        om.to_file_csv(fout)
 

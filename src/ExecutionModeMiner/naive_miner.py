@@ -30,7 +30,7 @@ class NaiveActivityNameExecutionModeMiner(BaseExecutionModeMiner):
         else:
             self.is_atypes_verified = False
 
-    def convert_event_log(self, el):
+    def derive_resource_log(self, el):
         # construct reversed dict: A -> AT
         rev_atypes = dict()
         for type_name, identifiers in self._atypes.items():
@@ -39,8 +39,9 @@ class NaiveActivityNameExecutionModeMiner(BaseExecutionModeMiner):
 
         # iterate through all events in the original log and convert
         resource_log = list()
-        for event in el.itertuples():
-            resource_log.append({
+        rl = list()
+        for event in el.itertuples(): # keep order
+            rl.append({
                 'resource': event.resource,
                 'case_type': None,
                 'activity_type': rev_atypes[event.activity],
@@ -48,5 +49,5 @@ class NaiveActivityNameExecutionModeMiner(BaseExecutionModeMiner):
             })
 
         from pandas import DataFrame
-        return DataFrame(resource_log)
+        return DataFrame(rl)
 
