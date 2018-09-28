@@ -21,7 +21,8 @@ from OrganizationalModelMiner.hierarchical import cluster
 
 from OrganizationalModelMiner.base import OrganizationalModel
 
-from OrganizationalModelMiner.mode_assignment import default_assign
+from OrganizationalModelMiner.mode_assignment import member_first_assign
+from OrganizationalModelMiner.mode_assignment import group_first_assign
 
 from Evaluation.l2m import conformance
 
@@ -36,15 +37,16 @@ if __name__ == '__main__':
     rl = naive_exec_mode_miner.derive_resource_log(el)
 
     # default mining
-    #ogs = default_mining(rl)
+    ogs = default_mining(rl)
 
-    sn = correlation(el, use_log_scale=False)
-    sn = select_edges_by_weight(sn, low=0.7)
-    ogs = graph_partitioning.connected_components(sn)
+    #sn = correlation(el, use_log_scale=False)
+    #sn = select_edges_by_weight(sn, low=0.7)
+    #ogs = graph_partitioning.connected_components(sn)
 
     om = OrganizationalModel()
     for og in ogs:
-        om.add_group(og, default_assign(og, rl))
+        #om.add_group(og, member_first_assign(og, rl))
+        om.add_group(og, group_first_assign(og, rl))
     
     print()
     print('Fitness = {}'.format(conformance.fitness(rl, om)))

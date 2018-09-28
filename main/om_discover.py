@@ -266,11 +266,18 @@ if __name__ == '__main__':
     om = OrganizationalModel()
 
     # assign execution modes to groups
-    from OrganizationalModelMiner.mode_assignment import default_assign
+    from OrganizationalModelMiner.mode_assignment import group_first_assign
     for og in ogs:
-        om.add_group(og, default_assign(og, rl))
+        om.add_group(og, group_first_assign(og, rl))
+
+    # TODO evaluate (goes here??)
+    from Evaluation.l2m import conformance
+    print()
+    print('Fitness = {:.6f}'.format(conformance.fitness(rl, om)))
+    print('Precision = {:.6f}'.format(conformance.precision(rl, om)))
 
     # save the mined organizational model to a file
     with open(fnout_org_model, 'w', encoding='utf-8') as fout:
         om.to_file_csv(fout)
+    print('Organizational model exported to "{}".'.format(fnout_org_model))
 

@@ -17,7 +17,8 @@ class NaiveActivityNameExecutionModeMiner(BaseExecutionModeMiner):
         self.verify()
 
     def _build_atypes(self, el):
-        activity_names = [{x} for x in el.groupby('activity').groups.keys()]
+        activity_names = [{x} for x in 
+                sorted(el.groupby('activity').groups.keys())]
         #is_disjoint = set.intersection(*activity_names)
         is_disjoint = True # naturally
         #is_union = set.union(*activity_names)

@@ -1,9 +1,7 @@
-#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import sys
 sys.path.append('./src/')
-from csv import reader
 from collections import defaultdict
 from numpy import mean, std
 
@@ -25,7 +23,6 @@ if __name__ == '__main__':
     # read reference model as input
     ref_model = read_org_model_csv_old(fn_org_ref_model)
 
-    # compare model using entropy measure
     model_resource = set()
     model_resource_labels = defaultdict(lambda: set())
     for k, x in model.items():
