@@ -5,3 +5,6 @@
 *.un~
 *.swp
 
+# Ignore external tools
+external/
+

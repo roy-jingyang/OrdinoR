@@ -30,7 +30,7 @@ if __name__ == '__main__':
     print('\t0. Default Mining (Song)')
     print('\t1. Metric based on Joint Activities/Cases (Song)')
     print('\t2. Hierarchical Organizational Mining')
-    print('\t3. Overlapping Community Detection (Appice)')
+    print('\t3. Overlapping Community Detection')
     print('\t4. Gaussian Mixture Model')
     print('\t5. Model based Overlapping Clustering')
     print('\t6. Fuzzy c-means')
@@ -124,30 +124,34 @@ if __name__ == '__main__':
         og_hcy.to_csv(fnout_org_model + '_hierarchy')
 
     elif mining_option == 3:
+        print('Build social network:')
+        # build social network
+        from SocialNetworkMiner.joint_activities import correlation
+        sn = correlation(el, use_log_scale=True)
+
+        # edge filtering
+        print('Input a value as threshold:', end=' ')
+        threshold = input()
+        threshold = (threshold if threshold[0] in ['+', '-']
+                else float(threshold))
+        from SocialNetworkMiner.utilities import select_edges_by_weight
+        if type(threshold) == float:
+            sn = select_edges_by_weight(sn, low=threshold)
+        else:
+            eps = sys.float_info.epsilon
+            sn = select_edges_by_weight(sn, low=eps) # TODO: keep only positive
+            sn = select_edges_by_weight(sn, percentage=threshold)
+
+        from OrganizationalModelMiner.overlap import community_detection
         print('Input a number to choose a method:')
-        print('\t0. Appice\'s algorithm (Linear Network + Louvain)')
+        print('\t0. CFinder (Clique Percolation Method)') 
+        print('\t1. Appice\'s approach (Link partitioning)')
         print('Option: ', end='')
         method_option = int(input())
         if method_option == 0:
-            from OrganizationalModelMiner.overlap.community_detection import ln_louvain
-            # build social network
-            from SocialNetworkMiner.joint_activities import correlation
-            sn = correlation(el, use_log_scale=True)
-
-            # edge filtering
-            print('Input a value as threshold:', end=' ')
-            threshold = input()
-            threshold = (threshold if threshold[0] in ['+', '-']
-                    else float(threshold))
-            from SocialNetworkMiner.utilities import select_edges_by_weight
-            if type(threshold) == float:
-                sn = select_edges_by_weight(sn, low=threshold)
-            else:
-                eps = sys.float_info.epsilon
-                sn = select_edges_by_weight(sn, low=eps) # TODO: Appice only keeps the top positive values
-                sn = select_edges_by_weight(sn, percentage=threshold)
-
-            ogs = ln_louvain(sn)
+            ogs = community_detection.clique_percolation(sn)
+        elif method_option == 1:
+            ogs = community_detection.link_partitioning(sn)
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
@@ -266,18 +270,21 @@ if __name__ == '__main__':
     om = OrganizationalModel()
 
     # assign execution modes to groups
-    from OrganizationalModelMiner.mode_assignment import group_first_assign
+    from OrganizationalModelMiner.mode_assignment import member_first_assign
+    #from OrganizationalModelMiner.mode_assignment import group_first_assign
     for og in ogs:
-        om.add_group(og, group_first_assign(og, rl))
+        om.add_group(og, member_first_assign(og, rl))
+        #om.add_group(og, group_first_assign(og, rl))
 
     # TODO evaluate (goes here??)
     from Evaluation.l2m import conformance
     print()
-    print('Fitness = {:.6f}'.format(conformance.fitness(rl, om)))
-    print('Precision = {:.6f}'.format(conformance.precision(rl, om)))
+    print('Fitness\t\t= {:.6f}'.format(conformance.fitness(rl, om)))
+    print('Precision\t= {:.6f}'.format(conformance.precision(rl, om)))
 
     # save the mined organizational model to a file
     with open(fnout_org_model, 'w', encoding='utf-8') as fout:
         om.to_file_csv(fout)
-    print('Organizational model exported to "{}".'.format(fnout_org_model))
+    print('Organizational model of {} resources in {} groups exported to "{}".'
+            .format(len(om.resources()), om.size(), fnout_org_model))
 
