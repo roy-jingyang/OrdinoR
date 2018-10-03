@@ -28,7 +28,7 @@ def betweenness(
             graph to be recognized as weight values. The default is None, i.e.
             the graph is considered as unweighted.
     Returns:
-        og: dict of sets
+        og: dict of frozensets
             The mined organizational groups.
         og_hcy: DataFrame
             The hierarchical structure as a pandas DataFrame, with resource ids
@@ -78,5 +78,5 @@ def betweenness(
         groups[og_hcy.iloc[i,-1]].add(og_hcy.index[i])
 
     print('{} organizational groups discovered.'.format(len(groups.values())))
-    return [set(g) for g in groups.values()], og_hcy
+    return [frozenset(g) for g in groups.values()], og_hcy
 

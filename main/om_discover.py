@@ -146,12 +146,27 @@ if __name__ == '__main__':
         print('Input a number to choose a method:')
         print('\t0. CFinder (Clique Percolation Method)') 
         print('\t1. Appice\'s approach (Link partitioning)')
+        print('\t2. OSLOM (Local expansion and optimization)')
+        print('\t3. MOSES (Fuzzy detection)')
+        print('\t4. COPRA (Agent-based dynamical methods)')
+        print('\t5. SLPA (Agent-based dynamical methods)')
         print('Option: ', end='')
         method_option = int(input())
         if method_option == 0:
-            ogs = community_detection.clique_percolation(sn)
+            print('Input a number to specify the smallest clique size: ',
+                    end='')
+            clique_size = int(input())
+            ogs = community_detection.clique_percolation(sn, clique_size)
         elif method_option == 1:
             ogs = community_detection.link_partitioning(sn)
+        elif method_option == 2:
+            ogs = community_detection.local_expansion(sn)
+        elif method_option == 3:
+            ogs = community_detection.fuzzy_detection(sn)
+        elif method_option == 4:
+            ogs = community_detection.agent_copra(sn)
+        elif method_option == 5:
+            ogs = community_detection.agent_slpa(sn)
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
@@ -285,6 +300,6 @@ if __name__ == '__main__':
     # save the mined organizational model to a file
     with open(fnout_org_model, 'w', encoding='utf-8') as fout:
         om.to_file_csv(fout)
-    print('Organizational model of {} resources in {} groups exported to "{}".'
+    print('\n[Org. model of {} resources in {} groups exported to "{}"]'
             .format(len(om.resources()), om.size(), fnout_org_model))
 

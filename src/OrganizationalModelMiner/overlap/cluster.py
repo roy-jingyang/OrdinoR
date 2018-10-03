@@ -36,7 +36,7 @@ def gmm(
             Filename of the initial guess of clustering.
             The default is None, meaning warm start is NOT used.
     Returns:
-        list of sets
+        list of frozensets
             A list of organizational groups.
     '''
 
@@ -114,7 +114,7 @@ def gmm(
             groups[argmax(resource_postpr)].add(profiles.index[i])
 
     print('{} organizational groups discovered.'.format(len(groups.values())))
-    return [set(g) for g in groups.values()]
+    return [frozenset(g) for g in groups.values()]
 
 def moc(
         profiles, n_groups,
@@ -134,7 +134,7 @@ def moc(
             Filename of the initial guess of clustering.
             The default is None, meaning warm start is NOT used.
     Returns:
-        list of sets
+        list of frozensets
             A list of organizational groups.
     '''
 
@@ -190,7 +190,7 @@ def moc(
             exit('[Fatal error] MOC failed to produce a valid result')
 
     print('{} organizational groups discovered.'.format(len(groups.values())))
-    return [set(g) for g in groups.values()]
+    return [frozenset(g) for g in groups.values()]
 
 # TODO
 def fcm(
@@ -217,7 +217,7 @@ def fcm(
             with each line in the CSV file representing a group.
             The default is None, meaning warm start is NOT used.
     Returns:
-        list of sets
+        list of frozensets
             A list of organizational groups.
     '''
     print('Applying overlapping organizational model mining using ' +
@@ -279,5 +279,5 @@ def fcm(
             groups[argmax(resource_wt)].add(profiles.index[i])
 
     print('{} organizational groups discovered.'.format(len(groups.values())))
-    return [set(g) for g in groups.values()]
+    return [frozenset(g) for g in groups.values()]
 

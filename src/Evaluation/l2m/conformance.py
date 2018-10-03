@@ -88,7 +88,7 @@ def precision(rl, om):
         m = (event.case_type, event.activity_type, event.time_type)
 
         cand_groups = om.get_candidate_groups(m)
-        cand_res = set.union(*cand_groups)
+        cand_res = frozenset.union(*cand_groups)
         cand_all.update(cand_res)
 
         counts.append(len(cand_res)) # "|cand(e)|"

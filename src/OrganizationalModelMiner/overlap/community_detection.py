@@ -16,11 +16,11 @@ Methods include:
 '''
 
 # 1. Clique Percolation Method (CFinder by Pallas et al.) 
-# TODO: why some of the nodes are missing in the result?
-def clique_percolation(sn):
+# TODO: the strategy of dealing with unconnected nodes
+def clique_percolation(sn, clique_size):
     '''
     This method implements the algorithm for discovering overlapping
-    organizational models using community detection technique named clique
+    organizational models using a community detection technique named clique
     percolation method.
 
     Notice that this is merely a "wrap-up" since the major procedure of the
@@ -34,25 +34,30 @@ def clique_percolation(sn):
             actions, etc.
 
     Returns:
-        list of sets
+        list of frozensets
             A list of organizational groups.
     '''
     print('Applying overlapping organizational model mining using '
-          'community detection (CFinder, Clique Percolation):')
+          'community detection (CFinder from Clique Percolation methods):')
 
-    # step 1. Distinguish the isolated nodes
-    from networkx import isolates
-    original_isolates = list(isolates(sn))
-    if len(original_isolates) > 0:
-        print('[Warning] There exist {} ISOLATED NODES in the network.'.format(
-            len(original_isolates)))
+    # step 1. Find all k-cliques and distinguish nodes not involved
+    from networkx.algorithms.clique import find_cliques
+    kcliques = [c for c in find_cliques(sn) if len(c) >= clique_size]
+    involved = set()
+    for kc in kcliques:
+        for r in kc:
+            involved.add(r)
+
+    if len(sn) - len(involved) > 0:
+        print('[Warning] {} nodes in the network not involved in the {}-cliques.'
+            .format(len(sn) - len(involved), clique_size))
 
     # step 2. Run the detection algorithm
     from networkx.algorithms.community import k_clique_communities
-    smallest_clique = 3
-    groups = list(k_clique_communities(sn, smallest_clique))
-    for iso in original_isolates:
-        groups.append({iso})
+    groups = list(frozenset(c) 
+            for c in k_clique_communities(sn, k=clique_size, cliques=kcliques))
+    for r in set(sn.nodes).difference(involved):
+        groups.append(frozenset({r}))
 
     print('{} organizational groups discovered.'.format(len(groups)))
     return groups
@@ -78,12 +83,12 @@ def link_partitioning(sn):
             actions, etc.
 
     Returns:
-        list of sets
+        list of frozensets
             A list of organizational groups.
     '''
 
     print('Applying overlapping organizational model mining using '
-          'community detection (Appice, Link partitioning):')
+          'community detection (Appice\'s method from Link partitioning):')
 
     # step 1. Build the linear network using the original network
     edges = sorted(list(sn.edges.data('weight')))
@@ -184,10 +189,34 @@ def link_partitioning(sn):
             groups['ISOLATE #{}'.format(i)].add(original_isolates[i])
 
     print('{} organizational groups discovered.'.format(len(groups.values())))
-    return [set(g) for g in groups.values()]
+    return [frozenset(g) for g in groups.values()]
 
 # 3. Local Expansion and Optimization (OSLOM by Lancichinetti et al.)
 def local_expansion(sn):
+    '''
+    This method implements the algorithm for discovering overlapping
+    organizational models using community detection technique named OSLOM,
+    which is a local expansion and optimization method.
+
+    Params:
+        sn: NetworkX (Di)Graph
+            A NetworkX (Di)Graph object, in which the resources are the nodes,
+            and the edges could be connections built on similarties, inter-
+            actions, etc.
+
+    Returns:
+        list of frozensets
+            A list of organizational groups.
+    '''
+    print('Applying overlapping organizational model mining using '
+          'community detection (OSLOM from Local expansion methods):')
+    # step (0). relabel nodes by name topology
+    node_relabel_mapping = dict()
+    for i, node in enumerate(sorted(sn.nodes())):
+        node_relabel_mapping[node] = i
+    from networkx import relabel_nodes
+    sn = relabel_nodes(sn, mapping=node_relabel_mapping)
+
     # step 1. Distinguish the isolated nodes
     from networkx import isolates
     original_isolates = list(isolates(sn))
@@ -208,10 +237,51 @@ def local_expansion(sn):
     print('Detected communities imported from "{}":'.format(fn_communities))
 
     # step 4. Derive organizational groups from the detection results
-    pass #TODO
+    inv_node_relabel_mapping = {v: k for k, v in node_relabel_mapping.items()}
+    from collections import defaultdict
+    groups = defaultdict(lambda: set())
+    cnt = -1
+    with open(fn_communities, 'r') as f:
+        for line in f:
+            if not line.startswith('#'): # for non-comment lines
+                cnt += 1
+                for label in line.split():
+                    # restore labels 
+                    groups[cnt].add(inv_node_relabel_mapping[int(label)])
 
+    for i in range(len(original_isolates)):
+        groups['ISOLATE #{}'.format(i)].add(
+                inv_node_relabel_mapping[original_isolates[i]])
+
+    return [frozenset(g) for g in groups.values()]
+
+#TODO
 # 4. Fuzzy Detection (MOSES by McDaid and Hurley)
 def fuzzy_detection(sn):
+    '''
+    This method implements the algorithm for discovering overlapping
+    organizational models using community detection technique named MOSES,
+    which is a fuzzy detection method (mapping and clustering).
+
+    Params:
+        sn: NetworkX (Di)Graph
+            A NetworkX (Di)Graph object, in which the resources are the nodes,
+            and the edges could be connections built on similarties, inter-
+            actions, etc.
+
+    Returns:
+        list of frozensets
+            A list of organizational groups.
+    '''
+    print('Applying overlapping organizational model mining using '
+          'community detection (MOSES from Fuzzy detection methods):')
+    # step (0). relabel nodes by name topology
+    node_relabel_mapping = dict()
+    for i, node in enumerate(sorted(sn.nodes())):
+        node_relabel_mapping[node] = i
+    from networkx import relabel_nodes
+    sn = relabel_nodes(sn, mapping=node_relabel_mapping)
+
     # step 1. Distinguish the isolated nodes
     from networkx import isolates
     original_isolates = list(isolates(sn))
@@ -226,16 +296,55 @@ def fuzzy_detection(sn):
     print('Network exported to "tmp_sn.edgelist".')
     print('Use the external tool MOSES to discover communities:')
 
-    # step 3. Run community detection applying MOSES
+    # step 3. Run community detection applying OSLOM
     print('Path to the community detection result file as input: ', end='')
     fn_communities = input()
     print('Detected communities imported from "{}":'.format(fn_communities))
 
     # step 4. Derive organizational groups from the detection results
-    pass #TODO
+    inv_node_relabel_mapping = {v: k for k, v in node_relabel_mapping.items()}
+    from collections import defaultdict
+    groups = defaultdict(lambda: set())
+    cnt = -1
+    with open(fn_communities, 'r') as f:
+        for line in f:
+            cnt += 1
+            for label in line.split():
+                # restore labels 
+                groups[cnt].add(inv_node_relabel_mapping[int(label)])
+
+    for i in range(len(original_isolates)):
+        groups['ISOLATE #{}'.format(i)].add(
+                inv_node_relabel_mapping[original_isolates[i]])
+
+    return [frozenset(g) for g in groups.values()]
 
 # 5.1 Agent-based (COPRA by Gregory)
 def agent_copra(sn):
+    '''
+    This method implements the algorithm for discovering overlapping
+    organizational models using community detection technique named COPRA,
+    which is a agent-based dynamical method.
+
+    Params:
+        sn: NetworkX (Di)Graph
+            A NetworkX (Di)Graph object, in which the resources are the nodes,
+            and the edges could be connections built on similarties, inter-
+            actions, etc.
+
+    Returns:
+        list of frozensets
+            A list of organizational groups.
+    '''
+    print('Applying overlapping organizational model mining using '
+          'community detection (COPRA from Agent-based methods):')
+    # step (0). relabel nodes by name topology
+    node_relabel_mapping = dict()
+    for i, node in enumerate(sorted(sn.nodes())):
+        node_relabel_mapping[node] = i
+    from networkx import relabel_nodes
+    sn = relabel_nodes(sn, mapping=node_relabel_mapping)
+
     # step 1. Distinguish the isolated nodes
     from networkx import isolates
     original_isolates = list(isolates(sn))
@@ -250,16 +359,56 @@ def agent_copra(sn):
     print('Network exported to "tmp_sn.edgelist".')
     print('Use the external tool COPRA to discover communities:')
 
-    # step 3. Run community detection applying COPRA
+    # step 3. Run community detection applying OSLOM
     print('Path to the community detection result file as input: ', end='')
     fn_communities = input()
     print('Detected communities imported from "{}":'.format(fn_communities))
 
     # step 4. Derive organizational groups from the detection results
-    pass #TODO
+    inv_node_relabel_mapping = {v: k for k, v in node_relabel_mapping.items()}
+    from collections import defaultdict
+    groups = defaultdict(lambda: set())
+    cnt = -1
+    with open(fn_communities, 'r') as f:
+        for line in f:
+            cnt += 1
+            for label in line.split():
+                # restore labels 
+                groups[cnt].add(inv_node_relabel_mapping[int(label)])
+
+    for i in range(len(original_isolates)):
+        groups['ISOLATE #{}'.format(i)].add(
+                inv_node_relabel_mapping[original_isolates[i]])
+
+    return [frozenset(g) for g in groups.values()]
 
 # 5.2 Agent-based (SLPA by Xie et al.)
+# TODO
 def agent_slpa(sn):
+    '''
+    This method implements the algorithm for discovering overlapping
+    organizational models using community detection technique named SLPA,
+    which is a agent-based dynamical method.
+
+    Params:
+        sn: NetworkX (Di)Graph
+            A NetworkX (Di)Graph object, in which the resources are the nodes,
+            and the edges could be connections built on similarties, inter-
+            actions, etc.
+
+    Returns:
+        list of frozensets
+            A list of organizational groups.
+    '''
+    print('Applying overlapping organizational model mining using '
+          'community detection (SLPA from Agent-based methods):')
+    # step (0). relabel nodes by name topology
+    node_relabel_mapping = dict()
+    for i, node in enumerate(sorted(sn.nodes())):
+        node_relabel_mapping[node] = i
+    from networkx import relabel_nodes
+    sn = relabel_nodes(sn, mapping=node_relabel_mapping)
+
     # step 1. Distinguish the isolated nodes
     from networkx import isolates
     original_isolates = list(isolates(sn))
@@ -272,13 +421,28 @@ def agent_slpa(sn):
     with open('tmp_sn.edgelist', 'wb') as f:
         write_weighted_edgelist(sn, f)
     print('Network exported to "tmp_sn.edgelist".')
-    print('Use the external tool GANXiS (SLPA) to discover communities:')
+    print('Use the external tool GANXiS (aka SLPA) to discover communities:')
 
-    # step 3. Run community detection applying SLPA
+    # step 3. Run community detection applying OSLOM
     print('Path to the community detection result file as input: ', end='')
     fn_communities = input()
     print('Detected communities imported from "{}":'.format(fn_communities))
 
     # step 4. Derive organizational groups from the detection results
-    pass #TODO
+    inv_node_relabel_mapping = {v: k for k, v in node_relabel_mapping.items()}
+    from collections import defaultdict
+    groups = defaultdict(lambda: set())
+    cnt = -1
+    with open(fn_communities, 'r') as f:
+        for line in f:
+            cnt += 1
+            for label in line.split():
+                # restore labels 
+                groups[cnt].add(inv_node_relabel_mapping[int(label)])
+
+    for i in range(len(original_isolates)):
+        groups['ISOLATE #{}'.format(i)].add(
+                inv_node_relabel_mapping[original_isolates[i]])
+
+    return [frozenset(g) for g in groups.values()]
 

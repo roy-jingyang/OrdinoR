@@ -93,10 +93,10 @@ class OrganizationalModel:
 
         Returns
         -------
-        set
+        frozenset
             The set of all resources.
         '''
-        return set(self._rmem.keys())
+        return frozenset(self._rmem.keys())
 
     def find_groups(self, r):
         '''Query the membership (i.e. belonging to which groups) of a resource
@@ -109,10 +109,10 @@ class OrganizationalModel:
 
         Returns
         -------
-        list of sets
+        list of frozensets
             The groups to which the queried resource belong.
         '''
-        return [self._mem[rg_id] for rg_id in self._rmem[r]]
+        return [frozenset(self._mem[rg_id]) for rg_id in self._rmem[r]]
 
     def find_all_groups(self):
         '''Simply return all the discovered groups.
@@ -122,10 +122,10 @@ class OrganizationalModel:
 
         Returns
         -------
-        list of sets
+        list of frozensets
             The groups to which the queried resource belong.
         '''
-        return [g for g in self._mem.values()]
+        return [frozenset(g) for g in self._mem.values()]
     
     def get_candidate_groups(self, exec_mode):
         '''Query the capable groups (i.e. groups that can perform the execution
@@ -138,10 +138,10 @@ class OrganizationalModel:
 
         Returns
         -------
-        list of sets
+        list of frozensets
             The groups which is capable of this execution mode.
         '''
-        return [self._mem[rg_id] for rg_id in self._rcap[exec_mode]]
+        return [frozenset(self._mem[rg_id]) for rg_id in self._rcap[exec_mode]]
 
     # IO related methods
     # TODO 
@@ -218,14 +218,14 @@ def default_mining(rl):
     Returns:
         om: OrganizationalModel object
             The discovered organizational model.
-        ogs: list of sets
+        ogs: list of frozensets
             A list of organizational groups.
     '''
 
     print('Applying Default Mining:')
     ogs = list()
     for atype, events in rl.groupby('activity_type'):
-        ogs.append(set(events['resource']))
+        ogs.append(frozenset(events['resource']))
     print('{} organizational groups discovered.'.format(len(ogs)))
     return ogs
 

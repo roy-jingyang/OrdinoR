@@ -23,7 +23,7 @@ def connected_components(sn):
             actions, etc.
 
     Returns:
-        ogs: list of sets
+        ogs: list of frozensets
             A list of organizational groups.
     '''
 
@@ -36,7 +36,7 @@ def connected_components(sn):
     # step 2. derive the organizational groups from the connected components
     ogs = list()
     for comp in connected_components(sn):
-        ogs.append(set(comp))
+        ogs.append(frozenset(comp))
     print('{} organizational groups discovered.'.format(len(ogs)))
     return ogs
 

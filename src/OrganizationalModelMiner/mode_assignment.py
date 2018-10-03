@@ -30,7 +30,7 @@ def member_first_assign(group, rl):
         for event in grouped_by_resource.get_group(r).itertuples():
             m = (event.case_type, event.activity_type, event.time_type)
             modes.add(m)
-    return modes
+    return frozenset(modes)
 
 def group_first_assign(group, rl):
     '''Assign an execution mode to a group, only if every member resources of
@@ -76,5 +76,5 @@ def vote_assign(group, rl, percentage):
         if len(originators) * 1.0 / len(group) >= percentage:
             modes.add(m)
 
-    return modes
+    return frozenset(modes)
 
