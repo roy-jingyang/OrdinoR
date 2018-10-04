@@ -6,6 +6,8 @@ event log, using metrics based on joint activities (ref. van der Aalst et.
 al, CSCW 2005).
 '''
 
+from networkx import is_directed
+
 def performer_activity_matrix(el, use_log_scale):
     '''
     This method builds a "profile" based on how frequent individuals originate
@@ -91,7 +93,10 @@ def distance(el,
         node_mapping[nodes[i]] = pam.index[i] 
     sn = relabel_nodes(G, node_mapping)
     sn.add_nodes_from(el.groupby('resource').groups.keys())
-    return sn
+    if not sn.is_directed():
+        return sn
+    else:
+        exit('[Error] Social network based on joint activities found directed')
 
 def correlation(el,
         use_log_scale=False,
@@ -132,5 +137,8 @@ def correlation(el,
         node_mapping[nodes[i]] = pam.index[i] 
     sn = relabel_nodes(G, node_mapping)
     sn.add_nodes_from(el.groupby('resource').groups.keys())
-    return sn
+    if not sn.is_directed():
+        return sn
+    else:
+        exit('[Error] Social network based on joint activities found directed')
 

@@ -129,27 +129,18 @@ if __name__ == '__main__':
         from SocialNetworkMiner.joint_activities import correlation
         sn = correlation(el, use_log_scale=True)
 
-        # edge filtering
-        print('Input a value as threshold:', end=' ')
-        threshold = input()
-        threshold = (threshold if threshold[0] in ['+', '-']
-                else float(threshold))
+        # keep only the positive correlations
         from SocialNetworkMiner.utilities import select_edges_by_weight
-        if type(threshold) == float:
-            sn = select_edges_by_weight(sn, low=threshold)
-        else:
-            eps = sys.float_info.epsilon
-            sn = select_edges_by_weight(sn, low=eps) # TODO: keep only positive
-            sn = select_edges_by_weight(sn, percentage=threshold)
+        eps = sys.float_info.epsilon
+        sn = select_edges_by_weight(sn, low=eps)
 
         from OrganizationalModelMiner.overlap import community_detection
         print('Input a number to choose a method:')
         print('\t0. CFinder (Clique Percolation Method)') 
         print('\t1. Appice\'s approach (Link partitioning)')
         print('\t2. OSLOM (Local expansion and optimization)')
-        print('\t3. MOSES (Fuzzy detection)')
-        print('\t4. COPRA (Agent-based dynamical methods)')
-        print('\t5. SLPA (Agent-based dynamical methods)')
+        print('\t3. COPRA (Agent-based dynamical methods)')
+        print('\t4. SLPA (Agent-based dynamical methods)')
         print('Option: ', end='')
         method_option = int(input())
         if method_option == 0:
@@ -158,14 +149,21 @@ if __name__ == '__main__':
             clique_size = int(input())
             ogs = community_detection.clique_percolation(sn, clique_size)
         elif method_option == 1:
+            # edge filtering
+            print('Input a value as threshold:', end=' ')
+            threshold = input()
+            threshold = (threshold if threshold[0] in ['+', '-']
+                    else float(threshold))
+            if type(threshold) == float:
+                sn = select_edges_by_weight(sn, low=threshold)
+            else:
+                sn = select_edges_by_weight(sn, percentage=threshold)
             ogs = community_detection.link_partitioning(sn)
         elif method_option == 2:
             ogs = community_detection.local_expansion(sn)
         elif method_option == 3:
-            ogs = community_detection.fuzzy_detection(sn)
-        elif method_option == 4:
             ogs = community_detection.agent_copra(sn)
-        elif method_option == 5:
+        elif method_option == 4:
             ogs = community_detection.agent_slpa(sn)
         else:
             raise Exception('Failed to recognize input option!')
