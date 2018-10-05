@@ -41,6 +41,46 @@ def _relabel_nodes_integers(g):
     from networkx import relabel_nodes
     return relabel_nodes(g, mapping), inv_mapping
 
+def _extended_modularity(g, cover):
+    '''
+    This method is a utility function that calculates the extended modularity
+    (proposed by Shen et al. (2009) "Detect overlapping and hierarchical
+    community structure in networks", Physica, with a network and the
+    discovered cover (i.e. communities) given.
+
+    Params:
+        g: NetworkX (Di)Graph
+            A Network (Di)Graph object, the original network. 
+        cover: list of sets
+            The discovered communities of nodes.
+
+    Returns:
+        float
+            The calculated extended modularity by definition.
+    '''
+    from collections import defaultdict
+    node_membership = defaultdict(lambda: set())
+    # identify membership
+    for i, community in enumerate(cover):
+        for node in community:
+            node_membership[node].add(i)
+
+    # calculate extended modularity by iterating over every pair of distint
+    # nodes within a community
+    eq = 0.0
+    m = sum([wt for (v, w, wt) in g.edges.data('weight')])
+    from itertools import combinations
+    for community in cover:
+        for v, w in combinations(community, 2):
+            Ov = len(node_membership[v])
+            Ow = len(node_membership[w])
+            Avw = g.edges[v, w]['weight'] if g.has_edge(v, w) else 0
+            kv = g.degree(v, 'weight')
+            kw = g.degree(w, 'weight')
+
+            eq += (1.0 / (Ov * Ow) * (Avw - kv * kw / (2 * m)))
+    return eq
+
 # 1. Clique Percolation Method (CFinder by Pallas et al.) 
 # TODO: the strategy of dealing with unconnected nodes
 def clique_percolation(sn, range_clique_size):
@@ -71,12 +111,16 @@ def clique_percolation(sn, range_clique_size):
     '''
     print('Applying overlapping organizational model mining using '
           'community detection (CFinder from Clique Percolation methods):')
+    print('Testing with clique size set to range [{}, {}]'.format(
+        range_clique_size[0], range_clique_size[1] - 1))
 
-    solutions = list()
+    best_k = -1
+    best_eq = float('-inf')
+    solution = None
     for k in range(range_clique_size[0], range_clique_size[1]):
         # step 1. Find all k-cliques and distinguish nodes not involved
         from networkx.algorithms.clique import find_cliques
-        kcliques = [c for c in find_cliques(sn) if len(c) == k]
+        kcliques = [c for c in find_cliques(sn) if len(c) >= k]
         involved = set()
         for kc in kcliques:
             for r in kc:
@@ -93,12 +137,16 @@ def clique_percolation(sn, range_clique_size):
         for r in set(sn.nodes).difference(involved):
             groups.append(frozenset({r}))
 
-        solutions.append(groups)
+        eq = _extended_modularity(sn, groups)
+        print(eq)
+        if eq > best_eq:
+            best_k = k
+            best_eq = eq
+            solution = groups
 
-    # Evaluate and pick the "best" solution
-    # TODO
-    print('{} organizational groups discovered.'.format(len(groups)))
-    return groups
+    print('Best solution produced using the {}-cliques.'.format(best_k))
+    print('{} organizational groups discovered.'.format(len(solution)))
+    return solution
 
 # 2. Line Graph and Link Partitioning (Appice, based on Evans and Lambiotte)
 def link_partitioning(sn):
@@ -202,8 +250,6 @@ def link_partitioning(sn):
     print('Path to the community detection result file (*.clu) as input: ', 
             end='')
     fn_pajek_net_communities = input()
-    print('Detected communities imported from "{}":'.format(
-        fn_pajek_net_communities))
 
     # step 3. Map communities onto the original network to get the results
     # derive the orgnizational groups
@@ -225,12 +271,15 @@ def link_partitioning(sn):
                 groups[label].add(inv_node_relabel_mapping[u])
                 groups[label].add(inv_node_relabel_mapping[v])
                 cnt += 1
+    print('Detected communities imported from "{}":'.format(
+        fn_pajek_net_communities))
 
     for i in range(len(original_isolates)):
         groups['ISOLATE #{}'.format(i)].add(
                 inv_node_relabel_mapping[original_isolates[i]])
 
     print('{} organizational groups discovered.'.format(len(groups.values())))
+
     return [frozenset(g) for g in groups.values()]
 
 # 3. Local Expansion and Optimization (OSLOM by Lancichinetti et al.)
@@ -274,7 +323,6 @@ def local_expansion(sn):
     # step 3. Run community detection applying OSLOM
     print('Path to the community detection result file as input: ', end='')
     fn_communities = input()
-    print('Detected communities imported from "{}":'.format(fn_communities))
 
     # step 4. Derive organizational groups from the detection results
     from collections import defaultdict
@@ -287,6 +335,7 @@ def local_expansion(sn):
                 for label in line.split():
                     # restore labels 
                     groups[cnt].add(inv_node_relabel_mapping[int(label)])
+    print('Detected communities imported from "{}":'.format(fn_communities))
 
     for i in range(len(original_isolates)):
         groups['ISOLATE #{}'.format(i)].add(
@@ -335,7 +384,6 @@ def agent_copra(sn):
     # step 3. Run community detection applying OSLOM
     print('Path to the community detection result file as input: ', end='')
     fn_communities = input()
-    print('Detected communities imported from "{}":'.format(fn_communities))
 
     # step 4. Derive organizational groups from the detection results
     from collections import defaultdict
@@ -347,6 +395,7 @@ def agent_copra(sn):
             for label in line.split():
                 # restore labels 
                 groups[cnt].add(inv_node_relabel_mapping[int(label)])
+    print('Detected communities imported from "{}":'.format(fn_communities))
 
     for i in range(len(original_isolates)):
         groups['ISOLATE #{}'.format(i)].add(
@@ -394,24 +443,44 @@ def agent_slpa(sn):
     print('Use the external tool GANXiS (aka SLPA) to discover communities:')
 
     # step 3. Run community detection applying OSLOM
-    print('Path to the community detection result file as input: ', end='')
-    fn_communities = input()
-    print('Detected communities imported from "{}":'.format(fn_communities))
+    print('Path to the output directory as input: ', end='')
+    dirn_communities = input()
 
     # step 4. Derive organizational groups from the detection results
+    # Note: since GANXiSw produces a set of results varied by the prob. "r"
     from collections import defaultdict
-    groups = defaultdict(lambda: set())
-    cnt = -1
-    with open(fn_communities, 'r') as f:
-        for line in f:
-            cnt += 1
-            for label in line.split():
-                # restore labels 
-                groups[cnt].add(inv_node_relabel_mapping[int(label)])
+    best_fn = None
+    best_eq = float('-inf')
+    solution = None
+    fn_cnt = 0
+    from os import listdir
+    for fn in listdir(dirn_communities):
+        if fn.endswith('.icpm'):
+            fn_cnt += 1
+            cnt = -1
+            groups = defaultdict(lambda: set())
+            with open(dirn_communities + '/' + fn, 'r') as f:
+                for line in f:
+                    cnt += 1
+                    for label in line.split():
+                        groups[cnt].add(int(label))
+            for i in range(len(original_isolates)):
+                groups['ISOLATE #{}'.format(i)].add(original_isolates[i])
+            eq = _extended_modularity(sn, list(groups.values()))
+            if eq > best_eq:
+                best_fn = fn
+                best_eq = eq
+                solution = groups
 
-    for i in range(len(original_isolates)):
-        groups['ISOLATE #{}'.format(i)].add(
-                inv_node_relabel_mapping[original_isolates[i]])
+    print('Detected communities imported from {} files in directory "{}":'
+            .format(dirn_communities, dirn_communities))
+    print('Best solution produced using communities from file {}'.format(
+        best_fn))
+    print('{} organizational groups discovered.'.format(len(solution)))
+    # restore labels
+    og = list()
+    for cover in solution.values():
+        og.append(frozenset({inv_node_relabel_mapping[x] for x in cover}))
 
-    return [frozenset(g) for g in groups.values()]
+    return og
 

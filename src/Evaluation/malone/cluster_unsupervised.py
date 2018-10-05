@@ -36,39 +36,3 @@ def within_cluster_variance(X, labels, is_overlapped=False):
             total_within_cluster_var += np.var(dist_to_cent, dtype=np.float64)
     return total_within_cluster_var
 
-def extended_modularity(resources, org_model, sn_model):
-    resources = sorted(list(resources))
-    N = len(resources)
-
-    labels = defaultdict(lambda: set())
-    for entity_id, entity in org_model.items():
-        entity = list(entity)
-        for res in entity:
-            labels[res].add(entity_id)
-
-    print('<k> = {:.3f}'.format(
-        np.mean([deg for (u, deg) in sn_model.degree()])))
-    m = sum([w for (u, v, w) in sn_model.edges.data('weight')])
-    modularity = 0.0
-
-    # Shen
-    for entity_id, entity in org_model.items():
-        entity = list(entity)
-        for i in range(len(entity) - 1): # for any two different points
-            u = entity[i]
-            for j in range(i + 1, len(entity)):
-                v = entity[j]
-                Ou = len(labels[u])
-                Ov = len(labels[v])
-                A = 1 if sn_model.has_edge(u, v) or sn_model.has_edge(v, u) \
-                        else 0
-
-                ku = sn_model.degree(u, weight='weight')
-                kv = sn_model.degree(v, weight='weight')
-                modularity += (1.0 / (Ou * Ov)) * \
-                        (A - ku * kv / (2 * m))
-
-    modularity *= 1 / (2 * m)
-
-    return modularity
-

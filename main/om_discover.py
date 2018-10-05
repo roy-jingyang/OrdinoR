@@ -144,10 +144,23 @@ if __name__ == '__main__':
         print('Option: ', end='')
         method_option = int(input())
         if method_option == 0:
-            print('Input a number to specify the smallest clique size: ',
-                    end='')
-            clique_size = int(input())
-            ogs = community_detection.clique_percolation(sn, clique_size)
+            # edge filtering
+            print('Input a value as threshold:', end=' ')
+            threshold = input()
+            threshold = (threshold if threshold[0] in ['+', '-']
+                    else float(threshold))
+            if type(threshold) == float:
+                sn = select_edges_by_weight(sn, low=threshold)
+            else:
+                sn = select_edges_by_weight(sn, percentage=threshold)
+
+            print('Specify the range for clique size values: [low, high)')
+            print('\tlow\t= ', end='')
+            size_low = int(input())
+            print('\thigh\t= ', end='')
+            size_high = int(input())
+            ogs = community_detection.clique_percolation(sn,
+                    (size_low, size_high))
         elif method_option == 1:
             # edge filtering
             print('Input a value as threshold:', end=' ')
