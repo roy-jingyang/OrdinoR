@@ -50,7 +50,7 @@ def _describe_event_log(el):
 
     print('Number of events:\t\t{}'.format(len(el)))
     print('Number of cases:\t\t{}'.format(len(el.groupby('case_id'))))
-    print('Event log attributes:\n\t') # TODO
+    #print('Event log attributes:\n\t') # TODO
 
     print('-' * 80)
     return
@@ -88,7 +88,7 @@ def read_disco_csv(f, mapping=None, header=True):
                 'timestamp': row[3]
             }
             # add addtional attributes mapping specified
-            if mapping:
+            if mapping is not None:
                 for attr, col_num in mapping.items():
                     if attr not in e:
                         e[attr] = row[col_num]
