@@ -14,16 +14,13 @@ def performer_activity_matrix(el, use_log_scale):
     events with specific activity names, i.e. the performer-by-activity matrix.
 
     Params:
-        rl: DataFrame
-            The resource log.
+        el: DataFrame
+            The impoted event log.
         use_log_scale: boolean
             Use the logrithm scale if the volume of work varies significantly.
     Returns:
-        pam: DataFrame
-            The constructed performer by activity matrix as a pandas DataFrame,
-            with resource ids as indices and activity names as columns.
-        X: DataFrame
-            The contructed resource profiles.
+        DataFrame
+            The contructed resource profiles as a pandas DataFrame.
     '''
 
     from collections import defaultdict
@@ -40,8 +37,7 @@ def performer_activity_matrix(el, use_log_scale):
     else:
         return DataFrame.from_dict(pam, orient='index').fillna(0)
 
-def distance(el, 
-        use_log_scale=False,
+def distance(profiles, 
         metric='euclidean',
         convert=False):
     '''
@@ -53,10 +49,9 @@ def distance(el,
         2. The generated network is naturally a undirected graph.
 
     Params:
-        el: DataFrame
-            The imported event log.
-        use_log_scale: boolean
-            Use the logrithm scale if the volume of work varies significantly.
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
         metric: str, optional
             Choice of different distance-related metrices. Options include:
                 - 'cityblock': the Manhattan (Rectilinear) distance
@@ -71,10 +66,8 @@ def distance(el,
         sn: NetworkX Graph
             The mined social network as a NetworkX Graph object.
     '''
-    
-    pam = performer_activity_matrix(el, use_log_scale)
     from scipy.spatial.distance import squareform, pdist
-    x = squareform(pdist(pam, metric=metric)) # preserve index
+    x = squareform(pdist(profiles, metric=metric)) # preserve index
 
     if convert:
         print('[Warning] Distance measure has been converted.')
@@ -90,26 +83,24 @@ def distance(el,
     nodes = list(G.nodes)
     node_mapping = dict()
     for i in range(len(x)):
-        node_mapping[nodes[i]] = pam.index[i] 
+        node_mapping[nodes[i]] = profiles.index[i] 
     sn = relabel_nodes(G, node_mapping)
-    sn.add_nodes_from(el.groupby('resource').groups.keys())
+    sn.add_nodes_from(profiles.index)
     if not sn.is_directed():
         return sn
     else:
         exit('[Error] Social network based on joint activities found directed')
 
-def correlation(el,
-        use_log_scale=False,
+def correlation(profiles,
         metric='pearson'):
     '''
     This method implements the mining based on metrics based on joint activi-
     ties where correlation-related measures are used.
 
     Params:
-        el: DataFrame
-            The imported event log.
-        use_log_scale: boolean
-            Use the logrithm scale if the volume of work varies significantly.
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
         metric: str, optional
             Choice of different distance-related metrices. Options include:
                 - 'pearson': the Pearson Correlation Coefficient (PCC), default
@@ -117,26 +108,25 @@ def correlation(el,
         sn: NetworkX Graph
             The mined social network as a NetworkX Graph object.
     '''
-    
-    pam = performer_activity_matrix(el, use_log_scale)
     from scipy.spatial.distance import squareform, pdist
     if metric == 'pearson':
-        x = squareform(pdist(pam, metric='correlation')) # preserve index
+        x = squareform(pdist(profiles, metric='correlation')) # preserve index
     else:
         pass
     # convert to Graph
     from networkx import Graph, relabel_nodes
     from numpy import fill_diagonal
-    x = 1 - x # correlation rather than 'correlation distance'
+    # correlation rather than 'correlation distance': range [-1, +1]
+    x = 1 - x 
     fill_diagonal(x, 0) # ignore self-loops
     G = Graph(x)
     # relabel nodes using resource index in the profile matrix
     nodes = list(G.nodes)
     node_mapping = dict()
     for i in range(len(x)):
-        node_mapping[nodes[i]] = pam.index[i] 
+        node_mapping[nodes[i]] = profiles.index[i] 
     sn = relabel_nodes(G, node_mapping)
-    sn.add_nodes_from(el.groupby('resource').groups.keys())
+    sn.add_nodes_from(profiles.index)
     if not sn.is_directed():
         return sn
     else:

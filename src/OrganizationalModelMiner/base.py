@@ -216,12 +216,9 @@ def default_mining(rl):
             The resource log.
 
     Returns:
-        om: OrganizationalModel object
-            The discovered organizational model.
         ogs: list of frozensets
             A list of organizational groups.
     '''
-
     print('Applying Default Mining:')
     ogs = list()
     for atype, events in rl.groupby('activity_type'):

@@ -17,16 +17,16 @@ from SocialNetworkMiner.utilities import select_edges_by_weight
 
 from ResourceProfiler.raw_profiler import performer_activity_frequency
 
-from OrganizationalModelMiner.hierarchical import cluster
+from OrganizationalModelMiner.hierarchical import clustering
 from OrganizationalModelMiner.hierarchical import community_detection
 
-from OrganizationalModelMiner.overlap import gmm
-from OrganizationalModelMiner.overlap import moc
-from OrganizationalModelMiner.overlap import fcm
+from OrganizationalModelMiner.overlap.clustering import gmm
+from OrganizationalModelMiner.overlap.clustering import moc
+from OrganizationalModelMiner.overlap.clustering import fcm
 
 from OrganizationalModelMiner.base import OrganizationalModel
 
-from OrganizationalModelMiner.mode_assignment import default_assign
+from OrganizationalModelMiner.mode_assignment import member_first_assign
 
 # List input parameters from shell
 filename_input = sys.argv[1]
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     rl = naive_exec_mode_miner.derive_resource_log(el)
 
     # default mining
-    ogs = default_mining(rl)
+    ogs, score = default_mining(rl)
 
     '''
     # MJA/MJC
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     '''
     # AHC
     profiles = performer_activity_frequency(rl, use_log_scale=True)
-    ogs, og_hcy = cluster.ahc(profiles, 9, method='ward')
+    ogs, og_hcy = clustering.ahc(profiles, 9, method='ward')
     '''
 
     '''
@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     om = OrganizationalModel()
     for og in ogs:
-        om.add_group(og, default_assign(og, rl))
+        om.add_group(og, member_first_assign(og, rl))
 
     with open(filename_result, 'w', encoding='utf-8') as f:
         om.to_file_csv(f)

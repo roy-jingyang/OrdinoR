@@ -11,7 +11,7 @@ Methods include:
     3. FCM (Fuzzy c-Means)
 '''
 
-def gmm(
+def _gmm(
         profiles, n_groups,
         threshold=None, cov_type='spherical', warm_start_input_fn=None): 
     '''
@@ -116,7 +116,49 @@ def gmm(
     print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]
 
-def moc(
+def gmm(
+        profiles, n_groups,
+        threshold=None, cov_type='spherical', warm_start_input_fn=None): 
+    '''
+    This method is just a wrapper function of the one above, which allows a
+    range of expected number of organizational groups to be specified rather
+    than an exact number.
+
+    Params:
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
+        n_groups: int, or iterator
+            The (range of) number of groups to be discovered.
+        threshold: float, optional
+            The threshold value for determining the resource membership. If
+            none is given, then the algorithm produces a disjoint partition as
+            result.
+        cov_type: str, optional
+            String describing the type of covariance parameters to use. The
+            default is 'spherical'.For detailed explanation, see
+            http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture.html
+        warm_start_input_fn: str, optional
+            Filename of the initial guess of clustering.
+            The default is None, meaning warm start is NOT used.
+    Returns:
+        best_ogs: list of frozensets
+            A list of organizational groups.
+    '''
+    if type(n_groups) is int:
+        return _gmm(profiles, n_groups, threshold, cov_type, warm_start_input_fn)
+    else:
+        best_ogs = None
+        best_score = float('-inf')
+        for k in n_groups:
+            #TODO: calculate the scores
+            if score > best_score:
+                best_score = score
+                best_ogs = cand_ogs
+        print('Selected "K" = {}'.format(len(best_ogs)))
+        return best_ogs
+
+def _moc(
         profiles, n_groups,
         warm_start_input_fn=None):
     '''
@@ -192,8 +234,41 @@ def moc(
     print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]
 
-# TODO
-def fcm(
+def moc(
+        profiles, n_groups,
+        warm_start_input_fn=None):
+    '''
+    This method is just a wrapper function of the one above, which allows a
+    range of expected number of organizational groups to be specified rather
+    than an exact number.
+
+    Params:
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
+        n_groups: int, or iterator
+            The (range of) number of groups to be discovered.
+        warm_start_input_fn: str, optional
+            Filename of the initial guess of clustering.
+            The default is None, meaning warm start is NOT used.
+    Returns:
+        best_ogs: list of frozensets
+            A list of organizational groups.
+    '''
+    if type(n_groups) is int:
+        return _moc(profiles, n_groups, warm_start_input_fn)
+    else:
+        best_ogs = None
+        best_score = float('-inf')
+        for k in n_groups:
+            #TODO: calculate the scores
+            if score > best_score:
+                best_score = score
+                best_ogs = cand_ogs
+        print('Selected "K" = {}'.format(len(best_ogs)))
+        return best_ogs
+
+def _fcm(
         profiles, n_groups,
         threshold=None, warm_start_input_fn=None):
     '''
@@ -280,4 +355,45 @@ def fcm(
 
     print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]
+
+def fcm(
+        profiles, n_groups,
+        threshold=None, warm_start_input_fn=None):
+    '''
+    This method is just a wrapper function of the one above, which allows a
+    range of expected number of organizational groups to be specified rather
+    than an exact number.
+
+    Params:
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
+        n_groups: int, or iterator
+            The (range of) number of groups to be discovered.
+        threshold: float, optional
+            The threshold value for determining the resource membership. If
+            none is given, then the algorithm produces a disjoint partition as
+            result.
+        warm_start_input_fn: str, optional
+            Filename of the initial guess of clustering. The file should be
+            formatted as:
+                Group ID, resource; resource; ...
+            with each line in the CSV file representing a group.
+            The default is None, meaning warm start is NOT used.
+    Returns:
+        list of frozensets
+            A list of organizational groups.
+    '''
+    if type(n_groups) is int:
+        return _fcm(profiles, n_groups, threshold, warm_start_input_fn)
+    else:
+        best_ogs = None
+        best_score = float('-inf')
+        for k in n_groups:
+            #TODO: calculate the scores
+            if score > best_score:
+                best_score = score
+                best_ogs = cand_ogs
+        print('Selected "K" = {}'.format(len(best_ogs)))
+        return best_ogs
 

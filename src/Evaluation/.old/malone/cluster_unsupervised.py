@@ -7,7 +7,7 @@ from scipy.spatial.distance import cdist
 from collections import defaultdict
 
 # Unsupervised evaluation requires the resource profile matrix as input
-def within_cluster_variance(X, labels, is_overlapped=False):
+def within_cluster_variance(X, labels, metric, is_overlapped=False):
     total_within_cluster_var = 0
     if is_overlapped:
         label_cluster = defaultdict(lambda: set())

@@ -25,7 +25,6 @@ if __name__ == '__main__':
     '''
 
     # discover organizational groups
-
     print('Input a number to choose a solution:')
     print('\t0. Default Mining (Song)')
     print('\t1. Metric based on Joint Activities/Cases (Song)')
@@ -46,6 +45,9 @@ if __name__ == '__main__':
         ogs = default_mining(rl)
 
     elif mining_option == 1:
+        print('Input a integer for the desired number of groups to be discovered:', end=' ')
+        num_groups = int(input())
+
         # select method (MJA/MJC)
         print('Input a number to choose a method:')
         print('\t0. MJA')
@@ -53,45 +55,29 @@ if __name__ == '__main__':
         print('Option: ', end='')
         method_option = int(input())
         if method_option == 0:
-            # MJA -> select metric (ED-distance/PCC)
-            from SocialNetworkMiner import joint_activities
+            # build profiles
+            from ResourceProfiler.raw_profiler import performer_activity_frequency
+            profiles = performer_activity_frequency(rl, use_log_scale=True)
+            #profiles = performer_activity_frequency(rl, use_log_scale=False)
+            from OrganizationalModelMiner.disjoint.graph_partitioning import (
+                    mja)
+            # MJA -> select metric (Euclidean distance/PCC)
             print('Input a number to choose a metric:')
             print('\t0. Distance (Euclidean)')
             print('\t1. PCC')
             print('Option: ', end='')
             metric_option = int(input())
-            if metric_option == 0:
-                sn = joint_activities.distance(
-                        el, use_log_scale=True, convert=True)
-            elif metric_option == 1:
-                sn = joint_activities.correlation(
-                        el, use_log_scale=True)
-            else:
-                raise Exception('Failed to recognize input option!')
-                exit(1)
+            metrics = ['euclidean', 'pearson']
+            ogs = mja(
+                    profiles, num_groups, 
+                    metric=metrics[metric_option], use_log_scale=True)
         elif method_option == 1:
-            from SocialNetworkMiner.joint_cases import working_together
-            sn = working_together(el)
-            print('[Warning] DiGraph casted to Graph.')
-            sn = sn.to_undirected()
+            from OrganizationalModelMiner.disjoint.graph_partitioning import (
+                    mjc)
+            ogs = mjc(el, num_groups)
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
-
-        # edge filtering
-        print('Input a value as threshold:', end=' ')
-        threshold = input()
-        threshold = (threshold if threshold[0] in ['+', '-']
-                else float(threshold))
-        from SocialNetworkMiner.utilities import select_edges_by_weight
-        if type(threshold) == float:
-            sn = select_edges_by_weight(sn, low=threshold)
-        else:
-            sn = select_edges_by_weight(sn, percentage=threshold)
-
-        # partitioning
-        from OrganizationalModelMiner.disjoint import graph_partitioning
-        ogs = graph_partitioning.connected_components(sn)
 
     elif mining_option == 2:
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
@@ -99,16 +85,21 @@ if __name__ == '__main__':
 
         print('Input a number to choose a method:')
         print('\t0. Mining using cluster analysis')
-        print('\t1. Mining using community detection')
+        #print('\t1. Mining using community detection')
         print('Option: ', end='')
         method_option = int(input())
         if method_option == 0:
             # build profiles
             from ResourceProfiler.raw_profiler import performer_activity_frequency
             profiles = performer_activity_frequency(rl, use_log_scale=True)
-            from OrganizationalModelMiner.hierarchical import cluster
-            ogs, og_hcy = cluster.ahc(
+            from OrganizationalModelMiner.hierarchical import clustering
+            ogs, og_hcy = clustering.ahc(
                     profiles, num_groups, method='ward')
+        else:
+            raise Exception('Failed to recognize input option!')
+            exit(1)
+        '''
+        #TODO: [DEPRECATED]
         elif method_option == 1:
             # build social network
             #from SocialNetworkMiner.causality import handover
@@ -117,14 +108,16 @@ if __name__ == '__main__':
             from OrganizationalModelMiner.hierarchical import community_detection
             ogs, og_hcy = community_detection.betweenness(
                     sn, num_groups, weight='weight') # consider edge weight, optional
-        else:
-            raise Exception('Failed to recognize input option!')
-            exit(1)
+        '''
                 
         og_hcy.to_csv(fnout_org_model + '_hierarchy')
 
     elif mining_option == 3:
-        print('Build social network:')
+        # build profiles
+        from ResourceProfiler.raw_profiler import performer_activity_frequency
+        profiles = performer_activity_frequency(rl, use_log_scale=True)
+        #profiles = performer_activity_frequency(rl, use_log_scale=False)
+
         # build social network
         from SocialNetworkMiner.joint_activities import correlation
         sn = correlation(el, use_log_scale=True)
@@ -137,7 +130,7 @@ if __name__ == '__main__':
         from OrganizationalModelMiner.overlap import community_detection
         print('Input a number to choose a method:')
         print('\t0. CFinder (Clique Percolation Method)') 
-        print('\t1. Appice\'s approach (Link partitioning)')
+        print('\t1. LN + Louvain (Link partitioning)')
         print('\t2. OSLOM (Local expansion and optimization)')
         print('\t3. COPRA (Agent-based dynamical methods)')
         print('\t4. SLPA (Agent-based dynamical methods)')
@@ -185,6 +178,7 @@ if __name__ == '__main__':
     elif mining_option == 4:
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = int(input())
+
         # build profiles
         from ResourceProfiler.raw_profiler import performer_activity_frequency
         profiles = performer_activity_frequency(rl, use_log_scale=True)
@@ -197,22 +191,15 @@ if __name__ == '__main__':
         user_selected_threshold = (float(user_selected_threshold)
                 if user_selected_threshold != '' else None)
 
-        print('Input a number to choose a specific covariance type:')
-        print('\t0. full 1. tied 2. diag 3. spherical (default)')
-        cov_types = ['full', 'tied', 'diag', 'spherical']
-        print('Option: ', end='')
-        cov_type_option = input()
-        cov_type_option = 3 if cov_type_option == '' else int(cov_type_option)
-
         print('Input a relative path to the file to be used for warm start: ' +
                 '(Enter if None)')
         ws_fn = input()
         ws_fn = None if ws_fn == '' else ws_fn
 
-        from OrganizationalModelMiner.overlap.cluster import gmm
+        from OrganizationalModelMiner.overlap.clustering import gmm
         ogs = gmm(
                 profiles, num_groups, threshold=user_selected_threshold,
-                cov_type=cov_types[cov_type_option], warm_start_input_fn=ws_fn)
+                warm_start_input_fn=ws_fn)
 
         # TODO: Timer related
         '''
@@ -226,6 +213,7 @@ if __name__ == '__main__':
     elif mining_option == 5:
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = int(input())
+
         # build profiles
         from ResourceProfiler.raw_profiler import performer_activity_frequency
         profiles = performer_activity_frequency(rl, use_log_scale=True)
@@ -236,7 +224,7 @@ if __name__ == '__main__':
         ws_fn = input()
         ws_fn = None if ws_fn == '' else ws_fn
 
-        from OrganizationalModelMiner.overlap.cluster import moc
+        from OrganizationalModelMiner.overlap.clustering import moc
         ogs = moc(
                 profiles, num_groups, 
                 warm_start_input_fn=ws_fn)
@@ -254,6 +242,7 @@ if __name__ == '__main__':
     elif mining_option == 6:
         print('Input a integer for the desired number of groups to be discovered:', end=' ')
         num_groups = int(input())
+
         # build profiles
         from ResourceProfiler.raw_profiler import performer_activity_frequency
         profiles = performer_activity_frequency(rl, use_log_scale=True)
@@ -271,7 +260,7 @@ if __name__ == '__main__':
         ws_fn = input()
         ws_fn = None if ws_fn == '' else ws_fn
 
-        from OrganizationalModelMiner.overlap.cluster import fcm
+        from OrganizationalModelMiner.overlap.clustering import fcm
         ogs = fcm(
                 profiles, num_groups,
                 threshold=user_selected_threshold,
@@ -303,10 +292,12 @@ if __name__ == '__main__':
         #om.add_group(og, group_first_assign(og, rl))
 
     # TODO evaluate (goes here??)
+    '''
     from Evaluation.l2m import conformance
     print()
     print('Fitness\t\t= {:.6f}'.format(conformance.fitness(rl, om)))
     print('Precision\t= {:.6f}'.format(conformance.precision(rl, om)))
+    '''
 
     # save the mined organizational model to a file
     with open(fnout_org_model, 'w', encoding='utf-8') as fout:

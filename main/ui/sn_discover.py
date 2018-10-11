@@ -12,7 +12,8 @@ fnout_social_network = sys.argv[2]
 if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
-    el = read_disco_csv(fn_event_log)
+    with open(fn_event_log, 'r', encoding='utf-8') as f:
+        el = read_disco_csv(f)
 
     print('Input a number to choose a solution:')
     print('\t0. Metrics based on possible causality (van der Aalst)')
@@ -86,6 +87,9 @@ if __name__ == '__main__':
             raise Exception('Failed to recognize input option!')
             exit(1)
 
+        profiles = joint_activities.performer_activity_matrix(
+            el, use_log_scale=ls)
+
         print('Input a number to specify a metric:')
         print('\t0. Distance: Euclidean distance')
         print('\t1. Distance: Manhattan distance')
@@ -98,13 +102,13 @@ if __name__ == '__main__':
                     'euclidean',
                     'cityblock',
                     'hamming']
-            sn = joint_activities.distance(el, use_log_scale=ls,
-                    metric=distance_metrics[metric_option])
+            sn = joint_activities.distance(
+                    profiles, metric=distance_metrics[metric_option])
         elif metric_option in [3]: # correlation metrics
             correlation_metrics = [
                     'pearson']
-            sn = joint_activities.correlation(el, use_log_scale=ls,
-                    metric=correlation_metrics[metric_option - 3])
+            sn = joint_activities.correlation(
+                    profiles, metric=correlation_metrics[metric_option - 3])
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
@@ -114,6 +118,6 @@ if __name__ == '__main__':
         exit(1)
 
     # save the mined social network to a file
-    from networkx import write_graphml
-    write_graphml(sn, fnout_social_network)
+    from networkx import write_gexf
+    write_gexf(sn, fnout_social_network)
 

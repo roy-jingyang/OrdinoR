@@ -8,7 +8,7 @@ This module contains the implementation of profiling a resource using the
 def performer_activity_frequency(rl, use_log_scale):
     '''
     This method builds a "profile" based on how frequent individuals originate
-    events with specific activity names, i.e. the performer-by-activity matrix.
+    events with specific activity types.
 
     Params:
         rl: DataFrame
