@@ -26,6 +26,8 @@ def _mja(
             Choice of metrics for measuring the distance while calculating the
             linkage. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
+        use_log_scale: boolean
+            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         ogs: list of frozensets
             A list of organizational groups.
@@ -34,7 +36,7 @@ def _mja(
     correlation_based_metrics = ['pearson']
     if metric in correlation_based_metrics:
         from SocialNetworkMiner.joint_activities import correlation
-        sn = correlation(profiles, metric=metric) 
+        sn = correlation(profiles, metric=metric, convert=True) 
     else:
         from SocialNetworkMiner.joint_activities import distance
         sn = distance(profiles, metric=metric, convert=True)
@@ -75,6 +77,8 @@ def mja(
             Choice of metrics for measuring the distance while calculating the
             linkage. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
+        use_log_scale: boolean
+            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         best_ogs: list of frozensets
             A list of organizational groups.

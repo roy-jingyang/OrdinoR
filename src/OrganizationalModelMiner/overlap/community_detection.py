@@ -82,91 +82,126 @@ def _extended_modularity(g, cover):
     return eq
 
 # 1. Clique Percolation Method (CFinder by Pallas et al.) 
-# TODO: the strategy of dealing with unconnected nodes
-def clique_percolation(sn, range_clique_size):
+def clique_percolation(
+        profiles,
+        metric='euclidean', use_log_scale=False):
     '''
     This method implements the algorithm for discovering overlapping
     organizational models using a community detection technique named clique
     percolation method.
     
-    The implementation is done using NetworkX built-in methods.
-
-    Notice that this is merely a "wrap-up" since the major procedure of the
-    algorithm (i.e. community detection) is performed using the NetworkX module
-    algorithms.community.kclique.k_clique_communities.
+    The implementation is done using the external software CFinder. The number
+    of communities to be discovered is determined automatically.
 
     Params:
-        sn: NetworkX (Di)Graph
-            A NetworkX (Di)Graph object, in which the resources are the nodes,
-            and the edges could be connections built on similarties, inter-
-            actions, etc.
-        range_clique_size: 2-tuple
-            The range as a 2-tuple, i.e. (low, high), specifying the range of
-            clique size to be searched. Notice that integers within range [low,
-            high) will be used.
-
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
+        metric: str, optional
+            Choice of metrics for measuring the distance while calculating the
+            linkage. Refer to scipy.spatial.distance.pdist for more detailed
+            explanation.
+        use_log_scale: boolean
+            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         list of frozensets
             A list of organizational groups.
     '''
     print('Applying overlapping organizational model mining using '
           'community detection (CFinder from Clique Percolation methods):')
-    print('Testing with clique size set to range [{}, {}]'.format(
-        range_clique_size[0], range_clique_size[1] - 1))
+    # build network from profiles
+    correlation_based_metrics = ['pearson']
+    if metric in correlation_based_metrics:
+        from SocialNetworkMiner.joint_activities import correlation
+        sn = correlation(profiles, metric=metric, convert=True) 
+    else:
+        from SocialNetworkMiner.joint_activities import distance
+        sn = distance(profiles, metric=metric, convert=True)
 
-    best_k = -1
+    # step 0. Relabel nodes
+    sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
+
+    # step 1. Distinguish the isolated nodes
+    from networkx import isolates
+    original_isolates = list(isolates(sn))
+    if len(original_isolates) > 0:
+        print('[Warning] There exist {} ISOLATED NODES in the network.'.format(
+            len(original_isolates)))
+
+    # step 2. Export network as edgelist
+    from networkx import write_weighted_edgelist
+    with open('tmp_sn.edgelist', 'wb') as f:
+        write_weighted_edgelist(sn, f)
+    print('Network exported to "tmp_sn.edgelist".')
+    print('Use the external tool CFinder to discover communities:')
+
+    # step 3. Run community detection applying CFinder
+    print('Path to the output directory as input: ', end='')
+    dirn_output = input()
+
+    # step 4. Derive organizational groups from the detection results
+    # Note: since CFinder produces a set of results varied by num. of cliques
+    from collections import defaultdict
+    best_fn = None
     best_eq = float('-inf')
+    fn_cnt = 0
     solution = None
-    for k in range(range_clique_size[0], range_clique_size[1]):
-        # step 1. Find all k-cliques and distinguish nodes not involved
-        from networkx.algorithms.clique import find_cliques
-        kcliques = [c for c in find_cliques(sn) if len(c) >= k]
-        involved = set()
-        for kc in kcliques:
-            for r in kc:
-                involved.add(r)
-
-        if len(sn) - len(involved) > 0:
-            print('[Warning] {} nodes in the network not involved in the {}-cliques.'
-                .format(len(sn) - len(involved), k))
-
-        # step 2. Run the detection algorithm
-        from networkx.algorithms.community import k_clique_communities
-        groups = list(frozenset(c) 
-                for c in k_clique_communities(sn, k=k, cliques=kcliques))
-        for r in set(sn.nodes).difference(involved):
-            groups.append(frozenset({r}))
-
-        eq = _extended_modularity(sn, groups)
-        print(eq)
-        if eq > best_eq:
-            best_k = k
-            best_eq = eq
-            solution = groups
-
-    print('Best solution produced using the {}-cliques.'.format(best_k))
+    from os import listdir, path
+    for n in listdir(dirn_output):
+        if path.isdir(path.join(dirn_output, n)) and n.startswith('k='):
+            fn_cnt += 1
+            fn_communities = path.join(dirn_output, n, 'communities')
+            cnt = -1
+            groups = defaultdict(lambda: set())
+            with open(fn_communities, 'r') as f:
+                for line in f:
+                    if not (line == '' or line.startswith('#')):
+                        cnt += 1
+                        for label in line.split(':')[-1].strip().split():
+                            groups[cnt].add(int(label))
+            for i, iso_node in enumerate(original_isolates):
+                groups['ISOLATE #{}'.format(i)].add(iso_node)
+            eq = _extended_modularity(sn, list(groups.values()))
+            if eq > best_eq:
+                best_fn = fn_communities
+                best_eq = eq
+                solution = groups
+    
+    print('Detected communities imported from directory "{}":'.format(
+        dirn_output))
+    print('Best solution "{}" selected from {} candidates:'.format(
+        best_fn, fn_cnt))
     print('{} organizational groups discovered.'.format(len(solution)))
-    return solution
+    # restore labels
+    og = list()
+    for cover in solution.values():
+        og.append(frozenset({inv_node_relabel_mapping[x] for x in cover}))
+
+    return og
 
 # 2. Line Graph and Link Partitioning (Appice, based on Evans and Lambiotte)
-def link_partitioning(sn):
+def link_partitioning(
+        profiles,
+        metric='euclidean', use_log_scale=False):
     '''
     This method implements the three-phased algorithm for discovering over-
     lapping organizational models proposed by A.Appice, which involves trans-
-    forming between original social networks and linear networks, and the app-
+    forming from an original social networks to a linear network, and the app-
     lication of the Louvain community detection algorithm.
 
-    The implementation is done using NetworkX built-in methods and the external
-    tool Pajek.
-
-    The expected data exchange format is Pajek NET format.
+    The implementation is done using NetworkX built-in methods and the
+    python-louvain module.
 
     Params:
-        sn: NetworkX (Di)Graph
-            A NetworkX (Di)Graph object, in which the resources are the nodes,
-            and the edges could be connections built on simiilarties, inter-
-            actions, etc.
-
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
+        metric: str, optional
+            Choice of metrics for measuring the distance while calculating the
+            linkage. Refer to scipy.spatial.distance.pdist for more detailed
+            explanation.
+        use_log_scale: boolean
+            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         list of frozensets
             A list of organizational groups.
@@ -174,9 +209,14 @@ def link_partitioning(sn):
 
     print('Applying overlapping organizational model mining using '
           'community detection (Appice\'s method from Link partitioning):')
-
-    # step 0. Relabel nodes
-    sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
+    # build network from profiles
+    correlation_based_metrics = ['pearson']
+    if metric in correlation_based_metrics:
+        from SocialNetworkMiner.joint_activities import correlation
+        sn = correlation(profiles, metric=metric, convert=True) 
+    else:
+        from SocialNetworkMiner.joint_activities import distance
+        sn = distance(profiles, metric=metric, convert=True)
 
     # step 1. Build the linear network using the original network
     edges = sorted(list(sn.edges.data('weight')))
@@ -194,115 +234,90 @@ def link_partitioning(sn):
         print('where N is the actual target number to be obtained in the '
               'final result.')
 
-    with open('tmp_ln.net', 'w') as f_pajek_net:
-        # header
-        f_pajek_net.write('*Vertices {}\n'.format(len(edges)))
-        # create nodes of the linear network (corresponding to edges)
-        for i in range(len(edges)):
-            e = edges[i]
-            u = e[0]
-            v = e[1]
-            # "><" is used as deliminator to distinguish between nodes
-            f_pajek_net.write('{} "{}><{}"\n'.format(i + 1, str(u), str(v)))
+    from networkx import DiGraph
+    ln = DiGraph()
+    from itertools import combinations
+    for ei, ej in list(combinations(sn.edges.data('weight'), 2)):
+        joint = None
+        if ei[0] == ej[0] or ei[0] == ej[1]:
+            joint = ei[0]
+        elif ei[1] == ej[0] or ei[1] == ej[1]:
+            joint = ei[1]
 
-        print('{} nodes have been added to the linear network.'.format(
-            len(edges)))
+        if joint is not None:
+            # i -> j
+            w_ij = ei[2] / (sn.degree(nbunch=joint, weight='weight') - ej[2])
+            # i <- j
+            w_ji = ej[2] / (sn.degree(nbunch=joint, weight='weight') - ei[2])
 
-        # create edges of the linear network
-        # header
-        f_pajek_net.write('*arcs\n')
-        cnt = 0
-        for i in range(len(edges) - 1):
-            ei = edges[i]
-            for j in range(i + 1, len(edges)):
-                ej = edges[j]
-
-                x = None
-                if ei[0] == ej[0] or ei[0] == ej[1]:
-                    x = ei[0]
-                elif ei[1] == ej[0] or ei[1] == ej[1]:
-                    x = ei[1]
-
-                if x is not None:
-                    # i -> j
-                    w_l = ei[2] / (
-                            sn.degree(nbunch=x, weight='weight') - ej[2])
-                    # i <- j
-                    w_r = ej[2] / (
-                            sn.degree(nbunch=x, weight='weight') - ei[2])
-
-                    # precision of the edge weight value is 1e-9
-                    f_pajek_net.write('{} {} {:.9f}\n'.format(
-                        i + 1, j + 1, w_l))
-                    f_pajek_net.write('{} {} {:.9f}\n'.format(
-                        j + 1, i + 1, w_r))
-                    cnt += 2
-
-        print('{} edges have been added to the linear network.'.format(cnt))
-
-    print('Transformed linear network exported to "tmp_ln.net".')
-    print('Use an external SNA tool to discover communities:')
+            ln.add_edge(
+                    '{}***{}'.format(ei[0], ei[1]),
+                    '{}***{}'.format(ej[0], ej[1]),
+                    weight=w_ij)
+            ln.add_edge(
+                    '{}***{}'.format(ej[0], ej[1]),
+                    '{}***{}'.format(ei[0], ei[1]),
+                    weight=w_ji)
 
     # step 2. Run Louvain algorithm to discover communities
-    # Run using external tool, then import the results back
-    # Pajek (recommended): "Network" -> "Create Partitions" -> "Communities"
-    # Gephi: "Statistics" -> "Modularity", result exported as *.gml
-    print('Path to the community detection result file (*.clu) as input: ', 
-            end='')
-    fn_pajek_net_communities = input()
+    from community import best_partition
+    # TODO: casting to undirected network
+    ln = ln.to_undirected()
+    ln_communities = best_partition(ln)
 
     # step 3. Map communities onto the original network to get the results
     # derive the orgnizational groups
     from collections import defaultdict
     groups = defaultdict(lambda: set())
-    cnt = 0
-    with open(fn_pajek_net_communities, 'r') as f:
-        is_header_line = True
-        for line in f:
-            if is_header_line:
-                is_header_line = False
-            else:
-                # one-to-one mapping between resource communities and linear
-                # communities
-                # TODO Optional: calculate the degree of membership
-                label = line.strip()
-                u = edges[cnt][0]
-                v = edges[cnt][1]
-                groups[label].add(inv_node_relabel_mapping[u])
-                groups[label].add(inv_node_relabel_mapping[v])
-                cnt += 1
-    print('Detected communities imported from "{}":'.format(
-        fn_pajek_net_communities))
-
-    for i in range(len(original_isolates)):
-        groups['ISOLATE #{}'.format(i)].add(
-                inv_node_relabel_mapping[original_isolates[i]])
+    # one-to-one mapping between resource communities and linear
+    # communities
+    # TODO Optional: calculate the degree of membership
+    for e, comm in ln_communities.items():
+            groups[comm].add(e.split('***')[0])
+            groups[comm].add(e.split('***')[1])
+    for i, iso_node in enumerate(original_isolates):
+        groups['ISOLATE #{}'.format(i)].add(iso_node)
 
     print('{} organizational groups discovered.'.format(len(groups.values())))
-
     return [frozenset(g) for g in groups.values()]
 
 # 3. Local Expansion and Optimization (OSLOM by Lancichinetti et al.)
-def local_expansion(sn):
+def local_expansion(
+        profiles,
+        metric='euclidean', use_log_scale=False):
     '''
     This method implements the algorithm for discovering overlapping
     organizational models using community detection technique named OSLOM,
     which is a local expansion and optimization method.
 
-    This implementation is done using the external software OSLOM.
+    This implementation is done using the external software OSLOM. The number
+    of communities to be discovered is determined automatically.
 
     Params:
-        sn: NetworkX (Di)Graph
-            A NetworkX (Di)Graph object, in which the resources are the nodes,
-            and the edges could be connections built on similarties, inter-
-            actions, etc.
-
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
+        metric: str, optional
+            Choice of metrics for measuring the distance while calculating the
+            linkage. Refer to scipy.spatial.distance.pdist for more detailed
+            explanation.
+        use_log_scale: boolean
+            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         list of frozensets
             A list of organizational groups.
     '''
     print('Applying overlapping organizational model mining using '
           'community detection (OSLOM from Local expansion methods):')
+    # build network from profiles
+    correlation_based_metrics = ['pearson']
+    if metric in correlation_based_metrics:
+        from SocialNetworkMiner.joint_activities import correlation
+        sn = correlation(profiles, metric=metric, convert=True) 
+    else:
+        from SocialNetworkMiner.joint_activities import distance
+        sn = distance(profiles, metric=metric, convert=True)
+
     # step 0. Relabel nodes
     sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
 
@@ -337,33 +352,48 @@ def local_expansion(sn):
                     groups[cnt].add(inv_node_relabel_mapping[int(label)])
     print('Detected communities imported from "{}":'.format(fn_communities))
 
-    for i in range(len(original_isolates)):
-        groups['ISOLATE #{}'.format(i)].add(
-                inv_node_relabel_mapping[original_isolates[i]])
+    for i, iso_node in enumerate(original_isolates):
+        groups['ISOLATE #{}'.format(i)].add(inv_node_relabel_mapping[iso_node])
 
     return [frozenset(g) for g in groups.values()]
 
 # 5.1 Agent-based (COPRA by Gregory)
-def agent_copra(sn):
+def agent_copra(
+        profiles,
+        metric='euclidean', use_log_scale=False):
     '''
     This method implements the algorithm for discovering overlapping
     organizational models using community detection technique named COPRA,
     which is a agent-based dynamical method.
 
-    This implementation is done using the external software COPRA.
+    This implementation is done using the external software COPRA. The number
+    of communities to be discovered is determined automatically.
 
     Params:
-        sn: NetworkX (Di)Graph
-            A NetworkX (Di)Graph object, in which the resources are the nodes,
-            and the edges could be connections built on similarties, inter-
-            actions, etc.
-
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
+        metric: str, optional
+            Choice of metrics for measuring the distance while calculating the
+            linkage. Refer to scipy.spatial.distance.pdist for more detailed
+            explanation.
+        use_log_scale: boolean
+            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         list of frozensets
             A list of organizational groups.
     '''
     print('Applying overlapping organizational model mining using '
           'community detection (COPRA from Agent-based methods):')
+    # build network from profiles
+    correlation_based_metrics = ['pearson']
+    if metric in correlation_based_metrics:
+        from SocialNetworkMiner.joint_activities import correlation
+        sn = correlation(profiles, metric=metric, convert=True) 
+    else:
+        from SocialNetworkMiner.joint_activities import distance
+        sn = distance(profiles, metric=metric, convert=True)
+
     # step 0. Relabel nodes
     sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
 
@@ -397,34 +427,49 @@ def agent_copra(sn):
                 groups[cnt].add(inv_node_relabel_mapping[int(label)])
     print('Detected communities imported from "{}":'.format(fn_communities))
 
-    for i in range(len(original_isolates)):
-        groups['ISOLATE #{}'.format(i)].add(
-                inv_node_relabel_mapping[original_isolates[i]])
+    for i, iso_node in enumerate(original_isolates):
+        groups['ISOLATE #{}'.format(i)].add(inv_node_relabel_mapping[iso_node])
 
     return [frozenset(g) for g in groups.values()]
 
 # 5.2 Agent-based (SLPA by Xie et al.)
 # TODO
-def agent_slpa(sn):
+def agent_slpa(
+        profiles,
+        metric='euclidean', use_log_scale=False):
     '''
     This method implements the algorithm for discovering overlapping
     organizational models using community detection technique named SLPA,
     which is a agent-based dynamical method.
 
-    This implementation is done using the external software GANXiSw.
+    This implementation is done using the external software GANXiSw. The number
+    of communities to be discovered is determined automatically.
 
     Params:
-        sn: NetworkX (Di)Graph
-            A NetworkX (Di)Graph object, in which the resources are the nodes,
-            and the edges could be connections built on similarties, inter-
-            actions, etc.
-
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
+        metric: str, optional
+            Choice of metrics for measuring the distance while calculating the
+            linkage. Refer to scipy.spatial.distance.pdist for more detailed
+            explanation.
+        use_log_scale: boolean
+            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         list of frozensets
             A list of organizational groups.
     '''
     print('Applying overlapping organizational model mining using '
           'community detection (SLPA from Agent-based methods):')
+    # build network from profiles
+    correlation_based_metrics = ['pearson']
+    if metric in correlation_based_metrics:
+        from SocialNetworkMiner.joint_activities import correlation
+        sn = correlation(profiles, metric=metric, convert=True) 
+    else:
+        from SocialNetworkMiner.joint_activities import distance
+        sn = distance(profiles, metric=metric, convert=True)
+
     # step 0. Relabel nodes
     sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
 
@@ -451,31 +496,32 @@ def agent_slpa(sn):
     from collections import defaultdict
     best_fn = None
     best_eq = float('-inf')
-    solution = None
     fn_cnt = 0
-    from os import listdir
+    solution = None
+    from os import listdir, path
     for fn in listdir(dirn_communities):
         if fn.endswith('.icpm'):
             fn_cnt += 1
+            fn_communities = path.join(dirn_communities, fn)
             cnt = -1
             groups = defaultdict(lambda: set())
-            with open(dirn_communities + '/' + fn, 'r') as f:
+            with open(fn_communities, 'r') as f:
                 for line in f:
                     cnt += 1
                     for label in line.split():
                         groups[cnt].add(int(label))
-            for i in range(len(original_isolates)):
-                groups['ISOLATE #{}'.format(i)].add(original_isolates[i])
+            for i, iso_node in enumerate(original_isolates):
+                groups['ISOLATE #{}'.format(i)].add(iso_node)
             eq = _extended_modularity(sn, list(groups.values()))
             if eq > best_eq:
-                best_fn = fn
+                best_fn = fn_communities
                 best_eq = eq
                 solution = groups
 
-    print('Detected communities imported from {} files in directory "{}":'
-            .format(dirn_communities, dirn_communities))
-    print('Best solution produced using communities from file {}'.format(
-        best_fn))
+    print('Detected communities imported from directory "{}":'.format(
+        dirn_communities))
+    print('Best solution "{}" selected from {} candidates:'.format(
+        best_fn, fn_cnt))
     print('{} organizational groups discovered.'.format(len(solution)))
     # restore labels
     og = list()

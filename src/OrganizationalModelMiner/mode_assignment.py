@@ -5,7 +5,8 @@ This module contains methods for associating discovered organizational groups
 with execution modes.
 '''
 
-def member_first_assign(group, rl):
+#def member_first_assign(group, rl):
+def assign_by_any(group, rl):
     '''Assign an execution mode to a group, as long as there exists a member
     resource of this group that have executed this mode, i.e. everything done
     by each member matters.
@@ -32,7 +33,8 @@ def member_first_assign(group, rl):
             modes.add(m)
     return frozenset(modes)
 
-def group_first_assign(group, rl):
+#def group_first_assign(group, rl):
+def assign_by_all(group, rl):
     '''Assign an execution mode to a group, only if every member resources of
     this group have executed this mode, i.e. only things done by every member
     matter.
@@ -48,7 +50,8 @@ def group_first_assign(group, rl):
     '''
     return vote_assign(group, rl, percentage=1.0)
 
-def vote_assign(group, rl, percentage):
+#def vote_assign(group, rl, percentage):
+def assign_by_proportion(group, rl, percentage):
     '''Assign an execution mode to a group, only if certain percentage of
     member resources of this group have executed this mode, i.e.only things
     done by certain percentage of members matter.

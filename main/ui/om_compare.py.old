@@ -24,7 +24,7 @@ if __name__ == '__main__':
     ref_model = read_org_model_csv_old(fn_org_ref_model)
 
     model_resource = set()
-    model_resource_labels = defaultdict(lambda: set())
+    model_resource_labels = defaultdict(set)
     for k, x in model.items():
         model_resource = model_resource.union(x)
         for r in x:
@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     if fn_org_ref_model:
         ref_model_resource = set()
-        ref_model_resource_labels = defaultdict(lambda: set())
+        ref_model_resource_labels = defaultdict(set)
         for k, y in ref_model.items():
             ref_model_resource = ref_model_resource.union(y)
             for r in y:

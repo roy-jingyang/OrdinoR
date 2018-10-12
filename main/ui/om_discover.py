@@ -118,15 +118,6 @@ if __name__ == '__main__':
         profiles = performer_activity_frequency(rl, use_log_scale=True)
         #profiles = performer_activity_frequency(rl, use_log_scale=False)
 
-        # build social network
-        from SocialNetworkMiner.joint_activities import correlation
-        sn = correlation(el, use_log_scale=True)
-
-        # keep only the positive correlations
-        from SocialNetworkMiner.utilities import select_edges_by_weight
-        eps = sys.float_info.epsilon
-        sn = select_edges_by_weight(sn, low=eps)
-
         from OrganizationalModelMiner.overlap import community_detection
         print('Input a number to choose a method:')
         print('\t0. CFinder (Clique Percolation Method)') 
@@ -137,40 +128,20 @@ if __name__ == '__main__':
         print('Option: ', end='')
         method_option = int(input())
         if method_option == 0:
-            # edge filtering
-            print('Input a value as threshold:', end=' ')
-            threshold = input()
-            threshold = (threshold if threshold[0] in ['+', '-']
-                    else float(threshold))
-            if type(threshold) == float:
-                sn = select_edges_by_weight(sn, low=threshold)
-            else:
-                sn = select_edges_by_weight(sn, percentage=threshold)
-
-            print('Specify the range for clique size values: [low, high)')
-            print('\tlow\t= ', end='')
-            size_low = int(input())
-            print('\thigh\t= ', end='')
-            size_high = int(input())
-            ogs = community_detection.clique_percolation(sn,
-                    (size_low, size_high))
+            ogs = community_detection.clique_percolation(
+                    profiles, metric='pearson', use_log_scale=False)
         elif method_option == 1:
-            # edge filtering
-            print('Input a value as threshold:', end=' ')
-            threshold = input()
-            threshold = (threshold if threshold[0] in ['+', '-']
-                    else float(threshold))
-            if type(threshold) == float:
-                sn = select_edges_by_weight(sn, low=threshold)
-            else:
-                sn = select_edges_by_weight(sn, percentage=threshold)
-            ogs = community_detection.link_partitioning(sn)
+            ogs = community_detection.link_partitioning(
+                    profiles, metric='pearson', use_log_scale=False)
         elif method_option == 2:
-            ogs = community_detection.local_expansion(sn)
+            ogs = community_detection.local_expansion(
+                    profiles, metric='pearson', use_log_scale=False)
         elif method_option == 3:
-            ogs = community_detection.agent_copra(sn)
+            ogs = community_detection.agent_copra(
+                    profiles, metric='pearson', use_log_scale=False)
         elif method_option == 4:
-            ogs = community_detection.agent_slpa(sn)
+            ogs = community_detection.agent_slpa(
+                    profiles, metric='pearson', use_log_scale=False)
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
@@ -285,11 +256,11 @@ if __name__ == '__main__':
     om = OrganizationalModel()
 
     # assign execution modes to groups
-    from OrganizationalModelMiner.mode_assignment import member_first_assign
-    #from OrganizationalModelMiner.mode_assignment import group_first_assign
+    from OrganizationalModelMiner.mode_assignment import assign_by_any
+    #from OrganizationalModelMiner.mode_assignment import assign_by_all
     for og in ogs:
-        om.add_group(og, member_first_assign(og, rl))
-        #om.add_group(og, group_first_assign(og, rl))
+        om.add_group(og, assign_by_any(og, rl))
+        #om.add_group(og, assign_by_all(og, rl))
 
     # TODO evaluate (goes here??)
     '''

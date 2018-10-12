@@ -92,15 +92,15 @@ def config_setup(fn):
 
     # Step 4: assign execution modes
     setup.add_node('4.0', **{
-        'name': 'member first assign ("any")',
+        'name': 'assign by any',
         'step': 4,
-        'invoke': 'OrganizationalModelMiner.mode_assignment.member_first_assign',
+        'invoke': 'OrganizationalModelMiner.mode_assignment.assign_by_any',
         'params': ''
     })
     setup.add_node('4.1', **{
-        'name': 'group first assign ("all")',
+        'name': 'assign by all',
         'step': 4,
-        'invoke': 'OrganizationalModelMiner.mode_assignment.member_first_assign',
+        'invoke': 'OrganizationalModelMiner.mode_assignment.assign_by_all',
         'params': ''
     })
     setup.add_edges_from(

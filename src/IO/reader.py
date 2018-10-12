@@ -113,7 +113,7 @@ def read_mxml(f):
 # TODO: [Deprecated]
 def read_org_model_csv_old(fn, encoding='utf-8'):
     from collections import defaultdict
-    model = defaultdict(lambda: set())
+    model = defaultdict(set)
     with open(fn, 'r', encoding=encoding) as f:
         is_header_line = True
         for row in csv.reader(f):
