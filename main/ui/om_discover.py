@@ -45,8 +45,10 @@ if __name__ == '__main__':
         ogs = default_mining(rl)
 
     elif mining_option == 1:
-        print('Input a integer for the desired number of groups to be discovered:', end=' ')
-        num_groups = int(input())
+        print('Input the desired range (e.g. [low, high)) of number of groups to be discovered:', end=' ')
+        num_groups = input()
+        num_groups = num_groups[1:-1].split(',')
+        num_groups = range(int(num_groups[0]), int(num_groups[1]))
 
         # select method (MJA/MJC)
         print('Input a number to choose a method:')
@@ -67,7 +69,7 @@ if __name__ == '__main__':
             print('\t1. PCC')
             print('Option: ', end='')
             metric_option = int(input())
-            metrics = ['euclidean', 'pearson']
+            metrics = ['euclidean', 'correlation']
             ogs = mja(
                     profiles, num_groups, 
                     metric=metrics[metric_option], use_log_scale=True)
@@ -80,8 +82,10 @@ if __name__ == '__main__':
             exit(1)
 
     elif mining_option == 2:
-        print('Input a integer for the desired number of groups to be discovered:', end=' ')
-        num_groups = int(input())
+        print('Input the desired range (e.g. [low, high)) of number of groups to be discovered:', end=' ')
+        num_groups = input()
+        num_groups = num_groups[1:-1].split(',')
+        num_groups = range(int(num_groups[0]), int(num_groups[1]))
 
         print('Input a number to choose a method:')
         print('\t0. Mining using cluster analysis')
@@ -129,19 +133,19 @@ if __name__ == '__main__':
         method_option = int(input())
         if method_option == 0:
             ogs = community_detection.clique_percolation(
-                    profiles, metric='pearson', use_log_scale=False)
+                    profiles, metric='correlation', use_log_scale=False)
         elif method_option == 1:
             ogs = community_detection.link_partitioning(
-                    profiles, metric='pearson', use_log_scale=False)
+                    profiles, metric='correlation', use_log_scale=False)
         elif method_option == 2:
             ogs = community_detection.local_expansion(
-                    profiles, metric='pearson', use_log_scale=False)
+                    profiles, metric='correlation', use_log_scale=False)
         elif method_option == 3:
             ogs = community_detection.agent_copra(
-                    profiles, metric='pearson', use_log_scale=False)
+                    profiles, metric='correlation', use_log_scale=False)
         elif method_option == 4:
             ogs = community_detection.agent_slpa(
-                    profiles, metric='pearson', use_log_scale=False)
+                    profiles, metric='correlation', use_log_scale=False)
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)

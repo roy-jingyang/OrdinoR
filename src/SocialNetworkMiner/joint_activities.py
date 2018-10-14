@@ -94,7 +94,7 @@ def distance(profiles,
         exit('[Error] Social network based on joint activities found directed')
 
 def correlation(profiles,
-        metric='pearson',
+        metric='correlation',
         convert=False):
     '''
     This method implements the mining based on metrics based on joint activi-
@@ -106,7 +106,7 @@ def correlation(profiles,
             DataFrame contains profiles of the specific resources.
         metric: str, optional
             Choice of different distance-related metrices. Options include:
-                - 'pearson': the Pearson Correlation Coefficient (PCC), default
+                - 'correlation': the Pearson Correlation Coefficient (PCC)
         convert: boolean, optional
             Boolean flag to determine whether the weight values of the edges in
             the mined network should be converted to similarity flavored (i.e.
@@ -117,10 +117,7 @@ def correlation(profiles,
             The mined social network as a NetworkX Graph object.
     '''
     from scipy.spatial.distance import squareform, pdist
-    if metric == 'pearson':
-        x = squareform(pdist(profiles, metric='correlation')) # preserve index
-    else:
-        pass
+    x = squareform(pdist(profiles, metric=metric)) # preserve index
     # convert to Graph
     from networkx import Graph, relabel_nodes
     from numpy import fill_diagonal

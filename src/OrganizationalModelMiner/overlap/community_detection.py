@@ -110,7 +110,7 @@ def clique_percolation(
     print('Applying overlapping organizational model mining using '
           'community detection (CFinder from Clique Percolation methods):')
     # build network from profiles
-    correlation_based_metrics = ['pearson']
+    correlation_based_metrics = ['correlation']
     if metric in correlation_based_metrics:
         from SocialNetworkMiner.joint_activities import correlation
         sn = correlation(profiles, metric=metric, convert=True) 
@@ -210,7 +210,7 @@ def link_partitioning(
     print('Applying overlapping organizational model mining using '
           'community detection (Appice\'s method from Link partitioning):')
     # build network from profiles
-    correlation_based_metrics = ['pearson']
+    correlation_based_metrics = ['correlation']
     if metric in correlation_based_metrics:
         from SocialNetworkMiner.joint_activities import correlation
         sn = correlation(profiles, metric=metric, convert=True) 
@@ -310,7 +310,7 @@ def local_expansion(
     print('Applying overlapping organizational model mining using '
           'community detection (OSLOM from Local expansion methods):')
     # build network from profiles
-    correlation_based_metrics = ['pearson']
+    correlation_based_metrics = ['correlation']
     if metric in correlation_based_metrics:
         from SocialNetworkMiner.joint_activities import correlation
         sn = correlation(profiles, metric=metric, convert=True) 
@@ -386,7 +386,7 @@ def agent_copra(
     print('Applying overlapping organizational model mining using '
           'community detection (COPRA from Agent-based methods):')
     # build network from profiles
-    correlation_based_metrics = ['pearson']
+    correlation_based_metrics = ['correlation']
     if metric in correlation_based_metrics:
         from SocialNetworkMiner.joint_activities import correlation
         sn = correlation(profiles, metric=metric, convert=True) 
@@ -462,7 +462,7 @@ def agent_slpa(
     print('Applying overlapping organizational model mining using '
           'community detection (SLPA from Agent-based methods):')
     # build network from profiles
-    correlation_based_metrics = ['pearson']
+    correlation_based_metrics = ['correlation']
     if metric in correlation_based_metrics:
         from SocialNetworkMiner.joint_activities import correlation
         sn = correlation(profiles, metric=metric, convert=True) 

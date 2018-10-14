@@ -27,7 +27,7 @@ def _ahc(
             scipy.cluster.hierarchy.linkage for more detailed explanation.
         metric: str, optional
             Choice of metrics for measuring the distance while calculating the
-            linkage. Refer to scipy.spatial.distance.pdist for more detailed
+            proximity. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
     Returns:
         list of frozensets
@@ -81,7 +81,7 @@ def ahc(
             scipy.cluster.hierarchy.linkage for more detailed explanation.
         metric: str, optional
             Choice of metrics for measuring the distance while calculating the
-            linkage. Refer to scipy.spatial.distance.pdist for more detailed
+            proximity. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
     Returns:
         best_ogs: list of frozensets
@@ -97,15 +97,24 @@ def ahc(
     if type(n_groups) is int:
         return _ahc(profiles, n_groups, method, metric)
     else:
-        best_ogs = None
-        best_og_hcy = None
+        from OrganizationalModelMiner.utilities import cross_validation_score
+        best_k = -1
         best_score = float('-inf')
         for k in n_groups:
             #TODO: calculate the scores
+            score = cross_validation_score(
+                X=profiles, miner=_ahc,
+                miner_params={
+                    'n_groups': k,
+                    'method': method,
+                    'metric': metric 
+                },
+                proximity_metric = metric
+            )
             if score > best_score:
                 best_score = score
-                best_ogs = cand_ogs
-                best_og_hcy = cand_og_hcy
-        print('Selected "K" = {}'.format(len(best_ogs)))
-        return best_ogs, best_og_hcy
+                best_k = k
+        print('-' * 80)
+        print('Selected "K" = {}'.format(best_k))
+        return _ahc(profiles, best_k, method, metric)
 
