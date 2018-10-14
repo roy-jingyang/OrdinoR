@@ -87,7 +87,7 @@ def _gmm(
         gmm_model = GaussianMixture(
                 n_components=n_groups,
                 covariance_type=cov_type,
-                n_init=500,
+                n_init=50,
                 init_params='random').fit(profiles.values)
 
     # step a3. Deriving the clusters as the end result
@@ -212,8 +212,8 @@ def _moc(
         moc_model = MOC(n_components=n_groups, M_init=m.values)
     else:
         # TODO: is_disjoint option
-        #moc_model = MOC(n_components=n_groups, n_init=500, is_disjoint=True)
-        moc_model = MOC(n_components=n_groups, n_init=500)
+        #moc_model = MOC(n_components=n_groups, n_init=50, is_disjoint=True)
+        moc_model = MOC(n_components=n_groups, n_init=50)
 
     mat_membership = moc_model.fit_predict(profiles.values)
 
@@ -335,7 +335,7 @@ def _fcm(
         fcm_model = FCM(n_components=n_groups, means_init=array(init_means),
                 threshold='random')
     else:
-        fcm_model = FCM(n_components=n_groups, n_init=500, threshold='random')
+        fcm_model = FCM(n_components=n_groups, n_init=50, threshold='random')
 
     fpp = fcm_model.fit_predict(profiles.values)
     

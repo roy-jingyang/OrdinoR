@@ -48,9 +48,8 @@ def assign_by_all(group, rl):
         modes: iterator
             The execution modes corresponding to the resources.
     '''
-    return vote_assign(group, rl, percentage=1.0)
+    return assign_by_proportion(group, rl, percentage=1.0)
 
-#def vote_assign(group, rl, percentage):
 def assign_by_proportion(group, rl, percentage):
     '''Assign an execution mode to a group, only if certain percentage of
     member resources of this group have executed this mode, i.e.only things
