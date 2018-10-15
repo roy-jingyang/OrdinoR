@@ -151,8 +151,10 @@ if __name__ == '__main__':
             exit(1)
 
     elif mining_option == 4:
-        print('Input a integer for the desired number of groups to be discovered:', end=' ')
-        num_groups = int(input())
+        print('Input the desired range (e.g. [low, high)) of number of groups to be discovered:', end=' ')
+        num_groups = input()
+        num_groups = num_groups[1:-1].split(',')
+        num_groups = range(int(num_groups[0]), int(num_groups[1]))
 
         # build profiles
         from ResourceProfiler.raw_profiler import performer_activity_frequency
@@ -186,8 +188,10 @@ if __name__ == '__main__':
         '''
 
     elif mining_option == 5:
-        print('Input a integer for the desired number of groups to be discovered:', end=' ')
-        num_groups = int(input())
+        print('Input the desired range (e.g. [low, high)) of number of groups to be discovered:', end=' ')
+        num_groups = input()
+        num_groups = num_groups[1:-1].split(',')
+        num_groups = range(int(num_groups[0]), int(num_groups[1]))
 
         # build profiles
         from ResourceProfiler.raw_profiler import performer_activity_frequency
@@ -215,8 +219,10 @@ if __name__ == '__main__':
         '''
 
     elif mining_option == 6:
-        print('Input a integer for the desired number of groups to be discovered:', end=' ')
-        num_groups = int(input())
+        print('Input the desired range (e.g. [low, high)) of number of groups to be discovered:', end=' ')
+        num_groups = input()
+        num_groups = num_groups[1:-1].split(',')
+        num_groups = range(int(num_groups[0]), int(num_groups[1]))
 
         # build profiles
         from ResourceProfiler.raw_profiler import performer_activity_frequency

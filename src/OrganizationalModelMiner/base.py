@@ -50,13 +50,13 @@ class OrganizationalModel:
         og: iterator
             The ids of resources to be added as a resource group.
         exec_modes: iterator
-            The execution modes corresponding to the og.
+            The execution modes corresponding to the group.
 
         Returns
         -------
         '''
         self._rg_id += 1
-        self._rg[self._rg_id] = dict()
+        self._rg[self._rg_id] = '' # TODO
 
         self._mem[self._rg_id] = set()
         # two-way dict here
@@ -66,9 +66,9 @@ class OrganizationalModel:
 
         # another two-way dict here
         self._cap[self._rg_id] = set()
-        for cap in exec_modes:
-            self._cap[self._rg_id].add(cap)
-            self._rcap[cap].add(self._rg_id)
+        for m in exec_modes:
+            self._cap[self._rg_id].add(m)
+            self._rcap[m].add(self._rg_id)
         
         return
 
@@ -99,8 +99,7 @@ class OrganizationalModel:
         return frozenset(self._rmem.keys())
 
     def find_groups(self, r):
-        '''Query the membership (i.e. belonging to which groups) of a resource
-        given its identifier.
+        '''Query the groups that contain a resource given its identifier.
 
         Parameters
         ----------
@@ -133,13 +132,13 @@ class OrganizationalModel:
 
         Parameters
         ----------
-        exec_mode: set of 3-tuples
-            The identifier of a resource given.
+        exec_mode: 3-tuple
+            The execution mode given.
 
         Returns
         -------
         list of frozensets
-            The groups which is capable of this execution mode.
+            The groups which are capable of this execution mode.
         '''
         return [frozenset(self._mem[rg_id]) for rg_id in self._rcap[exec_mode]]
 

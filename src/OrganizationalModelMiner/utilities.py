@@ -7,7 +7,7 @@ mining methods.
 
 def cross_validation_score(
         X, miner, miner_params,
-        proximity_metric='euclidean', cv_fold=10):
+        proximity_metric='euclidean', cv_fold=0.25):
     '''
     This method implements the cross validation strategy for determining an
     appropriate number of clusters ('K') for organizational model miners that
@@ -25,9 +25,11 @@ def cross_validation_score(
             proximity. Refer to scipy.spatial.distance.pdist for more detailed
             explanation. This should be consistent with that employed within
             the mining method.
-        cv_fold: int, optional
-            The number of folds to be used for cross validation. The default
-            number of folds is 10. 
+        cv_fold: int, or float in (0, 1)
+            The number of folds to be used for cross validation. If an integer
+            K is given, then K is used as the fold number; if a floating number
+            P is given, then (P * 100)% data will be used as the test fold,
+            which means that the fold number will be approximately (1 / P).
     Returns:
         score: float
             The result validation score.
@@ -40,7 +42,9 @@ def cross_validation_score(
     from numpy.random import shuffle
     shuffle(index)
     from numpy import array_split
-    index_folds = array_split(index, cv_fold)
+    if type(cv_fold) is float and 0 < cv_fold and cv_fold < 1.0:
+        cv_fold = int(1.0 / cv_fold)
+    index_folds = array_split(index, cv_fold)    
 
     from numpy import array, mean # TODO: different definition of centroids
     from scipy.spatial.distance import cdist
@@ -67,7 +71,7 @@ def cross_validation_score(
         for ix in test_set_index:
             x = X.loc[ix].values.reshape((1, len(X.loc[ix])))
             sum_closest_proximity += min(
-                    cdist(x, cluster_centroids, metric=proximity_metric))
+                    cdist(x, cluster_centroids, metric=proximity_metric)[0])
         scores.append((-1) * sum_closest_proximity)
 
     return mean(scores)

@@ -128,7 +128,7 @@ def gmm(
         profiles: DataFrame
             With resource ids as indices and activity names as columns, this
             DataFrame contains profiles of the specific resources.
-        n_groups: int, or iterator
+        n_groups: iterable
             The (range of) number of groups to be discovered.
         threshold: float, optional
             The threshold value for determining the resource membership. If
@@ -145,18 +145,30 @@ def gmm(
         best_ogs: list of frozensets
             A list of organizational groups.
     '''
-    if type(n_groups) is int:
-        return _gmm(profiles, n_groups, threshold, cov_type, warm_start_input_fn)
+    if len(n_groups) == 1:
+        return _gmm(profiles, n_groups[0], threshold, cov_type, warm_start_input_fn)
     else:
-        best_ogs = None
+        from OrganizationalModelMiner.utilities import cross_validation_score
+        best_k = -1
         best_score = float('-inf')
         for k in n_groups:
-            #TODO: calculate the scores
+            score = cross_validation_score(
+                X=profiles, miner=_gmm,
+                miner_params={
+                    'n_groups': k,
+                    'threshold': threshold,
+                    'cov_type': cov_type,
+                    'warm_start_input_fn': warm_start_input_fn
+                },
+                proximity_metric='euclidean'
+            )
             if score > best_score:
                 best_score = score
-                best_ogs = cand_ogs
-        print('Selected "K" = {}'.format(len(best_ogs)))
-        return best_ogs
+                best_k = k
+
+        print('-' * 80)
+        print('Selected "K" = {}'.format(best_k))
+        return _gmm(profiles, best_k, threshold, cov_type, warm_start_input_fn)
 
 def _moc(
         profiles, n_groups,
@@ -246,7 +258,7 @@ def moc(
         profiles: DataFrame
             With resource ids as indices and activity names as columns, this
             DataFrame contains profiles of the specific resources.
-        n_groups: int, or iterator
+        n_groups: iterable
             The (range of) number of groups to be discovered.
         warm_start_input_fn: str, optional
             Filename of the initial guess of clustering.
@@ -255,18 +267,28 @@ def moc(
         best_ogs: list of frozensets
             A list of organizational groups.
     '''
-    if type(n_groups) is int:
-        return _moc(profiles, n_groups, warm_start_input_fn)
+    if len(n_groups) == 1:
+        return _moc(profiles, n_groups[0], warm_start_input_fn)
     else:
-        best_ogs = None
+        from OrganizationalModelMiner.utilities import cross_validation_score
+        best_k = -1
         best_score = float('-inf')
         for k in n_groups:
-            #TODO: calculate the scores
+            score = cross_validation_score(
+                X=profiles, miner=_moc,
+                miner_params={
+                    'n_groups': k,
+                    'warm_start_input_fn': warm_start_input_fn
+                },
+                proximity_metric='euclidean'
+            )
             if score > best_score:
                 best_score = score
-                best_ogs = cand_ogs
-        print('Selected "K" = {}'.format(len(best_ogs)))
-        return best_ogs
+                best_k = k
+
+        print('-' * 80)
+        print('Selected "K" = {}'.format(best_k))
+        return _moc(profiles, best_k, warm_start_input_fn)
 
 def _fcm(
         profiles, n_groups,
@@ -368,7 +390,7 @@ def fcm(
         profiles: DataFrame
             With resource ids as indices and activity names as columns, this
             DataFrame contains profiles of the specific resources.
-        n_groups: int, or iterator
+        n_groups: iterable
             The (range of) number of groups to be discovered.
         threshold: float, optional
             The threshold value for determining the resource membership. If
@@ -384,16 +406,27 @@ def fcm(
         list of frozensets
             A list of organizational groups.
     '''
-    if type(n_groups) is int:
-        return _fcm(profiles, n_groups, threshold, warm_start_input_fn)
+    if len(n_groups) == 1:
+        return _fcm(profiles, n_groups[0], threshold, warm_start_input_fn)
     else:
-        best_ogs = None
+        from OrganizationalModelMiner.utilities import cross_validation_score
+        best_k = -1
         best_score = float('-inf')
         for k in n_groups:
-            #TODO: calculate the scores
+            score = cross_validation_score(
+                X=profiles, miner=_fcm,
+                miner_params={
+                    'n_groups': k,
+                    'threshold': threshold,
+                    'warm_start_input_fn': warm_start_input_fn
+                },
+                proximity_metric='euclidean'
+            )
             if score > best_score:
                 best_score = score
-                best_ogs = cand_ogs
-        print('Selected "K" = {}'.format(len(best_ogs)))
-        return best_ogs
+                best_k = k
+
+        print('-' * 80)
+        print('Selected "K" = {}'.format(best_k))
+        return _fcm(profiles, best_k, threshold, warm_start_input_fn)
 

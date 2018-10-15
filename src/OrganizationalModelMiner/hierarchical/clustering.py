@@ -73,7 +73,7 @@ def ahc(
         profiles: DataFrame
             With resource ids as indices and activity names as columns, this
             DataFrame contains profiles of the specific resources.
-        n_groups: int, or iterable
+        n_groups: iterable
             The (range of) number of groups to be discovered.
         method: str, optional
             Choice of methods for calculating the newly formed cluster and 
@@ -94,8 +94,8 @@ def ahc(
             rows and 5 columns in the DataFrame, and the values should be in
             range of 0 to 7.
     '''
-    if type(n_groups) is int:
-        return _ahc(profiles, n_groups, method, metric)
+    if len(n_groups) == 1:
+        return _ahc(profiles, n_groups[0], method, metric)
     else:
         from OrganizationalModelMiner.utilities import cross_validation_score
         best_k = -1

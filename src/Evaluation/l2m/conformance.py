@@ -81,31 +81,27 @@ def precision(rl, om):
     '''
     conformed_events = rl[rl.apply(
         lambda e: _is_conformed_event(e, om), axis=1)]
+    n_conformed_events = len(conformed_events) # "|E_conf|"
     
-    counts = list() # list of "cand(e)"
-    cand_all = set() # "cand(E)"
+    l_n_cand_e = list() # list of "cand(e)"
+    cand_E = set()
     for event in conformed_events.itertuples():
         m = (event.case_type, event.activity_type, event.time_type)
-
         cand_groups = om.get_candidate_groups(m)
-        cand_res = frozenset.union(*cand_groups)
-        cand_all.update(cand_res)
 
-        counts.append(len(cand_res)) # "|cand(e)|"
+        cand_e = frozenset.union(*cand_groups) # cand(e)
+        l_n_cand_e.append(len(cand_e)) # "|cand(e)|"
+        cand_E.update(cand_e) # update cand(E) by union with cand(e)
 
+    n_cand_E = len(cand_E) # "|cand(E)|"
 
-    n_conformed_events = len(conformed_events) # "|E_conf|"
-
-    n_cand_all = len(cand_all) # "|cand(E)|"
-    if n_cand_all <= 1:
+    if n_cand_E <= 1:
         print('[Warning] Number of overall set of candidate resources is '
-              '{}.'.format(n_cand_all))
+              '{}.'.format(n_cand_E))
         return 1.0
     else:
-        prec_sum = 0.0
-        for n_cand_res in counts:
-            prec_sum += ((n_cand_all - n_cand_res) / (n_cand_all - 1)
-                    if n_cand_all > 1 else 0)
+        prec_sum = sum(
+            [(n_cand_E - n_cand_e) / (n_cand_E - 1) for n_cand_e in l_n_cand_e])
         return prec_sum / n_conformed_events
 
 # This is rather trivial ... (Should it even be implemented as a method?)

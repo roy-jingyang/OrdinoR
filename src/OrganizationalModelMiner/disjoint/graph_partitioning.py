@@ -44,20 +44,24 @@ def _mja(
     edges_sorted = sorted(sn.edges.data('weight'), key=itemgetter(2))
     from networkx import (
             restricted_view, connected_components, number_connected_components)
-    # TODO: speed up the search
-    for i in range(len(edges_sorted)):
+    # search the cut edge using bisection (i.e. binary search)
+    lo = 0
+    hi = len(edges_sorted)
+    while lo < hi:
+        mid = (lo + hi) // 2
         sub_sn = restricted_view(
-                sn, nodes=[], edges=[(u, v) for u, v, w in edges_sorted[:i]])
-        if number_connected_components(sub_sn) == n_groups:
-            ogs = list()
-            for comp in connected_components(sub_sn):
-                ogs.append(frozenset(comp))
-            print('{} organizational groups discovered.'.format(len(ogs)))
-            return ogs
+            sn, nodes=[], edges=[(u, v) for u, v, w in edges_sorted[:mid]])
+        if number_connected_components(sub_sn) < n_groups:
+            lo = mid + 1
         else:
-            pass
-
-    return None
+            hi = mid
+    sub_sn = restricted_view(
+        sn, nodes=[], edges=[(u, v) for u, v, w in edges_sorted[:lo]])
+    ogs = list()
+    for comp in connected_components(sub_sn):
+        ogs.append(frozenset(comp))
+    print('{} organizational groups discovered.'.format(len(ogs)))
+    return ogs
 
 # TODO
 def mja(
@@ -72,7 +76,7 @@ def mja(
         profiles: DataFrame
             With resource ids as indices and activity names as columns, this
             DataFrame contains profiles of the specific resources.
-        n_groups: int, or iterator
+        n_groups: iterable
             The (range of) number of groups to be discovered.
         metric: str, optional
             Choice of metrics for measuring the distance while calculating the
@@ -84,14 +88,13 @@ def mja(
         best_ogs: list of frozensets
             A list of organizational groups.
     '''
-    if type(n_groups) is int:
-        return _mja(profiles, n_groups, metric, use_log_scale)
+    if len(n_groups) == 1:
+        return _mja(profiles, n_groups[0], metric, use_log_scale)
     else:
         from OrganizationalModelMiner.utilities import cross_validation_score
         best_k = -1
         best_score = float('-inf')
         for k in n_groups:
-            #TODO: calculate the scores
             score = cross_validation_score(
                 X=profiles, miner=_mja,
                 miner_params={
@@ -104,6 +107,7 @@ def mja(
             if score > best_score:
                 best_score = score
                 best_k = k
+
         print('-' * 80)
         print('Selected "K" = {}'.format(best_k))
         return _mja(profiles, best_k, metric, use_log_scale)
@@ -158,8 +162,8 @@ def mjc(
     Params:
         el: DataFrame
             The imported event log.
-        n_groups: int or iterator
-            The number of groups to be discovered.
+        n_groups: iterable
+            The (range of) number of groups to be discovered.
     Returns:
         best_ogs: list of frozensets
             A list of organizational groups.
