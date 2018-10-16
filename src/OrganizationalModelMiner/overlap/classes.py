@@ -90,7 +90,7 @@ class MOC:
             delta_log_likelihood = infty
             converged = False
 
-            print('Fitting MOC model-{}:'.format(init + 1), end=' ')
+            #print('Fitting MOC model-{}:'.format(init + 1), end=' ')
             while not converged:
                 iteration += 1
                 if iteration >= self.max_iter:
@@ -103,7 +103,7 @@ class MOC:
                 prev_log_likelihood = current_log_likelihood
 
                 # Alternate between updating M and A
-                # update A: assume loss function sqaured Euclidean Distance
+                # update A: assume loss function squared Euclidean Distance
                 pinv_M = pinv(M) 
                 A = dot(pinv_M, X)
 
@@ -142,7 +142,7 @@ class MOC:
                     break
 
             if is_valid:
-                print('Final score =\t{:.8f}'.format(current_log_likelihood))
+                #print('Final score =\t{:.8f}'.format(current_log_likelihood))
                 if best_score is None or current_log_likelihood > best_score:
                     best_score = current_log_likelihood
                     best_M = M.copy()
@@ -319,35 +319,24 @@ class FCM:
         When p gets larger, the partitions grow fuzzier (approaching global
         centroid).
 
-    threshold: float, or str, optional
-        The threshold value for converting the output result as a crisp
-        assignment. The default is None, meaning that a fuzzy assignment will
-        be returned.
-        The valid input value for threshold should be in range [0, 1].
-        User can also leave the choice of threshold to be randomly generated,
-        by specifying this parameter as a string 'random'; or can specifying it
-        as a string 'disjoint', which results in the reduced disjoint results.
-
     n_init: int, defaults to 1.
         The number of initializations to perform. The best results are kept.
         This parameter would be override if means_init is present.
 
-    max_iter: int, defaults to 10e4.
+    max_iter: int, defaults to 100.
         The number of iterative alternating updates to run.
 
     means_init: array-like, shape (n_components, n_features), optional
         The user-provided initial guess of centroids.
         If None, random initialization is used and assigns random-valued 
         weights for samples.
-
     '''
     def __init__(self,
-            n_components=1, tol=1e-6, p=2, threshold=None,
-            n_init=1, max_iter=10e4, means_init=None):
+            n_components=1, tol=1e-6, p=2, n_init=1, max_iter=100,
+            means_init=None):
         self.n_components = n_components
         self.tol = tol
         self.p = p
-        self.threshold = threshold
         self.n_init = n_init if means_init is None else 1
         self.max_iter = max_iter
         self.means_init = means_init
@@ -378,19 +367,20 @@ class FCM:
                 w = zeros((len(X), self.n_components))
                 exp = 1 / (self.p - 1)
                 for i in range(len(X)):
-                    for j in range(self.n_components):
-                        sqd_xi_cj = power(dist(X[i,:], self.means_init[j,:]), 2)
-                        if sqd_xi_cj == 0:
-                            # special case: current data point is the centroid
-                            w[i,j] = 1.0
-                        else:
+                    l_sqd_xi_c = [power(dist(X[i,:], self.means_init[q,:]), 2)
+                            for q in range(self.n_components)]
+                    if 0.0 in l_sqd_xi_c:
+                        # special case: current point is one of the centroids
+                        cntr_cluster_ix = l_sqd_xi_c.index(0.0)
+                        w[i,cntr_cluster_ix] = 1.0 # leave others 0
+                    else:
+                        for j in range(self.n_components):
+                            sqd_xi_cj = power(dist(X[i,:], self.means_init[j,:]), 2)
                             w[i,j] = (
                                     power((1 / sqd_xi_cj), exp)
-                                    /
-                                    sum([power(
+                                    / sum([power(
                                         (1 / power(dist(X[i,:], self.means_init[q,:]), 2)), 
-                                        exp) for q in range(self.n_components)])
-                                    )
+                                        exp) for q in range(self.n_components)]))
             else:
                 # random init, constraint: row sum = 1.0
                 w = list()
@@ -406,7 +396,7 @@ class FCM:
             delta_sse = infty
             converged = False
 
-            print('Fitting FCM model-{}:'.format(init + 1), end=' ')
+            #print('Fitting FCM model-{}:'.format(init + 1), end=' ')
             while not converged:
                 if iteration >= self.max_iter:
                     iteration += 1
@@ -457,30 +447,7 @@ class FCM:
                         w = prev_w.copy()
                     #print('\nModel converged with ', end='')
 
-            # determine crisp/fuzzy assignment
-            if self.threshold is None:
-                # fuzzy output
-                pass
-            else:
-                crisp_w = list()
-                # crisp output
-                if self.threshold == 'random':
-                    # randomly determined
-                    for i in range(len(w)):
-                        w_row = w[i,:]
-                        th = choice(w_row[w_row != 0])
-                        crisp_w.append(array([p >= th for p in w_row]))
-                elif self.threshold == 'disjoint':
-                    # the reduced case
-                    for i in range(len(w)):
-                        th = amax(w[i,:])
-                        crisp_w.append(array([p >= th for p in w[i,:]]))
-                else:
-                    th = float(self.threshold)
-                    for i in range(len(w)):
-                        crisp_w.append(array([p >= th for p in w[i,:]]))
-                w = array(crisp_w)
-                    
+            # check if the solution is valid
             is_valid = True
             for j in range(self.n_components):
                 if not w[:,j].any():
@@ -488,7 +455,7 @@ class FCM:
                     break
 
             if is_valid:
-                print('Final SSE =\t{:.8f}'.format(current_sse))
+                #print('Final SSE =\t{:.8f}'.format(current_sse))
                 if best_sse is None or current_sse < best_sse:
                     best_sse = current_sse
                     best_w = w.copy()

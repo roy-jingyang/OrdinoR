@@ -13,7 +13,7 @@ Methods include:
 
 def _gmm(
         profiles, n_groups,
-        threshold=None, cov_type='spherical', warm_start_input_fn=None): 
+        threshold=None, init='random', n_init=500): 
     '''
     This method implements the algorithm of using Gaussian Mixture Model
     for mining an overlapping organizational model from the given event log.
@@ -26,82 +26,74 @@ def _gmm(
             The number of groups to be discovered.
         threshold: float, optional
             The threshold value for determining the resource membership. If
-            none is given, then the algorithm produces a disjoint partition as
-            result.
-        cov_type: str, optional
-            String describing the type of covariance parameters to use. The
-            default is 'spherical'.For detailed explanation, see
-            http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture.html
-        warm_start_input_fn: str, optional
-            Filename of the initial guess of clustering.
-            The default is None, meaning warm start is NOT used.
+            none is given, then a random number (ranged [0, 1]) is used.
+        init: str, optional
+            The strategy used for initialization. The default is to use random
+            initialization. Other options include:
+                - 'mja': Use the mining method of 'Metric based on Joint 
+                Activities' as initialization method.
+                - 'ahc': Use the (hierarchical) method of 'Agglomerative
+                  Hierarchical Clustering' as initialization method.
+            Note taht if an option other than 'random' is specified, then the
+            initialization is performed once only.
+        n_init: int, optional
+            The number of times of random initialization (if specified)
+            performed before training the clustering model, ranged [1, +inf).
+            The default is 500.
     Returns:
         list of frozensets
             A list of organizational groups.
     '''
-
-    from collections import defaultdict
-
     print('Applying overlapping organizational model mining using ' +
             'clustering-based GMM:')
-    # step 1. Importing warm-start (initial guess of clustering) from file
-    gmm_warm_start = (warm_start_input_fn is not None)
-    if gmm_warm_start:
-        from csv import reader
-        with open(warm_start_input_fn, 'r') as f:
-            is_header = True
-            init_groups = defaultdict(lambda: set())
-            count_groups = 0
-            for row in reader(f):
-                if is_header:
-                    is_header = False
-                else:
-                    group_id = row[0]
-                    for r in row[-1].split(';'):
-                        init_groups[group_id].add(r)
-                    count_groups += 1
 
-        if n_groups != count_groups:
-            print('[Warning] Inequal group size {} != {}.'.format(
-                n_groups, count_groups))
+    # step 0. Perform specific initialization method (if given)
+    if init in ['mja', 'ahc']:
+        warm_start = True
+        if init == 'mja':
+            from OrganizationalModelMiner.disjoint.graph_partitioning import (
+                    _mja)
+            init_groups = _mja(profiles, n_groups)  
+        elif init == 'ahc':
+            from OrganizationalModelMiner.hierarchical.clustering import _ahc
+            init_groups, _ = _ahc(profiles, n_groups)
         else:
-            print('Initial guess imported from file "{}".'.format(
-                warm_start_input_fn))
+            exit(1)
+        print('Initialization done by using {}:'.format(init))
+    elif init == 'random':
+        warm_start = False
+    else:
+        exit('[Error] Unrecognized parameter "{}".'.format(init))
 
-    # step a2. Training the model
+    # step 1. Train the model
     from sklearn.mixture import GaussianMixture
-    if gmm_warm_start:
-        init_wt = [1.0 / n_groups] * n_groups
+    if warm_start:
         from numpy import mean
         init_means = list()
-        for k in sorted(init_groups.keys()):
-            init_means.append(mean(
-                profiles.loc[list(init_groups[k])].values, axis=0))
+        for g in init_groups:
+            init_means.append(mean(profiles.loc[list(g)].values, axis=0))
         gmm_model = GaussianMixture(
                 n_components=n_groups,
-                covariance_type=cov_type,
+                tol=1e-6,
                 n_init=1,
-                weights_init=init_wt,
+                weights_init=[1.0 / n_groups] * n_groups,
                 means_init=init_means).fit(profiles.values)
     else:
         gmm_model = GaussianMixture(
                 n_components=n_groups,
-                covariance_type=cov_type,
-                n_init=50,
+                tol=1e-6,
+                n_init=n_init,
                 init_params='random').fit(profiles.values)
 
-    # step a3. Deriving the clusters as the end result
+    # step 2. Derive the clusters as the end result
     posterior_pr = gmm_model.predict_proba(profiles)
-    from numpy import array, amax, nonzero, argmax
+
+    from numpy import array, nonzero, argmax
     from numpy.random import choice
-    groups = defaultdict(lambda: set())
-    # TODO: more pythonic way required
-    for i in range(len(posterior_pr)):
-        resource_postpr = posterior_pr[i]
+    from collections import defaultdict
+    groups = defaultdict(set)
+    for i, resource_postpr in enumerate(posterior_pr):
         if threshold is None:
-            # TODO: is_disjoint option
-            #threshold = amax(resource_postpr)
-            # TODO: randomly select a threshold
             threshold = choice(resource_postpr[resource_postpr != 0])
         membership = array([p >= threshold for p in resource_postpr])
 
@@ -118,7 +110,7 @@ def _gmm(
 
 def gmm(
         profiles, n_groups,
-        threshold=None, cov_type='spherical', warm_start_input_fn=None): 
+        threshold=None, init='random', n_init=500): 
     '''
     This method is just a wrapper function of the one above, which allows a
     range of expected number of organizational groups to be specified rather
@@ -132,21 +124,26 @@ def gmm(
             The (range of) number of groups to be discovered.
         threshold: float, optional
             The threshold value for determining the resource membership. If
-            none is given, then the algorithm produces a disjoint partition as
-            result.
-        cov_type: str, optional
-            String describing the type of covariance parameters to use. The
-            default is 'spherical'.For detailed explanation, see
-            http://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture.html
-        warm_start_input_fn: str, optional
-            Filename of the initial guess of clustering.
-            The default is None, meaning warm start is NOT used.
+            none is given, then a random number (ranged [0, 1]) is used.
+        init: str, optional
+            The strategy used for initialization. The default is to use random
+            initialization. Other options include:
+                - 'mja': Use the mining method of 'Metric based on Joint 
+                Activities' as initialization method.
+                - 'ahc': Use the (hierarchical) method of 'Agglomerative
+                  Hierarchical Clustering' as initialization method.
+            Note taht if an option other than 'random' is specified, then the
+            initialization is performed once only.
+        n_init: int, optional
+            The number of times of random initialization (if specified)
+            performed before training the clustering model, ranged [1, +inf).
+            The default is 500.
     Returns:
-        best_ogs: list of frozensets
+        list of frozensets
             A list of organizational groups.
     '''
     if len(n_groups) == 1:
-        return _gmm(profiles, n_groups[0], threshold, cov_type, warm_start_input_fn)
+        return _gmm(profiles, n_groups[0], threshold, init, n_init)
     else:
         from OrganizationalModelMiner.utilities import cross_validation_score
         best_k = -1
@@ -157,8 +154,8 @@ def gmm(
                 miner_params={
                     'n_groups': k,
                     'threshold': threshold,
-                    'cov_type': cov_type,
-                    'warm_start_input_fn': warm_start_input_fn
+                    'init': init,
+                    'n_init': n_init
                 },
                 proximity_metric='euclidean'
             )
@@ -168,11 +165,11 @@ def gmm(
 
         print('-' * 80)
         print('Selected "K" = {}'.format(best_k))
-        return _gmm(profiles, best_k, threshold, cov_type, warm_start_input_fn)
+        return _gmm(profiles, best_k, threshold, init, n_init)
 
 def _moc(
         profiles, n_groups,
-        warm_start_input_fn=None):
+        init='random', n_init=500):
     '''
     This method implements the algorithm of using Model-based Overlapping
     Clustering for mining an overlapping organizational model from the given
@@ -184,56 +181,63 @@ def _moc(
             DataFrame contains profiles of the specific resources.
         n_groups: int
             The number of groups to be discovered.
-        warm_start_input_fn: str, optional
-            Filename of the initial guess of clustering.
-            The default is None, meaning warm start is NOT used.
+        init: str, optional
+            The strategy used for initialization. The default is to use random
+            initialization. Other options include:
+                - 'mja': Use the mining method of 'Metric based on Joint 
+                Activities' as initialization method.
+                - 'ahc': Use the (hierarchical) method of 'Agglomerative
+                  Hierarchical Clustering' as initialization method.
+            Note taht if an option other than 'random' is specified, then the
+            initialization is performed once only.
+        n_init: int, optional
+            The number of times of random initialization (if specified)
+            performed before training the clustering model, ranged [1, +inf).
+            The default is 500.
     Returns:
         list of frozensets
             A list of organizational groups.
     '''
-
     print('Applying overlapping organizational model mining using ' + 
             'clustering-based MOC:')
-    # step 1. Importing warm-start (initial guess of clustering from file
-    moc_warm_start = (warm_start_input_fn is not None)
-    if moc_warm_start:
+    # step 0. Perform specific initialization method (if given)
+    if init in ['mja', 'ahc']:
+        warm_start = True
         from numpy import zeros
         from pandas import DataFrame
         m = DataFrame(zeros((len(profiles), n_groups)), index=profiles.index)
-        from csv import reader
-        with open(warm_start_input_fn, 'r') as f:
-            is_header = True
-            count_groups = 0
-            for row in reader(f):
-                if is_header:
-                    is_header = False
-                else:
-                    for r in row[-1].split(';'):
-                        m.loc[r][count_groups] = 1 # equals to m[i,j]
-                    count_groups += 1
-        if n_groups != count_groups:
-            print('[Warning] Inequal group size {} != {}.'.format(
-                n_groups, count_groups))
+        if init == 'mja':
+            from OrganizationalModelMiner.disjoint.graph_partitioning import (
+                    _mja)
+            init_groups = _mja(profiles, n_groups)  
+        elif init == 'ahc':
+            from OrganizationalModelMiner.hierarchical.clustering import _ahc
+            init_groups, _ = _ahc(profiles, n_groups)
         else:
-            print('Initial guess imported from file "{}".'.format(
-                warm_start_input_fn))
+            exit(1)
+        print('Initialization done by using {}:'.format(init))
 
-    # step 2. Training the model
-    from .classes import MOC
-    if moc_warm_start:
-        moc_model = MOC(n_components=n_groups, M_init=m.values)
+        for i, g in enumerate(init_groups):
+            for r in g:
+                m.loc[r][i] = 1 # set the membership matrix as init input
+    elif init == 'random':
+        warm_start = False
     else:
-        # TODO: is_disjoint option
-        #moc_model = MOC(n_components=n_groups, n_init=50, is_disjoint=True)
-        moc_model = MOC(n_components=n_groups, n_init=50)
+        exit('[Error] Unrecognized parameter "{}".'.format(init))
 
+    # step 1. Train the model
+    from .classes import MOC
+    if warm_start:
+        moc_model = MOC(n_components=n_groups, M_init=m.values, n_init=1)
+    else:
+        moc_model = MOC(n_components=n_groups, n_init=n_init)
+
+    # step 2. Derive the clusters as the end result
     mat_membership = moc_model.fit_predict(profiles.values)
 
-    # step 3. Deriving the clusters as the end result
     from numpy import nonzero
     from collections import defaultdict
-    groups = defaultdict(lambda: set())
-    # TODO: more pythonic way required
+    groups = defaultdict(set)
     for i in range(len(mat_membership)):
         # check if any valid membership exists for the resource based on
         # the results predicted by the obtained MOC model
@@ -248,7 +252,7 @@ def _moc(
 
 def moc(
         profiles, n_groups,
-        warm_start_input_fn=None):
+        init='random', n_init=500):
     '''
     This method is just a wrapper function of the one above, which allows a
     range of expected number of organizational groups to be specified rather
@@ -260,15 +264,25 @@ def moc(
             DataFrame contains profiles of the specific resources.
         n_groups: iterable
             The (range of) number of groups to be discovered.
-        warm_start_input_fn: str, optional
-            Filename of the initial guess of clustering.
-            The default is None, meaning warm start is NOT used.
+        init: str, optional
+            The strategy used for initialization. The default is to use random
+            initialization. Other options include:
+                - 'mja': Use the mining method of 'Metric based on Joint 
+                Activities' as initialization method.
+                - 'ahc': Use the (hierarchical) method of 'Agglomerative
+                  Hierarchical Clustering' as initialization method.
+            Note taht if an option other than 'random' is specified, then the
+            initialization is performed once only.
+        n_init: int, optional
+            The number of times of random initialization (if specified)
+            performed before training the clustering model, ranged [1, +inf).
+            The default is 500.
     Returns:
-        best_ogs: list of frozensets
+        list of frozensets
             A list of organizational groups.
     '''
     if len(n_groups) == 1:
-        return _moc(profiles, n_groups[0], warm_start_input_fn)
+        return _moc(profiles, n_groups[0], init, n_init)
     else:
         from OrganizationalModelMiner.utilities import cross_validation_score
         best_k = -1
@@ -278,7 +292,8 @@ def moc(
                 X=profiles, miner=_moc,
                 miner_params={
                     'n_groups': k,
-                    'warm_start_input_fn': warm_start_input_fn
+                    'init': init,
+                    'n_init': n_init
                 },
                 proximity_metric='euclidean'
             )
@@ -288,11 +303,11 @@ def moc(
 
         print('-' * 80)
         print('Selected "K" = {}'.format(best_k))
-        return _moc(profiles, best_k, warm_start_input_fn)
+        return _moc(profiles, best_k, init, n_init)
 
 def _fcm(
         profiles, n_groups,
-        threshold=None, warm_start_input_fn=None):
+        threshold=None, init='random', n_init=500): 
     '''
     This method implements the algorithm of using Fuzzy c-Means for mining an
     overlapping organizational model from the given event log.
@@ -305,14 +320,20 @@ def _fcm(
             The number of groups to be discovered.
         threshold: float, optional
             The threshold value for determining the resource membership. If
-            none is given, then the algorithm produces a disjoint partition as
-            result.
-        warm_start_input_fn: str, optional
-            Filename of the initial guess of clustering. The file should be
-            formatted as:
-                Group ID, resource; resource; ...
-            with each line in the CSV file representing a group.
-            The default is None, meaning warm start is NOT used.
+            none is given, then a random number (ranged [0, 1]) is used.
+        init: str, optional
+            The strategy used for initialization. The default is to use random
+            initialization. Other options include:
+                - 'mja': Use the mining method of 'Metric based on Joint 
+                Activities' as initialization method.
+                - 'ahc': Use the (hierarchical) method of 'Agglomerative
+                  Hierarchical Clustering' as initialization method.
+            Note taht if an option other than 'random' is specified, then the
+            initialization is performed once only.
+        n_init: int, optional
+            The number of times of random initialization (if specified)
+            performed before training the clustering model, ranged [1, +inf).
+            The default is 500.
     Returns:
         list of frozensets
             A list of organizational groups.
@@ -320,67 +341,67 @@ def _fcm(
     print('Applying overlapping organizational model mining using ' +
             'clustering-based FCM:')
 
-    from collections import defaultdict
-
-    # step 1. Importing warm-start (initial guess of clustering) from file
-    fcm_warm_start = (warm_start_input_fn is not None)
-    if fcm_warm_start:
-        from csv import reader
-        with open(warm_start_input_fn, 'r') as f:
-            is_header = True
-            init_groups = defaultdict(lambda: set())
-            count_groups = 0
-            for row in reader(f):
-                if is_header:
-                    is_header = False
-                else:
-                    group_id = row[0]
-                    for r in row[-1].split(';'):
-                        init_groups[group_id].add(r)
-                    count_groups += 1
-
-        if n_groups != count_groups:
-            print('[Warning] Inequal group size {} != {}.'.format(
-                n_groups, count_groups))
+    # step 0. Perform specific initialization method (if given)
+    if init in ['mja', 'ahc']:
+        warm_start = True
+        if init == 'mja':
+            from OrganizationalModelMiner.disjoint.graph_partitioning import (
+                    _mja)
+            init_groups = _mja(profiles, n_groups)  
+        elif init == 'ahc':
+            from OrganizationalModelMiner.hierarchical.clustering import _ahc
+            init_groups, _ = _ahc(profiles, n_groups)
         else:
-            print('Initial guess imported from file "{}".'.format(
-                warm_start_input_fn))
+            exit(1)
+        print('Initialization done by using {}:'.format(init))
+    elif init == 'random':
+        warm_start = False
+    else:
+        exit('[Error] Unrecognized parameter "{}".'.format(init))
 
-    # step 2. Training the model and obtain the results
+    # step 1. Train the model
     from .classes import FCM
-    if fcm_warm_start:
+    if warm_start:
         from numpy import array, mean, nonzero
         init_means = list()
-        for k in sorted(init_groups.keys()):
-            init_means.append(mean(
-                profiles.loc[list(init_groups[k])].values, axis=0))
-        fcm_model = FCM(n_components=n_groups, means_init=array(init_means),
-                threshold='random')
+        for g in init_groups:
+            init_means.append(mean(profiles.loc[list(g)].values, axis=0))
+        fcm_model = FCM(
+                n_components=n_groups,
+                n_init=1,
+                means_init=array(init_means))
     else:
-        fcm_model = FCM(n_components=n_groups, n_init=50, threshold='random')
+        fcm_model = FCM(
+                n_components=n_groups,
+                n_init=n_init)
 
+    # step 2. Derive the clusters as the end result
     fpp = fcm_model.fit_predict(profiles.values)
-    
-    # step 3. Deriving the clusters as the end result
-    from numpy import array, amax, nonzero, argmax
+
+    from numpy import array, nonzero, argmax
     from numpy.random import choice
-    groups = defaultdict(lambda: set())
+    from collections import defaultdict
+    groups = defaultdict(set)
     for i in range(len(fpp)):
+        membership = fpp[i,:]
+        if threshold is None:
+            threshold = choice(membership[membership != 0])
+        membership = array([p >= threshold for p in membership])
+
         # check if any valid membership exists for the resource based on
         # the selection of the threshold
-        membership = fpp[i,:]
         if membership.any():
             for j in nonzero(membership)[0]:
                 groups[j].add(profiles.index[i])
         else: # invalid, have to choose the maximum one or missing the resource
-            groups[argmax(resource_wt)].add(profiles.index[i])
+            groups[argmax(fpp[i,:])].add(profiles.index[i])
 
     print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]
 
 def fcm(
         profiles, n_groups,
-        threshold=None, warm_start_input_fn=None):
+        threshold=None, init='random', n_init=500): 
     '''
     This method is just a wrapper function of the one above, which allows a
     range of expected number of organizational groups to be specified rather
@@ -394,20 +415,26 @@ def fcm(
             The (range of) number of groups to be discovered.
         threshold: float, optional
             The threshold value for determining the resource membership. If
-            none is given, then the algorithm produces a disjoint partition as
-            result.
-        warm_start_input_fn: str, optional
-            Filename of the initial guess of clustering. The file should be
-            formatted as:
-                Group ID, resource; resource; ...
-            with each line in the CSV file representing a group.
-            The default is None, meaning warm start is NOT used.
+            none is given, then a random number (ranged [0, 1]) is used.
+        init: str, optional
+            The strategy used for initialization. The default is to use random
+            initialization. Other options include:
+                - 'mja': Use the mining method of 'Metric based on Joint 
+                Activities' as initialization method.
+                - 'ahc': Use the (hierarchical) method of 'Agglomerative
+                  Hierarchical Clustering' as initialization method.
+            Note taht if an option other than 'random' is specified, then the
+            initialization is performed once only.
+        n_init: int, optional
+            The number of times of random initialization (if specified)
+            performed before training the clustering model, ranged [1, +inf).
+            The default is 500.
     Returns:
         list of frozensets
             A list of organizational groups.
     '''
     if len(n_groups) == 1:
-        return _fcm(profiles, n_groups[0], threshold, warm_start_input_fn)
+        return _fcm(profiles, n_groups[0], threshold, init, n_init)
     else:
         from OrganizationalModelMiner.utilities import cross_validation_score
         best_k = -1
@@ -418,7 +445,8 @@ def fcm(
                 miner_params={
                     'n_groups': k,
                     'threshold': threshold,
-                    'warm_start_input_fn': warm_start_input_fn
+                    'init': init,
+                    'n_init': n_init
                 },
                 proximity_metric='euclidean'
             )
@@ -428,5 +456,5 @@ def fcm(
 
         print('-' * 80)
         print('Selected "K" = {}'.format(best_k))
-        return _fcm(profiles, best_k, threshold, warm_start_input_fn)
+        return _fcm(profiles, best_k, threshold, init, n_init)
 

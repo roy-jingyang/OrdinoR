@@ -84,7 +84,7 @@ def _extended_modularity(g, cover):
 # 1. Clique Percolation Method (CFinder by Pallas et al.) 
 def clique_percolation(
         profiles,
-        metric='euclidean', use_log_scale=False):
+        metric='euclidean'):
     '''
     This method implements the algorithm for discovering overlapping
     organizational models using a community detection technique named clique
@@ -101,8 +101,6 @@ def clique_percolation(
             Choice of metrics for measuring the distance while calculating the
             linkage. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
-        use_log_scale: boolean
-            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         list of frozensets
             A list of organizational groups.
@@ -182,7 +180,7 @@ def clique_percolation(
 # 2. Line Graph and Link Partitioning (Appice, based on Evans and Lambiotte)
 def link_partitioning(
         profiles,
-        metric='euclidean', use_log_scale=False):
+        metric='euclidean'):
     '''
     This method implements the three-phased algorithm for discovering over-
     lapping organizational models proposed by A.Appice, which involves trans-
@@ -200,8 +198,6 @@ def link_partitioning(
             Choice of metrics for measuring the distance while calculating the
             linkage. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
-        use_log_scale: boolean
-            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         list of frozensets
             A list of organizational groups.
@@ -284,7 +280,7 @@ def link_partitioning(
 # 3. Local Expansion and Optimization (OSLOM by Lancichinetti et al.)
 def local_expansion(
         profiles,
-        metric='euclidean', use_log_scale=False):
+        metric='euclidean'):
     '''
     This method implements the algorithm for discovering overlapping
     organizational models using community detection technique named OSLOM,
@@ -301,8 +297,6 @@ def local_expansion(
             Choice of metrics for measuring the distance while calculating the
             linkage. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
-        use_log_scale: boolean
-            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         list of frozensets
             A list of organizational groups.
@@ -360,7 +354,7 @@ def local_expansion(
 # 5.1 Agent-based (COPRA by Gregory)
 def agent_copra(
         profiles,
-        metric='euclidean', use_log_scale=False):
+        metric='euclidean'):
     '''
     This method implements the algorithm for discovering overlapping
     organizational models using community detection technique named COPRA,
@@ -377,8 +371,6 @@ def agent_copra(
             Choice of metrics for measuring the distance while calculating the
             linkage. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
-        use_log_scale: boolean
-            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         list of frozensets
             A list of organizational groups.
@@ -436,7 +428,7 @@ def agent_copra(
 # TODO
 def agent_slpa(
         profiles,
-        metric='euclidean', use_log_scale=False):
+        metric='euclidean'):
     '''
     This method implements the algorithm for discovering overlapping
     organizational models using community detection technique named SLPA,
@@ -453,8 +445,6 @@ def agent_slpa(
             Choice of metrics for measuring the distance while calculating the
             linkage. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
-        use_log_scale: boolean
-            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         list of frozensets
             A list of organizational groups.

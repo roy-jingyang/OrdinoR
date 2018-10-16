@@ -29,11 +29,6 @@ node attributes as well as convenient visualization features.
 import sys
 sys.path.append('./src/')
 
-fn_setup = sys.argv[1]
-fnout = sys.argv[2]
-
-import networkx as nx
-
 def _import_block(path_invoke):
     from importlib import import_module
     module = import_module('.'.join(path_invoke.split('.')[:-1]))
@@ -43,7 +38,6 @@ def _import_block(path_invoke):
 def execute(setup, seq_ix):
     sequence = list(setup.nodes[ix] for ix in seq_ix)
     test_name = ' -> '.join(step['label'] for step in sequence)
-    print('Start test instance:\t{}'.format(test_name))
 
     # Step 0: input an event log
     step = 0
@@ -85,23 +79,21 @@ def execute(setup, seq_ix):
     precision_eval = _import_block(sequence[step]['invoke'])
     precision = precision_eval(rl, om)
 
-    # output result
-    with open(fnout, 'a') as fout:
-        fout.write(test_name)
-        fout.write('\n')
-        fout.write('\tFitness   = {:.6f}\n'.format(fitness))
-        fout.write('\tPrecision = {:.6f}\n'.format(precision))
-
-    return
+    return test_name, fitness, precision
 
 
 if __name__ == '__main__':
+    fn_setup = sys.argv[1]
+    fnout = sys.argv[2]
+    path = sys.argv[3].split(',')
+
     from networkx import read_gexf, read_graphml
-    #setup = read_gexf(sys.argv[1])
     setup = read_graphml(fn_setup)
-    test_instances = [path[1:-1] 
-            for path in nx.all_simple_paths(setup, source='0', target='13')]
 
-    for test in test_instances:
-        execute(setup, test)
+    name, f, p = execute(setup, path)
 
+    with open(fnout, 'a') as fout:
+        fout.write('{}\n'.format(name))
+        fout.write('\tFitness   = {:.6f}\n'.format(f))
+        fout.write('\tPrecision = {:.6f}\n'.format(p))
+    

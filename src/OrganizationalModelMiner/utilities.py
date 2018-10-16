@@ -46,6 +46,8 @@ def cross_validation_score(
         cv_fold = int(1.0 / cv_fold)
     index_folds = array_split(index, cv_fold)    
 
+    print('Using cross validation with {} folds:'.format(cv_fold))
+
     from numpy import array, mean # TODO: different definition of centroids
     from scipy.spatial.distance import cdist
     for i in range(cv_fold):

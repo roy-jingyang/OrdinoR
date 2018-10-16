@@ -10,7 +10,7 @@ tional models, based on the use of graph partitioning by egde removal. A graph
 
 def _mja(
         profiles, n_groups,
-        metric='euclidean', use_log_scale=False):
+        metric='euclidean'):
     '''
     This method implements the algorithm of discovering an organizational model
     using edge thresholding in a network built by metrics based on joint
@@ -26,8 +26,6 @@ def _mja(
             Choice of metrics for measuring the distance while calculating the
             proximity. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
-        use_log_scale: boolean
-            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         ogs: list of frozensets
             A list of organizational groups.
@@ -66,7 +64,7 @@ def _mja(
 # TODO
 def mja(
         profiles, n_groups,
-        metric='euclidean', use_log_scale=False):
+        metric='euclidean'):
     '''
     This method is just a wrapper function of the one above, which allows a
     range of expected number of organizational groups to be specified rather
@@ -82,14 +80,12 @@ def mja(
             Choice of metrics for measuring the distance while calculating the
             proximity. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
-        use_log_scale: boolean
-            Use the logrithm scale if the volume of work varies significantly.
     Returns:
         best_ogs: list of frozensets
             A list of organizational groups.
     '''
     if len(n_groups) == 1:
-        return _mja(profiles, n_groups[0], metric, use_log_scale)
+        return _mja(profiles, n_groups[0], metric)
     else:
         from OrganizationalModelMiner.utilities import cross_validation_score
         best_k = -1
@@ -99,8 +95,7 @@ def mja(
                 X=profiles, miner=_mja,
                 miner_params={
                     'n_groups': k,
-                    'metric': metric,
-                    'use_log_scale': use_log_scale
+                    'metric': metric
                 },
                 proximity_metric=metric
             )
@@ -110,7 +105,7 @@ def mja(
 
         print('-' * 80)
         print('Selected "K" = {}'.format(best_k))
-        return _mja(profiles, best_k, metric, use_log_scale)
+        return _mja(profiles, best_k, metric)
 
 def _mjc(
         el, n_groups):

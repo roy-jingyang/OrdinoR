@@ -59,8 +59,7 @@ if __name__ == '__main__':
         if method_option == 0:
             # build profiles
             from ResourceProfiler.raw_profiler import performer_activity_frequency
-            profiles = performer_activity_frequency(rl, use_log_scale=True)
-            #profiles = performer_activity_frequency(rl, use_log_scale=False)
+            profiles = performer_activity_frequency(rl, use_log_scale=False)
             from OrganizationalModelMiner.disjoint.graph_partitioning import (
                     mja)
             # MJA -> select metric (Euclidean distance/PCC)
@@ -72,7 +71,7 @@ if __name__ == '__main__':
             metrics = ['euclidean', 'correlation']
             ogs = mja(
                     profiles, num_groups, 
-                    metric=metrics[metric_option], use_log_scale=True)
+                    metric=metrics[metric_option])
         elif method_option == 1:
             from OrganizationalModelMiner.disjoint.graph_partitioning import (
                     mjc)
@@ -95,7 +94,7 @@ if __name__ == '__main__':
         if method_option == 0:
             # build profiles
             from ResourceProfiler.raw_profiler import performer_activity_frequency
-            profiles = performer_activity_frequency(rl, use_log_scale=True)
+            profiles = performer_activity_frequency(rl, use_log_scale=False)
             from OrganizationalModelMiner.hierarchical import clustering
             ogs, og_hcy = clustering.ahc(
                     profiles, num_groups, method='ward')
@@ -119,8 +118,7 @@ if __name__ == '__main__':
     elif mining_option == 3:
         # build profiles
         from ResourceProfiler.raw_profiler import performer_activity_frequency
-        profiles = performer_activity_frequency(rl, use_log_scale=True)
-        #profiles = performer_activity_frequency(rl, use_log_scale=False)
+        profiles = performer_activity_frequency(rl, use_log_scale=False)
 
         from OrganizationalModelMiner.overlap import community_detection
         print('Input a number to choose a method:')
@@ -133,19 +131,19 @@ if __name__ == '__main__':
         method_option = int(input())
         if method_option == 0:
             ogs = community_detection.clique_percolation(
-                    profiles, metric='correlation', use_log_scale=False)
+                    profiles, metric='correlation')
         elif method_option == 1:
             ogs = community_detection.link_partitioning(
-                    profiles, metric='correlation', use_log_scale=False)
+                    profiles, metric='correlation')
         elif method_option == 2:
             ogs = community_detection.local_expansion(
-                    profiles, metric='correlation', use_log_scale=False)
+                    profiles, metric='correlation')
         elif method_option == 3:
             ogs = community_detection.agent_copra(
-                    profiles, metric='correlation', use_log_scale=False)
+                    profiles, metric='correlation')
         elif method_option == 4:
             ogs = community_detection.agent_slpa(
-                    profiles, metric='correlation', use_log_scale=False)
+                    profiles, metric='correlation')
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
@@ -158,25 +156,18 @@ if __name__ == '__main__':
 
         # build profiles
         from ResourceProfiler.raw_profiler import performer_activity_frequency
-        profiles = performer_activity_frequency(rl, use_log_scale=True)
-        #profiles = performer_activity_frequency(rl, use_log_scale=False)
+        profiles = performer_activity_frequency(rl, use_log_scale=False)
 
         print('Input a threshold value [0, 1), in order to determine the ' +
-                'resource membership (Enter to choose the max., ' + 
-                'creating disjoint groups):', end=' ')
+                'resource membership (Enter to use a random threshold):',
+                end=' ')
         user_selected_threshold = input()
         user_selected_threshold = (float(user_selected_threshold)
                 if user_selected_threshold != '' else None)
 
-        print('Input a relative path to the file to be used for warm start: ' +
-                '(Enter if None)')
-        ws_fn = input()
-        ws_fn = None if ws_fn == '' else ws_fn
-
         from OrganizationalModelMiner.overlap.clustering import gmm
         ogs = gmm(
-                profiles, num_groups, threshold=user_selected_threshold,
-                warm_start_input_fn=ws_fn)
+                profiles, num_groups, threshold=user_selected_threshold)
 
         # TODO: Timer related
         '''
@@ -195,18 +186,11 @@ if __name__ == '__main__':
 
         # build profiles
         from ResourceProfiler.raw_profiler import performer_activity_frequency
-        profiles = performer_activity_frequency(rl, use_log_scale=True)
-        #profiles = performer_activity_frequency(rl, use_log_scale=False)
-
-        print('Input a relative path to the file to be used for warm start: ' +
-                '(Enter if None)')
-        ws_fn = input()
-        ws_fn = None if ws_fn == '' else ws_fn
+        profiles = performer_activity_frequency(rl, use_log_scale=False)
 
         from OrganizationalModelMiner.overlap.clustering import moc
         ogs = moc(
-                profiles, num_groups, 
-                warm_start_input_fn=ws_fn)
+                profiles, num_groups)
 
         # TODO: Timer related
         '''
@@ -226,26 +210,18 @@ if __name__ == '__main__':
 
         # build profiles
         from ResourceProfiler.raw_profiler import performer_activity_frequency
-        profiles = performer_activity_frequency(rl, use_log_scale=True)
-        #profiles = performer_activity_frequency(rl, use_log_scale=False)
+        profiles = performer_activity_frequency(rl, use_log_scale=False)
 
         print('Input a threshold value [0, 1), in order to determine the ' +
-                'resource membership (Enter to choose the max., ' + 
-                'creating disjoint groups):', end=' ')
+                'resource membership (Enter to use a random threshold):',
+                end=' ')
         user_selected_threshold = input()
         user_selected_threshold = (float(user_selected_threshold)
                 if user_selected_threshold != '' else None)
 
-        print('Input a relative path to the file to be used for warm start: ' +
-                '(Enter if None)')
-        ws_fn = input()
-        ws_fn = None if ws_fn == '' else ws_fn
-
         from OrganizationalModelMiner.overlap.clustering import fcm
         ogs = fcm(
-                profiles, num_groups,
-                threshold=user_selected_threshold,
-                warm_start_input_fn=ws_fn)
+                profiles, num_groups, threshold=user_selected_threshold)
 
         # TODO: Timer related
         '''
