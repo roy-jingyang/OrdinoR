@@ -245,8 +245,8 @@ if __name__ == '__main__':
     from OrganizationalModelMiner.mode_assignment import assign_by_any
     from OrganizationalModelMiner.mode_assignment import assign_by_all
     for og in ogs:
-        #om.add_group(og, assign_by_any(og, rl))
-        om.add_group(og, assign_by_all(og, rl))
+        om.add_group(og, assign_by_any(og, rl))
+        #om.add_group(og, assign_by_all(og, rl))
 
     # TODO evaluate (goes here??)
     from Evaluation.l2m import conformance

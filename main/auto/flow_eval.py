@@ -79,7 +79,7 @@ def execute(setup, seq_ix):
     precision_eval = _import_block(sequence[step]['invoke'])
     precision = precision_eval(rl, om)
 
-    return test_name, fitness, precision
+    return test_name, om.size(), fitness, precision
 
 
 if __name__ == '__main__':
@@ -90,10 +90,11 @@ if __name__ == '__main__':
     from networkx import read_gexf, read_graphml
     setup = read_graphml(fn_setup)
 
-    name, f, p = execute(setup, path)
+    name, k, f, p = execute(setup, path)
 
     with open(fnout, 'a') as fout:
         fout.write('{}\n'.format(name))
+        fout.write('\tk         = {}\n'.format(k))
         fout.write('\tFitness   = {:.6f}\n'.format(f))
         fout.write('\tPrecision = {:.6f}\n'.format(p))
     

@@ -222,6 +222,6 @@ def default_mining(rl):
     ogs = list()
     for atype, events in rl.groupby('activity_type'):
         ogs.append(frozenset(events['resource']))
-    print('{} organizational groups discovered.'.format(len(ogs)))
+    #print('{} organizational groups discovered.'.format(len(ogs)))
     return ogs
 

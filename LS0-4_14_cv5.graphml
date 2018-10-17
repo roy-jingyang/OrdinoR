@@ -32,8 +32,8 @@
 <data key="r">255</data>
 <data key="g">85</data>
 <data key="b">132</data>
-<data key="x">-2219.2407</data>
-<data key="y">-62.27153</data>
+<data key="x">-2272.3782</data>
+<data key="y">408.8792</data>
 </node>
 <node id="2">
 <data key="label">Method-1: partition based on AT </data>
@@ -61,7 +61,7 @@
 <node id="4">
 <data key="label">clustering: GMM</data>
 <data key="invoke">OrganizationalModelMiner.overlap.clustering.gmm</data>
-<data key="params">{'n_groups': range(14, 15)}</data>
+<data key="params">{'n_groups': range(4, 15)}</data>
 <data key="phase">2.2</data>
 <data key="size">25.0</data>
 <data key="r">223</data>
@@ -73,7 +73,7 @@
 <node id="5">
 <data key="label">clustering: MOC</data>
 <data key="invoke">OrganizationalModelMiner.overlap.clustering.moc</data>
-<data key="params">{'n_groups':}</data>
+<data key="params">{'n_groups': range(4, 15)}</data>
 <data key="phase">2.2</data>
 <data key="size">25.0</data>
 <data key="r">223</data>
@@ -85,7 +85,7 @@
 <node id="6">
 <data key="label">clustering: FCM</data>
 <data key="invoke">OrganizationalModelMiner.overlap.clustering.fcm</data>
-<data key="params">{'n_groups':}</data>
+<data key="params">{'n_groups': range(4, 15)}</data>
 <data key="phase">2.2</data>
 <data key="size">25.0</data>
 <data key="r">223</data>
@@ -97,7 +97,7 @@
 <node id="7">
 <data key="label">sna: Link partitioning</data>
 <data key="invoke">OrganizationalModelMiner.overlap.community_detection.link_partitioning</data>
-<data key="params">{'n_groups':, 'correlation':}</data>
+<data key="params">{ 'metric': 'correlation'}</data>
 <data key="phase">2.2</data>
 <data key="size">25.0</data>
 <data key="r">223</data>
@@ -162,7 +162,7 @@
 <node id="14">
 <data key="label">sna: MJA</data>
 <data key="invoke">OrganizationalModelMiner.disjoint.graph_partitioning.mja</data>
-<data key="params">{'n_groups': range(14, 15), 'metric': 'correlation'}</data>
+<data key="params">{'n_groups': range(4, 15), 'metric': 'correlation'}</data>
 <data key="phase">2.2</data>
 <data key="size">25.0</data>
 <data key="r">223</data>
@@ -223,6 +223,18 @@
 <data key="weight">1.0</data>
 </edge>
 <edge id="43" source="14" target="9">
+<data key="weight">1.0</data>
+</edge>
+<edge id="54" source="3" target="7">
+<data key="weight">1.0</data>
+</edge>
+<edge id="53" source="3" target="6">
+<data key="weight">1.0</data>
+</edge>
+<edge id="52" source="3" target="5">
+<data key="weight">1.0</data>
+</edge>
+<edge id="51" source="3" target="4">
 <data key="weight">1.0</data>
 </edge>
 </graph>

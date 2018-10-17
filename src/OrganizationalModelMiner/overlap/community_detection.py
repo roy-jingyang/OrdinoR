@@ -274,7 +274,7 @@ def link_partitioning(
     for i, iso_node in enumerate(original_isolates):
         groups['ISOLATE #{}'.format(i)].add(iso_node)
 
-    print('{} organizational groups discovered.'.format(len(groups.values())))
+    #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]
 
 # 3. Local Expansion and Optimization (OSLOM by Lancichinetti et al.)

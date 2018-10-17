@@ -57,7 +57,7 @@ def _ahc(
     for i in range(len(og_hcy.index)):
         groups[og_hcy.iloc[i,-1]].add(og_hcy.index[i])
 
-    print('{} organizational groups discovered.'.format(len(groups.values())))
+    #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()], og_hcy
 
 # TODO

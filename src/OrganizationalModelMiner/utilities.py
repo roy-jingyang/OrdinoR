@@ -7,7 +7,7 @@ mining methods.
 
 def cross_validation_score(
         X, miner, miner_params,
-        proximity_metric='euclidean', cv_fold=0.25):
+        proximity_metric='euclidean', cv_fold=0.2):
     '''
     This method implements the cross validation strategy for determining an
     appropriate number of clusters ('K') for organizational model miners that

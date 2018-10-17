@@ -105,7 +105,7 @@ def _gmm(
         else: # invalid, have to choose the maximum one or missing the resource
             groups[argmax(resource_postpr)].add(profiles.index[i])
 
-    print('{} organizational groups discovered.'.format(len(groups.values())))
+    #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]
 
 def gmm(
@@ -247,7 +247,7 @@ def _moc(
         else: # invalid (unexpected exit)
             exit('[Fatal error] MOC failed to produce a valid result')
 
-    print('{} organizational groups discovered.'.format(len(groups.values())))
+    #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]
 
 def moc(
@@ -396,7 +396,7 @@ def _fcm(
         else: # invalid, have to choose the maximum one or missing the resource
             groups[argmax(fpp[i,:])].add(profiles.index[i])
 
-    print('{} organizational groups discovered.'.format(len(groups.values())))
+    #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]
 
 def fcm(
