@@ -110,7 +110,8 @@ def _gmm(
 
 def gmm(
         profiles, n_groups,
-        threshold=None, init='random', n_init=500): 
+        threshold=None, init='random', n_init=500,
+        search_only=False): 
     '''
     This method is just a wrapper function of the one above, which allows a
     range of expected number of organizational groups to be specified rather
@@ -138,6 +139,10 @@ def gmm(
             The number of times of random initialization (if specified)
             performed before training the clustering model, ranged [1, +inf).
             The default is 500.
+        search_only: boolean, optional
+            Determine whether to search for the number of groups only or to
+            perform cluster analysis based on the search result. The default is
+            to perform cluster analysis after searching.
     Returns:
         list of frozensets
             A list of organizational groups.
@@ -165,7 +170,10 @@ def gmm(
 
         print('-' * 80)
         print('Selected "K" = {}'.format(best_k))
-        return _gmm(profiles, best_k, threshold, init, n_init)
+        if search_only:
+            return best_k
+        else:
+            return _gmm(profiles, best_k, threshold, init, n_init)
 
 def _moc(
         profiles, n_groups,
@@ -252,7 +260,8 @@ def _moc(
 
 def moc(
         profiles, n_groups,
-        init='random', n_init=500):
+        init='random', n_init=500,
+        search_only=False):
     '''
     This method is just a wrapper function of the one above, which allows a
     range of expected number of organizational groups to be specified rather
@@ -277,6 +286,10 @@ def moc(
             The number of times of random initialization (if specified)
             performed before training the clustering model, ranged [1, +inf).
             The default is 500.
+        search_only: boolean, optional
+            Determine whether to search for the number of groups only or to
+            perform cluster analysis based on the search result. The default is
+            to perform cluster analysis after searching.
     Returns:
         list of frozensets
             A list of organizational groups.
@@ -303,7 +316,10 @@ def moc(
 
         print('-' * 80)
         print('Selected "K" = {}'.format(best_k))
-        return _moc(profiles, best_k, init, n_init)
+        if search_only:
+            return best_k
+        else:
+            return _moc(profiles, best_k, init, n_init)
 
 def _fcm(
         profiles, n_groups,
@@ -401,7 +417,8 @@ def _fcm(
 
 def fcm(
         profiles, n_groups,
-        threshold=None, init='random', n_init=500): 
+        threshold=None, init='random', n_init=500,
+        search_only=False): 
     '''
     This method is just a wrapper function of the one above, which allows a
     range of expected number of organizational groups to be specified rather
@@ -429,6 +446,10 @@ def fcm(
             The number of times of random initialization (if specified)
             performed before training the clustering model, ranged [1, +inf).
             The default is 500.
+        search_only: boolean, optional
+            Determine whether to search for the number of groups only or to
+            perform cluster analysis based on the search result. The default is
+            to perform cluster analysis after searching.
     Returns:
         list of frozensets
             A list of organizational groups.
@@ -456,5 +477,8 @@ def fcm(
 
         print('-' * 80)
         print('Selected "K" = {}'.format(best_k))
-        return _fcm(profiles, best_k, threshold, init, n_init)
+        if search_only:
+            return best_k
+        else:
+            return _fcm(profiles, best_k, threshold, init, n_init)
 

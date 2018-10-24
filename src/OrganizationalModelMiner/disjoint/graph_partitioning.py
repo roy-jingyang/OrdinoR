@@ -73,7 +73,8 @@ def _mja(
 
 def mja(
         profiles, n_groups,
-        metric='euclidean'):
+        metric='euclidean',
+        search_only=False):
     '''
     This method is just a wrapper function of the one above, which allows a
     range of expected number of organizational groups to be specified rather
@@ -89,6 +90,10 @@ def mja(
             Choice of metrics for measuring the distance while calculating the
             proximity. Refer to scipy.spatial.distance.pdist for more detailed
             explanation.
+        search_only: boolean, optional
+            Determine whether to search for the number of groups only or to
+            perform cluster analysis based on the search result. The default is
+            to perform cluster analysis after searching.
     Returns:
         best_ogs: list of frozensets
             A list of organizational groups.
@@ -114,7 +119,10 @@ def mja(
 
         print('-' * 80)
         print('Selected "K" = {}'.format(best_k))
-        return _mja(profiles, best_k, metric)
+        if search_only:
+            return best_k 
+        else:
+            return _mja(profiles, best_k, metric)
 
 def _mjc(
         el, n_groups):

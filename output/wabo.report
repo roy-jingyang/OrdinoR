@@ -1,0 +1,40 @@
+'WABO' log -> Method-1: partition based on AT  -> performer-by-activity matrix -> sna: MJA -> assign by all -> fitness -> precision
+	k         = 9
+	Fitness   = 0.563367
+	Precision = 0.360698
+'WABO' log -> Method-1: partition based on AT  -> performer-by-activity matrix -> sna: MJA -> assign by any -> fitness -> precision
+	k         = 9
+	Fitness   = 1.000000
+	Precision = 0.159556
+'WABO' log -> Method-1: partition based on AT  -> performer-by-activity matrix -> sna: Link partitioning -> assign by all -> fitness -> precision
+	k         = 16
+	Fitness   = 0.000000
+	Precision = 1.000000
+'WABO' log -> Method-1: partition based on AT  -> performer-by-activity matrix -> sna: Link partitioning -> assign by any -> fitness -> precision
+	k         = 16
+	Fitness   = 1.000000
+	Precision = 0.000000
+'WABO' log -> Method-1: partition based on AT  -> performer-by-activity matrix -> clustering: FCM -> assign by any -> fitness -> precision
+	k         = 9
+	Fitness   = 1.000000
+	Precision = 0.010027
+'WABO' log -> Method-1: partition based on AT  -> performer-by-activity matrix -> clustering: FCM -> assign by all -> fitness -> precision
+	k         = 9
+	Fitness   = 0.572928
+	Precision = 0.035409
+'WABO' log -> Method-1: partition based on AT  -> performer-by-activity matrix -> clustering: MOC -> assign by any -> fitness -> precision
+	k         = 9
+	Fitness   = 1.000000
+	Precision = 0.000104
+'WABO' log -> Method-1: partition based on AT  -> performer-by-activity matrix -> clustering: MOC -> assign by all -> fitness -> precision
+	k         = 9
+	Fitness   = 0.551591
+	Precision = 0.226362
+'WABO' log -> Method-1: partition based on AT  -> performer-by-activity matrix -> clustering: GMM -> assign by any -> fitness -> precision
+	k         = 9
+	Fitness   = 1.000000
+	Precision = 0.012671
+'WABO' log -> Method-1: partition based on AT  -> performer-by-activity matrix -> clustering: GMM -> assign by all -> fitness -> precision
+	k         = 9
+	Fitness   = 0.625510
+	Precision = 0.430149
