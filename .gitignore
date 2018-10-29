@@ -7,3 +7,6 @@
 
 # Ignore external tools
 
+# Ignore input file
+input/
+
