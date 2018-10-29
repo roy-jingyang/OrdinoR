@@ -113,6 +113,21 @@ class OrganizationalModel:
         '''
         return [frozenset(self._mem[rg_id]) for rg_id in self._rmem[r]]
 
+    def find_group_ids(self, r):
+        '''Query the id of groups that contain a resource given its identifier.
+
+        Parameters
+        ----------
+        r: 
+            The identifier of a resource given.
+
+        Returns
+        -------
+        list of ints
+            The id of the groups to which the queried resource belong.
+        '''
+        return list(self._rmem[r])
+
     def find_all_groups(self):
         '''Simply return all the discovered groups.
 
@@ -143,7 +158,6 @@ class OrganizationalModel:
         return [frozenset(self._mem[rg_id]) for rg_id in self._rcap[exec_mode]]
 
     # IO related methods
-    # TODO 
     def to_file_csv(self, f):
         '''Export and write the current organizational model to a csv file.
 
@@ -165,9 +179,12 @@ class OrganizationalModel:
         for rg_id in sorted(self._rg.keys()):
             str_rg_id = str(rg_id)
             str_members = ';'.join(sorted(str(r) for r in self._mem[rg_id]))
-            str_exec_modes = ';'.join(sorted(
-                    '|'.join(str(t) for t in mode)
-                    for mode in self._cap[rg_id]))
+            if len(self._cap) > 0:
+                str_exec_modes = ';'.join(sorted(
+                        '|'.join(str(t) for t in mode)
+                        for mode in self._cap[rg_id]))
+            else:
+                str_exec_modes = ''
 
             rows.append([str_rg_id, str_members, str_exec_modes])
 

@@ -29,13 +29,15 @@ node attributes as well as convenient visualization features.
 import sys
 sys.path.append('./src/')
 
+from os.path import join
+
 def _import_block(path_invoke):
     from importlib import import_module
     module = import_module('.'.join(path_invoke.split('.')[:-1]))
     foo = getattr(module, path_invoke.split('.')[-1])
     return foo
 
-def execute(setup, seq_ix):
+def execute(setup, seq_ix, exp_dirpath):
     sequence = list(setup.nodes[ix] for ix in seq_ix)
     test_name = ' -> '.join(step['label'] for step in sequence)
 
@@ -59,6 +61,7 @@ def execute(setup, seq_ix):
     # Step 3: discover resource grouping
     step += 1
     grouping_discoverer = _import_block(sequence[step]['invoke'])
+    discoverer_name = sequence[step]['label'].replace(' ', '')
     ogs = grouping_discoverer(profiles, **eval(sequence[step]['params']))
 
     # assign execution modes
@@ -79,20 +82,25 @@ def execute(setup, seq_ix):
     precision_eval = _import_block(sequence[step]['invoke'])
     precision = precision_eval(rl, om)
 
+    # export organizational models
+    fnout = discoverer_name + '.om'
+    with open(join(exp_dirpath, fnout), 'w') as fout:
+        om.to_file_csv(fout)
+
     return test_name, om.size(), fitness, precision
 
 
 if __name__ == '__main__':
     fn_setup = sys.argv[1]
-    fnout = sys.argv[2]
+    dirout = sys.argv[2]
     path = sys.argv[3].split(',')
 
-    from networkx import read_gexf, read_graphml
+    from networkx import read_graphml
     setup = read_graphml(fn_setup)
 
-    name, k, f, p = execute(setup, path)
+    name, k, f, p = execute(setup, path, dirout)
 
-    with open(fnout, 'a') as fout:
+    with open(join(dirout, 'report'), 'a') as fout:
         fout.write('{}\n'.format(name))
         fout.write('\tk         = {}\n'.format(k))
         fout.write('\tFitness   = {:.6f}\n'.format(f))

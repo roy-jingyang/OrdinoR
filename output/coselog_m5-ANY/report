@@ -1,0 +1,20 @@
+'CoSeLoG M5' log -> Method-1: partition by activity name -> performer-by-activity matrix -> sna: MJA -> assign by any -> fitness -> precision
+	k         = 8
+	Fitness   = 1.000000
+	Precision = 0.284590
+'CoSeLoG M5' log -> Method-1: partition by activity name -> performer-by-activity matrix -> sna: Link partitioning -> assign by any -> fitness -> precision
+	k         = 6
+	Fitness   = 1.000000
+	Precision = 0.000000
+'CoSeLoG M5' log -> Method-1: partition by activity name -> performer-by-activity matrix -> clustering: FCM -> assign by any -> fitness -> precision
+	k         = 6
+	Fitness   = 1.000000
+	Precision = 0.003404
+'CoSeLoG M5' log -> Method-1: partition by activity name -> performer-by-activity matrix -> clustering: MOC -> assign by any -> fitness -> precision
+	k         = 5
+	Fitness   = 1.000000
+	Precision = 0.000322
+'CoSeLoG M5' log -> Method-1: partition by activity name -> performer-by-activity matrix -> clustering: GMM -> assign by any -> fitness -> precision
+	k         = 8
+	Fitness   = 1.000000
+	Precision = 0.158693
