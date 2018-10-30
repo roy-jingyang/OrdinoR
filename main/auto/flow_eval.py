@@ -82,6 +82,8 @@ def execute(setup, seq_ix, exp_dirpath):
     precision_eval = _import_block(sequence[step]['invoke'])
     precision = precision_eval(rl, om)
 
+    print(fitness)
+    print(precision)
     # export organizational models
     fnout = discoverer_name + '.om'
     with open(join(exp_dirpath, fnout), 'w') as fout:

@@ -1,0 +1,14 @@
+0,Resource01;Resource21;Resource30;Resource37,None|AT.0|None;None|AT.16|None;None|AT.5|None
+1,Resource02;Resource07;Resource23,None|AT.0|None;None|AT.16|None;None|AT.1|None;None|AT.3|None;None|AT.4|None;None|AT.5|None
+2,Resource03;Resource12;Resource17;Resource33,None|AT.0|None;None|AT.16|None;None|AT.1|None;None|AT.3|None;None|AT.5|None
+3,Resource04;Resource08,None|AT.0|None;None|AT.16|None;None|AT.17|None;None|AT.1|None;None|AT.20|None;None|AT.3|None;None|AT.4|None;None|AT.5|None
+4,Resource05;Resource32;Resource40;Resource41,
+5,Resource06;Resource09;Resource27;Resource38;admin3,None|AT.0|None
+6,Resource10;Resource16;Resource18;Resource20;admin2,None|AT.0|None;None|AT.1|None;None|AT.3|None;None|AT.4|None
+7,Resource11;Resource24;Resource25,None|AT.1|None;None|AT.3|None
+8,Resource13;admin1;test,
+9,Resource14;Resource22;Resource29,None|AT.0|None;None|AT.16|None;None|AT.1|None;None|AT.3|None;None|AT.4|None;None|AT.5|None
+10,Resource15;Resource28,None|AT.0|None;None|AT.11|None;None|AT.16|None;None|AT.1|None;None|AT.3|None;None|AT.4|None;None|AT.5|None;None|AT.7|None
+11,Resource19;Resource26;Resource39,None|AT.1|None
+12,Resource31;Resource34;Resource36;Resource42;Resource43;TEST,
+13,Resource35,None|AT.0|None;None|AT.16|None;None|AT.1|None;None|AT.3|None;None|AT.5|None;None|AT.8|None

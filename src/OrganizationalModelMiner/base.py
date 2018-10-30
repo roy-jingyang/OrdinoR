@@ -49,27 +49,50 @@ class OrganizationalModel:
         ----------
         og: iterator
             The ids of resources to be added as a resource group.
-        exec_modes: iterator
+        exec_modes: iterator (frozenset or dict of frozensets)
             The execution modes corresponding to the group.
 
         Returns
         -------
         '''
-        self._rg_id += 1
-        self._rg[self._rg_id] = '' # TODO
 
-        self._mem[self._rg_id] = set()
-        # two-way dict here
-        for r in og:
-            self._mem[self._rg_id].add(r)
-            self._rmem[r].add(self._rg_id)
+        if type(exec_modes) == frozenset:
+            # no refinement applied
+            self._rg_id += 1
+            self._rg[self._rg_id] = '' # TODO: further description of a group
 
-        # another two-way dict here
-        self._cap[self._rg_id] = set()
-        for m in exec_modes:
-            self._cap[self._rg_id].add(m)
-            self._rcap[m].add(self._rg_id)
-        
+            self._mem[self._rg_id] = set()
+            # two-way dict here
+            for r in og:
+                self._mem[self._rg_id].add(r)
+                self._rmem[r].add(self._rg_id)
+
+            # another two-way dict here
+            self._cap[self._rg_id] = set()
+            for m in exec_modes:
+                self._cap[self._rg_id].add(m)
+                self._rcap[m].add(self._rg_id)
+        elif type(exec_modes) == dict:
+            # refinement applied
+            for subog, subm in exec_modes.items():
+                if subog not in self._mem.values():
+                    self._rg_id += 1
+                    self._rg[self._rg_id] = ''
+
+                    self._mem[self._rg_id] = set()
+                    for r in subog:
+                        self._mem[self._rg_id].add(r)
+                        self._rmem[r].add(self._rg_id)
+
+                    self._cap[self._rg_id] = set()
+                    for m in subm:
+                        self._cap[self._rg_id].add(m)
+                        self._rcap[m].add(self._rg_id)
+                else:
+                    pass
+        else:
+            exit('[Error] Invalid execution modes')
+            
         return
 
     def size(self):

@@ -1,0 +1,13 @@
+0,Resource01;Resource02;Resource03;Resource04;Resource05;Resource06;Resource07;Resource08;Resource09;Resource11;Resource12;Resource13;Resource14;Resource15;Resource16;Resource17;Resource18;Resource20;Resource21;Resource22;Resource23;Resource25;Resource26;Resource30;Resource31;Resource34;Resource36,None|AT.0|None;None|AT.10|None;None|AT.11|None;None|AT.12|None;None|AT.13|None;None|AT.14|None;None|AT.15|None;None|AT.16|None;None|AT.17|None;None|AT.18|None;None|AT.19|None;None|AT.1|None;None|AT.20|None;None|AT.21|None;None|AT.22|None;None|AT.23|None;None|AT.24|None;None|AT.25|None;None|AT.26|None;None|AT.2|None;None|AT.3|None;None|AT.4|None;None|AT.5|None;None|AT.6|None;None|AT.7|None;None|AT.8|None;None|AT.9|None
+1,Resource10;Resource19;admin3,None|AT.0|None;None|AT.18|None;None|AT.1|None;None|AT.20|None;None|AT.3|None;None|AT.4|None
+2,Resource24;Resource32;Resource39,None|AT.18|None;None|AT.1|None;None|AT.3|None;None|AT.6|None;None|AT.7|None;None|AT.9|None
+3,Resource27;Resource42;Resource43;admin2,None|AT.0|None;None|AT.10|None;None|AT.16|None;None|AT.17|None;None|AT.19|None;None|AT.1|None;None|AT.2|None;None|AT.3|None;None|AT.4|None;None|AT.5|None;None|AT.6|None;None|AT.7|None
+4,Resource28,None|AT.0|None;None|AT.11|None;None|AT.14|None;None|AT.16|None;None|AT.1|None;None|AT.2|None;None|AT.3|None;None|AT.4|None;None|AT.5|None;None|AT.7|None
+5,Resource29;Resource33,None|AT.0|None;None|AT.10|None;None|AT.11|None;None|AT.16|None;None|AT.1|None;None|AT.3|None;None|AT.4|None;None|AT.5|None;None|AT.7|None
+6,Resource35,None|AT.0|None;None|AT.16|None;None|AT.1|None;None|AT.3|None;None|AT.5|None;None|AT.8|None
+7,Resource37,None|AT.0|None;None|AT.10|None;None|AT.16|None;None|AT.5|None
+8,Resource38,None|AT.0|None;None|AT.1|None;None|AT.3|None
+9,Resource40;Resource41,None|AT.7|None
+10,TEST,None|AT.1|None;None|AT.4|None
+11,admin1,None|AT.0|None;None|AT.16|None;None|AT.17|None;None|AT.18|None;None|AT.1|None;None|AT.20|None;None|AT.21|None;None|AT.3|None;None|AT.4|None
+12,test,None|AT.11|None;None|AT.12|None;None|AT.14|None;None|AT.5|None;None|AT.7|None

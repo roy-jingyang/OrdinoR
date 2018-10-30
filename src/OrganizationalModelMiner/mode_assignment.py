@@ -46,8 +46,9 @@ def assign_by_all(group, rl):
         modes: iterator
             The execution modes corresponding to the resources:
             - if a splitting is not needed, then a frozenset is returned;
-            - if a splitting is needed, then a dict is returned, with the
-              subgroups as dict keys and the related execution modes as values.
+            - if a splitting is needed, then a dict of frozensets is returned,
+              with the subgroups as dict keys and the related execution modes
+              as values.
     '''
     return assign_by_proportion(group, rl, p=1.0)
 
@@ -66,44 +67,65 @@ def assign_by_proportion(group, rl, p):
         modes: iterator
             The execution modes corresponding to the resources:
             - if a splitting is not needed, then a frozenset is returned;
-            - if a splitting is needed, then a dict is returned, with the
-              subgroups as dict keys and the related execution modes as values.
+            - if a splitting is needed, then a dict of frozensets is returned,
+              with the subgroups as dict keys and the related execution modes
+              as values.
     '''
     modes = _get_modes_by_prop(group, rl, p)
     
+    '''
     return modes
     '''
     if len(modes) > 0:
         return modes
     else:
         # post refining required
+        print('Group of size {} is being refined: '.format(len(group)), end='')
         sigma = dict()
-        all_subgroups = _powerset_excluded(group)
+        all_subgroups = [frozenset(x) for x in _powerset_excluded(group)]
+
+        # pre-calculate the cost and execution modes for all subgroups
+        def cost(s):
+            m = _get_modes_by_prop(s, rl, p)
+            # TODO: different cost function definitions
+            # Strategy 1. Maximum Capability
+            cost = 1.0 / len(m) if len(m) >= 1 else None
+            # Strategy 2. Maximum Size
+            #cost = 1.0 / len(s) if len(m) >= 1 else None
+            return cost, m
+
+        from collections import defaultdict
+        all_candidate_subgroups = defaultdict(dict)
+        for subgroup in all_subgroups:
+            group_cost, modes = cost(subgroup)
+            if group_cost is not None:
+                all_candidate_subgroups[subgroup]['cost'] = group_cost
+                all_candidate_subgroups[subgroup]['modes'] = modes
+            else:
+                pass
+
        
         # Algorithm Weighted SetCoverGreedy
         while True:
-            uncovered = group.difference(
-                    set.union(set(sg) for sg in sigma.keys()))
+            if len(sigma) >= 1:
+                covered = frozenset.union(*sigma.keys())
+                uncovered = group.difference(covered)
+            else:
+                uncovered = group
 
             if len(uncovered) > 0:
                 def cost_effectiveness(s):
-                    # calculate the cost (weight)
-                    m = _get_modes_by_prop(s, rl, p)
-                    # TODO: different cost function definitions
-                    # Strategy 1. Maximum Capability
-                    cost = 1.0 / len(m) if len(m) >= 1 else float('inf')
-                    # Strategy 2. Maximum Size
-                    #cost = 1.0 / len(s) if len(s) >= 1 else float('inf')
-                    # calculate the cost effectiveness
-                    return len(uncovered.intersection(s)) / cost
+                    return (len(uncovered.intersection(s)) /
+                            all_candidate_subgroups[s]['cost'])
 
-                best_sg = max(all_subgroups, key=cost_effectiveness)
-                sigma[best_sg] = _get_modes_by_prop(best_sg)
+                best_sg = max(
+                        all_candidate_subgroups.keys(), key=cost_effectiveness)
+                sigma[best_sg] = all_candidate_subgroups[best_sg]['modes']
             else:
                 break
 
+        print('{} subgroups obtained.'.format(len(sigma)))
         return sigma
-    '''
 
 def _get_modes_by_prop(g, rl, p):
     '''Find the executions modes of a given (sub)group, if a certain percentage
