@@ -23,6 +23,9 @@ def assign_by_any(group, rl):
             The execution modes corresponding to the resources.
     '''
     
+    from sys import float_info
+    return assign_by_proportion(group, rl, p=float_info.epsilon)
+    '''
     modes = set()
     grouped_by_resource = rl.groupby('resource')
 
@@ -30,7 +33,9 @@ def assign_by_any(group, rl):
         for event in grouped_by_resource.get_group(r).itertuples():
             m = (event.case_type, event.activity_type, event.time_type)
             modes.add(m)
+
     return frozenset(modes)
+    '''
 
 def assign_by_all(group, rl):
     '''Assign an execution mode to a group, only if every member resources of
@@ -62,7 +67,7 @@ def assign_by_proportion(group, rl, p):
             The ids of resources as a resource group.
         rl: DataFrame
             The resource log.
-        p: float, in range [0, 1]
+        p: float, in range (0, 1]
     Returns:
         modes: iterator
             The execution modes corresponding to the resources:
@@ -73,16 +78,12 @@ def assign_by_proportion(group, rl, p):
     '''
     modes = _get_modes_by_prop(group, rl, p)
     
-    '''
-    return modes
-    '''
     if len(modes) > 0:
         return modes
     else:
         # post refining required
         print('Group of size {} is being refined: '.format(len(group)), end='')
         sigma = dict()
-        all_subgroups = [frozenset(x) for x in _powerset_excluded(group)]
 
         # pre-calculate the cost and execution modes for all subgroups
         def cost(s):
@@ -96,31 +97,31 @@ def assign_by_proportion(group, rl, p):
 
         from collections import defaultdict
         all_candidate_subgroups = defaultdict(dict)
-        for subgroup in all_subgroups:
-            group_cost, modes = cost(subgroup)
+        for subgroup in _powerset_excluded(group):
+            group_cost, modes = cost(frozenset(subgroup))
             if group_cost is not None:
-                all_candidate_subgroups[subgroup]['cost'] = group_cost
-                all_candidate_subgroups[subgroup]['modes'] = modes
+                k = tuple(sorted(subgroup))
+                all_candidate_subgroups[k]['cost'] = group_cost
+                all_candidate_subgroups[k]['modes'] = modes
             else:
                 pass
 
        
         # Algorithm Weighted SetCoverGreedy
         while True:
-            if len(sigma) >= 1:
-                covered = frozenset.union(*sigma.keys())
-                uncovered = group.difference(covered)
+            if len(sigma) > 0:
+                uncovered = group.difference(frozenset.union(*sigma.keys()))
             else:
                 uncovered = group
 
             if len(uncovered) > 0:
-                def cost_effectiveness(s):
-                    return (len(uncovered.intersection(s)) /
-                            all_candidate_subgroups[s]['cost'])
+                def cost_effectiveness(k):
+                    return (len(uncovered.intersection(frozenset(k))) /
+                            all_candidate_subgroups[k]['cost'])
 
                 best_sg = max(
                         all_candidate_subgroups.keys(), key=cost_effectiveness)
-                sigma[best_sg] = all_candidate_subgroups[best_sg]['modes']
+                sigma[frozenset(best_sg)] = all_candidate_subgroups[best_sg]['modes']
             else:
                 break
 
@@ -136,22 +137,17 @@ def _get_modes_by_prop(g, rl, p):
             The ids of resources as a resource group.
         rl: DataFrame
             The resource log.
-        p: float, in range [0, 1]
+        p: float, in range (0, 1]
     Returns:
         modes: frozenset
     '''
 
     modes = set()
-    grouped_by_resource = rl.groupby('resource')
-    from collections import defaultdict
-    count_mode_originator = defaultdict(set)
-    for r in g:
-        for event in grouped_by_resource.get_group(r).itertuples():
-            m = (event.case_type, event.activity_type, event.time_type)
-            count_mode_originator[m].add(r)
-    
-    for m, originators in count_mode_originator.items():
-        if len(originators) * 1.0 / len(g) >= p:
+    for m, events in rl.groupby(['case_type', 'activity_type', 'time_type']):
+        candidates_in_group = [
+                r for r in events['resource'].drop_duplicates() if r in g]
+        if (len(candidates_in_group) > 0 
+                and len(candidates_in_group) * 1.0 / len(g) >= p):
             modes.add(m)
     return frozenset(modes)
 

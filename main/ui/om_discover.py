@@ -3,6 +3,7 @@
 
 import sys
 sys.path.append('./src/')
+import cProfile
 
 fn_event_log = sys.argv[1]
 fnout_org_model = sys.argv[2]
@@ -247,6 +248,13 @@ if __name__ == '__main__':
     for og in ogs:
         #om.add_group(og, assign_by_any(og, rl))
         om.add_group(og, assign_by_all(og, rl))
+        '''
+        cProfile.runctx(
+            'om.add_group(og, assign_by_any(og, rl))',
+            globals(),
+            locals()
+        )
+        '''
 
     # TODO evaluate (goes here??)
     from Evaluation.l2m import conformance

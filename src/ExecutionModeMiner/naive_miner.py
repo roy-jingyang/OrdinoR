@@ -44,9 +44,9 @@ class NaiveActivityNameExecutionModeMiner(BaseExecutionModeMiner):
         for event in el.itertuples(): # keep order
             rl.append({
                 'resource': event.resource,
-                'case_type': None,
+                'case_type': '',
                 'activity_type': rev_atypes[event.activity],
-                'time_type': None
+                'time_type': ''
             })
 
         from pandas import DataFrame

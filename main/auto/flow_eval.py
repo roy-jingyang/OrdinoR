@@ -28,6 +28,7 @@ node attributes as well as convenient visualization features.
 
 import sys
 sys.path.append('./src/')
+import cProfile
 
 from os.path import join
 
