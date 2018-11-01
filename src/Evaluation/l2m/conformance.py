@@ -95,7 +95,10 @@ def precision(rl, om):
 
     n_cand_E = len(cand_E) # "|cand(E)|"
 
-    if n_cand_E <= 1:
+    if n_cand_E == 0:
+        print('[Warning] No candidate resource.')
+        return float('nan')
+    if n_cand_E == 1:
         print('[Warning] Number of overall set of candidate resources is '
               '{}.'.format(n_cand_E))
         return 1.0

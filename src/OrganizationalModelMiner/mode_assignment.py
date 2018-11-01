@@ -23,9 +23,7 @@ def assign_by_any(group, rl):
             The execution modes corresponding to the resources.
     '''
     
-    from sys import float_info
-    return assign_by_proportion(group, rl, p=float_info.epsilon)
-    '''
+    print('Applying "assign by any" for mode assignment:')
     modes = set()
     grouped_by_resource = rl.groupby('resource')
 
@@ -35,7 +33,6 @@ def assign_by_any(group, rl):
             modes.add(m)
 
     return frozenset(modes)
-    '''
 
 def assign_by_all(group, rl):
     '''Assign an execution mode to a group, only if every member resources of
@@ -55,6 +52,7 @@ def assign_by_all(group, rl):
               with the subgroups as dict keys and the related execution modes
               as values.
     '''
+    print('Applying "assign by all" for mode assignment:')
     return assign_by_proportion(group, rl, p=1.0)
 
 def assign_by_proportion(group, rl, p):
@@ -76,16 +74,17 @@ def assign_by_proportion(group, rl, p):
               with the subgroups as dict keys and the related execution modes
               as values.
     '''
+    print('Applying "assign by proportion {:.0%}" for mode assignment:'.format(
+        p))
     modes = _get_modes_by_prop(group, rl, p)
     
     if len(modes) > 0:
         return modes
     else:
         # post refining required
-        print('Group of size {} is being refined: '.format(len(group)), end='')
-        sigma = dict()
-
-        # pre-calculate the cost and execution modes for all subgroups
+        print('\t[Warning] Applying refinement, may increase group number.')
+        print('\tGroup of size {} is being refined: '.format(
+            len(group)), end='')
         def cost(s):
             m = _get_modes_by_prop(s, rl, p)
             # TODO: different cost function definitions
@@ -94,6 +93,10 @@ def assign_by_proportion(group, rl, p):
             # Strategy 2. Maximum Size
             #cost = 1.0 / len(s) if len(m) >= 1 else None
             return cost, m
+
+        sigma = dict()
+
+        # pre-calculate the cost and execution modes for all subgroups
 
         from collections import defaultdict
         all_candidate_subgroups = defaultdict(dict)
@@ -106,13 +109,16 @@ def assign_by_proportion(group, rl, p):
             else:
                 pass
 
-       
+        print('\t\t{} candidate subgroups under test'.format(
+            len(all_candidate_subgroups)))
         # Algorithm Weighted SetCoverGreedy
         while True:
             if len(sigma) > 0:
                 uncovered = group.difference(frozenset.union(*sigma.keys()))
             else:
                 uncovered = group
+
+            print('\t\t{}/{} uncovered'.format(len(uncovered), len(group)))
 
             if len(uncovered) > 0:
                 def cost_effectiveness(k):

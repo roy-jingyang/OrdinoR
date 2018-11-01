@@ -1,4 +1,0 @@
-'WABO' log -> Method-1: partition by activity name -> performer-by-activity matrix -> sna: MJA -> assign by all -> fitness -> precision
-	k         = 13
-	Fitness   = 0.703509
-	Precision = 0.327724
