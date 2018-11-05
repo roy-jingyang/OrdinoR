@@ -70,8 +70,17 @@ def execute(setup, seq_ix, exp_dirpath):
     om = OrganizationalModel()
     step += 1
     assigner = _import_block(sequence[step]['invoke'])
+    postponed = list()
     for og in ogs:
-        om.add_group(og, assigner(og, rl))    
+        modes = assigner(og, rl)
+        if type(modes) == frozenset:
+            om.add_group(og, modes)
+        elif type(modes) == dict:
+            postponed.append((og, modes))
+        else:
+            exit(1)
+    for g_m in postponed:
+        om.add_group(g_m[0], g_m[1])
 
     # evaluate organizational model: fitness
     step += 1

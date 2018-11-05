@@ -95,7 +95,6 @@ def assign_by_proportion(group, rl, p):
         print('\t[Warning] Group number may change due to refinement.')
         sigma = dict()
 
-        '''
         # pre-calculate the cost and execution modes for all subgroups
         from collections import defaultdict
         all_valid_cand_sg = defaultdict(dict)
@@ -116,7 +115,6 @@ def assign_by_proportion(group, rl, p):
                 all_valid_cand_sg[k]['modes'] = modes
             else:
                 pass
-        '''
 
         # Algorithm Weighted SetCoverGreedy
         while True:
@@ -126,25 +124,17 @@ def assign_by_proportion(group, rl, p):
                 uncovered = group
 
             if len(uncovered) > 0:
-                # TODO: different cost function definitions
-                def cost_effectiveness(g):
-                    m = _get_modes_by_prop(
-                            frozenset(g), inv_resource_cap, p)
-                    if len(m) >= 1:
-                        cost = 1.0 / len(m)
-                        #cost = 1.0 / len(g)
-                        return len(uncovered.intersection(frozenset(g))) / cost
-                    else:
-                        return 0
+                def cost_effectiveness(k):
+                    return (len(uncovered.intersection(frozenset(k))) /
+                            all_valid_cand_sg[k]['cost'])
 
                 best_sg = max(
-                        _powerset_excluded(group), key=cost_effectiveness)
-                sigma[frozenset(best_sg)] = _get_modes_by_prop(
-                        frozenset(best_sg), inv_resource_cap, p)
+                        all_valid_cand_sg.keys(), key=cost_effectiveness)
+                sigma[frozenset(best_sg)] = all_valid_cand_sg[best_sg]['modes']
             else:
                 break
 
-        print('\tGroup of size {} split to {} subgroups after refinement.'
+        print('Group of size {} split to {} subgroups after refinement.'
             .format(len(group), len(sigma)))
         return sigma
 

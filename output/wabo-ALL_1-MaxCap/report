@@ -1,0 +1,12 @@
+'WABO' log -> Method-1: partition by activity name -> performer-by-activity matrix -> sna: MJA -> assign by all -> fitness -> precision
+	k         = 13
+	Fitness   = 0.703509
+	Precision = 0.327724
+'WABO' log -> Method-1: partition by activity name -> performer-by-activity matrix -> sna: MJA -> assign by all -> fitness -> precision
+	k         = 13
+	Fitness   = 0.703509
+	Precision = 0.327724
+'WABO' log -> Method-1: partition by activity name -> performer-by-activity matrix -> clustering: FCM -> assign by all -> fitness -> precision
+	k         = 14
+	Fitness   = 0.906960
+	Precision = 0.290663

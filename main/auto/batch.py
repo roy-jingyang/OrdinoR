@@ -12,6 +12,6 @@ if __name__ == '__main__':
     setup = freeze(read_graphml(fn_setup))
 
     for path in all_simple_paths(setup, source='0', target='13'):
-        subprocess.run(['python', 'main/auto/flow_eval.py', 
+        subprocess.check_call(['python', 'main/auto/flow_eval.py', 
             fn_setup, dirout, ','.join(path[1:-1])])
 
