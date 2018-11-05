@@ -99,8 +99,7 @@ def precision(rl, om):
         print('[Warning] No candidate resource.')
         return float('nan')
     if n_cand_E == 1:
-        print('[Warning] Number of overall set of candidate resources is '
-              '{}.'.format(n_cand_E))
+        print('[Warning] The overall number of candidate resources is 1.')
         return 1.0
     else:
         prec_sum = sum(

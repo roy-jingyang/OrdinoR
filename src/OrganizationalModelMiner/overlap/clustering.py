@@ -34,7 +34,9 @@ def _gmm(
                 Activities' as initialization method.
                 - 'ahc': Use the (hierarchical) method of 'Agglomerative
                   Hierarchical Clustering' as initialization method.
-            Note taht if an option other than 'random' is specified, then the
+                - 'zero': Use zero initialization, this is to guarantee that
+                  all instances of the algorithm start from the same point.
+            Note that if an option other than 'random' is specified, then the
             initialization is performed once only.
         n_init: int, optional
             The number of times of random initialization (if specified)
@@ -48,7 +50,7 @@ def _gmm(
             'clustering-based GMM:')
 
     # step 0. Perform specific initialization method (if given)
-    if init in ['mja', 'ahc']:
+    if init in ['mja', 'ahc', 'zero']:
         warm_start = True
         if init == 'mja':
             from OrganizationalModelMiner.disjoint.graph_partitioning import (
@@ -57,6 +59,8 @@ def _gmm(
         elif init == 'ahc':
             from OrganizationalModelMiner.hierarchical.clustering import _ahc
             init_groups, _ = _ahc(profiles, n_groups)
+        elif init == 'zero':
+            init_groups = None
         else:
             exit(1)
         print('Initialization done by using {}:'.format(init))
@@ -68,10 +72,13 @@ def _gmm(
     # step 1. Train the model
     from sklearn.mixture import GaussianMixture
     if warm_start:
-        from numpy import mean
+        from numpy import mean, zeros
         init_means = list()
-        for g in init_groups:
-            init_means.append(mean(profiles.loc[list(g)].values, axis=0))
+        if init_groups is not None:
+            for g in init_groups:
+                init_means.append(mean(profiles.loc[list(g)].values, axis=0))
+        else:
+            init_means = zeros((n_groups, profiles.shape[1]))
         gmm_model = GaussianMixture(
                 n_components=n_groups,
                 tol=1e-6,
@@ -196,7 +203,9 @@ def _moc(
                 Activities' as initialization method.
                 - 'ahc': Use the (hierarchical) method of 'Agglomerative
                   Hierarchical Clustering' as initialization method.
-            Note taht if an option other than 'random' is specified, then the
+                - 'zero': Use zero initialization, this is to guarantee that
+                  all instances of the algorithm start from the same point.
+            Note that if an option other than 'random' is specified, then the
             initialization is performed once only.
         n_init: int, optional
             The number of times of random initialization (if specified)
@@ -209,11 +218,10 @@ def _moc(
     print('Applying overlapping organizational model mining using ' + 
             'clustering-based MOC:')
     # step 0. Perform specific initialization method (if given)
-    if init in ['mja', 'ahc']:
+    if init in ['mja', 'ahc', 'zero']:
         warm_start = True
         from numpy import zeros
         from pandas import DataFrame
-        m = DataFrame(zeros((len(profiles), n_groups)), index=profiles.index)
         if init == 'mja':
             from OrganizationalModelMiner.disjoint.graph_partitioning import (
                     _mja)
@@ -221,13 +229,19 @@ def _moc(
         elif init == 'ahc':
             from OrganizationalModelMiner.hierarchical.clustering import _ahc
             init_groups, _ = _ahc(profiles, n_groups)
+        elif init == 'zero':
+            init_groups = None
         else:
             exit(1)
         print('Initialization done by using {}:'.format(init))
 
-        for i, g in enumerate(init_groups):
-            for r in g:
-                m.loc[r][i] = 1 # set the membership matrix as init input
+        m = DataFrame(zeros((len(profiles), n_groups)), index=profiles.index)
+        if init_groups is not None:
+            for i, g in enumerate(init_groups):
+                for r in g:
+                    m.loc[r][i] = 1 # set the membership matrix as init input
+        else:
+            pass
     elif init == 'random':
         warm_start = False
     else:
@@ -344,7 +358,9 @@ def _fcm(
                 Activities' as initialization method.
                 - 'ahc': Use the (hierarchical) method of 'Agglomerative
                   Hierarchical Clustering' as initialization method.
-            Note taht if an option other than 'random' is specified, then the
+                - 'zero': Use zero initialization, this is to guarantee that
+                  all instances of the algorithm start from the same point.
+            Note that if an option other than 'random' is specified, then the
             initialization is performed once only.
         n_init: int, optional
             The number of times of random initialization (if specified)
@@ -358,7 +374,7 @@ def _fcm(
             'clustering-based FCM:')
 
     # step 0. Perform specific initialization method (if given)
-    if init in ['mja', 'ahc']:
+    if init in ['mja', 'ahc', 'zero']:
         warm_start = True
         if init == 'mja':
             from OrganizationalModelMiner.disjoint.graph_partitioning import (
@@ -367,6 +383,8 @@ def _fcm(
         elif init == 'ahc':
             from OrganizationalModelMiner.hierarchical.clustering import _ahc
             init_groups, _ = _ahc(profiles, n_groups)
+        elif init == 'zero':
+            init_groups = None
         else:
             exit(1)
         print('Initialization done by using {}:'.format(init))
@@ -378,10 +396,13 @@ def _fcm(
     # step 1. Train the model
     from .classes import FCM
     if warm_start:
-        from numpy import array, mean, nonzero
+        from numpy import array, mean, nonzero, zeros
         init_means = list()
-        for g in init_groups:
-            init_means.append(mean(profiles.loc[list(g)].values, axis=0))
+        if init_groups is not None:
+            for g in init_groups:
+                init_means.append(mean(profiles.loc[list(g)].values, axis=0))
+        else:
+            init_means = zeros((n_groups, profiles.shape[1]))
         fcm_model = FCM(
                 n_components=n_groups,
                 n_init=1,
