@@ -39,8 +39,9 @@ def cross_validation_score(
     # split input dataset into specific number of folds
     from copy import copy
     index = copy(list(X.index))
-    from numpy.random import shuffle
-    shuffle(index)
+    # TODO
+    #from numpy.random import shuffle
+    #shuffle(index)
     from numpy import array_split
     if type(cv_fold) is float and 0 < cv_fold and cv_fold < 1.0:
         cv_fold = int(1.0 / cv_fold)

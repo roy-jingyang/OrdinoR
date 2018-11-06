@@ -34,8 +34,9 @@ def _gmm(
                 Activities' as initialization method.
                 - 'ahc': Use the (hierarchical) method of 'Agglomerative
                   Hierarchical Clustering' as initialization method.
-                - 'zero': Use zero initialization, this is to guarantee that
-                  all instances of the algorithm start from the same point.
+                - 'plain': Simply put resource into groups by their topological
+                  order in a looping fashion. Note that this is a meaniningless
+                  initialization similar to a zero initialization.
             Note that if an option other than 'random' is specified, then the
             initialization is performed once only.
         n_init: int, optional
@@ -50,7 +51,7 @@ def _gmm(
             'clustering-based GMM:')
 
     # step 0. Perform specific initialization method (if given)
-    if init in ['mja', 'ahc', 'zero']:
+    if init in ['mja', 'ahc', 'plain']:
         warm_start = True
         if init == 'mja':
             from OrganizationalModelMiner.disjoint.graph_partitioning import (
@@ -59,11 +60,13 @@ def _gmm(
         elif init == 'ahc':
             from OrganizationalModelMiner.hierarchical.clustering import _ahc
             init_groups, _ = _ahc(profiles, n_groups)
-        elif init == 'zero':
-            init_groups = None
+        elif init == 'plain':
+            init_groups = list(set() for i in range(n_groups))
+            for i, r in enumerate(sorted(profiles.index)):
+                init_groups[i % n_groups].add(r)
         else:
             exit(1)
-        print('Initialization done by using {}:'.format(init))
+        print('Initialization done using {}:'.format(init))
     elif init == 'random':
         warm_start = False
     else:
@@ -74,15 +77,13 @@ def _gmm(
     if warm_start:
         from numpy import mean, zeros
         init_means = list()
-        if init_groups is not None:
-            for g in init_groups:
-                init_means.append(mean(profiles.loc[list(g)].values, axis=0))
-        else:
-            init_means = zeros((n_groups, profiles.shape[1]))
+        for g in init_groups:
+            init_means.append(mean(profiles.loc[list(g)].values, axis=0))
         gmm_model = GaussianMixture(
                 n_components=n_groups,
                 tol=1e-6,
                 n_init=1,
+                random_state=0,
                 weights_init=[1.0 / n_groups] * n_groups,
                 means_init=init_means).fit(profiles.values)
     else:
@@ -95,13 +96,13 @@ def _gmm(
     # step 2. Derive the clusters as the end result
     posterior_pr = gmm_model.predict_proba(profiles)
 
-    from numpy import array, nonzero, argmax
+    from numpy import array, nonzero, argmax, median
     from numpy.random import choice
     from collections import defaultdict
     groups = defaultdict(set)
     for i, resource_postpr in enumerate(posterior_pr):
         if threshold is None:
-            threshold = choice(resource_postpr[resource_postpr != 0])
+            threshold = median(resource_postpr[resource_postpr != 0])
         membership = array([p >= threshold for p in resource_postpr])
 
         # check if any valid membership exists for the resource based on
@@ -203,8 +204,9 @@ def _moc(
                 Activities' as initialization method.
                 - 'ahc': Use the (hierarchical) method of 'Agglomerative
                   Hierarchical Clustering' as initialization method.
-                - 'zero': Use zero initialization, this is to guarantee that
-                  all instances of the algorithm start from the same point.
+                - 'plain': Simply put resource into groups by their topological
+                  order in a looping fashion. Note that this is a meaniningless
+                  initialization similar to a zero initialization.
             Note that if an option other than 'random' is specified, then the
             initialization is performed once only.
         n_init: int, optional
@@ -218,7 +220,7 @@ def _moc(
     print('Applying overlapping organizational model mining using ' + 
             'clustering-based MOC:')
     # step 0. Perform specific initialization method (if given)
-    if init in ['mja', 'ahc', 'zero']:
+    if init in ['mja', 'ahc', 'plain']:
         warm_start = True
         from numpy import zeros
         from pandas import DataFrame
@@ -229,19 +231,18 @@ def _moc(
         elif init == 'ahc':
             from OrganizationalModelMiner.hierarchical.clustering import _ahc
             init_groups, _ = _ahc(profiles, n_groups)
-        elif init == 'zero':
-            init_groups = None
+        elif init == 'plain':
+            init_groups = list(set() for i in range(n_groups))
+            for i, r in enumerate(sorted(profiles.index)):
+                init_groups[i % n_groups].add(r)
         else:
             exit(1)
-        print('Initialization done by using {}:'.format(init))
+        print('Initialization done using {}:'.format(init))
 
         m = DataFrame(zeros((len(profiles), n_groups)), index=profiles.index)
-        if init_groups is not None:
-            for i, g in enumerate(init_groups):
-                for r in g:
-                    m.loc[r][i] = 1 # set the membership matrix as init input
-        else:
-            pass
+        for i, g in enumerate(init_groups):
+            for r in g:
+                m.loc[r][i] = 1 # set the membership matrix as init input
     elif init == 'random':
         warm_start = False
     else:
@@ -267,6 +268,7 @@ def _moc(
             for j in nonzero(mat_membership[i,:])[0]:
                 groups[j].add(profiles.index[i])
         else: # invalid (unexpected exit)
+            print(mat_membership)
             exit('[Fatal error] MOC failed to produce a valid result')
 
     #print('{} organizational groups discovered.'.format(len(groups.values())))
@@ -358,8 +360,9 @@ def _fcm(
                 Activities' as initialization method.
                 - 'ahc': Use the (hierarchical) method of 'Agglomerative
                   Hierarchical Clustering' as initialization method.
-                - 'zero': Use zero initialization, this is to guarantee that
-                  all instances of the algorithm start from the same point.
+                - 'plain': Simply put resource into groups by their topological
+                  order in a looping fashion. Note that this is a meaniningless
+                  initialization similar to a zero initialization.
             Note that if an option other than 'random' is specified, then the
             initialization is performed once only.
         n_init: int, optional
@@ -374,7 +377,7 @@ def _fcm(
             'clustering-based FCM:')
 
     # step 0. Perform specific initialization method (if given)
-    if init in ['mja', 'ahc', 'zero']:
+    if init in ['mja', 'ahc', 'plain']:
         warm_start = True
         if init == 'mja':
             from OrganizationalModelMiner.disjoint.graph_partitioning import (
@@ -383,11 +386,13 @@ def _fcm(
         elif init == 'ahc':
             from OrganizationalModelMiner.hierarchical.clustering import _ahc
             init_groups, _ = _ahc(profiles, n_groups)
-        elif init == 'zero':
-            init_groups = None
+        elif init == 'plain':
+            init_groups = list(set() for i in range(n_groups))
+            for i, r in enumerate(sorted(profiles.index)):
+                init_groups[i % n_groups].add(r)
         else:
             exit(1)
-        print('Initialization done by using {}:'.format(init))
+        print('Initialization done using {}:'.format(init))
     elif init == 'random':
         warm_start = False
     else:
@@ -415,14 +420,14 @@ def _fcm(
     # step 2. Derive the clusters as the end result
     fpp = fcm_model.fit_predict(profiles.values)
 
-    from numpy import array, nonzero, argmax
+    from numpy import array, nonzero, argmax, median
     from numpy.random import choice
     from collections import defaultdict
     groups = defaultdict(set)
     for i in range(len(fpp)):
         membership = fpp[i,:]
         if threshold is None:
-            threshold = choice(membership[membership != 0])
+            threshold = median(membership[membership != 0])
         membership = array([p >= threshold for p in membership])
 
         # check if any valid membership exists for the resource based on

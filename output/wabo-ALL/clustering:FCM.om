@@ -1,9 +1,0 @@
-0,Resource01;Resource02;Resource03;Resource04;Resource05;Resource06;Resource07;Resource08;Resource09;Resource11;Resource12;Resource13,None|AT.0|None;None|AT.16|None;None|AT.1|None;None|AT.3|None;None|AT.4|None;None|AT.5|None
-1,Resource02;Resource03;Resource04;Resource05;Resource06;Resource07;Resource08;Resource09;Resource11;Resource12;Resource13;admin1,None|AT.0|None;None|AT.16|None;None|AT.1|None;None|AT.3|None;None|AT.4|None
-2,Resource02;Resource03;Resource04;Resource05;Resource06;Resource07;Resource08;Resource09;Resource11;Resource12;Resource13;Resource14;Resource15,None|AT.0|None;None|AT.16|None;None|AT.1|None;None|AT.3|None;None|AT.4|None;None|AT.5|None
-3,Resource08;Resource11;Resource12;Resource13;Resource14;Resource15,None|AT.0|None;None|AT.16|None;None|AT.1|None;None|AT.3|None;None|AT.4|None;None|AT.5|None
-4,Resource10;Resource16;Resource17;Resource18;Resource19,None|AT.0|None;None|AT.1|None;None|AT.3|None
-5,Resource16;Resource17;Resource18;admin2,None|AT.0|None;None|AT.16|None;None|AT.1|None;None|AT.3|None;None|AT.4|None;None|AT.5|None
-6,Resource19;Resource20;Resource21;Resource24;Resource27,
-7,Resource21;Resource22;Resource23;Resource24;Resource25;Resource26;Resource27;Resource28;Resource29;Resource30;Resource31;Resource32;Resource33;Resource34;Resource35;Resource36;Resource37;Resource38;Resource39;Resource40;Resource41;Resource42;Resource43;TEST;admin3;test,
-8,Resource21;Resource22;Resource23;Resource24;Resource25;Resource26;Resource27;Resource28;Resource29;Resource30;Resource31;Resource32;Resource33;Resource34;Resource35;Resource36;Resource37;Resource38;Resource39;Resource40;Resource41;Resource42;Resource43;TEST;admin3;test,

@@ -245,21 +245,9 @@ if __name__ == '__main__':
     # assign execution modes to groups
     from OrganizationalModelMiner.mode_assignment import assign_by_any
     from OrganizationalModelMiner.mode_assignment import assign_by_all
-    postponed = list()
-    # add the original groups (obtained from clustering) first
     for og in ogs:
         #modes = assign_by_any(og, rl)
         modes = assign_by_all(og, rl)
-
-        if type(modes) == frozenset:
-            om.add_group(og, modes)
-        elif type(modes) == dict:
-            postponed.append((og, modes))
-        else:
-            exit(1)
-    # add the split groups
-    for g_m in postponed:
-        om.add_group(g_m[0], g_m[1])
 
     from Evaluation.l2m import conformance
     print()

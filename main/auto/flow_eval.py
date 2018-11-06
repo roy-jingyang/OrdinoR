@@ -70,17 +70,9 @@ def execute(setup, seq_ix, exp_dirpath):
     om = OrganizationalModel()
     step += 1
     assigner = _import_block(sequence[step]['invoke'])
-    postponed = list()
     for og in ogs:
         modes = assigner(og, rl)
-        if type(modes) == frozenset:
-            om.add_group(og, modes)
-        elif type(modes) == dict:
-            postponed.append((og, modes))
-        else:
-            exit(1)
-    for g_m in postponed:
-        om.add_group(g_m[0], g_m[1])
+        om.add_group(og, modes)
 
     # evaluate organizational model: fitness
     step += 1
@@ -92,8 +84,6 @@ def execute(setup, seq_ix, exp_dirpath):
     precision_eval = _import_block(sequence[step]['invoke'])
     precision = precision_eval(rl, om)
 
-    print(fitness)
-    print(precision)
     # export organizational models
     fnout = discoverer_name + '.om'
     with open(join(exp_dirpath, fnout), 'w') as fout:

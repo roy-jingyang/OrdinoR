@@ -23,26 +23,23 @@ if __name__ == '__main__':
 
     # specify the number of tests to be performed to check consistency
     n_tests = 100
-    #from OrganizationalModelMiner.disjoint.graph_partitioning import mja as miner
-    #from OrganizationalModelMiner.hierarchical.clustering import ahc as miner
-    #from OrganizationalModelMiner.overlap.community_detection import link_partitioning as miner
-    #from OrganizationalModelMiner.overlap.clustering import gmm as miner
-    #from OrganizationalModelMiner.overlap.clustering import moc as miner
-    from OrganizationalModelMiner.overlap.clustering import fcm as miner
+    #from OrganizationalModelMiner.disjoint.graph_partitioning import mja
+    #from OrganizationalModelMiner.hierarchical.clustering import ahc
+    #from OrganizationalModelMiner.overlap.community_detection import link_partitioning
+    from OrganizationalModelMiner.overlap.clustering import gmm
+    from OrganizationalModelMiner.overlap.clustering import moc
+    from OrganizationalModelMiner.overlap.clustering import fcm
 
     prev_ogs = None
     succ = True
     for t in range(n_tests):
-        #ogs = miner(profiles, range(5, 6), metric='correlation')
-        #ogs, _ = miner(profiles, range(5, 6), method='ward')
-        #ogs = miner(profiles, metric='correlation')
-        # TODO: GMM didn't pass.
-        #ogs = miner(profiles, range(5, 6), init='zero', threshold=None)
-        # TODO: MOC didn't pass
-        #ogs = miner(profiles, range(5, 6), init='zero')
-        # TODO: FCM didn't pass.
-        ogs = miner(profiles, range(5, 6), init='zero', threshold=None)
-
+        #ogs = mja(profiles, range(5, 6), metric='correlation')
+        #ogs, _ = ahc(profiles, range(5, 6), method='ward')
+        #ogs = link_partitioning(profiles, metric='correlation')
+        #ogs = gmm(profiles, range(5, 6), init='ahc', threshold=None)
+        #ogs = moc(profiles, range(5, 6), init='ahc')
+        ogs = fcm(profiles, range(5, 6), init='ahc', threshold=None)
+        
         if t != 0:
             # compare
             if sorted(ogs) == sorted(prev_ogs):
@@ -59,6 +56,7 @@ if __name__ == '__main__':
 
     if succ:
         print('\n{} tests passed.'.format(n_tests))
-        for og in prev_ogs:
+        for i, og in enumerate(prev_ogs):
+            print(i)
             print(og)
 

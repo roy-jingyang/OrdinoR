@@ -95,29 +95,6 @@ def assign_by_proportion(group, rl, p):
         print('\t[Warning] Group number may change due to refinement.')
         sigma = dict()
 
-        '''
-        # pre-calculate the cost and execution modes for all subgroups
-        from collections import defaultdict
-        all_valid_cand_sg = defaultdict(dict)
-        for subgroup in _powerset_excluded(group):
-            group_size = len(subgroup)
-            group_modes = _get_modes_by_prop(
-                    frozenset(subgroup), inv_resource_cap, p)
-
-            # TODO: different cost function definitions
-            if len(group_modes) >= 1:
-                # Strategy 1. Maximum Capability
-                group_cost = 1.0 / len(group_modes)
-                # Strategy 2. Maximum Size
-                #group_cost = 1.0 / len(group_size)
-
-                k = tuple(sorted(subgroup))
-                all_valid_cand_sg[k]['cost'] = group_cost
-                all_valid_cand_sg[k]['modes'] = modes
-            else:
-                pass
-        '''
-
         # Algorithm Weighted SetCoverGreedy
         while True:
             if len(sigma) > 0:
@@ -125,22 +102,47 @@ def assign_by_proportion(group, rl, p):
             else:
                 uncovered = group
 
+            print('\t\t{}/{} uncovered.'.format(len(uncovered), len(group)))
             if len(uncovered) > 0:
-                # TODO: different cost function definitions
+                # NOTE: different cost function definitions
                 def cost_effectiveness(g):
                     m = _get_modes_by_prop(
                             frozenset(g), inv_resource_cap, p)
                     if len(m) >= 1:
-                        cost = 1.0 / len(m)
-                        #cost = 1.0 / len(g)
+                        # valid candidate
+                        #cost = 1.0 # Strategy Naive
+                        #cost = 1.0 / len(g) # Strategy Max. Size
+                        cost = 1.0 / len(m) # Strategy Max. Cap
                         return len(uncovered.intersection(frozenset(g))) / cost
                     else:
-                        return 0
+                        # invalid candidate
+                        return float('-inf')
 
-                best_sg = max(
-                        _powerset_excluded(group), key=cost_effectiveness)
-                sigma[frozenset(best_sg)] = _get_modes_by_prop(
-                        frozenset(best_sg), inv_resource_cap, p)
+                best = max(_powerset_excluded(group), key=cost_effectiveness)
+                '''
+                # Pruning for Optimization
+                # TODO: Pruning (by Cardinality) only applies to Naive and Max. Size
+                prev_cardinality = -1
+                best = None
+                best_cost_effectiveness = -1
+                for cand in _powerset_excluded(group):
+                    if prev_cardinality == -1:
+                        prev_cardinality = len(cand)
+
+                    if len(cand) < prev_cardinality:
+                        if best is None:
+                            prev_cardinality = len(cand)
+                        else:
+                            break
+
+                    c_e = cost_effectiveness(cand)
+                    if c_e > 0 and c_e > best_cost_effectiveness:
+                        best_cost_effectiveness = c_e
+                        best = cand
+                '''
+
+                sigma[frozenset(best)] = _get_modes_by_prop(
+                        frozenset(best), inv_resource_cap, p)
             else:
                 break
 
@@ -173,7 +175,7 @@ def _get_modes_by_prop(g, inverse_resource_capability, p):
 
 # Python recipe: this is a helper function
 # This function returns a generator Powerset(s) \ {emptyset, s} given a set s
-# Note: the generator starts from delivering the larger subsets, and ends up
+# NOTE: the generator starts from delivering the larger subsets, and ends up
 # with the single-element subsets (i.e. descending order based on cardinality)
 from itertools import chain, combinations
 def _powerset_excluded(iterable):

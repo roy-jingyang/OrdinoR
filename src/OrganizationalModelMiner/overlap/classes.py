@@ -17,7 +17,7 @@ class MOC:
         The number of initializations to perform. The best results are kept.
         This parameter would be override if M_init is present.
 
-    max_iter: int, defaults to 100.
+    max_iter: int, defaults to 1000.
         The number of iterative alternating updates to run.
 
     M_init: array-like, shape (n_samples, n_components), optional
@@ -30,7 +30,7 @@ class MOC:
 
     '''
     def __init__(self, 
-            n_components=1, tol=1e-6, n_init=1, max_iter=100, M_init=None,
+            n_components=1, tol=1e-6, n_init=1, max_iter=1000, M_init=None,
             is_disjoint=False):
         self.n_components = n_components
         self.tol = tol
@@ -51,7 +51,7 @@ class MOC:
         best_m : array-like, shape (n_samples, n_components), component membership
         '''
 
-        from numpy import array, dot, infty, zeros
+        from numpy import array, dot, infty, zeros, absolute
         from numpy.random import randint, choice
         from numpy.linalg import pinv
 
@@ -123,7 +123,7 @@ class MOC:
                     delta_log_likelihood = (current_log_likelihood
                             - prev_log_likelihood)
 
-                if delta_log_likelihood < self.tol:
+                if absolute(delta_log_likelihood) < self.tol:
                     converged = True
                     if delta_log_likelihood >= 0:
                         pass
@@ -323,7 +323,7 @@ class FCM:
         The number of initializations to perform. The best results are kept.
         This parameter would be override if means_init is present.
 
-    max_iter: int, defaults to 100.
+    max_iter: int, defaults to 1000.
         The number of iterative alternating updates to run.
 
     means_init: array-like, shape (n_components, n_features), optional
@@ -332,7 +332,7 @@ class FCM:
         weights for samples.
     '''
     def __init__(self,
-            n_components=1, tol=1e-6, p=2, n_init=1, max_iter=100,
+            n_components=1, tol=1e-6, p=2, n_init=1, max_iter=1000,
             means_init=None):
         self.n_components = n_components
         self.tol = tol
@@ -353,7 +353,7 @@ class FCM:
         w : array-like, shape (n_samples, n_components), weights
         '''
 
-        from numpy import array, infty, zeros, sum, power, dot, amax
+        from numpy import array, infty, zeros, sum, power, dot, amax, absolute
         from numpy.random import randint, choice
         from scipy.spatial.distance import euclidean as dist
 
@@ -398,8 +398,8 @@ class FCM:
 
             #print('Fitting FCM model-{}:'.format(init + 1), end=' ')
             while not converged:
+                iteration += 1
                 if iteration >= self.max_iter:
-                    iteration += 1
                     print('[Warning] Model did not converged within a max. of '
                             + '{} iterations (delta= {:.4f}).'.format(
                                 self.max_iter, self.tol))
@@ -412,9 +412,8 @@ class FCM:
                 # (eq. 9.2)
                 cntr = dot(power(w.T, self.p), X) # shape = (n_comp, n_features)
                 for j in range(self.n_components):
-                    cntr[j,:] /= sum([power(w[i,j], self.p) 
-                        for i in range(len(X))])
-
+                    cntr[j,:] /= sum(
+                        [power(w[i,j], self.p) for i in range(len(X))])
 
                 # Recompute the fuzzy psuedo-partition (eq. 9.3)
                 exp = 1 / (self.p - 1)
@@ -436,16 +435,16 @@ class FCM:
                     delta_sse = current_sse - prev_sse
 
                 # until: change in SSE is below certain threshold
-                if delta_sse < self.tol:
+                if absolute(delta_sse) < self.tol:
                     converged = True
                     if delta_sse <= 0:
                         pass
                     else:
                         # current solution is worse (minimizing)
-                        print('\tDELTA > 0: Pick the last solution instead.')
+                        #print('\tDELTA > 0: Pick the last solution instead.')
                         current_sse = prev_sse
                         w = prev_w.copy()
-                    #print('\nModel converged with ', end='')
+                    #print('\nModel converged')
 
             # check if the solution is valid
             is_valid = True

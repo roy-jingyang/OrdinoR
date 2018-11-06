@@ -36,11 +36,11 @@ if __name__ == '__main__':
             search_only=True)
 
     from OrganizationalModelMiner.overlap.clustering import gmm, moc, fcm
-    best_k_gmm = gmm(profiles, num_groups, threshold=None, 
+    best_k_gmm = gmm(profiles, num_groups, threshold=None, init='ahc',
             search_only=True)
-    best_k_moc = moc(profiles, num_groups,
+    best_k_moc = moc(profiles, num_groups, init='ahc',
             search_only=True)
-    best_k_fcm = fcm(profiles, num_groups, threshold=None,
+    best_k_fcm = fcm(profiles, num_groups, threshold=None, init='ahc',
             search_only=True)
 
     with open(fnout, 'w') as f:
