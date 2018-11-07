@@ -25,7 +25,7 @@ if __name__ == '__main__':
     n_tests = 100
     #from OrganizationalModelMiner.disjoint.graph_partitioning import mja
     #from OrganizationalModelMiner.hierarchical.clustering import ahc
-    #from OrganizationalModelMiner.overlap.community_detection import link_partitioning
+    from OrganizationalModelMiner.overlap.community_detection import link_partitioning
     from OrganizationalModelMiner.overlap.clustering import gmm
     from OrganizationalModelMiner.overlap.clustering import moc
     from OrganizationalModelMiner.overlap.clustering import fcm
@@ -35,10 +35,10 @@ if __name__ == '__main__':
     for t in range(n_tests):
         #ogs = mja(profiles, range(5, 6), metric='correlation')
         #ogs, _ = ahc(profiles, range(5, 6), method='ward')
-        #ogs = link_partitioning(profiles, metric='correlation')
+        ogs = link_partitioning(profiles, metric='correlation')
         #ogs = gmm(profiles, range(5, 6), init='ahc', threshold=None)
         #ogs = moc(profiles, range(5, 6), init='ahc')
-        ogs = fcm(profiles, range(5, 6), init='ahc', threshold=None)
+        #ogs = fcm(profiles, range(5, 6), init='ahc', threshold=None)
         
         if t != 0:
             # compare

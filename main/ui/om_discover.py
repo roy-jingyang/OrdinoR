@@ -245,9 +245,11 @@ if __name__ == '__main__':
     # assign execution modes to groups
     from OrganizationalModelMiner.mode_assignment import assign_by_any
     from OrganizationalModelMiner.mode_assignment import assign_by_all
-    for og in ogs:
+    l = list()
+    for og in sorted(ogs):
         #modes = assign_by_any(og, rl)
         modes = assign_by_all(og, rl)
+        om.add_group(og, modes)
 
     from Evaluation.l2m import conformance
     print()

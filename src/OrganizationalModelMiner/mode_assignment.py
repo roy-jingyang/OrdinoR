@@ -91,63 +91,25 @@ def assign_by_proportion(group, rl, p):
         return modes
     else:
         # post refining required
-        # TODO: need to SPEED UP!!
         print('\t[Warning] Group number may change due to refinement.')
-        sigma = dict()
-
-        # Algorithm Weighted SetCoverGreedy
-        while True:
-            if len(sigma) > 0:
-                uncovered = group.difference(frozenset.union(*sigma.keys()))
+        # TODO: different cost function definitions
+        def cost(g):
+            m = _get_modes_by_prop(frozenset(g), inv_resource_cap, p)
+            if len(m) >= 1:
+                #return 1 # Naive
+                return 1 / len(g) # Max. Size
+                #return 1 / len(m) # Max. Cap.
             else:
-                uncovered = group
+                return float('inf')
 
-            print('\t\t{}/{} uncovered.'.format(len(uncovered), len(group)))
-            if len(uncovered) > 0:
-                # NOTE: different cost function definitions
-                def cost_effectiveness(g):
-                    m = _get_modes_by_prop(
-                            frozenset(g), inv_resource_cap, p)
-                    if len(m) >= 1:
-                        # valid candidate
-                        #cost = 1.0 # Strategy Naive
-                        #cost = 1.0 / len(g) # Strategy Max. Size
-                        cost = 1.0 / len(m) # Strategy Max. Cap
-                        return len(uncovered.intersection(frozenset(g))) / cost
-                    else:
-                        # invalid candidate
-                        return float('-inf')
-
-                best = max(_powerset_excluded(group), key=cost_effectiveness)
-                '''
-                # Pruning for Optimization
-                # TODO: Pruning (by Cardinality) only applies to Naive and Max. Size
-                prev_cardinality = -1
-                best = None
-                best_cost_effectiveness = -1
-                for cand in _powerset_excluded(group):
-                    if prev_cardinality == -1:
-                        prev_cardinality = len(cand)
-
-                    if len(cand) < prev_cardinality:
-                        if best is None:
-                            prev_cardinality = len(cand)
-                        else:
-                            break
-
-                    c_e = cost_effectiveness(cand)
-                    if c_e > 0 and c_e > best_cost_effectiveness:
-                        best_cost_effectiveness = c_e
-                        best = cand
-                '''
-
-                sigma[frozenset(best)] = _get_modes_by_prop(
-                        frozenset(best), inv_resource_cap, p)
-            else:
-                break
+        split = _set_cover_greedy(group, cost, pruning=True)
 
         print('\tGroup of size {} split to {} subgroups after refinement.'
-            .format(len(group), len(sigma)))
+            .format(len(group), len(split)))
+        sigma = dict()
+        for subgroup in split:
+            subgroup_modes = _get_modes_by_prop(subgroup, inv_resource_cap, p)
+            sigma[subgroup] = subgroup_modes
         return sigma
 
 def _get_modes_by_prop(g, inverse_resource_capability, p):
@@ -173,13 +135,84 @@ def _get_modes_by_prop(g, inverse_resource_capability, p):
 
     return frozenset(modes)
 
+def _set_cover_greedy(U, f_cost, pruning=False):
+    sigma = list()
+
+    while True:
+        if len(sigma) > 0:
+            uncovered = U.difference(frozenset.union(*sigma))
+        else:
+            uncovered = U
+        #print('\t\t{}/{} uncovered.'.format(len(uncovered), len(U)))
+
+        if len(uncovered) > 0:
+            def cost_effectiveness(g):
+                cost = f_cost(g)
+                if cost != float('inf'):
+                    # valid candidate
+                    return len(uncovered.intersection(frozenset(g))) / cost
+                else:
+                    # invalid candidate
+                    return 0
+
+            if pruning:
+                candidates = _powerset_exclude_headtail(
+                        U, reverse=True, depth=1)
+                def find_best_candidate(S):
+                    # TODO: debugging required, cannot reproduce
+                    best = None
+                    best_coverable = None
+                    best_cost_effectiveness = float('-inf')
+                    best_coverablity = 0
+                    for cand in S:
+                        num_covered = len(uncovered.intersection(frozenset(cand)))
+                        if num_covered > best_coverablity:
+                            print('{}-{}'.format(num_covered,
+                                best_coverablity))
+                            best_coverablity = num_covered
+                            best_coverable = cand
+
+                        c_e = cost_effectiveness(cand)
+                        if c_e > 0 and c_e > best_cost_effectiveness:
+                            best_cost_effectiveness = c_e
+                            best = cand
+
+                    if best is not None:
+                        return best
+                    else:
+                        print('recursion takes place')
+                        exit()
+                        return find_best_candidate(_powerset_exclude_headtail(
+                            best_coverable, reverse=True, depth=1))
+
+                best = find_best_candidate(candidates)
+            else:
+                candidates = _powerset_exclude_headtail(
+                        U, reverse=True)
+                best = max(candidates, key=cost_effectiveness)
+
+            sigma.append(frozenset(best))
+        else:
+            return sigma
+
+
 # Python recipe: this is a helper function
 # This function returns a generator Powerset(s) \ {emptyset, s} given a set s
-# NOTE: the generator starts from delivering the larger subsets, and ends up
-# with the single-element subsets (i.e. descending order based on cardinality)
+
+# NOTE 1: the generator delivers subsets based on cardinality on an ascending
+# order, specify the additional argument 'reverse' to change the behaviour.
+# NOTE 2: the additional argument 'depth' specifies the maximal (minimal) 
+# cardinality of subset(s) returned by the function. If None, all will be
+# returned.
 from itertools import chain, combinations
-def _powerset_excluded(iterable):
+def _powerset_exclude_headtail(iterable, reverse=False, depth=None):
     s = list(iterable)
-    return (chain.from_iterable(combinations(s, r) 
-        for r in range(len(s) - 1, 0, -1)))
+    if reverse:
+        end = 0 if depth is None else (len(s) - 1 - depth)
+        return (chain.from_iterable(combinations(s, r) 
+            for r in range(len(s) - 1, end, -1)))
+    else:
+        end = len(s) if depth is None else (1 + depth)
+        return (chain.from_iterable(combinations(s, r) 
+            for r in range(1, end)))
 
