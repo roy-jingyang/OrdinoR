@@ -91,21 +91,25 @@ def assign_by_proportion(group, rl, p):
         return modes
     else:
         # post refining required
-        print('\t[Warning] Group number may change due to refinement.')
         # TODO: different cost function definitions
         def cost(g):
             m = _get_modes_by_prop(frozenset(g), inv_resource_cap, p)
             if len(m) >= 1:
-                #return 1 # Naive
-                return 1 / len(g) # Max. Size
-                #return 1 / len(m) # Max. Cap.
+                #return 1.0 # Naive
+                #return 1.0 / len(g) # Max. Size
+                return 1.0 / len(m) # Max. Cap.
             else:
                 return float('inf')
 
-        split = _set_cover_greedy(group, cost, pruning=True)
+        # NOTE: pruning only applies for Naive and Max. Size
+        #search_option = 'exhaust'
+        #search_option = 'pruned'
+        search_option = 'ga'
+        split = _set_cover_greedy(group, cost, search=search_option)
 
-        print('\tGroup of size {} split to {} subgroups after refinement.'
-            .format(len(group), len(split)))
+        print('\t[Warning] Group of size {} split to {} subgroups, '
+              'after refinement using search method "{}".'
+            .format(len(group), len(split), search_option))
         sigma = dict()
         for subgroup in split:
             subgroup_modes = _get_modes_by_prop(subgroup, inv_resource_cap, p)
@@ -135,7 +139,8 @@ def _get_modes_by_prop(g, inverse_resource_capability, p):
 
     return frozenset(modes)
 
-def _set_cover_greedy(U, f_cost, pruning=False):
+def _set_cover_greedy(U, f_cost, search='exhaust'):
+    from .utilities import powerset_exclude_headtail
     sigma = list()
 
     while True:
@@ -143,7 +148,7 @@ def _set_cover_greedy(U, f_cost, pruning=False):
             uncovered = U.difference(frozenset.union(*sigma))
         else:
             uncovered = U
-        #print('\t\t{}/{} uncovered.'.format(len(uncovered), len(U)))
+        print('\t\t{}/{} uncovered.'.format(len(uncovered), len(U)))
 
         if len(uncovered) > 0:
             def cost_effectiveness(g):
@@ -155,20 +160,20 @@ def _set_cover_greedy(U, f_cost, pruning=False):
                     # invalid candidate
                     return 0
 
-            if pruning:
-                candidates = _powerset_exclude_headtail(
-                        U, reverse=True, depth=1)
+            if search == 'exhaust':
+                candidates = powerset_exclude_headtail(
+                        sorted(U), reverse=True)
+                best = max(candidates, key=cost_effectiveness)
+            elif search == 'pruned':
                 def find_best_candidate(S):
-                    # TODO: debugging required, cannot reproduce
                     best = None
                     best_coverable = None
                     best_cost_effectiveness = float('-inf')
                     best_coverablity = 0
+
                     for cand in S:
                         num_covered = len(uncovered.intersection(frozenset(cand)))
                         if num_covered > best_coverablity:
-                            print('{}-{}'.format(num_covered,
-                                best_coverablity))
                             best_coverablity = num_covered
                             best_coverable = cand
 
@@ -180,39 +185,28 @@ def _set_cover_greedy(U, f_cost, pruning=False):
                     if best is not None:
                         return best
                     else:
-                        print('recursion takes place')
-                        exit()
-                        return find_best_candidate(_powerset_exclude_headtail(
+                        return find_best_candidate(powerset_exclude_headtail(
                             best_coverable, reverse=True, depth=1))
 
+                candidates = powerset_exclude_headtail(
+                        sorted(U), reverse=True, depth=1)
                 best = find_best_candidate(candidates)
+            elif search == 'ga':
+                from .utilities import find_best_subset_GA
+                sorted_U = sorted(U)
+                def f_evaluate(individual):
+                    s = set(sorted_U[i]
+                            for i, flag in enumerate(individual) if flag == 1)
+                    return (cost_effectiveness(s),)
+                best = find_best_subset_GA(sorted_U,
+                        evaluate=f_evaluate,
+                        max_iter=10000,
+                        size_population=500, 
+                        p_crossover=0.5, p_mutate=0.2)
             else:
-                candidates = _powerset_exclude_headtail(
-                        U, reverse=True)
-                best = max(candidates, key=cost_effectiveness)
+                exit('[Error] Invalid option specified for search method.')
 
             sigma.append(frozenset(best))
         else:
             return sigma
-
-
-# Python recipe: this is a helper function
-# This function returns a generator Powerset(s) \ {emptyset, s} given a set s
-
-# NOTE 1: the generator delivers subsets based on cardinality on an ascending
-# order, specify the additional argument 'reverse' to change the behaviour.
-# NOTE 2: the additional argument 'depth' specifies the maximal (minimal) 
-# cardinality of subset(s) returned by the function. If None, all will be
-# returned.
-from itertools import chain, combinations
-def _powerset_exclude_headtail(iterable, reverse=False, depth=None):
-    s = list(iterable)
-    if reverse:
-        end = 0 if depth is None else (len(s) - 1 - depth)
-        return (chain.from_iterable(combinations(s, r) 
-            for r in range(len(s) - 1, end, -1)))
-    else:
-        end = len(s) if depth is None else (1 + depth)
-        return (chain.from_iterable(combinations(s, r) 
-            for r in range(1, end)))
 

@@ -79,3 +79,95 @@ def cross_validation_score(
 
     return mean(scores)
 
+def powerset_exclude_headtail(iterable, reverse=False, depth=None):
+    '''
+    Python recipe: this is a helper function
+    This function returns a generator Powerset(s) \ {emptyset, s} given a set s
+
+    Params:
+        iterable: iterable
+        reverse: Boolean, optional
+            The generator delivers subsets based on cardinality on an ascending
+            order, specify the additional argument 'reverse' to change the
+            behaviour.
+        depth: int, optional
+            The additional argument 'depth' specifies the maximal (or minimal) 
+            cardinality of subset(s) returned by the function. If None, all
+            will be returned.
+    Returns:
+        generator
+            The subsets in the powerset as required.
+    '''
+    from itertools import chain, combinations
+    s = list(iterable)
+    if reverse:
+        end = 0 if depth is None else (len(s) - 1 - depth)
+        return (chain.from_iterable(combinations(s, r) 
+            for r in range(len(s) - 1, end, -1)))
+    else:
+        end = len(s) if depth is None else (1 + depth)
+        return (chain.from_iterable(combinations(s, r) 
+            for r in range(1, end)))
+
+def find_best_subset_GA(universe, evaluate,
+        max_iter, size_population, p_crossover, p_mutate):
+        from random import randint, random
+        from deap import base, creator, tools
+
+        creator.create('FitnessMax', base.Fitness, weights=(1.0,))
+        creator.create('Individual', list, fitness=creator.FitnessMax)
+
+        toolbox = base.Toolbox()
+
+        toolbox.register('attr_bool', randint, 0, 1)
+        toolbox.register('individual', tools.initRepeat, creator.Individual,
+                toolbox.attr_bool, len(universe))
+        toolbox.register('population', tools.initRepeat, list, toolbox.individual)
+
+        toolbox.register('evaluate', evaluate)
+        toolbox.register('crossover', tools.cxTwoPoint)
+        toolbox.register('mutate', tools.mutFlipBit, indpb=0.05)
+        toolbox.register('select', tools.selTournament, tournsize=3)
+
+        pop = toolbox.population(n=size_population)
+        pop = list(filter(lambda x: any(x) and not all(x), pop))
+        for ind, fit in zip(pop, map(toolbox.evaluate, pop)):
+            ind.fitness.values = fit
+        fits = [ind.fitness.values[0] for ind in pop]
+
+        generation = 0
+        while generation < max_iter:
+            #print('-' * 5 + 'Generation {}'.format(generation))
+            offspring = toolbox.select(pop, len(pop))
+            offspring = list(map(toolbox.clone, offspring))
+
+            for childx, childy in zip(offspring[::2], offspring[1::2]):
+                if random() < p_crossover:
+                    toolbox.crossover(childx, childy)
+                    del childx.fitness.values
+                    del childy.fitness.values
+
+            for child in offspring:
+                if random() < p_mutate:
+                    toolbox.mutate(child)
+                    del child.fitness.values
+
+            invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+            invalid_ind = list(
+                    filter(lambda x: any(x) and not all(x), invalid_ind))
+            for ind, fit in zip(invalid_ind, map(toolbox.evaluate, invalid_ind)):
+                ind.fitness.values = fit
+            
+            offspring = list(
+                    filter(lambda x: any(x) and not all(x), offspring))
+            if len(offspring) == 0:
+                # if no valid offspring is to be generated
+                break
+            else:
+                pop[:] = offspring
+            generation += 1
+        
+        best_ind = tools.selBest(pop, 1)[0]
+        return frozenset(universe[i] 
+                for i, flag in enumerate(best_ind) if flag == 1)
+

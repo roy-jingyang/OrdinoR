@@ -1,0 +1,17 @@
+0,Resource01,|AT.0|;|AT.16|;|AT.17|;|AT.18|;|AT.1|;|AT.21|;|AT.22|;|AT.23|;|AT.25|;|AT.26|;|AT.2|;|AT.3|;|AT.4|;|AT.5|
+1,Resource02;Resource03;Resource09;Resource12;Resource13;Resource14;Resource15;Resource16;Resource17;Resource18;Resource20;Resource21;Resource25;Resource26;Resource28;Resource29;Resource30;Resource31;Resource32;Resource33;Resource34;Resource35;Resource36;Resource38;Resource39,|AT.1|
+2,Resource40;Resource41,|AT.7|
+3,Resource37;Resource42;Resource43;admin3,|AT.0|
+4,Resource02;Resource03;Resource09;Resource12;Resource13;Resource14;Resource15;Resource16;Resource17;Resource18;Resource20;Resource21;Resource25;Resource26;Resource28;Resource29;Resource30;Resource31;Resource32;Resource33;Resource34;Resource35;Resource36;TEST,|AT.1|
+5,Resource02;Resource03;Resource09;Resource12;Resource13;Resource14;Resource15;Resource16;Resource17;Resource18;Resource20;Resource21;Resource25;Resource26;Resource28;Resource29;Resource30;Resource31;Resource33;Resource34;Resource35;Resource36;Resource37;test,|AT.5|
+6,Resource04;Resource05;Resource06,|AT.0|;|AT.16|;|AT.17|;|AT.18|;|AT.1|;|AT.20|;|AT.3|;|AT.4|;|AT.5|
+7,Resource07,|AT.0|;|AT.16|;|AT.17|;|AT.18|;|AT.1|;|AT.20|;|AT.21|;|AT.22|;|AT.23|;|AT.25|;|AT.26|;|AT.2|;|AT.3|;|AT.4|;|AT.5|
+8,Resource08,|AT.0|;|AT.16|;|AT.17|;|AT.1|;|AT.20|;|AT.22|;|AT.23|;|AT.25|;|AT.26|;|AT.2|;|AT.3|;|AT.4|;|AT.5|
+9,Resource10,|AT.0|;|AT.1|;|AT.20|;|AT.3|;|AT.4|
+10,Resource11,|AT.0|;|AT.16|;|AT.1|;|AT.21|;|AT.22|;|AT.23|;|AT.24|;|AT.25|;|AT.26|;|AT.2|;|AT.3|;|AT.4|;|AT.5|;|AT.8|;|AT.9|
+11,Resource19,|AT.0|;|AT.18|;|AT.1|;|AT.20|;|AT.3|
+12,Resource22;Resource23,|AT.0|;|AT.16|;|AT.1|;|AT.3|;|AT.4|;|AT.5|;|AT.6|
+13,Resource24,|AT.18|;|AT.1|;|AT.3|;|AT.6|
+14,Resource27,|AT.0|;|AT.4|
+15,admin1,|AT.0|;|AT.16|;|AT.17|;|AT.18|;|AT.1|;|AT.20|;|AT.21|;|AT.3|;|AT.4|
+16,admin2,|AT.0|;|AT.10|;|AT.16|;|AT.17|;|AT.19|;|AT.1|;|AT.2|;|AT.3|;|AT.4|;|AT.5|;|AT.6|;|AT.7|
