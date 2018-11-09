@@ -90,19 +90,20 @@ def assign_by_proportion(group, rl, p):
     if len(modes) > 0:
         return modes
     else:
-        # post refining required
+        # post refinement required
         # TODO: different cost function definitions
         def cost(g):
             m = _get_modes_by_prop(frozenset(g), inv_resource_cap, p)
             if len(m) >= 1:
-                #return 1.0 # Naive
+                return 1.0 # Naive
                 #return 1.0 / len(g) # Max. Size
-                return 1.0 / len(m) # Max. Cap.
+                #return len(g) # Min. Size
+                #return 1.0 / len(m) # Max. Cap.
             else:
                 return float('inf')
 
-        # NOTE: pruning only applies for Naive and Max. Size
         #search_option = 'exhaust'
+        # NOTE: pruning only applies for Naive and Max. Size
         #search_option = 'pruned'
         search_option = 'ga'
         split = _set_cover_greedy(group, cost, search=search_option)
@@ -158,12 +159,13 @@ def _set_cover_greedy(U, f_cost, search='exhaust'):
                     return len(uncovered.intersection(frozenset(g))) / cost
                 else:
                     # invalid candidate
-                    return 0
-
+                    return float('-inf')
+            
+            best_candidate = None
             if search == 'exhaust':
                 candidates = powerset_exclude_headtail(
                         sorted(U), reverse=True)
-                best = max(candidates, key=cost_effectiveness)
+                best_candidate = max(candidates, key=cost_effectiveness)
             elif search == 'pruned':
                 def find_best_candidate(S):
                     best = None
@@ -190,7 +192,7 @@ def _set_cover_greedy(U, f_cost, search='exhaust'):
 
                 candidates = powerset_exclude_headtail(
                         sorted(U), reverse=True, depth=1)
-                best = find_best_candidate(candidates)
+                best_candidate = find_best_candidate(candidates)
             elif search == 'ga':
                 from .utilities import find_best_subset_GA
                 sorted_U = sorted(U)
@@ -198,15 +200,23 @@ def _set_cover_greedy(U, f_cost, search='exhaust'):
                     s = set(sorted_U[i]
                             for i, flag in enumerate(individual) if flag == 1)
                     return (cost_effectiveness(s),)
-                best = find_best_subset_GA(sorted_U,
-                        evaluate=f_evaluate,
-                        max_iter=10000,
-                        size_population=500, 
-                        p_crossover=0.5, p_mutate=0.2)
+
+                while True:
+                    result = find_best_subset_GA(sorted_U,
+                            evaluate=f_evaluate,
+                            max_iter=1000,
+                            size_population=min(int(0.2 * len(sorted_U)), 500), 
+                            p_crossover=0.5, p_mutate=0.3)
+                    if cost_effectiveness(result) > 0:
+                        best_candidate = result
+                        break
             else:
                 exit('[Error] Invalid option specified for search method.')
-
-            sigma.append(frozenset(best))
+            
+            if best_candidate is not None:
+                sigma.append(frozenset(best_candidate))
+            else:
+                exit('[Fatal Error] No valid search result produced')
         else:
             return sigma
 

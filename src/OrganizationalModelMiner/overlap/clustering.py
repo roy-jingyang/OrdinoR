@@ -102,7 +102,8 @@ def _gmm(
     groups = defaultdict(set)
     for i, resource_postpr in enumerate(posterior_pr):
         if threshold is None:
-            threshold = median(resource_postpr[resource_postpr != 0])
+            #threshold = median(resource_postpr[resource_postpr != 0])
+            threshold = 1.0 / n_groups
         membership = array([p >= threshold for p in resource_postpr])
 
         # check if any valid membership exists for the resource based on
@@ -403,11 +404,8 @@ def _fcm(
     if warm_start:
         from numpy import array, mean, nonzero, zeros
         init_means = list()
-        if init_groups is not None:
-            for g in init_groups:
-                init_means.append(mean(profiles.loc[list(g)].values, axis=0))
-        else:
-            init_means = zeros((n_groups, profiles.shape[1]))
+        for g in init_groups:
+            init_means.append(mean(profiles.loc[list(g)].values, axis=0))
         fcm_model = FCM(
                 n_components=n_groups,
                 n_init=1,
@@ -424,11 +422,11 @@ def _fcm(
     from numpy.random import choice
     from collections import defaultdict
     groups = defaultdict(set)
-    for i in range(len(fpp)):
-        membership = fpp[i,:]
+    for i, belonging_factor in enumerate(fpp):
         if threshold is None:
-            threshold = median(membership[membership != 0])
-        membership = array([p >= threshold for p in membership])
+            #threshold = median(belonging_factor[belonging_factor != 0])
+            threshold = 1.0 / n_groups
+        membership = array([p >= threshold for p in belonging_factor])
 
         # check if any valid membership exists for the resource based on
         # the selection of the threshold
@@ -436,7 +434,7 @@ def _fcm(
             for j in nonzero(membership)[0]:
                 groups[j].add(profiles.index[i])
         else: # invalid, have to choose the maximum one or missing the resource
-            groups[argmax(fpp[i,:])].add(profiles.index[i])
+            groups[argmax(belonging_factor)].add(profiles.index[i])
 
     #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]

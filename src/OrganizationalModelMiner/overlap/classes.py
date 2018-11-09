@@ -51,7 +51,7 @@ class MOC:
         best_m : array-like, shape (n_samples, n_components), component membership
         '''
 
-        from numpy import array, dot, infty, zeros, absolute
+        from numpy import array, dot, infty, zeros
         from numpy.random import randint, choice
         from numpy.linalg import pinv
 
@@ -123,7 +123,7 @@ class MOC:
                     delta_log_likelihood = (current_log_likelihood
                             - prev_log_likelihood)
 
-                if absolute(delta_log_likelihood) < self.tol:
+                if delta_log_likelihood is not infty and delta_log_likelihood < self.tol:
                     converged = True
                     if delta_log_likelihood >= 0:
                         pass
@@ -353,9 +353,11 @@ class FCM:
         w : array-like, shape (n_samples, n_components), weights
         '''
 
-        from numpy import array, infty, zeros, sum, power, dot, amax, absolute
+        from numpy import array, infty, zeros, sum, power, dot, amax
         from numpy.random import randint, choice
         from scipy.spatial.distance import euclidean as dist
+        # NOTE: DEBUG import
+        #from skfuzzy.cluster import cmeans
 
         best_sse = None
         best_w = None
@@ -415,6 +417,7 @@ class FCM:
                     cntr[j,:] /= sum(
                         [power(w[i,j], self.p) for i in range(len(X))])
 
+                prev_w = w.copy()
                 # Recompute the fuzzy psuedo-partition (eq. 9.3)
                 exp = 1 / (self.p - 1)
                 for i in range(len(X)):
@@ -435,7 +438,7 @@ class FCM:
                     delta_sse = current_sse - prev_sse
 
                 # until: change in SSE is below certain threshold
-                if absolute(delta_sse) < self.tol:
+                if delta_sse is not infty and (-1) * delta_sse < self.tol:
                     converged = True
                     if delta_sse <= 0:
                         pass
@@ -446,6 +449,14 @@ class FCM:
                         w = prev_w.copy()
                     #print('\nModel converged')
 
+            '''
+            # NOTE: DEBUG starts
+            _, w, w0, _, sse, _, _ = cmeans(X.T,
+                    self.n_components, self.p, self.tol, self.max_iter,
+                    w.T)
+            # NOTE: DEBUG ends
+            '''
+
             # check if the solution is valid
             is_valid = True
             for j in range(self.n_components):
@@ -454,7 +465,9 @@ class FCM:
                     break
 
             if is_valid:
-                #print('Final SSE =\t{:.8f}'.format(current_sse))
+                print('Final SSE =\t{:.8f}'.format(current_sse))
+                #best_w = w.T.copy()
+                #print('Final SSE =\t{:.8f}'.format(sse[0]))
                 if best_sse is None or current_sse < best_sse:
                     best_sse = current_sse
                     best_w = w.copy()

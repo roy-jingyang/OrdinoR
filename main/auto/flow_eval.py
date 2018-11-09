@@ -31,6 +31,7 @@ sys.path.append('./src/')
 import cProfile
 
 from os.path import join
+from csv import writer
 
 def _import_block(path_invoke):
     from importlib import import_module
@@ -40,7 +41,7 @@ def _import_block(path_invoke):
 
 def execute(setup, seq_ix, exp_dirpath):
     sequence = list(setup.nodes[ix] for ix in seq_ix)
-    test_name = ' -> '.join(step['label'] for step in sequence)
+    test_name = '-'.join(step['label'] for step in sequence)
 
     # Step 0: input an event log
     step = 0
@@ -84,12 +85,14 @@ def execute(setup, seq_ix, exp_dirpath):
     precision_eval = _import_block(sequence[step]['invoke'])
     precision = precision_eval(rl, om)
 
+    '''
     # export organizational models
     fnout = discoverer_name + '.om'
     with open(join(exp_dirpath, fnout), 'w') as fout:
         om.to_file_csv(fout)
+    '''
 
-    return test_name, om.size(), fitness, precision
+    return discoverer_name, om.size(), fitness, precision
 
 
 if __name__ == '__main__':
@@ -100,11 +103,26 @@ if __name__ == '__main__':
     from networkx import read_graphml
     setup = read_graphml(fn_setup)
 
-    name, k, f, p = execute(setup, path, dirout)
+    n_tests = 1
+    name = ''
+    k_values = list()
+    fitness_values = list()
+    precision_values = list()
+    for i in range(n_tests):
+        name, k, f, p = execute(setup, path, dirout)
+        k_values.append(k)
+        fitness_values.append(f)
+        precision_values.append(p)
 
-    with open(join(dirout, 'report'), 'a') as fout:
+    with open(join(dirout, '{}_report.csv'.format(name)), 'w') as fout:
+        writer = writer(fout)
+        for i in range(n_tests):
+            writer.writerow([
+                name, k_values[i], fitness_values[i], precision_values[i]])
+        '''
         fout.write('{}\n'.format(name))
         fout.write('\tk         = {}\n'.format(k))
         fout.write('\tFitness   = {:.6f}\n'.format(f))
         fout.write('\tPrecision = {:.6f}\n'.format(p))
+        '''
     
