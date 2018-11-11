@@ -465,7 +465,7 @@ class FCM:
                     break
 
             if is_valid:
-                print('Final SSE =\t{:.8f}'.format(current_sse))
+                #print('Final SSE =\t{:.8f}'.format(current_sse))
                 #best_w = w.T.copy()
                 #print('Final SSE =\t{:.8f}'.format(sse[0]))
                 if best_sse is None or current_sse < best_sse:

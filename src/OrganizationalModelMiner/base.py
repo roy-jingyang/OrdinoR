@@ -237,7 +237,7 @@ class OrganizationalModel:
             exec_modes = list()
             for str_mode in row[2].split(';'):
                 exec_modes.append(tuple(str_mode.split('|')))
-            om_obj.add_group(group, exec_modes)
+            om_obj.add_group(group, frozenset(exec_modes))
         return om_obj
 
 

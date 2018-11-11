@@ -200,16 +200,26 @@ def _set_cover_greedy(U, f_cost, search='exhaust'):
                     s = set(sorted_U[i]
                             for i, flag in enumerate(individual) if flag == 1)
                     return (cost_effectiveness(s),)
-
+                from random import random
+                GA_SIZE_POP = 100
+                GA_PR_CX = 0.5 # probability of crossover
+                GA_PR_MT = 0.2 # probability of mutation
+                
                 while True:
                     result = find_best_subset_GA(sorted_U,
                             evaluate=f_evaluate,
                             max_iter=1000,
-                            size_population=min(int(0.2 * len(sorted_U)), 500), 
-                            p_crossover=0.5, p_mutate=0.3)
+                            size_population=min(
+                                int(0.2 * 2 ** len(sorted_U)), GA_SIZE_POP), 
+                            p_crossover=GA_PR_CX, p_mutate=GA_PR_MT)
                     if cost_effectiveness(result) > 0:
                         best_candidate = result
                         break
+                    else:
+                        # TODO: add randomness here
+                        pass
+                        #GA_PR_CX = random()
+                        #GA_PR_MT = random()
             else:
                 exit('[Error] Invalid option specified for search method.')
             

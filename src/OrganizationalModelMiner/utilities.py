@@ -129,45 +129,49 @@ def find_best_subset_GA(universe, evaluate,
         toolbox.register('mutate', tools.mutFlipBit, indpb=0.05)
         toolbox.register('select', tools.selTournament, tournsize=3)
 
-        pop = toolbox.population(n=size_population)
-        pop = list(filter(lambda x: any(x) and not all(x), pop))
-        for ind, fit in zip(pop, map(toolbox.evaluate, pop)):
-            ind.fitness.values = fit
-        fits = [ind.fitness.values[0] for ind in pop]
-
-        generation = 0
-        while generation < max_iter:
-            #print('-' * 5 + 'Generation {}'.format(generation))
-            offspring = toolbox.select(pop, len(pop))
-            offspring = list(map(toolbox.clone, offspring))
-
-            for childx, childy in zip(offspring[::2], offspring[1::2]):
-                if random() < p_crossover:
-                    toolbox.crossover(childx, childy)
-                    del childx.fitness.values
-                    del childy.fitness.values
-
-            for child in offspring:
-                if random() < p_mutate:
-                    toolbox.mutate(child)
-                    del child.fitness.values
-
-            invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-            invalid_ind = list(
-                    filter(lambda x: any(x) and not all(x), invalid_ind))
-            for ind, fit in zip(invalid_ind, map(toolbox.evaluate, invalid_ind)):
+        while True:
+            pop = toolbox.population(n=size_population)
+            pop = list(filter(lambda x: any(x) and not all(x), pop))
+            for ind, fit in zip(pop, map(toolbox.evaluate, pop)):
                 ind.fitness.values = fit
+            fits = [ind.fitness.values[0] for ind in pop]
+
+            generation = 0
+            while generation < max_iter:
+                #print('-' * 5 + 'Generation {}'.format(generation))
+                offspring = toolbox.select(pop, len(pop))
+                offspring = list(map(toolbox.clone, offspring))
+
+                for childx, childy in zip(offspring[::2], offspring[1::2]):
+                    if random() < p_crossover:
+                        toolbox.crossover(childx, childy)
+                        del childx.fitness.values
+                        del childy.fitness.values
+
+                for child in offspring:
+                    if random() < p_mutate:
+                        toolbox.mutate(child)
+                        del child.fitness.values
+
+                invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+                invalid_ind = list(
+                        filter(lambda x: any(x) and not all(x), invalid_ind))
+                for ind, fit in zip(invalid_ind, map(toolbox.evaluate, invalid_ind)):
+                    ind.fitness.values = fit
+                
+                offspring = list(
+                        filter(lambda x: any(x) and not all(x), offspring))
+                if len(offspring) == 0:
+                    # if no valid offspring is to be generated
+                    break
+                else:
+                    pop[:] = offspring
+                generation += 1
             
-            offspring = list(
-                    filter(lambda x: any(x) and not all(x), offspring))
-            if len(offspring) == 0:
-                # if no valid offspring is to be generated
-                break
+            top_results = tools.selBest(pop, 1)
+            if len(top_results) > 0:
+                return frozenset(universe[i] 
+                        for i, flag in enumerate(top_results[0]) if flag == 1)
             else:
-                pop[:] = offspring
-            generation += 1
-        
-        best_ind = tools.selBest(pop, 1)[0]
-        return frozenset(universe[i] 
-                for i, flag in enumerate(best_ind) if flag == 1)
+                pass
 
