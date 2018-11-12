@@ -14,15 +14,18 @@ def search_k(profiles, num_groups, method):
             search_only=True)
     elif method == 'gmm':
         from OrganizationalModelMiner.overlap.clustering import gmm
-        return gmm(profiles, num_groups, threshold=None, init='ahc',
+        #return gmm(profiles, num_groups, threshold=None, init='ahc',
+        return gmm(profiles, num_groups, threshold=None,
             search_only=True)
     elif method == 'moc':
         from OrganizationalModelMiner.overlap.clustering import moc
-        return moc(profiles, num_groups, init='ahc',
+        #return moc(profiles, num_groups, init='ahc',
+        return moc(profiles, num_groups,
             search_only=True)
     elif method == 'fcm':
         from OrganizationalModelMiner.overlap.clustering import fcm
-        return fcm(profiles, num_groups, threshold=None, init='ahc',
+        #return fcm(profiles, num_groups, threshold=None, init='ahc',
+        return fcm(profiles, num_groups, threshold=None,
             search_only=True)
     else:
         exit('[Error] Unrecognized method option')
