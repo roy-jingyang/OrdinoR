@@ -109,9 +109,9 @@ def powerset_exclude_headtail(iterable, reverse=False, depth=None):
         return (chain.from_iterable(combinations(s, r) 
             for r in range(1, end)))
 
-def find_best_subset_GA(universe, evaluate,
+def find_best_subset_GA(universe, evaluate, seed,
         max_iter, size_population, p_crossover, p_mutate):
-        from random import randint, random
+        from random import randint, sample, random
         from deap import base, creator, tools
 
         creator.create('FitnessMax', base.Fitness, weights=(1.0,))
@@ -119,9 +119,24 @@ def find_best_subset_GA(universe, evaluate,
 
         toolbox = base.Toolbox()
 
+        '''
+        # Non-guided initialization
         toolbox.register('attr_bool', randint, 0, 1)
         toolbox.register('individual', tools.initRepeat, creator.Individual,
                 toolbox.attr_bool, len(universe))
+        '''
+
+        # use the seed to guide the initialization of individuals
+        def initIndividualBySeed(icls, seed):
+            init = [0] * len(universe)
+            num_activated = randint(1, len(seed))
+            index_activated = map(universe.index, sample(seed, num_activated))
+            for i in index_activated:
+                init[i] = 1
+            return icls(init)
+        toolbox.register('individual', initIndividualBySeed,
+                creator.Individual, seed)
+
         toolbox.register('population', tools.initRepeat, list, toolbox.individual)
 
         toolbox.register('evaluate', evaluate)
