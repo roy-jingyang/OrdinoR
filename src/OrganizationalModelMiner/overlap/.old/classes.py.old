@@ -29,7 +29,6 @@ class MOC:
         case) is required.
 
     '''
-
     def __init__(self, 
             n_components=1, tol=1e-6, n_init=1, max_iter=1000, M_init=None,
             is_disjoint=False):
@@ -39,44 +38,6 @@ class MOC:
         self.max_iter = max_iter
         self.M_init = M_init
         self.is_disjoint = is_disjoint
-
-    def _init_M(self, n_init, shape):
-        '''Initialize a list of random guesses of membership M.
-
-        Parameters
-        __________
-        n_init : int
-
-        Returns
-        -------
-        l_rand_M : list
-        '''
-        from numpy import zeros
-        from numpy.random import randint, choice
-
-        l_rand_M = list()
-        visited = set() # pool for storing used seeds
-        for init in range(n_init):
-            # Random initialization (non-repeat)
-            while True:
-                M = zeros(shape)
-                if self.is_disjoint:
-                    for row in M:
-                        row[randint(self.n_components)] = 1 # only 1
-                else:
-                    for row in M:
-                        row[choice(range(shape[1]),
-                            size=randint(1, shape[1] + 1),
-                            replace=False)] = 1
-
-                M.flags.writeable = False # set RO, entries immutable
-                bM = M.data.tobytes()
-                if bM not in visited:
-                    # if seed unused before
-                    visited.add(bM)
-                    l_rand_M.append(M)
-                    break
-        return l_rand_M
     
     def fit_predict(self, X):
         '''Fit and then predict labels for samples.
@@ -89,21 +50,47 @@ class MOC:
         -------
         best_m : array-like, shape (n_samples, n_components), component membership
         '''
-        from numpy import array, dot, infty
+
+        from numpy import array, dot, infty, zeros
+        from numpy.random import randint, choice
         from numpy.linalg import pinv
 
-        if self.M_init is not None:
-            l_M = [self.M_init.copy()]
-        else:
-            l_M = self._init_M(self.n_init, shape=(len(X), self.n_components))
-            
-        def _e_m(M):
+        M_init_values_visited = set() # pool for storing used seeds
+        best_score = None
+        best_M = None
+        init = 0
+        while init < self.n_init:
+            # Do initialization based on selected setting
+            if self.M_init is not None:
+                M = self.M_init
+            else:
+                # Initialize a random guess of membership M
+                # Random initialization of a binary matrix
+                while True:
+                    M = zeros((len(X), self.n_components))
+                    if self.is_disjoint:
+                        for row in M:
+                            row[randint(self.n_components)] = 1 # only 1
+                    else:
+                        for row in M:
+                            row[choice(range(self.n_components),
+                                size=randint(1, self.n_components + 1),
+                                replace=False)] = 1
+
+                    M.flags.writeable = False # set RO, entries immutable
+                    bM = M.data.tobytes()
+                    if bM not in M_init_values_visited:
+                        # if seed unused before
+                        M_init_values_visited.add(bM)
+                        break
+
             # Start fitting with valid initialized value of M
             iteration = -1
             current_log_likelihood = None
             delta_log_likelihood = infty
             converged = False
 
+            #print('Fitting MOC model-{}:'.format(init + 1), end=' ')
             while not converged:
                 iteration += 1
                 if iteration >= self.max_iter:
@@ -153,12 +140,16 @@ class MOC:
                 if not M[:,j].any(): # invalid, an empty cluster found
                     is_valid = False
                     break
+
             if is_valid:
                 #print('Final score =\t{:.8f}'.format(current_log_likelihood))
-                return M.copy(), current_log_likelihood
-       
-        l_fitted_M = list(map(_e_m, l_M))
-        best_M, best_score = max(l_fitted_M, key=lambda x: x[1])
+                if best_score is None or current_log_likelihood > best_score:
+                    best_score = current_log_likelihood
+                    best_M = M.copy()
+                init += 1
+            else:
+                print('(Result invalid. Re-run the fitting.)')
+                pass
         return best_M
 
     # Definition of the likelihood function: log p(X, M, A) to be maximized
@@ -189,6 +180,52 @@ class MOC:
         #print('{:.4f}'.format(score))
         return score
 
+    # search over all possible settings in the naive way
+    def _enumerate(self, x, m0, A):
+        from numpy import array, dot
+        from scipy.spatial.distance import sqeuclidean
+        from itertools import combinations
+
+        L0 = sqeuclidean(x, dot(m0, A))
+        Lmin = L0
+        k = len(m0)
+        m_best = m0
+
+        # Constrained (pruned): possible settings sum_{i = 1 to c} C^i_k
+        '''
+        for i in range(1, 2 + 1):
+        '''
+        # Exhaustively enumerate all possible settings sum_{i = 1 to k} C^i_k
+        # start from 1 ensures that at least one scalar with value True
+        if self.is_disjoint:
+            for i in range(k):
+                m = np.array([0] * k)
+                m[i] = 1
+                L = sqeuclidean(x, np.dot(m, A))
+                if L < Lmin:
+                    Lmin = L
+                    m_best = m
+        else:
+            for i in range(1, k + 1):
+                for index in combinations(range(k), i):
+                    m = array([0] * k)
+                    m[[index]] = 1
+                    L = sqeuclidean(x, dot(m, A))
+                    if L < Lmin:
+                        Lmin = L
+                        m_best = m
+
+        '''
+        for i in range(k):
+            m = np.array([0] * k)
+            m[i] = 1
+            L = sqeuclidean(x, np.dot(m, A))
+            if L < Lmin:
+                Lmin = L
+                m_best = m
+        '''
+        return m_best
+    
     # search on each separate threads with different initial setting
     # greedily proceed on the fly (idea similar to DP)
     def _dynamicm(self, x, m0, A):
@@ -245,11 +282,11 @@ class MOC:
             for h in range(n_components): # init each search thread
                 m = array([0] * n_components)
                 m[h] = 1
-                # create thread local data copies
+                # create thread local data
                 local_data = local()
-                local_data.x = x.copy()
-                local_data.A = A.copy()
-                local_data.m = m.copy()
+                local_data.x = x
+                local_data.A = A
+                local_data.m = m
 
                 s = SearchThread(local_data)
                 s.start() # run 
@@ -304,31 +341,6 @@ class FCM:
         self.max_iter = max_iter
         self.means_init = means_init
 
-    def _init_w(self, n_init, shape):
-        '''Initialize a list of random guesses of fuzzy pseudo partition w.
-
-        Parameters
-        __________
-        n_init : int
-
-        Returns
-        -------
-        l_rand_w : list
-        '''
-        from numpy import array
-        from numpy.random import randint, choice
-
-        l_rand_w = list()
-        for init in range(n_init):
-            # random init, constraint: row sum = 1.0
-            w = list()
-            for i in range(shape[0]):
-                weights = randint(1, 10, shape[1]) 
-                weights = weights / sum(weights)
-                w.append(weights)
-            l_rand_w.append(array(w))
-        return l_rand_w
-
     def fit_predict(self, X):
         '''Fit and then predict labels for samples.
 
@@ -342,39 +354,109 @@ class FCM:
         '''
 
         from numpy import array, infty, zeros, sum, power, dot, amax
+        from numpy.random import randint, choice
         from scipy.spatial.distance import euclidean as dist
-        from skfuzzy.cluster import cmeans
+        # NOTE: DEBUG import
+        #from skfuzzy.cluster import cmeans
 
         best_sse = None
         best_w = None
-        if self.means_init is not None:
-            # if seed centroids given, compute initial fuzzy pseudo partition
-            w = zeros((len(X), self.n_components))
-            exp = 1 / (self.p - 1)
-            for i in range(len(X)):
-                l_sqd_xi_c = [power(dist(X[i,:], self.means_init[q,:]), 2)
-                        for q in range(self.n_components)]
-                if 0.0 in l_sqd_xi_c:
-                    # special case: current point is one of the centroids
-                    cntr_cluster_ix = l_sqd_xi_c.index(0.0)
-                    w[i,cntr_cluster_ix] = 1.0 # leave others 0
-                else:
+        init = 0
+        while init < self.n_init:
+            # Select an initial fuzzy pseudo-partition, i.e. the values for weights
+            if self.means_init is not None:
+                # if initial centroids provided, compute initial fuzzy partition
+                w = zeros((len(X), self.n_components))
+                exp = 1 / (self.p - 1)
+                for i in range(len(X)):
+                    l_sqd_xi_c = [power(dist(X[i,:], self.means_init[q,:]), 2)
+                            for q in range(self.n_components)]
+                    if 0.0 in l_sqd_xi_c:
+                        # special case: current point is one of the centroids
+                        cntr_cluster_ix = l_sqd_xi_c.index(0.0)
+                        w[i,cntr_cluster_ix] = 1.0 # leave others 0
+                    else:
+                        for j in range(self.n_components):
+                            sqd_xi_cj = power(dist(X[i,:], self.means_init[j,:]), 2)
+                            w[i,j] = (
+                                    power((1 / sqd_xi_cj), exp)
+                                    / sum([power(
+                                        (1 / power(dist(X[i,:], self.means_init[q,:]), 2)), 
+                                        exp) for q in range(self.n_components)]))
+            else:
+                # random init, constraint: row sum = 1.0
+                w = list()
+                for i in range(len(X)):
+                    weights = randint(1, 10, self.n_components) 
+                    weights = weights / sum(weights)
+                    w.append(weights)
+                w = array(w)
+
+            # Start fitting with valid initialized value of w
+            iteration = -1
+            current_sse = None
+            delta_sse = infty
+            converged = False
+
+            #print('Fitting FCM model-{}:'.format(init + 1), end=' ')
+            while not converged:
+                iteration += 1
+                if iteration >= self.max_iter:
+                    print('[Warning] Model did not converged within a max. of '
+                            + '{} iterations (delta= {:.4f}).'.format(
+                                self.max_iter, self.tol))
+                    return w
+
+                #print('\n\tIteration {}:'.format(iteration), end=' ')
+                prev_sse = current_sse
+
+                # Compute the centroid for each cluster using the pseudo-partition
+                # (eq. 9.2)
+                cntr = dot(power(w.T, self.p), X) # shape = (n_comp, n_features)
+                for j in range(self.n_components):
+                    cntr[j,:] /= sum(
+                        [power(w[i,j], self.p) for i in range(len(X))])
+
+                prev_w = w.copy()
+                # Recompute the fuzzy psuedo-partition (eq. 9.3)
+                exp = 1 / (self.p - 1)
+                for i in range(len(X)):
                     for j in range(self.n_components):
-                        sqd_xi_cj = power(dist(X[i,:], self.means_init[j,:]), 2)
+                        sqd_xi_cj = power(dist(X[i,:], cntr[j,:]), 2)
                         w[i,j] = (
                                 power((1 / sqd_xi_cj), exp)
-                                / sum([power(
-                                    (1 / power(dist(X[i,:], self.means_init[q,:]), 2)), 
-                                    exp) for q in range(self.n_components)]))
-            l_w = [w.copy()]
-        else:
-            l_w = self._init_w(self.n_init, shape=(len(X), self.n_components))
+                                /
+                                sum([power(
+                                    (1 / power(dist(X[i,:], cntr[q,:]), 2)), 
+                                    exp) for q in range(self.n_components)])
+                                )
 
-        def _e_m(w):
-            _, w, w0, _, sse, _, _ = cmeans(data=X.T,
-                    c=self.n_components, m=self.p, error=self.tol, 
-                    maxiter=self.max_iter, init=w.T)
-             
+                # Calculate the new SSE:
+                current_sse = self.error(X, cntr, w)
+
+                if prev_sse is not None:
+                    delta_sse = current_sse - prev_sse
+
+                # until: change in SSE is below certain threshold
+                if delta_sse is not infty and (-1) * delta_sse < self.tol:
+                    converged = True
+                    if delta_sse <= 0:
+                        pass
+                    else:
+                        # current solution is worse (minimizing)
+                        #print('\tDELTA > 0: Pick the last solution instead.')
+                        current_sse = prev_sse
+                        w = prev_w.copy()
+                    #print('\nModel converged')
+
+            '''
+            # NOTE: DEBUG starts
+            _, w, w0, _, sse, _, _ = cmeans(X.T,
+                    self.n_components, self.p, self.tol, self.max_iter,
+                    w.T)
+            # NOTE: DEBUG ends
+            '''
+
             # check if the solution is valid
             is_valid = True
             for j in range(self.n_components):
@@ -383,10 +465,28 @@ class FCM:
                     break
 
             if is_valid:
-                #print('Final SSE =\t{:.8f}'.format(sse[-1]))
-                return w.copy(), sse[-1]
-        
-        l_fitted_w = list(map(_e_m, l_w))
-        best_w, best_sse = max(l_fitted_w, key=lambda x: x[1])
+                #print('Final SSE =\t{:.8f}'.format(current_sse))
+                #best_w = w.T.copy()
+                #print('Final SSE =\t{:.8f}'.format(sse[0]))
+                if best_sse is None or current_sse < best_sse:
+                    best_sse = current_sse
+                    best_w = w.copy()
+                init += 1
+            else:
+                print('(Result invalid. Re-run the fitting.)')
+                pass
+
         return best_w
+    
+    # (eq. 9.1)
+    def error(self, X, centroids, weights):
+        from numpy import dot, power
+        from scipy.spatial.distance import euclidean as dist
+
+        total_sse = 0.0
+        for j in range(self.n_components):
+            for i in range(len(X)):
+                sqd_xi_cj = power(dist(X[i,:], centroids[j,:]), 2)
+                total_sse += power(weights[i,j], self.p) * sqd_xi_cj
+        return total_sse
 

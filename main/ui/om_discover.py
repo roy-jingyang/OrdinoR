@@ -192,8 +192,8 @@ if __name__ == '__main__':
 
         from OrganizationalModelMiner.overlap.clustering import moc
         ogs = moc(
-                profiles, num_groups,
-                init='ahc')
+                profiles, num_groups)
+                #init='ahc')
 
         # TODO: Timer related
         '''
@@ -224,8 +224,8 @@ if __name__ == '__main__':
 
         from OrganizationalModelMiner.overlap.clustering import fcm
         ogs = fcm(
-                profiles, num_groups, threshold=user_selected_threshold,
-                init='ahc')
+                profiles, num_groups, threshold=user_selected_threshold)
+                #init='ahc')
 
         # TODO: Timer related
         '''

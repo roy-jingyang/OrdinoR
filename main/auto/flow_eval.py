@@ -94,7 +94,6 @@ def execute(setup, seq_ix, exp_dirpath):
 
     return discoverer_name, om.size(), fitness, precision
 
-
 if __name__ == '__main__':
     fn_setup = sys.argv[1]
     dirout = sys.argv[2]
@@ -119,10 +118,4 @@ if __name__ == '__main__':
         for i in range(n_tests):
             writer.writerow([
                 name, k_values[i], fitness_values[i], precision_values[i]])
-        '''
-        fout.write('{}\n'.format(name))
-        fout.write('\tk         = {}\n'.format(k))
-        fout.write('\tFitness   = {:.6f}\n'.format(f))
-        fout.write('\tPrecision = {:.6f}\n'.format(p))
-        '''
     
