@@ -28,7 +28,6 @@ node attributes as well as convenient visualization features.
 
 import sys
 sys.path.append('./src/')
-import cProfile
 
 from os.path import join
 from csv import writer
@@ -102,7 +101,7 @@ if __name__ == '__main__':
     from networkx import read_graphml
     setup = read_graphml(fn_setup)
 
-    n_tests = 1
+    n_tests = 20
     name = ''
     k_values = list()
     fitness_values = list()

@@ -32,8 +32,8 @@
 <data key="r">115</data>
 <data key="g">192</data>
 <data key="b">0</data>
-<data key="x">-2272.3782</data>
-<data key="y">408.8792</data>
+<data key="x">-2545.4985</data>
+<data key="y">-1615.4236</data>
 </node>
 <node id="2">
 <data key="label">Method-1: partition by activity name</data>
@@ -85,7 +85,7 @@
 <node id="6">
 <data key="label">clustering: FCM</data>
 <data key="invoke">OrganizationalModelMiner.overlap.clustering.fcm</data>
-<data key="params">{'n_groups': range(6, 7), 'init': 'ahc'}</data>
+<data key="params">{'n_groups': range(8, 9), 'init': 'ahc'}</data>
 <data key="phase">2.2</data>
 <data key="size">25.0</data>
 <data key="r">223</data>
@@ -180,31 +180,16 @@
 <data key="r">115</data>
 <data key="g">192</data>
 <data key="b">0</data>
-<data key="x">-2279.6948</data>
-<data key="y">140.0877</data>
+<data key="x">-2276.4817</data>
+<data key="y">30.83966</data>
 </node>
-<node id="16">
-<data key="label">'BPiC 2017' log (problematic)</data>
-<data key="invoke">IO.reader.read_disco_csv</data>
-<data key="params">./input/bpic2017_problematic.csv</data>
-<data key="phase">0</data>
-<data key="size">25.0</data>
-<data key="r">115</data>
-<data key="g">192</data>
-<data key="b">0</data>
-<data key="x">-2294.6526</data>
-<data key="y">-222.55588</data>
-</node>
-<edge id="21" source="1" target="2">
+<edge id="80" source="4" target="8">
 <data key="weight">1.0</data>
 </edge>
 <edge id="22" source="2" target="3">
 <data key="weight">1.0</data>
 </edge>
 <edge id="46" source="3" target="14">
-<data key="weight">1.0</data>
-</edge>
-<edge id="27" source="4" target="8">
 <data key="weight">1.0</data>
 </edge>
 <edge id="61" source="14" target="9">
@@ -226,9 +211,6 @@
 <data key="weight">1.0</data>
 </edge>
 <edge id="34" source="7" target="8">
-<data key="weight">1.0</data>
-</edge>
-<edge id="76" source="9" target="11">
 <data key="weight">1.0</data>
 </edge>
 <edge id="37" source="11" target="12">
@@ -258,7 +240,10 @@
 <edge id="66" source="15" target="2">
 <data key="weight">1.0</data>
 </edge>
-<edge id="77" source="0" target="15">
+<edge id="79" source="0" target="15">
+<data key="weight">1.0</data>
+</edge>
+<edge id="83" source="9" target="11">
 <data key="weight">1.0</data>
 </edge>
 </graph>

@@ -47,9 +47,9 @@ if __name__ == '__main__':
             else:
                 print('Inconsistent results found!')
                 print('\tCurrent:')
-                print(sorted(ogs))
+                print(len(sorted(ogs)))
                 print('\tPrevious:')
-                print(sorted(prev_ogs))
+                print(len(sorted(prev_ogs)))
                 succ = False
                 break
         prev_ogs = ogs

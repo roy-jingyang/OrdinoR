@@ -261,6 +261,13 @@ def link_partitioning(
     ln_igraph = iGraph.Read_GML(tmp_file_path)
     from os import remove
     remove(tmp_file_path)
+    '''
+    ln_igraph = iGraph(directed=True)
+    for node in ln.nodes:
+        ln_igraph.add_vertex(name=str(node))
+    for edge in ln.edges.data('weight'):
+        ln_igraph.add_edge(source=edge[0], target=edge[1], weight=edge[2])
+    '''
 
     # apply louvain algorithm
     from leidenalg import find_partition, ModularityVertexPartition

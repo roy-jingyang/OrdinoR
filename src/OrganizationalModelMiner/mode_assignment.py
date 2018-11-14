@@ -219,8 +219,6 @@ def _set_cover_greedy(U, f_cost, search='exhaust'):
                     else:
                         # TODO: add randomness here
                         pass
-                        #GA_PR_CX = random()
-                        #GA_PR_MT = random()
             else:
                 exit('[Error] Invalid option specified for search method.')
             

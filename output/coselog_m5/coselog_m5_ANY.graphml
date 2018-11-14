@@ -85,7 +85,7 @@
 <node id="6">
 <data key="label">clustering: FCM</data>
 <data key="invoke">OrganizationalModelMiner.overlap.clustering.fcm</data>
-<data key="params">{'n_groups': range(6, 7), 'init': 'ahc'}</data>
+<data key="params">{'n_groups': range(8, 9), 'init': 'ahc'}</data>
 <data key="phase">2.2</data>
 <data key="size">25.0</data>
 <data key="r">223</data>
@@ -182,18 +182,6 @@
 <data key="b">0</data>
 <data key="x">-2276.4817</data>
 <data key="y">30.83966</data>
-</node>
-<node id="16">
-<data key="label">'BPiC 2017' log (problematic)</data>
-<data key="invoke">IO.reader.read_disco_csv</data>
-<data key="params">./input/bpic2017_problematic.csv</data>
-<data key="phase">0</data>
-<data key="size">25.0</data>
-<data key="r">115</data>
-<data key="g">192</data>
-<data key="b">0</data>
-<data key="x">-2548.4937</data>
-<data key="y">-1764.8818</data>
 </node>
 <edge id="80" source="4" target="8">
 <data key="weight">1.0</data>
