@@ -75,7 +75,7 @@ def select_edges_by_weight(sn, weight='weight',
         exit('Error processing due to no criteria specified.')
 
     psn.remove_edges_from(edges_to_be_removed)
-    print('{}/{} edges ({:.2%}) have been removed.'.format(
+    print('\t{}/{} edges ({:.2%}) have been removed.'.format(
         len(edges_to_be_removed), n_edges_old,
         (len(edges_to_be_removed) / n_edges_old)))
 

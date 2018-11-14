@@ -214,9 +214,12 @@ def link_partitioning(
         from SocialNetworkMiner.joint_activities import distance
         sn = distance(profiles, metric=metric, convert=True)
 
-    # step 1. Build the linear network using the original network
-    edges = sorted(list(sn.edges.data('weight')))
+    # NOTE: Appice's method: keep only the TOP 75% POSITIVE valued edges
+    from SocialNetworkMiner.utilities import select_edges_by_weight
+    sn = select_edges_by_weight(sn, low=0.0)
+    sn = select_edges_by_weight(sn, percentage='+0.75')
 
+    # step 1. Build the linear network using the original network
     # distinguish the isolated nodes in the original network first
     from networkx import isolates
     original_isolates = list(isolates(sn))
@@ -246,31 +249,34 @@ def link_partitioning(
             # i <- j
             w_ji = ej[2] / (sn.degree(nbunch=joint, weight='weight') - ei[2])
 
-            ln.add_edge(
-                    '{}***{}'.format(ei[0], ei[1]),
-                    '{}***{}'.format(ej[0], ej[1]),
-                    weight=w_ij)
-            ln.add_edge(
-                    '{}***{}'.format(ej[0], ej[1]),
-                    '{}***{}'.format(ei[0], ei[1]),
-                    weight=w_ji)
+            ln.add_edge(str((ei[0], ei[1])), str((ej[0], ej[1])), weight=w_ij)
+            ln.add_edge(str((ej[0], ej[1])), str((ei[0], ei[1])), weight=w_ji)
 
     # step 2. Run Louvain algorithm to discover communities
-    from community import best_partition
-    # TODO: casting to undirected network
-    ln = ln.to_undirected()
-    ln_communities = best_partition(ln)
+    # convert the graph to igraph format
+    from networkx import write_gml
+    from igraph import Graph as iGraph
+    tmp_file_path = '.linear_graph.tmp'
+    write_gml(ln, path=tmp_file_path)
+    ln_igraph = iGraph.Read_GML(tmp_file_path)
+    from os import remove
+    remove(tmp_file_path)
+
+    # apply louvain algorithm
+    from leidenalg import find_partition, ModularityVertexPartition
+    ln_communities = find_partition(ln_igraph, 
+            ModularityVertexPartition,
+            weights='weight')
 
     # step 3. Map communities onto the original network to get the results
     # derive the orgnizational groups
     from collections import defaultdict
-    groups = defaultdict(lambda: set())
-    # one-to-one mapping between resource communities and linear
-    # communities
-    # TODO Optional: calculate the degree of membership
-    for e, comm in ln_communities.items():
-            groups[comm].add(e.split('***')[0])
-            groups[comm].add(e.split('***')[1])
+    groups = defaultdict(set)
+    for i, comm in enumerate(ln_communities):
+        for n_idx in comm:
+            e = ln_igraph.vs[n_idx]
+            groups[i].add(eval(e['label'])[0])
+            groups[i].add(eval(e['label'])[1])
     for i, iso_node in enumerate(original_isolates):
         groups['ISOLATE #{}'.format(i)].add(iso_node)
 
