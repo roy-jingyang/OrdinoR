@@ -95,10 +95,10 @@ def assign_by_proportion(group, rl, p):
         def cost(g):
             m = _get_modes_by_prop(frozenset(g), inv_resource_cap, p)
             if len(m) >= 1:
-                return 1.0 # Naive
+                #return 1.0 # Naive
                 #return 1.0 / len(g) # Max. Size
                 #return len(g) # Min. Size
-                #return 1.0 / len(m) # Max. Cap.
+                return 1.0 / len(m) # Max. Cap.
             else:
                 return float('inf')
 

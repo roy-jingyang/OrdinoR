@@ -252,7 +252,7 @@ def link_partitioning(
             ln.add_edge(str((ei[0], ei[1])), str((ej[0], ej[1])), weight=w_ij)
             ln.add_edge(str((ej[0], ej[1])), str((ei[0], ei[1])), weight=w_ji)
 
-    # step 2. Run Louvain algorithm to discover communities
+    # step 2. Run Leiden (improved Louvain) algorithm to discover communities
     # convert the graph to igraph format
     from networkx import write_gml
     from igraph import Graph as iGraph
@@ -269,11 +269,11 @@ def link_partitioning(
         ln_igraph.add_edge(source=edge[0], target=edge[1], weight=edge[2])
     '''
 
-    # apply louvain algorithm
-    from leidenalg import find_partition, ModularityVertexPartition
+    # apply detection algorithm
+    from leidenalg import find_partition, RBConfigurationVertexPartition
     ln_communities = find_partition(ln_igraph, 
-            ModularityVertexPartition,
-            weights='weight')
+            RBConfigurationVertexPartition,
+            weights='weight', n_iterations=-1, seed=0)
 
     # step 3. Map communities onto the original network to get the results
     # derive the orgnizational groups
