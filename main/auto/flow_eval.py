@@ -101,20 +101,28 @@ if __name__ == '__main__':
     from networkx import read_graphml
     setup = read_graphml(fn_setup)
 
-    n_tests = 20
+    n_tests = 10
     name = ''
     k_values = list()
     fitness_values = list()
     precision_values = list()
+    execute_time = list()
+
+    from time import time
     for i in range(n_tests):
+        start_time = time()
         name, k, f, p = execute(setup, path, dirout)
+        end_time = time()
         k_values.append(k)
         fitness_values.append(f)
         precision_values.append(p)
+        execute_time.append(end_time - start_time)
 
     with open(join(dirout, '{}_report.csv'.format(name)), 'w') as fout:
         writer = writer(fout)
         for i in range(n_tests):
             writer.writerow([
-                name, k_values[i], fitness_values[i], precision_values[i]])
+                name,
+                k_values[i], fitness_values[i], precision_values[i],
+                execute_time[i]])
     

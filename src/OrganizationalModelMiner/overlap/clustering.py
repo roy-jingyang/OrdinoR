@@ -13,7 +13,7 @@ Methods include:
 
 def _gmm(
         profiles, n_groups,
-        threshold=None, init='random', n_init=500): 
+        threshold=None, init='random', n_init=100): 
     '''
     This method implements the algorithm of using Gaussian Mixture Model
     for mining an overlapping organizational model from the given event log.
@@ -42,7 +42,7 @@ def _gmm(
         n_init: int, optional
             The number of times of random initialization (if specified)
             performed before training the clustering model, ranged [1, +inf).
-            The default is 500.
+            The default is 100.
     Returns:
         list of frozensets
             A list of organizational groups.
@@ -119,7 +119,7 @@ def _gmm(
 
 def gmm(
         profiles, n_groups,
-        threshold=None, init='random', n_init=500,
+        threshold=None, init='random', n_init=100,
         search_only=False): 
     '''
     This method is just a wrapper function of the one above, which allows a
@@ -147,7 +147,7 @@ def gmm(
         n_init: int, optional
             The number of times of random initialization (if specified)
             performed before training the clustering model, ranged [1, +inf).
-            The default is 500.
+            The default is 100.
         search_only: boolean, optional
             Determine whether to search for the number of groups only or to
             perform cluster analysis based on the search result. The default is
@@ -186,7 +186,7 @@ def gmm(
 
 def _moc(
         profiles, n_groups,
-        init='random', n_init=500):
+        init='random', n_init=100):
     '''
     This method implements the algorithm of using Model-based Overlapping
     Clustering for mining an overlapping organizational model from the given
@@ -213,7 +213,7 @@ def _moc(
         n_init: int, optional
             The number of times of random initialization (if specified)
             performed before training the clustering model, ranged [1, +inf).
-            The default is 500.
+            The default is 100.
     Returns:
         list of frozensets
             A list of organizational groups.
@@ -277,7 +277,7 @@ def _moc(
 
 def moc(
         profiles, n_groups,
-        init='random', n_init=500,
+        init='random', n_init=100,
         search_only=False):
     '''
     This method is just a wrapper function of the one above, which allows a
@@ -302,7 +302,7 @@ def moc(
         n_init: int, optional
             The number of times of random initialization (if specified)
             performed before training the clustering model, ranged [1, +inf).
-            The default is 500.
+            The default is 100.
         search_only: boolean, optional
             Determine whether to search for the number of groups only or to
             perform cluster analysis based on the search result. The default is
@@ -340,7 +340,7 @@ def moc(
 
 def _fcm(
         profiles, n_groups,
-        threshold=None, init='random', n_init=500): 
+        threshold=None, init='random', n_init=100): 
     '''
     This method implements the algorithm of using Fuzzy c-Means for mining an
     overlapping organizational model from the given event log.
@@ -369,7 +369,7 @@ def _fcm(
         n_init: int, optional
             The number of times of random initialization (if specified)
             performed before training the clustering model, ranged [1, +inf).
-            The default is 500.
+            The default is 100.
     Returns:
         list of frozensets
             A list of organizational groups.
@@ -441,7 +441,7 @@ def _fcm(
 
 def fcm(
         profiles, n_groups,
-        threshold=None, init='random', n_init=500,
+        threshold=None, init='random', n_init=100,
         search_only=False): 
     '''
     This method is just a wrapper function of the one above, which allows a
@@ -469,7 +469,7 @@ def fcm(
         n_init: int, optional
             The number of times of random initialization (if specified)
             performed before training the clustering model, ranged [1, +inf).
-            The default is 500.
+            The default is 100.
         search_only: boolean, optional
             Determine whether to search for the number of groups only or to
             perform cluster analysis based on the search result. The default is

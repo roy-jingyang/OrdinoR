@@ -209,7 +209,7 @@ def _set_cover_greedy(U, f_cost, search='exhaust'):
                     result = find_best_subset_GA(sorted_U,
                             evaluate=f_evaluate,
                             seed=uncovered,
-                            max_iter=1000,
+                            max_iter=500,
                             size_population=min(
                                 (2 ** len(sorted_U) - 2), GA_SIZE_POP), 
                             p_crossover=GA_PR_CX, p_mutate=GA_PR_MT)
