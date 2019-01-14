@@ -5,10 +5,10 @@ This module contains the implementation of profiling a resource using the
 "raw" information in the given resource log. Methods include:
 '''
 
-def performer_activity_frequency(rl, use_log_scale):
+def count_execution_frequency(rl, use_log_scale):
     '''
-    This method builds a "profile" based on how frequent individuals originate
-    events with specific activity types.
+    This method builds a "profile" based on how frequent individuals originated
+    events with specific execution modes.
 
     Params:
         rl: DataFrame
@@ -24,7 +24,8 @@ def performer_activity_frequency(rl, use_log_scale):
     pam = defaultdict(lambda: defaultdict(lambda: 0))
     for res, trace in rl.groupby('resource'):
         for event in trace.itertuples():
-            pam[res][event.activity_type] += 1
+            exec_mode = (event.case_type, event.activity_type, event.time_type)
+            pam[res][exec_mode] += 1
 
     from pandas import DataFrame
     if use_log_scale: 

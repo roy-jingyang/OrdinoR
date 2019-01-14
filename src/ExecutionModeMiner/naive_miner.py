@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
 '''
-This module contains the definition of a class which is a implementation of the
-baseline execution model mining approach, i.e.
-    AT = {{a} | a in A}, CT = {C} (not considered), TT = {T} (not considered).
+This module contains implementations of some naive baseline execution mode
+mining methods, including
+    AT only: AT = {{a} | a in A}, CT = {C}, TT = {T}.
+    (TODO)
 '''
 
 from .base import BaseExecutionModeMiner
 
+# AT only
 class NaiveActivityNameExecutionModeMiner(BaseExecutionModeMiner):
     
     def __init__(self, el):
@@ -17,13 +19,17 @@ class NaiveActivityNameExecutionModeMiner(BaseExecutionModeMiner):
         self.verify()
 
     def _build_atypes(self, el):
+        # designate the partitioning
         activity_names = [{x} for x in 
                 sorted(el.groupby('activity').groups.keys())]
+
+        # validate the partitioning
         #is_disjoint = set.intersection(*activity_names)
         is_disjoint = True # naturally
         #is_union = set.union(*activity_names)
         is_union = True # naturally
 
+        # build types
         if is_disjoint and is_union:
             self.is_atypes_verified = True
             for i, coll in enumerate(activity_names):
