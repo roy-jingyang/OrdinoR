@@ -34,6 +34,8 @@ def _gmm(
                 Activities' as initialization method.
                 - 'ahc': Use the (hierarchical) method of 'Agglomerative
                   Hierarchical Clustering' as initialization method.
+                - 'kmeans': Use the classic clustering algorithm KMeans as
+                  initialization method.
                 - 'plain': Simply put resource into groups by their topological
                   order in a looping fashion. Note that this is a meaniningless
                   initialization similar to a zero initialization.
@@ -51,7 +53,7 @@ def _gmm(
             'clustering-based GMM:')
 
     # step 0. Perform specific initialization method (if given)
-    if init in ['mja', 'ahc', 'plain']:
+    if init in ['mja', 'ahc', 'kmeans', 'plain']:
         warm_start = True
         if init == 'mja':
             from OrganizationalModelMiner.clustering.graph_partitioning import (
@@ -60,6 +62,13 @@ def _gmm(
         elif init == 'ahc':
             from OrganizationalModelMiner.clustering.hierarchical import _ahc
             init_groups, _ = _ahc(profiles, n_groups)
+        elif init == 'kmeans':
+            init_groups = list(set() for i in range(n_groups))
+            from sklearn.cluster import KMeans
+            labels = KMeans(n_clusters=n_groups, random_state=0).fit_predict(
+                    profiles)
+            for i, r in enumerate(sorted(profiles.index)):
+                init_groups[labels[i]].add(r)
         elif init == 'plain':
             init_groups = list(set() for i in range(n_groups))
             for i, r in enumerate(sorted(profiles.index)):
@@ -221,7 +230,7 @@ def _moc(
     print('Applying overlapping organizational model mining using ' + 
             'clustering-based MOC:')
     # step 0. Perform specific initialization method (if given)
-    if init in ['mja', 'ahc', 'plain']:
+    if init in ['mja', 'ahc', 'kmeans', 'plain']:
         warm_start = True
         from numpy import zeros
         from pandas import DataFrame
@@ -232,6 +241,13 @@ def _moc(
         elif init == 'ahc':
             from OrganizationalModelMiner.clustering.hierarchical import _ahc
             init_groups, _ = _ahc(profiles, n_groups)
+        elif init == 'kmeans':
+            init_groups = list(set() for i in range(n_groups))
+            from sklearn.cluster import KMeans
+            labels = KMeans(n_clusters=n_groups, random_state=0).fit_predict(
+                    profiles)
+            for i, r in enumerate(sorted(profiles.index)):
+                init_groups[labels[i]].add(r)
         elif init == 'plain':
             init_groups = list(set() for i in range(n_groups))
             for i, r in enumerate(sorted(profiles.index)):
@@ -378,7 +394,7 @@ def _fcm(
             'clustering-based FCM:')
 
     # step 0. Perform specific initialization method (if given)
-    if init in ['mja', 'ahc', 'plain']:
+    if init in ['mja', 'ahc', 'kmeans', 'plain']:
         warm_start = True
         if init == 'mja':
             from OrganizationalModelMiner.clustering.graph_partitioning import (
@@ -387,6 +403,13 @@ def _fcm(
         elif init == 'ahc':
             from OrganizationalModelMiner.clustering.hierarchical import _ahc
             init_groups, _ = _ahc(profiles, n_groups)
+        elif init == 'kmeans':
+            init_groups = list(set() for i in range(n_groups))
+            from sklearn.cluster import KMeans
+            labels = KMeans(n_clusters=n_groups, random_state=0).fit_predict(
+                    profiles)
+            for i, r in enumerate(sorted(profiles.index)):
+                init_groups[labels[i]].add(r)
         elif init == 'plain':
             init_groups = list(set() for i in range(n_groups))
             for i, r in enumerate(sorted(profiles.index)):

@@ -160,7 +160,7 @@ if __name__ == '__main__':
         profiles = count_execution_frequency(rl, use_log_scale=False)
 
         print('Input a threshold value [0, 1), in order to determine the ' +
-                'resource membership (Enter to use a random threshold):',
+                'resource membership (Enter to use a "null" threshold):',
                 end=' ')
         user_selected_threshold = input()
         user_selected_threshold = (float(user_selected_threshold)
@@ -169,7 +169,7 @@ if __name__ == '__main__':
         from OrganizationalModelMiner.clustering.overlap import gmm
         ogs = gmm(
                 profiles, num_groups, threshold=user_selected_threshold,
-                init='ahc')
+                init='kmeans')
 
         # TODO: Timer related
         '''
@@ -192,8 +192,8 @@ if __name__ == '__main__':
 
         from OrganizationalModelMiner.clustering.overlap import moc
         ogs = moc(
-                profiles, num_groups)
-                #init='ahc')
+                profiles, num_groups,
+                init='kmeans')
 
         # TODO: Timer related
         '''
@@ -216,7 +216,7 @@ if __name__ == '__main__':
         profiles = count_execution_frequency(rl, use_log_scale=False)
 
         print('Input a threshold value [0, 1), in order to determine the ' +
-                'resource membership (Enter to use a random threshold):',
+                'resource membership (Enter to use a "null" threshold):',
                 end=' ')
         user_selected_threshold = input()
         user_selected_threshold = (float(user_selected_threshold)
@@ -224,8 +224,8 @@ if __name__ == '__main__':
 
         from OrganizationalModelMiner.clustering.overlap import fcm
         ogs = fcm(
-                profiles, num_groups, threshold=user_selected_threshold)
-                #init='ahc')
+                profiles, num_groups, threshold=user_selected_threshold,
+                init='kmeans')
 
         # TODO: Timer related
         '''
