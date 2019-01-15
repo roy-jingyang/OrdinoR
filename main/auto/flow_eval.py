@@ -64,6 +64,8 @@ def execute(setup, seq_ix, exp_dirpath):
     grouping_discoverer = _import_block(sequence[step]['invoke'])
     discoverer_name = sequence[step]['label'].replace(' ', '')
     ogs = grouping_discoverer(profiles, **eval(sequence[step]['params']))
+    if type(ogs) is tuple:
+        ogs = ogs[0]
 
     # assign execution modes
     from OrganizationalModelMiner.base import OrganizationalModel
@@ -71,7 +73,10 @@ def execute(setup, seq_ix, exp_dirpath):
     step += 1
     assigner = _import_block(sequence[step]['invoke'])
     for og in ogs:
-        modes = assigner(og, rl)
+        if 'params' in sequence[step]:
+            modes = assigner(og, rl, **eval(sequence[step]['params']))
+        else:
+            modes = assigner(og, rl)
         om.add_group(og, modes)
 
     # evaluate organizational model: fitness
@@ -101,7 +106,7 @@ if __name__ == '__main__':
     from networkx import read_graphml
     setup = read_graphml(fn_setup)
 
-    n_tests = 10
+    n_tests = 1
     name = ''
     k_values = list()
     fitness_values = list()
