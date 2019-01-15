@@ -45,6 +45,7 @@ class NaiveActivityNameExecutionModeMiner(BaseExecutionModeMiner):
                 rev_atypes[i] = type_name
 
         # iterate through all events in the original log and convert
+        # Note: only E_res (resource events) should be considered
         resource_log = list()
         rl = list()
         for event in el.itertuples(): # keep order

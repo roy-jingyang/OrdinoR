@@ -61,7 +61,7 @@ if __name__ == '__main__':
             # build profiles
             from ResourceProfiler.raw_profiler import count_execution_frequency
             profiles = count_execution_frequency(rl, use_log_scale=False)
-            from OrganizationalModelMiner.disjoint.graph_partitioning import (
+            from OrganizationalModelMiner.clustering.graph_partitioning import (
                     mja)
             # MJA -> select metric (Euclidean distance/PCC)
             print('Input a number to choose a metric:')
@@ -74,7 +74,7 @@ if __name__ == '__main__':
                     profiles, num_groups, 
                     metric=metrics[metric_option])
         elif method_option == 1:
-            from OrganizationalModelMiner.disjoint.graph_partitioning import (
+            from OrganizationalModelMiner.clustering.graph_partitioning import (
                     mjc)
             ogs = mjc(el, num_groups)
         else:
@@ -96,8 +96,8 @@ if __name__ == '__main__':
             # build profiles
             from ResourceProfiler.raw_profiler import count_execution_frequency
             profiles = count_execution_frequency(rl, use_log_scale=False)
-            from OrganizationalModelMiner.hierarchical import clustering
-            ogs, og_hcy = clustering.ahc(
+            from OrganizationalModelMiner.clustering.hierarchical import ahc
+            ogs, og_hcy = ahc(
                     profiles, num_groups, method='ward')
         else:
             raise Exception('Failed to recognize input option!')
@@ -121,7 +121,7 @@ if __name__ == '__main__':
         from ResourceProfiler.raw_profiler import count_execution_frequency
         profiles = count_execution_frequency(rl, use_log_scale=False)
 
-        from OrganizationalModelMiner.overlap import community_detection
+        from OrganizationalModelMiner.community import overlap
         print('Input a number to choose a method:')
         print('\t0. CFinder (Clique Percolation Method)') 
         print('\t1. LN + Louvain (Link partitioning)')
@@ -131,19 +131,19 @@ if __name__ == '__main__':
         print('Option: ', end='')
         method_option = int(input())
         if method_option == 0:
-            ogs = community_detection.clique_percolation(
+            ogs = overlap.clique_percolation(
                     profiles, metric='correlation')
         elif method_option == 1:
-            ogs = community_detection.link_partitioning(
+            ogs = overlap.link_partitioning(
                     profiles, metric='correlation')
         elif method_option == 2:
-            ogs = community_detection.local_expansion(
+            ogs = overlap.local_expansion(
                     profiles, metric='correlation')
         elif method_option == 3:
-            ogs = community_detection.agent_copra(
+            ogs = overlap.agent_copra(
                     profiles, metric='correlation')
         elif method_option == 4:
-            ogs = community_detection.agent_slpa(
+            ogs = overlap.agent_slpa(
                     profiles, metric='correlation')
         else:
             raise Exception('Failed to recognize input option!')
@@ -166,7 +166,7 @@ if __name__ == '__main__':
         user_selected_threshold = (float(user_selected_threshold)
                 if user_selected_threshold != '' else None)
 
-        from OrganizationalModelMiner.overlap.clustering import gmm
+        from OrganizationalModelMiner.clustering.overlap import gmm
         ogs = gmm(
                 profiles, num_groups, threshold=user_selected_threshold,
                 init='ahc')
@@ -190,7 +190,7 @@ if __name__ == '__main__':
         from ResourceProfiler.raw_profiler import count_execution_frequency
         profiles = count_execution_frequency(rl, use_log_scale=False)
 
-        from OrganizationalModelMiner.overlap.clustering import moc
+        from OrganizationalModelMiner.clustering.overlap import moc
         ogs = moc(
                 profiles, num_groups)
                 #init='ahc')
@@ -222,7 +222,7 @@ if __name__ == '__main__':
         user_selected_threshold = (float(user_selected_threshold)
                 if user_selected_threshold != '' else None)
 
-        from OrganizationalModelMiner.overlap.clustering import fcm
+        from OrganizationalModelMiner.clustering.overlap import fcm
         ogs = fcm(
                 profiles, num_groups, threshold=user_selected_threshold)
                 #init='ahc')
@@ -250,8 +250,8 @@ if __name__ == '__main__':
     from OrganizationalModelMiner.mode_assignment import assign_by_all
     l = list()
     for og in sorted(ogs):
-        #modes = assign_by_any(og, rl)
-        modes = assign_by_all(og, rl)
+        modes = assign_by_any(og, rl)
+        #modes = assign_by_all(og, rl)
         om.add_group(og, modes)
 
     from Evaluation.l2m import conformance

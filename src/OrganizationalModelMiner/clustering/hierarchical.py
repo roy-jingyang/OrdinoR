@@ -60,7 +60,6 @@ def _ahc(
     #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()], og_hcy
 
-# TODO
 def ahc(
         profiles, n_groups,
         method='single', metric='euclidean',
@@ -106,7 +105,6 @@ def ahc(
         best_k = -1
         best_score = float('-inf')
         for k in n_groups:
-            #TODO: calculate the scores
             score = cross_validation_score(
                 X=profiles, miner=_ahc,
                 miner_params={

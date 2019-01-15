@@ -54,11 +54,11 @@ def _gmm(
     if init in ['mja', 'ahc', 'plain']:
         warm_start = True
         if init == 'mja':
-            from OrganizationalModelMiner.disjoint.graph_partitioning import (
+            from OrganizationalModelMiner.clustering.graph_partitioning import (
                     _mja)
             init_groups = _mja(profiles, n_groups)  
         elif init == 'ahc':
-            from OrganizationalModelMiner.hierarchical.clustering import _ahc
+            from OrganizationalModelMiner.clustering.hierarchical import _ahc
             init_groups, _ = _ahc(profiles, n_groups)
         elif init == 'plain':
             init_groups = list(set() for i in range(n_groups))
@@ -226,11 +226,11 @@ def _moc(
         from numpy import zeros
         from pandas import DataFrame
         if init == 'mja':
-            from OrganizationalModelMiner.disjoint.graph_partitioning import (
+            from OrganizationalModelMiner.clustering.graph_partitioning import (
                     _mja)
             init_groups = _mja(profiles, n_groups)  
         elif init == 'ahc':
-            from OrganizationalModelMiner.hierarchical.clustering import _ahc
+            from OrganizationalModelMiner.clustering.hierarchical import _ahc
             init_groups, _ = _ahc(profiles, n_groups)
         elif init == 'plain':
             init_groups = list(set() for i in range(n_groups))
@@ -381,11 +381,11 @@ def _fcm(
     if init in ['mja', 'ahc', 'plain']:
         warm_start = True
         if init == 'mja':
-            from OrganizationalModelMiner.disjoint.graph_partitioning import (
+            from OrganizationalModelMiner.clustering.graph_partitioning import (
                     _mja)
             init_groups = _mja(profiles, n_groups)  
         elif init == 'ahc':
-            from OrganizationalModelMiner.hierarchical.clustering import _ahc
+            from OrganizationalModelMiner.clustering.hierarchical import _ahc
             init_groups, _ = _ahc(profiles, n_groups)
         elif init == 'plain':
             init_groups = list(set() for i in range(n_groups))
