@@ -384,7 +384,7 @@ class FCM:
 
             if is_valid:
                 #print('Final SSE =\t{:.8f}'.format(sse[-1]))
-                return w.copy(), sse[-1]
+                return w.copy().T, sse[-1]
         
         l_fitted_w = list(map(_e_m, l_w))
         best_w, best_sse = max(l_fitted_w, key=lambda x: x[1])

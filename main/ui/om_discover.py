@@ -61,7 +61,7 @@ if __name__ == '__main__':
             # build profiles
             from ResourceProfiler.raw_profiler import count_execution_frequency
             profiles = count_execution_frequency(rl, use_log_scale=False)
-            from OrganizationalModelMiner.clustering.graph_partitioning import (
+            from OrganizationalModelMiner.community.graph_partitioning import (
                     mja)
             # MJA -> select metric (Euclidean distance/PCC)
             print('Input a number to choose a metric:')

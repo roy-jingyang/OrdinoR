@@ -56,7 +56,7 @@ def _gmm(
     if init in ['mja', 'ahc', 'kmeans', 'plain']:
         warm_start = True
         if init == 'mja':
-            from OrganizationalModelMiner.clustering.graph_partitioning import (
+            from OrganizationalModelMiner.community.graph_partitioning import (
                     _mja)
             init_groups = _mja(profiles, n_groups)  
         elif init == 'ahc':
@@ -235,7 +235,7 @@ def _moc(
         from numpy import zeros
         from pandas import DataFrame
         if init == 'mja':
-            from OrganizationalModelMiner.clustering.graph_partitioning import (
+            from OrganizationalModelMiner.community.graph_partitioning import (
                     _mja)
             init_groups = _mja(profiles, n_groups)  
         elif init == 'ahc':
@@ -397,7 +397,7 @@ def _fcm(
     if init in ['mja', 'ahc', 'kmeans', 'plain']:
         warm_start = True
         if init == 'mja':
-            from OrganizationalModelMiner.clustering.graph_partitioning import (
+            from OrganizationalModelMiner.community.graph_partitioning import (
                     _mja)
             init_groups = _mja(profiles, n_groups)  
         elif init == 'ahc':
