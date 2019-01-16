@@ -51,7 +51,10 @@ def execute(setup, seq_ix, exp_dirpath):
     # Step 1: define execution modes
     step += 1
     cls_exec_mode_miner = _import_block(sequence[step]['invoke'])
-    exec_mode_miner = cls_exec_mode_miner(el)
+    if 'params' in sequence[step]:
+        exec_mode_miner = cls_exec_mode_miner(el, **eval(sequence[step]['params']))
+    else:
+        exec_mode_miner = cls_exec_mode_miner(el)
     rl = exec_mode_miner.derive_resource_log(el)
 
     # Step 2: characterizing resources
@@ -72,6 +75,7 @@ def execute(setup, seq_ix, exp_dirpath):
     om = OrganizationalModel()
     step += 1
     assigner = _import_block(sequence[step]['invoke'])
+    assigner_name = sequence[step]['label'].replace(' ', '')
     for og in ogs:
         if 'params' in sequence[step]:
             modes = assigner(og, rl, **eval(sequence[step]['params']))
@@ -96,7 +100,8 @@ def execute(setup, seq_ix, exp_dirpath):
         om.to_file_csv(fout)
     '''
 
-    return discoverer_name, om.size(), fitness, precision
+    #return discoverer_name, om.size(), fitness, precision
+    return assigner_name, om.size(), fitness, precision
 
 if __name__ == '__main__':
     fn_setup = sys.argv[1]

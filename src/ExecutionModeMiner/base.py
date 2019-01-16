@@ -2,17 +2,17 @@
 
 '''
 This module contains the definition of the abstract class
-'BaseExecutionModeMiner', which is the base class for any approach on
-discovering execution modes.
+'BaseMiner', which is the base class for any approach for discovering 
+execution modes.
 
-An execution mode miner class inherited from the BaseExecutionModeMiner should
-learn and store the mappings C -> CT, A -> AT, T -> TT. More importantly, it
-should allow the conversion from a source event log to a resource log.
+An execution mode miner class inherited from the BaseMiner should
+learn and store the mappings C -> CT, A -> AT, T -> TT, and should enable the
+conversion from a source event log to a derived resource log.
 '''
 
 from abc import ABC, abstractmethod
 
-class BaseExecutionModeMiner(ABC):
+class BaseMiner(ABC):
     '''This abstract class implements the definition of the data structure for
     case/activity/time types as python dicts, which contain the mappings from
     case/activity/time types to their corresponding identifiers.
@@ -31,8 +31,11 @@ class BaseExecutionModeMiner(ABC):
         self._build_ttypes(el)
         self.verify()
 
-    def _build_ctypes(self, el):
+    @abstractmethod
+    def _build_ctypes(self, el, **kwargs):
         '''Mine the case types.
+        Each type should be stored as a key-value pair where the key is of
+        string type and the value is a set of strings.
 
         Parameters
         ----------
@@ -46,8 +49,11 @@ class BaseExecutionModeMiner(ABC):
         '''
         pass
 
-    def _build_atypes(self, el):
+    @abstractmethod
+    def _build_atypes(self, el, **kwargs):
         '''Mine the activity types.
+        Each type should be stored as a key-value pair where the key is of
+        string type and the value is a set of strings.
 
         Parameters
         ----------
@@ -61,8 +67,11 @@ class BaseExecutionModeMiner(ABC):
         '''
         pass
 
-    def _build_ttypes(self, el):
+    @abstractmethod
+    def _build_ttypes(self, el, **kwargs):
         '''Mine the time types.
+        Each type should be stored as a key-value pair where the key is of
+        string type and the value is a set of strings.
 
         Parameters
         ----------
@@ -78,7 +87,7 @@ class BaseExecutionModeMiner(ABC):
 
     @abstractmethod
     def derive_resource_log(self, el):
-        '''Create a 'resource log' given the original log after the execution
+        '''Derive a 'resource log' given the original log AFTER the execution
         modes have been discovered and verified. The collections of case/
         activity/time identifiers in the original event log will be mapped
         onto the corresponding execution modes.
@@ -101,13 +110,6 @@ class BaseExecutionModeMiner(ABC):
         pass
 
     def verify(self):
-        self.is_ctypes_verified = (
-                len(self._ctypes) == 0 or self.is_ctypes_verified)
-        self.is_atypes_verified = (
-                len(self._atypes) == 0 or self.is_atypes_verified)
-        self.is_ttypes_verified = (
-                len(self._ttypes) == 0 or self.is_ttypes_verified)
-
         if (self.is_ctypes_verified and self.is_atypes_verified and
                 self.is_ttypes_verified):
             print('-' * 80)

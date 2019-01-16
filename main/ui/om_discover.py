@@ -15,8 +15,8 @@ if __name__ == '__main__':
         el = read_disco_csv(f)
 
     # learn execution modes and convert to resource log
-    from ExecutionModeMiner.naive_miner import NaiveActivityNameExecutionModeMiner
-    naive_exec_mode_miner = NaiveActivityNameExecutionModeMiner(el)
+    from ExecutionModeMiner.naive_miner import ATonlyMiner
+    naive_exec_mode_miner = ATonlyMiner(el)
     rl = naive_exec_mode_miner.derive_resource_log(el)
 
     # TODO: Timer related
