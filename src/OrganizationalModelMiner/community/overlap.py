@@ -221,6 +221,7 @@ def link_partitioning(
 
     # step 1. Build the linear network using the original network
     # distinguish the isolated nodes in the original network first
+    # store as a Pajek .net format file as intermediate
     from networkx import isolates
     original_isolates = list(isolates(sn))
     if len(original_isolates) > 0:
@@ -233,41 +234,48 @@ def link_partitioning(
         print('where N is the actual target number to be obtained in the '
               'final result.')
 
-    from networkx import DiGraph
-    ln = DiGraph()
-    from itertools import combinations
-    for ei, ej in list(combinations(sn.edges.data('weight'), 2)):
-        joint = None
-        if ei[0] == ej[0] or ei[0] == ej[1]:
-            joint = ei[0]
-        elif ei[1] == ej[0] or ei[1] == ej[1]:
-            joint = ei[1]
+    tmp_file_path = '.linear_graph.tmp'
+    edges = sorted(list(sn.edges.data('weight')))
+    with open(tmp_file_path, 'w') as f_pajek_net:
+        # write header
+        f_pajek_net.write('*Vertices {}\n'.format(len(edges)))
 
-        if joint is not None:
-            # i -> j
-            w_ij = ei[2] / (sn.degree(nbunch=joint, weight='weight') - ej[2])
-            # i <- j
-            w_ji = ej[2] / (sn.degree(nbunch=joint, weight='weight') - ei[2])
+        # write nodes in LN
+        for i, e in enumerate(edges):
+            # "><" is used as deliminator to distinguish the original nodes
+            f_pajek_net.write('{} "{}><{}"\n'.format(i + 1, 
+                str(e[0]), str(e[1])))
 
-            ln.add_edge(str((ei[0], ei[1])), str((ej[0], ej[1])), weight=w_ij)
-            ln.add_edge(str((ej[0], ej[1])), str((ei[0], ei[1])), weight=w_ji)
+        # write header
+        f_pajek_net.write('*arcs\n')
+
+        # write edges in LN
+        from itertools import combinations
+        for i, j in combinations(range(len(edges)), 2):
+            ei = edges[i]
+            ej = edges[j]
+            joint = None
+            if ei[0] == ej[0] or ei[0] == ej[1]:
+                joint = ei[0]
+            elif ei[1] == ej[0] or ei[1] == ej[1]:
+                joint = ei[1]
+
+            if joint is not None:
+                # i -> j
+                w_ij = ei[2] / (sn.degree(nbunch=joint, weight='weight') - ej[2])
+                # i <- j
+                w_ji = ej[2] / (sn.degree(nbunch=joint, weight='weight') - ei[2])
+
+                # precision set to 1e-9
+                f_pajek_net.write('{} {} {:.9f}\n'.format(i + 1, j + 1, w_ij))
+                f_pajek_net.write('{} {} {:.9f}\n'.format(j + 1, i + 1, w_ji))
 
     # step 2. Run Leiden (improved Louvain) algorithm to discover communities
     # convert the graph to igraph format
-    from networkx import write_gml
     from igraph import Graph as iGraph
-    tmp_file_path = '.linear_graph.tmp'
-    write_gml(ln, path=tmp_file_path)
-    ln_igraph = iGraph.Read_GML(tmp_file_path)
+    ln_igraph = iGraph.Read_Pajek(tmp_file_path)
     from os import remove
     remove(tmp_file_path)
-    '''
-    ln_igraph = iGraph(directed=True)
-    for node in ln.nodes:
-        ln_igraph.add_vertex(name=str(node))
-    for edge in ln.edges.data('weight'):
-        ln_igraph.add_edge(source=edge[0], target=edge[1], weight=edge[2])
-    '''
 
     # apply detection algorithm
     from leidenalg import find_partition, RBConfigurationVertexPartition
@@ -281,9 +289,9 @@ def link_partitioning(
     groups = defaultdict(set)
     for i, comm in enumerate(ln_communities):
         for n_idx in comm:
-            e = ln_igraph.vs[n_idx]
-            groups[i].add(eval(e['label'])[0])
-            groups[i].add(eval(e['label'])[1])
+            ln_v = ln_igraph.vs[n_idx]
+            groups[i].add(ln_v['id'].split('><')[0])
+            groups[i].add(ln_v['id'].split('><')[1])
     for i, iso_node in enumerate(original_isolates):
         groups['ISOLATE #{}'.format(i)].add(iso_node)
 

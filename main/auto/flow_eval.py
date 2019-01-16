@@ -45,16 +45,19 @@ def execute(setup, seq_ix, exp_dirpath):
     # Step 0: input an event log
     step = 0
     reader = _import_block(sequence[step]['invoke'])
-    with open(sequence[step]['params'], 'r') as f:
-        el = reader(f)
+    filepath = sequence[step]['params']['filepath']
+    mapping = eval(sequence[step]['params']['mapping'])
+    with open(filepath, 'r') as f:
+        el = reader(f, mapping=mapping)
 
     # Step 1: define execution modes
     step += 1
     cls_exec_mode_miner = _import_block(sequence[step]['invoke'])
-    if 'params' in sequence[step]:
-        exec_mode_miner = cls_exec_mode_miner(el, **eval(sequence[step]['params']))
-    else:
+    exec_mode_miner_name = sequence[step]['label'].replace(' ', '')
+    if sequence[step].get('params') is None:
         exec_mode_miner = cls_exec_mode_miner(el)
+    else:
+        exec_mode_miner = cls_exec_mode_miner(el, **eval(sequence[step]['params']))
     rl = exec_mode_miner.derive_resource_log(el)
 
     # Step 2: characterizing resources
@@ -64,9 +67,9 @@ def execute(setup, seq_ix, exp_dirpath):
 
     # Step 3: discover resource grouping
     step += 1
-    grouping_discoverer = _import_block(sequence[step]['invoke'])
+    discoverer = _import_block(sequence[step]['invoke'])
     discoverer_name = sequence[step]['label'].replace(' ', '')
-    ogs = grouping_discoverer(profiles, **eval(sequence[step]['params']))
+    ogs = discoverer(profiles, **eval(sequence[step]['params']))
     if type(ogs) is tuple:
         ogs = ogs[0]
 
@@ -77,10 +80,10 @@ def execute(setup, seq_ix, exp_dirpath):
     assigner = _import_block(sequence[step]['invoke'])
     assigner_name = sequence[step]['label'].replace(' ', '')
     for og in ogs:
-        if 'params' in sequence[step]:
-            modes = assigner(og, rl, **eval(sequence[step]['params']))
-        else:
+        if sequence[step].get('params') is None:
             modes = assigner(og, rl)
+        else:
+            modes = assigner(og, rl, **eval(sequence[step]['params']))
         om.add_group(og, modes)
 
     # evaluate organizational model: fitness
@@ -100,6 +103,7 @@ def execute(setup, seq_ix, exp_dirpath):
         om.to_file_csv(fout)
     '''
 
+    #return exec_mode_miner_name, om.size(), fitness, precision
     #return discoverer_name, om.size(), fitness, precision
     return assigner_name, om.size(), fitness, precision
 
