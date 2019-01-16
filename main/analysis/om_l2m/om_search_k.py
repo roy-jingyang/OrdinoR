@@ -9,23 +9,24 @@ fnout = sys.argv[2]
 
 def search_k(profiles, num_groups, method):
     if method == 'mja':
-        from OrganizationalModelMiner.disjoint.graph_partitioning import mja
+        from OrganizationalModelMiner.community.graph_partitioning import mja
         return mja(profiles, num_groups, metric='correlation',
             search_only=True)
+    elif method == 'ahc':
+        from OrganizationalModelMiner.clustering.hierarchical import ahc
+        return ahc(profiles, num_groups, method='ward',
+            search_only=True)[0]
     elif method == 'gmm':
-        from OrganizationalModelMiner.overlap.clustering import gmm
-        #return gmm(profiles, num_groups, threshold=None, init='ahc',
-        return gmm(profiles, num_groups, threshold=None,
+        from OrganizationalModelMiner.clustering.overlap import gmm
+        return gmm(profiles, num_groups, threshold=None, init='kmeans',
             search_only=True)
     elif method == 'moc':
-        from OrganizationalModelMiner.overlap.clustering import moc
-        #return moc(profiles, num_groups, init='ahc',
-        return moc(profiles, num_groups,
+        from OrganizationalModelMiner.clustering.overlap import moc
+        return moc(profiles, num_groups, init='kmeans',
             search_only=True)
     elif method == 'fcm':
-        from OrganizationalModelMiner.overlap.clustering import fcm
-        #return fcm(profiles, num_groups, threshold=None, init='ahc',
-        return fcm(profiles, num_groups, threshold=None,
+        from OrganizationalModelMiner.clustering.overlap import fcm
+        return fcm(profiles, num_groups, threshold=None, init='kmeans',
             search_only=True)
     else:
         exit('[Error] Unrecognized method option')
@@ -37,8 +38,9 @@ if __name__ == '__main__':
         el = read_disco_csv(f)
 
     # learn execution modes and convert to resource log
-    from ExecutionModeMiner.naive_miner import NaiveActivityNameExecutionModeMiner
-    naive_exec_mode_miner = NaiveActivityNameExecutionModeMiner(el)
+    from ExecutionModeMiner.naive_miner import ATonlyMiner
+    from ExecutionModeMiner.naive_miner import ATCTMiner
+    naive_exec_mode_miner = ATonlyMiner(el)
     rl = naive_exec_mode_miner.derive_resource_log(el)
 
     print('Input the desired range [low, high): ', end=' ')
@@ -47,10 +49,10 @@ if __name__ == '__main__':
     num_groups = range(int(num_groups[0]), int(num_groups[1]))
 
     # build profiles
-    from ResourceProfiler.raw_profiler import performer_activity_frequency
-    profiles = performer_activity_frequency(rl, use_log_scale=False)
+    from ResourceProfiler.raw_profiler import count_execution_frequency
+    profiles = count_execution_frequency(rl, use_log_scale=False)
 
-    methods = ['gmm', 'moc', 'fcm', 'mja']
+    methods = ['gmm', 'moc', 'mja', 'ahc']
     from multiprocessing import Pool
     from functools import partial
     partial_search_k = partial(search_k,
