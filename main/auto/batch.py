@@ -21,6 +21,8 @@ if __name__ == '__main__':
 
 
     # NOTE: if time performance are to be tested, do NOT use multi-processing
+    # NOTE: WATCH OUT! The community detection methods involve blocking IO!
+    # Error(s) may be raised in regard to FileIO.
     if switch_parallel:
         print('Running in parallel mode.')
         # Multi-processes version

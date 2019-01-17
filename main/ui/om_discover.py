@@ -255,8 +255,8 @@ if __name__ == '__main__':
     l = list()
     for og in sorted(ogs):
         #modes = assign_by_any(og, rl)
-        #modes = assign_by_all(og, rl)
-        modes = assign_by_proportion(og, rl, p=0.5)
+        modes = assign_by_all(og, rl)
+        #modes = assign_by_proportion(og, rl, p=0.5)
         om.add_group(og, modes)
 
     from Evaluation.l2m import conformance
