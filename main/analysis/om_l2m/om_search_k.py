@@ -52,8 +52,7 @@ if __name__ == '__main__':
     from ResourceProfiler.raw_profiler import count_execution_frequency
     profiles = count_execution_frequency(rl, use_log_scale=False)
 
-    #methods = ['gmm', 'moc', 'mja', 'ahc']
-    methods = ['ahc']
+    methods = ['gmm', 'moc', 'mja', 'ahc']
     from multiprocessing import Pool
     from functools import partial
     partial_search_k = partial(search_k,
