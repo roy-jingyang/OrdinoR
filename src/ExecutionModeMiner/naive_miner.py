@@ -80,17 +80,17 @@ class ATCTMiner(ATonlyMiner):
         # (map the values of a specified attribute to case_ids)
         par = list()
         # 1) directly let each value correspond to a category (type)
-        '''
         for v, events in el.groupby(case_attr_name): # sorted by default
             par.append(set(events['case_id']))
-        '''
 
+        '''
         # 2) another way: use bins to convert continuous values to categorical
         # NOTE: BPIC12 case (AMOUNT_REQ)
         from pandas import cut
         for v, events in el.groupby(cut(el[case_attr_name].astype('int'), 
             bins=range(-1, 100000, 10000))):
             par.append(set(events['case_id']))
+        '''
 
         # validate the partitioning
         is_disjoint = set.intersection(*par) == set()
