@@ -120,5 +120,11 @@ class BaseMiner(ABC):
             print('Number of T Types:\t\t{}'.format(len(self._ttypes)))
             print('-' * 80)
         else:
-            exit('[Error] Failed to verify the collected execution modes')
+            print('C Types:\t{}'.format('VERIFIED' if self.is_ctypes_verified
+                else 'INVALID'))
+            print('A Types:\t{}'.format('VERIFIED' if self.is_atypes_verified
+                else 'INVALID'))
+            print('T Types:\t{}'.format('VERIFIED' if self.is_ttypes_verified
+                else 'INVALID'))
+            exit('[Error] Failed to verify the collected execution modes: ')
     

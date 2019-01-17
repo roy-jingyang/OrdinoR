@@ -35,12 +35,14 @@ if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        el = read_disco_csv(f)
+        #el = read_disco_csv(f)
+        el = read_disco_csv(f, mapping={'(case) AMOUNT_REQ': 6})
 
     # learn execution modes and convert to resource log
     from ExecutionModeMiner.naive_miner import ATonlyMiner
     from ExecutionModeMiner.naive_miner import ATCTMiner
-    naive_exec_mode_miner = ATonlyMiner(el)
+    #naive_exec_mode_miner = ATonlyMiner(el)
+    naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) AMOUNT_REQ')
     rl = naive_exec_mode_miner.derive_resource_log(el)
 
     print('Input the desired range [low, high): ', end=' ')
