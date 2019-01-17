@@ -26,7 +26,7 @@
 <node id="1">
 <data key="label">input log: BPIC12</data>
 <data key="invoke">IO.reader.read_disco_csv</data>
-<data key="params">{'filepath': './input/bpic12.csv'}</data>
+<data key="params">{'filepath': './input/bpic12.csv', 'mapping': {'(case) AMOUNT_REQ}: 6}</data>
 <data key="phase">0</data>
 <data key="size">30.0</data>
 <data key="r">245</data>
@@ -61,7 +61,7 @@
 <node id="4">
 <data key="label">Phase 2.2: GMM</data>
 <data key="invoke">OrganizationalModelMiner.clustering.overlap.gmm</data>
-<data key="params">{'n_groups': range(11, 12), 'init': 'kmeans'}</data>
+<data key="params">{'n_groups': range(9, 10), 'init': 'kmeans'}</data>
 <data key="phase">2.2</data>
 <data key="size">30.0</data>
 <data key="r">153</data>
@@ -73,7 +73,7 @@
 <node id="5">
 <data key="label">Phase 2.2: MOC</data>
 <data key="invoke">OrganizationalModelMiner.clustering.overlap.moc</data>
-<data key="params">{'n_groups': range(11, 12), 'init': 'kmeans'}</data>
+<data key="params">{'n_groups': range(9, 10), 'init': 'kmeans'}</data>
 <data key="phase">2.2</data>
 <data key="size">30.0</data>
 <data key="r">153</data>
@@ -151,7 +151,7 @@
 <node id="14">
 <data key="label">Phase 2.2: MJA</data>
 <data key="invoke">OrganizationalModelMiner.community.graph_partitioning.mja</data>
-<data key="params">{'n_groups': range(11, 12), 'metric': 'correlation'}</data>
+<data key="params">{'n_groups': range(9, 10), 'metric': 'correlation'}</data>
 <data key="phase">2.2</data>
 <data key="size">30.0</data>
 <data key="r">153</data>
@@ -163,7 +163,7 @@
 <node id="21">
 <data key="label">Phase 2.2: AHC</data>
 <data key="invoke">OrganizationalModelMiner.clustering.hierarchical.ahc</data>
-<data key="params">{'n_groups': range(11, 12), 'method': 'ward'}</data>
+<data key="params">{'n_groups': range(9, 10), 'method': 'ward'}</data>
 <data key="phase">2.2</data>
 <data key="size">30.0</data>
 <data key="r">153</data>
@@ -175,7 +175,7 @@
 <node id="19">
 <data key="label">input log: BPIC13_op</data>
 <data key="invoke">IO.reader.read_disco_csv</data>
-<data key="params">{'filepath': './input/bpic13_op.csv'}</data>
+<data key="params">{'filepath': './input/bpic13_op.csv', 'mapping': {'impact': 7}}</data>
 <data key="phase">0</data>
 <data key="size">30.0</data>
 <data key="r">245</data>
@@ -187,7 +187,7 @@
 <node id="20">
 <data key="label">input log: WABO_rp</data>
 <data key="invoke">IO.reader.read_disco_csv</data>
-<data key="params">{'filepath': './input/wabo_rp.csv'}</data>
+<data key="params">{'filepath': './input/wabo_rp.csv', 'mapping': {'(case) channel': 6}}</data>
 <data key="phase">0</data>
 <data key="size">30.0</data>
 <data key="r">245</data>
@@ -199,6 +199,7 @@
 <node id="22">
 <data key="label">Phase 1: AT + CT</data>
 <data key="invoke">ExecutionModeMiner.naive_miner.ATCTMiner</data>
+<data key="params">{'case_attr_name': '(case) channel'}</data>
 <data key="phase">1</data>
 <data key="size">30.0</data>
 <data key="r">255</data>
@@ -225,46 +226,46 @@
 <edge id="133" source="12" target="13">
 <data key="weight">1.0</data>
 </edge>
-<edge id="136" source="2" target="3">
+<edge id="134" source="22" target="3">
 <data key="weight">1.0</data>
 </edge>
-<edge id="137" source="3" target="21">
+<edge id="135" source="3" target="21">
 <data key="weight">1.0</data>
 </edge>
-<edge id="138" source="3" target="4">
+<edge id="136" source="3" target="4">
 <data key="weight">1.0</data>
 </edge>
-<edge id="139" source="3" target="5">
+<edge id="137" source="3" target="5">
 <data key="weight">1.0</data>
 </edge>
-<edge id="140" source="3" target="14">
+<edge id="138" source="3" target="14">
 <data key="weight">1.0</data>
 </edge>
-<edge id="141" source="3" target="7">
+<edge id="139" source="3" target="7">
 <data key="weight">1.0</data>
 </edge>
-<edge id="142" source="21" target="8">
+<edge id="140" source="21" target="8">
 <data key="weight">1.0</data>
 </edge>
-<edge id="143" source="4" target="8">
+<edge id="141" source="4" target="8">
 <data key="weight">1.0</data>
 </edge>
-<edge id="144" source="5" target="8">
+<edge id="142" source="5" target="8">
 <data key="weight">1.0</data>
 </edge>
-<edge id="145" source="14" target="8">
+<edge id="143" source="14" target="8">
 <data key="weight">1.0</data>
 </edge>
-<edge id="146" source="7" target="8">
+<edge id="144" source="7" target="8">
 <data key="weight">1.0</data>
 </edge>
-<edge id="147" source="8" target="11">
+<edge id="145" source="8" target="11">
 <data key="weight">1.0</data>
 </edge>
-<edge id="159" source="19" target="2">
+<edge id="154" source="0" target="20">
 <data key="weight">1.0</data>
 </edge>
-<edge id="158" source="0" target="19">
+<edge id="155" source="20" target="22">
 <data key="weight">1.0</data>
 </edge>
 </graph>
