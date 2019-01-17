@@ -45,31 +45,46 @@ def execute(setup, seq_ix, exp_dirpath):
     # Step 0: input an event log
     step = 0
     reader = _import_block(sequence[step]['invoke'])
-    filepath = sequence[step]['params']['filepath']
-    mapping = eval(sequence[step]['params']['mapping'])
-    with open(filepath, 'r') as f:
-        el = reader(f, mapping=mapping)
+    params = sequence[step].get('params', None)
+    if params is None:
+        exit('[Node Error]\t"{}"'.format(sequence[step]['label']))
+    else:
+        params = eval(params)
+    with open(params['filepath'], 'r') as f:
+        el = reader(f, mapping=params.get('mapping', None))
 
     # Step 1: define execution modes
     step += 1
     cls_exec_mode_miner = _import_block(sequence[step]['invoke'])
     exec_mode_miner_name = sequence[step]['label'].replace(' ', '')
-    if sequence[step].get('params') is None:
+    params = sequence[step].get('params', None)
+    if params is None:
         exec_mode_miner = cls_exec_mode_miner(el)
     else:
-        exec_mode_miner = cls_exec_mode_miner(el, **eval(sequence[step]['params']))
+        params = eval(params)
+        exec_mode_miner = cls_exec_mode_miner(el, **params)
     rl = exec_mode_miner.derive_resource_log(el)
 
     # Step 2: characterizing resources
     step += 1
     profiler = _import_block(sequence[step]['invoke'])
-    profiles = profiler(rl, **eval(sequence[step]['params']))
+    params = sequence[step].get('params', None)
+    if params is None:
+        exit('[Node Error]\t"{}"'.format(sequence[step]['label']))
+    else:
+        params = eval(params)
+    profiles = profiler(rl, **params)
 
     # Step 3: discover resource grouping
     step += 1
     discoverer = _import_block(sequence[step]['invoke'])
     discoverer_name = sequence[step]['label'].replace(' ', '')
-    ogs = discoverer(profiles, **eval(sequence[step]['params']))
+    params = sequence[step].get('params', None)
+    if params is None:
+        exit('[Node Error]\t"{}"'.format(sequence[step]['label']))
+    else:
+        params = eval(params)
+    ogs = discoverer(profiles, **params)
     if type(ogs) is tuple:
         ogs = ogs[0]
 
@@ -80,10 +95,12 @@ def execute(setup, seq_ix, exp_dirpath):
     assigner = _import_block(sequence[step]['invoke'])
     assigner_name = sequence[step]['label'].replace(' ', '')
     for og in ogs:
-        if sequence[step].get('params') is None:
+        params = sequence[step].get('params', None)
+        if params is None:
             modes = assigner(og, rl)
         else:
-            modes = assigner(og, rl, **eval(sequence[step]['params']))
+            params = eval(params)
+            modes = assigner(og, rl, **params)
         om.add_group(og, modes)
 
     # evaluate organizational model: fitness
@@ -104,8 +121,8 @@ def execute(setup, seq_ix, exp_dirpath):
     '''
 
     #return exec_mode_miner_name, om.size(), fitness, precision
-    #return discoverer_name, om.size(), fitness, precision
-    return assigner_name, om.size(), fitness, precision
+    return discoverer_name, om.size(), fitness, precision
+    #return assigner_name, om.size(), fitness, precision
 
 if __name__ == '__main__':
     fn_setup = sys.argv[1]
