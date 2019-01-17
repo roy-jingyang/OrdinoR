@@ -26,7 +26,7 @@
 <node id="1">
 <data key="label">input log: BPIC12</data>
 <data key="invoke">IO.reader.read_disco_csv</data>
-<data key="params">{'filepath': './input/bpic12.csv', 'mapping': {'(case) AMOUNT_REQ}: 6}</data>
+<data key="params">{'filepath': './input/bpic12.csv', 'mapping': {'(case) AMOUNT_REQ}': 6}</data>
 <data key="phase">0</data>
 <data key="size">30.0</data>
 <data key="r">245</data>
@@ -61,7 +61,7 @@
 <node id="4">
 <data key="label">Phase 2.2: GMM</data>
 <data key="invoke">OrganizationalModelMiner.clustering.overlap.gmm</data>
-<data key="params">{'n_groups': range(7, 8), 'init': 'kmeans'}</data>
+<data key="params">{'n_groups': range(9, 10), 'init': 'kmeans'}</data>
 <data key="phase">2.2</data>
 <data key="size">30.0</data>
 <data key="r">153</data>
@@ -151,7 +151,7 @@
 <node id="14">
 <data key="label">Phase 2.2: MJA</data>
 <data key="invoke">OrganizationalModelMiner.community.graph_partitioning.mja</data>
-<data key="params">{'n_groups': range(10, 11), 'metric': 'correlation'}</data>
+<data key="params">{'n_groups': range(9, 10), 'metric': 'correlation'}</data>
 <data key="phase">2.2</data>
 <data key="size">30.0</data>
 <data key="r">153</data>
@@ -163,7 +163,7 @@
 <node id="21">
 <data key="label">Phase 2.2: AHC</data>
 <data key="invoke">OrganizationalModelMiner.clustering.hierarchical.ahc</data>
-<data key="params">{'n_groups': range(10, 11), 'method': 'ward'}</data>
+<data key="params">{'n_groups': range(9, 10), 'method': 'ward'}</data>
 <data key="phase">2.2</data>
 <data key="size">30.0</data>
 <data key="r">153</data>
