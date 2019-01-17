@@ -15,7 +15,7 @@ def search_k(profiles, num_groups, method):
     elif method == 'ahc':
         from OrganizationalModelMiner.clustering.hierarchical import ahc
         return ahc(profiles, num_groups, method='ward',
-            search_only=True)[0]
+            search_only=True)
     elif method == 'gmm':
         from OrganizationalModelMiner.clustering.overlap import gmm
         return gmm(profiles, num_groups, threshold=None, init='kmeans',
@@ -52,7 +52,8 @@ if __name__ == '__main__':
     from ResourceProfiler.raw_profiler import count_execution_frequency
     profiles = count_execution_frequency(rl, use_log_scale=False)
 
-    methods = ['gmm', 'moc', 'mja', 'ahc']
+    #methods = ['gmm', 'moc', 'mja', 'ahc']
+    methods = ['ahc']
     from multiprocessing import Pool
     from functools import partial
     partial_search_k = partial(search_k,
