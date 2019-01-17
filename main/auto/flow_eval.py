@@ -149,7 +149,7 @@ if __name__ == '__main__':
         precision_values.append(p)
         execute_time.append(end_time - start_time)
 
-    with open(join(dirout, '{}_report.csv'.format(name)), 'w') as fout:
+    with open(join(dirout, '{}_report.csv'.format(name)), 'w+') as fout:
         writer = writer(fout)
         for i in range(n_tests):
             writer.writerow([
