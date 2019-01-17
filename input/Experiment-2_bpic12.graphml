@@ -26,7 +26,7 @@
 <node id="1">
 <data key="label">input log: BPIC12</data>
 <data key="invoke">IO.reader.read_disco_csv</data>
-<data key="params">{'filepath': './input/bpic12.csv', 'mapping': {'(case) AMOUNT_REQ}': 6}}</data>
+<data key="params">{'filepath': './input/bpic12.csv', 'mapping': {'(case) AMOUNT_REQ': 6}}</data>
 <data key="phase">0</data>
 <data key="size">30.0</data>
 <data key="r">245</data>
