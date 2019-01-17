@@ -121,8 +121,10 @@ def execute(setup, seq_ix, exp_dirpath):
     '''
 
     #return exec_mode_miner_name, om.size(), fitness, precision
-    return discoverer_name, om.size(), fitness, precision
+    #return discoverer_name, om.size(), fitness, precision
     #return assigner_name, om.size(), fitness, precision
+    return ('{}-{}'.format(discoverer_name, assigner_name), 
+            om.size(), fitness, precision)
 
 if __name__ == '__main__':
     fn_setup = sys.argv[1]
