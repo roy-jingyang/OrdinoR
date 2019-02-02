@@ -113,6 +113,23 @@ def execute(setup, seq_ix, exp_dirpath):
     precision_eval = _import_block(sequence[step]['invoke'])
     precision = precision_eval(rl, om)
 
+    # TODO: implicit evaluation (model statistics)
+    k = om.size()
+    resources = om.resources()
+    n_ov_res = 0
+    n_ov_res_membership = 0
+    for r in resources:
+        n_res_membership = len(om.find_groups(r))
+        if n_res_membership == 1:
+            pass
+        else:
+            n_ov_res += 1
+            n_ov_res_membership += n_res_membership
+
+    ov_density = n_ov_res / len(resources)
+    avg_ov_diversity = (n_ov_res_membership / n_ov_res 
+            if n_ov_res > 0 else float('nan'))
+
     '''
     # export organizational models
     fnout = discoverer_name + '.om'
@@ -120,11 +137,11 @@ def execute(setup, seq_ix, exp_dirpath):
         om.to_file_csv(fout)
     '''
 
-    #return exec_mode_miner_name, om.size(), fitness, precision
-    #return discoverer_name, om.size(), fitness, precision
-    #return assigner_name, om.size(), fitness, precision
+    #return exec_mode_miner_name, k, fitness, precision
+    #return discoverer_name, k, fitness, precision
+    #return assigner_name, k, fitness, precision
     return ('{}-{}'.format(discoverer_name, assigner_name), 
-            om.size(), fitness, precision)
+            k, fitness, precision, ov_density, avg_ov_diversity)
 
 if __name__ == '__main__':
     fn_setup = sys.argv[1]
@@ -139,16 +156,20 @@ if __name__ == '__main__':
     k_values = list()
     fitness_values = list()
     precision_values = list()
+    ov_density_values = list()
+    avg_ov_diversity_values = list()
     execute_time = list()
 
     from time import time
     for i in range(n_tests):
         start_time = time()
-        name, k, f, p = execute(setup, path, dirout)
+        name, k, f, p, ovden, avg_ovdiv = execute(setup, path, dirout)
         end_time = time()
         k_values.append(k)
         fitness_values.append(f)
         precision_values.append(p)
+        ov_density_values.append(ovden)
+        avg_ov_diversity_values.append(avg_ovdiv)
         execute_time.append(end_time - start_time)
 
     with open(join(dirout, '{}_report.csv'.format(name)), 'w+') as fout:
@@ -157,5 +178,6 @@ if __name__ == '__main__':
             writer.writerow([
                 name,
                 k_values[i], fitness_values[i], precision_values[i],
+                ov_density_values[i], avg_ov_diversity_values[i],
                 execute_time[i]])
     
