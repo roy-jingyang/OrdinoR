@@ -1,9 +1,0 @@
-0,Resource01,|AT.0|;|AT.16|;|AT.17|;|AT.18|;|AT.1|;|AT.21|;|AT.22|;|AT.23|;|AT.25|;|AT.26|;|AT.2|;|AT.3|;|AT.4|;|AT.5|
-1,Resource02;Resource03;Resource04;Resource08;Resource09;Resource16;Resource17;Resource21;Resource22;Resource23;Resource24;Resource25;Resource26;Resource27;Resource28;Resource29;Resource30;Resource31;Resource32;Resource33;Resource34;Resource35;Resource36;Resource37;Resource38;Resource39;Resource40;Resource41;Resource42;Resource43;TEST;admin3;test,|AT.0|;|AT.16|;|AT.1|;|AT.3|;|AT.4|;|AT.5|
-2,Resource02;Resource08;Resource09;Resource11;Resource12;Resource13;Resource14;Resource15,|AT.0|;|AT.16|;|AT.17|;|AT.1|;|AT.22|;|AT.23|;|AT.25|;|AT.26|;|AT.2|;|AT.3|;|AT.4|;|AT.5|;|AT.7|
-3,Resource02;Resource16;Resource17;Resource18;Resource20,|AT.0|;|AT.16|;|AT.1|;|AT.2|;|AT.3|;|AT.4|;|AT.5|
-4,Resource03;Resource04;Resource05;Resource06;Resource07,|AT.0|;|AT.16|;|AT.17|;|AT.18|;|AT.1|;|AT.20|;|AT.21|;|AT.22|;|AT.23|;|AT.25|;|AT.26|;|AT.2|;|AT.3|;|AT.4|;|AT.5|
-5,Resource10,|AT.0|;|AT.1|;|AT.20|;|AT.3|;|AT.4|
-6,Resource19,|AT.0|;|AT.18|;|AT.1|;|AT.20|;|AT.3|
-7,admin1,|AT.0|;|AT.16|;|AT.17|;|AT.18|;|AT.1|;|AT.20|;|AT.21|;|AT.3|;|AT.4|
-8,admin2,|AT.0|;|AT.10|;|AT.16|;|AT.17|;|AT.19|;|AT.1|;|AT.2|;|AT.3|;|AT.4|;|AT.5|;|AT.6|;|AT.7|
