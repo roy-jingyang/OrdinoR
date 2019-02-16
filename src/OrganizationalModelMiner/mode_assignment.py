@@ -68,6 +68,7 @@ def assign_by_proportion(group, rl, p):
         rl: DataFrame
             The resource log.
         p: float, in range (0, 1]
+            The designated proportion value.
     Returns:
         modes: iterator
             The execution modes corresponding to the resources:

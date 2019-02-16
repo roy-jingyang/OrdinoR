@@ -121,21 +121,6 @@ class OrganizationalModel:
         '''
         return frozenset(self._rmem.keys())
 
-    def find_groups(self, r):
-        '''Query the groups that contain a resource given its identifier.
-
-        Parameters
-        ----------
-        r: 
-            The identifier of a resource given.
-
-        Returns
-        -------
-        list of frozensets
-            The groups to which the queried resource belong.
-        '''
-        return [frozenset(self._mem[rg_id]) for rg_id in self._rmem[r]]
-
     def find_group_ids(self, r):
         '''Query the id of groups that contain a resource given its identifier.
 
@@ -151,20 +136,38 @@ class OrganizationalModel:
         '''
         return list(self._rmem[r])
 
-    def find_all_groups(self):
-        '''Simply return all the discovered groups.
+    def find_groups(self, r):
+        '''Query the groups that contain a resource given its identifier.
 
         Parameters
         ----------
+        r: 
+            The identifier of a resource given.
 
         Returns
         -------
         list of frozensets
             The groups to which the queried resource belong.
         '''
-        return [frozenset(g) for g in self._mem.values()]
-    
-    def get_candidate_groups(self, exec_mode):
+        return [frozenset(self._mem[rg_id]) for rg_id in self._rmem[r]]
+
+    def find_execution_modes(self, r):
+        '''Query the allowed execution modes of a resource given its identifier.
+
+        Parameters
+        ----------
+        r: 
+            The identifier of a resource given.
+
+        Returns
+        -------
+        list of 3-tuples
+            The allowed execution modes specific to the given resource.
+        '''
+        return list(set.union(
+            *[self._cap[rg_id] for rg_id in self._rmem[r]]))
+
+    def find_candidate_groups(self, exec_mode):
         '''Query the capable groups (i.e. groups that can perform the execution
         mode according to the model) given an execution mode.
 
@@ -180,6 +183,33 @@ class OrganizationalModel:
         '''
         return [frozenset(self._mem[rg_id]) for rg_id in self._rcap[exec_mode]]
 
+    def find_all_groups(self):
+        '''Simply return all the discovered groups.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        list of frozensets
+            The groups of resources.
+        '''
+        return [frozenset(g) for g in self._mem.values()]
+    
+    def find_all_execution_modes(self):
+        '''Simply return all the execution modes related to the discovered
+        groups.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        list of frozensets of 3-tuples
+            The execution modes related.
+        '''
+        return [frozenset(em) for em in self._cap.values()]
+    
     # IO related methods
     def to_file_csv(self, f):
         '''Export and write the current organizational model to a csv file.

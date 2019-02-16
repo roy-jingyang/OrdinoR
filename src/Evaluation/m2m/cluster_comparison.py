@@ -4,6 +4,15 @@
 Ref: Amigó, E., Gonzalo, J., Artiles, J., & Verdejo, F. (2009). A comparison
 of extrinsic clustering evaluation metrics based on formal constraints.
 Information retrieval, 12(4), 461-486.
+
+This module provides a set of extrinsic evaluation measure for the latent
+clusters (grouping of resources) in the organizational models, implemented
+directly following the definitions in the reference paper. For intrinsic
+evaluation measure, see ./cluster_validation.py.
+
+Note that to conduct the evaluation of comparing clusters, the expected input
+of these implemented methods should be (extracted) clusters rather than an
+organizational model instance.
 '''
 
 import math
@@ -25,11 +34,11 @@ def report_set_matching(resources, clu, ref_clu):
 def purity(resources, clu, ref_clu):
     N = len(resources)
     clu_purity = 0.0
-    for entity_id_i, entity_i in clu.items(): # cluster Ci
+    for entity_i in clu: # cluster Ci
         n_i  = len(entity_i) # |Ci|
         p_i = n_i / N # proportion of Ci
         entity_purity_i = 0.0
-        for entity_id_j, entity_j in ref_clu.items(): # category Lj
+        for entity_j in ref_clu: # category Lj
             n_ij = len(entity_i.intersection(entity_j)) # |Ci n Lj|
             p_ij = n_ij / n_i # Precision(Ci, Lj)
             entity_purity_i = (
@@ -44,11 +53,11 @@ def purity(resources, clu, ref_clu):
 def inverse_purity(resources, clu, ref_clu):
     N = len(resources)
     clu_inverse_purity = 0.0
-    for entity_id_i, entity_i in ref_clu.items(): # category Li
+    for entity_i in ref_clu: # category Li
         n_i  = len(entity_i)    # |Li|
         p_i = n_i / N # proportion of Li
         entity_inverse_purity_i = 0.0
-        for entity_id_j, entity_j in clu.items(): # cluster Cj
+        for entity_j in clu: # cluster Cj
             n_ij = len(entity_i.intersection(entity_j)) # |Li n Cj|
             p_ij = n_ij / n_i # Precision(Li, Cj)
             entity_inverse_purity_i = (
@@ -64,11 +73,11 @@ def inverse_purity(resources, clu, ref_clu):
 def F_measure(resources, clu, ref_clu):
     N = len(resources)
     clu_F_value = 0.0
-    for entity_id_i, entity_i in ref_clu.items(): # category Li
+    for entity_i in ref_clu: # category Li
         n_i = len(entity_i) # |Li|
         p_i = n_i / N # proportion of Li
         entity_F_value = 0.0
-        for entity_id_j, entity_j in clu.items(): # cluster Cj
+        for entity_j in clu: # cluster Cj
             n_ij = len(entity_i.intersection(entity_j)) # |Li n Cj|
             n_j = len(entity_j) # |Cj|
             precision = n_ij / n_i # Precison(Li, Cj)
@@ -107,7 +116,7 @@ def _similarity_matrices(resources, clu, ref_clu):
     # both mat_cluster & mat_category use the same indexing
 
     mat_cluster = np.eye(N) # diag set to 1
-    for entity_id, entity in clu.items():
+    for entity in clu:
         entity = list(entity)
         # avoid repeatedly counting the simultaneous appearance
         for i in range(len(entity) - 1):
@@ -119,7 +128,7 @@ def _similarity_matrices(resources, clu, ref_clu):
                 mat_cluster[v][u] = 1
 
     mat_category = np.eye(N) # diag set to 1
-    for entity_id, entity in ref_clu.items():
+    for entity in ref_clu:
         entity = list(entity)
         # avoid repeatedly counting the simultaneous appearance
         for i in range(len(entity) - 1):
@@ -188,10 +197,10 @@ def report_entropy_based(resources, clu, ref_clu):
 def entropy_measure(resources, clu, ref_clu):
     N = len(resources)
     clu_entropy = 0
-    for entity_id_j, entity_j in clu.items(): # cluster j
+    for entity_j in clu: # cluster j
         p_j = len(entity_j) / N # proportion of cluster j
         entity_entropy_j = 0 
-        for entity_id_i, entity_i in ref_clu.items(): # category i
+        for entity_i in ref_clu: # category i
             p = len(entity_i.intersection(entity_j)) / len(entity_j)
             # Inner SUM
             if p != 0:
@@ -248,7 +257,7 @@ def _multiplicity_matrices(resources, clu, ref_clu):
     # both mat_cluster_multi & mat_category_multi use the same indexing
 
     mat_cluster_multi = np.zeros((N, N)) # diag set to 0
-    for entity_id, entity in clu.items():
+    for entity in clu:
         entity = list(entity)
         # avoid repeatedly counting the simultaneous appearance
         for i in range(len(entity) - 1):
@@ -260,7 +269,7 @@ def _multiplicity_matrices(resources, clu, ref_clu):
                 mat_cluster_multi[v][u] += 1
 
     mat_category_multi = np.zeros((N, N)) # diag set to 0
-    for entity_id, entity in ref_clu.items():
+    for entity in ref_clu:
         entity = list(entity)
         # avoid repeatedly counting the simultaneous appearance
         for i in range(len(entity) - 1):
