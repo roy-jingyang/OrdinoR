@@ -40,7 +40,10 @@ def silhouette_score(
                             X.loc[r].values.reshape(1, len(X.loc[r])),
                             X.loc[list(other_g)],
                             metric=proximity_metric)))
-                min_inter_dist = amin(avg_inter_dist)
+                if len(avg_inter_dist) == 0:
+                    min_inter_dist = 0
+                else:
+                    min_inter_dist = amin(avg_inter_dist)
 
                 score.append((min_inter_dist - avg_intra_dist) /
                         max(avg_intra_dist, min_inter_dist))
