@@ -49,7 +49,7 @@ def cross_validation_score(
 
     print('Using cross validation with {} folds:'.format(cv_fold))
 
-    from numpy import array, mean # TODO: different definition of centroids
+    from numpy import array, amin, mean # TODO: different definition of centroids
     from scipy.spatial.distance import cdist
     for i in range(cv_fold):
         # split test set and train set
@@ -73,8 +73,8 @@ def cross_validation_score(
         sum_closest_proximity = 0.0
         for ix in test_set_index:
             x = X.loc[ix].values.reshape((1, len(X.loc[ix])))
-            sum_closest_proximity += min(
-                    cdist(x, cluster_centroids, metric=proximity_metric)[0])
+            sum_closest_proximity += amin(
+                    cdist(x, cluster_centroids, metric=proximity_metric))
         scores.append((-1) * sum_closest_proximity)
 
     return mean(scores)

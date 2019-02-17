@@ -152,4 +152,3 @@ def precision1(rl, om):
             for r in om.resources())
     return n_conformed_res_events / n_allowed_res_events
 
-

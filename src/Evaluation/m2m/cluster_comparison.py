@@ -15,8 +15,8 @@ of these implemented methods should be (extracted) clusters rather than an
 organizational model instance.
 '''
 
-import math
-import numpy as np
+from math import sqrt, log2
+from numpy import eye, zeros
 
 # 1. Evaluation by set matching: purity, inverse purity and F measure of them
 def report_set_matching(resources, clu, ref_clu):
@@ -115,7 +115,7 @@ def _similarity_matrices(resources, clu, ref_clu):
 
     # both mat_cluster & mat_category use the same indexing
 
-    mat_cluster = np.eye(N) # diag set to 1
+    mat_cluster = eye(N) # diag set to 1
     for entity in clu:
         entity = list(entity)
         # avoid repeatedly counting the simultaneous appearance
@@ -127,7 +127,7 @@ def _similarity_matrices(resources, clu, ref_clu):
                 mat_cluster[u][v] = 1
                 mat_cluster[v][u] = 1
 
-    mat_category = np.eye(N) # diag set to 1
+    mat_category = eye(N) # diag set to 1
     for entity in ref_clu:
         entity = list(entity)
         # avoid repeatedly counting the simultaneous appearance
@@ -184,7 +184,7 @@ def Folkes_and_Mallows(resources, clu, ref_clu):
     string = ('The Folkes and Mallows score of the loaded cluster compared to'
             ' the reference cluster is FM = {:.3f}')
     J = ss / (ss + sd + ds)
-    FM = math.sqrt((ss / (ss + sd)) * (ss / (ss + ds)))
+    FM = sqrt((ss / (ss + sd)) * (ss / (ss + ds)))
     return (FM, string)
 
 # 3. Metrics based on entropy
@@ -204,7 +204,7 @@ def entropy_measure(resources, clu, ref_clu):
             p = len(entity_i.intersection(entity_j)) / len(entity_j)
             # Inner SUM
             if p != 0:
-                entity_entropy_j += (-1) * p * math.log2(p)
+                entity_entropy_j += (-1) * p * log2(p)
             else:
                 # lim -> 0
                 entity_entropy_j += 0
@@ -223,7 +223,7 @@ def _correctness_matrix(resources, clu, ref_clu):
             resources, clu, ref_clu)
 
     # indexing follows mat_cluster & mat_category
-    mat_correctness = np.zeros((N, N))
+    mat_correctness = zeros((N, N))
     for i in range(N - 1):
         for j in range(i + 1, n): # for any two different items (e, e')
             # L(e) = L(e') <==> C(e) = C(e')
@@ -256,7 +256,7 @@ def _multiplicity_matrices(resources, clu, ref_clu):
 
     # both mat_cluster_multi & mat_category_multi use the same indexing
 
-    mat_cluster_multi = np.zeros((N, N)) # diag set to 0
+    mat_cluster_multi = zeros((N, N)) # diag set to 0
     for entity in clu:
         entity = list(entity)
         # avoid repeatedly counting the simultaneous appearance
@@ -268,7 +268,7 @@ def _multiplicity_matrices(resources, clu, ref_clu):
                 mat_cluster_multi[u][v] += 1
                 mat_cluster_multi[v][u] += 1
 
-    mat_category_multi = np.zeros((N, N)) # diag set to 0
+    mat_category_multi = zeros((N, N)) # diag set to 0
     for entity in ref_clu:
         entity = list(entity)
         # avoid repeatedly counting the simultaneous appearance
@@ -289,7 +289,7 @@ def _pairwise_multiplicity_precision(resources, clu, ref_clu):
             resources, clu, ref_clu)
 
     # indexing follows mat_cluster_multi & mat_category_multi
-    mat_multi_precision = np.zeros((N, N)) # diag set to 0
+    mat_multi_precision = zeros((N, N)) # diag set to 0
     for i in range(N - 1):
         for j in range(i + 1, N): # for any two different items
             # Min(|C(e) n C(e')|, |L(e) n L(e')|) / |C(e) n C(e')|
@@ -314,7 +314,7 @@ def _pairwise_multiplicity_recall(resources, clu, ref_clu):
             resources, clu, ref_clu)
 
     # indexing follows mat_cluster_multi & mat_category_multi
-    mat_multi_recall = np.zeros((N, N)) # diag set to 0
+    mat_multi_recall = zeros((N, N)) # diag set to 0
     for i in range(N - 1):
         for j in range(i + 1, N): # for any two different items
             # Min(|C(e) n C(e')|, |L(e) n L(e')|) / |L(e) n L(e')|

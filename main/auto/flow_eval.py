@@ -88,6 +88,11 @@ def execute(setup, seq_ix, exp_dirpath):
     if type(ogs) is tuple:
         ogs = ogs[0]
 
+    # TODO: Hard-coded evalution measure (TBD)
+    # `. Intrinsic evaluation of clustering (by Silhouette score)
+    from Evaluation.m2m.cluster_validation import silhouette_score
+    silhouette = silhouette_score(ogs, profiles)
+
     # assign execution modes
     from OrganizationalModelMiner.base import OrganizationalModel
     om = OrganizationalModel()
@@ -113,7 +118,13 @@ def execute(setup, seq_ix, exp_dirpath):
     precision_eval = _import_block(sequence[step]['invoke'])
     precision = precision_eval(rl, om)
 
-    # TODO: implicit evaluation (model statistics)
+    # TODO: Hard-coded evalution measure (TBD) cont.
+    # 2. (New) Fitness & Precision values
+    from Evaluation.l2m.conformance import fitness1, precision1
+    fitness1 = fitness1(rl, om)
+    precision1 = precision1(rl, om)
+
+    # 3. Overlapping Density & Overlapping Diversity (avg.)
     k = om.size()
     resources = om.resources()
     n_ov_res = 0
@@ -129,7 +140,7 @@ def execute(setup, seq_ix, exp_dirpath):
     ov_density = n_ov_res / len(resources)
     avg_ov_diversity = (n_ov_res_membership / n_ov_res 
             if n_ov_res > 0 else float('nan'))
-
+    
     '''
     # export organizational models
     fnout = discoverer_name + '.om'
@@ -141,7 +152,9 @@ def execute(setup, seq_ix, exp_dirpath):
     #return discoverer_name, k, fitness, precision
     #return assigner_name, k, fitness, precision
     return ('{}-{}'.format(discoverer_name, assigner_name), 
-            k, fitness, precision, ov_density, avg_ov_diversity)
+            k, fitness, precision, 
+            fitness1, precision1,
+            ov_density, avg_ov_diversity, silhouette)
 
 if __name__ == '__main__':
     fn_setup = sys.argv[1]
@@ -156,20 +169,31 @@ if __name__ == '__main__':
     k_values = list()
     fitness_values = list()
     precision_values = list()
+
+    fitness1_values = list()
+    precision1_values = list()
     ov_density_values = list()
     avg_ov_diversity_values = list()
+    silhouette_values = list()
+
     execute_time = list()
 
     from time import time
     for i in range(n_tests):
         start_time = time()
-        name, k, f, p, ovden, avg_ovdiv = execute(setup, path, dirout)
+        name, k, f, p, f1, p1, ovden, avg_ovdiv, sil = execute(
+                setup, path, dirout)
         end_time = time()
         k_values.append(k)
         fitness_values.append(f)
         precision_values.append(p)
+
+        fitness1_values.append(f1)
+        precision1_values.append(p1)
         ov_density_values.append(ovden)
         avg_ov_diversity_values.append(avg_ovdiv)
+        silhouette_values.append(sil)
+
         execute_time.append(end_time - start_time)
 
     with open(join(dirout, '{}_report.csv'.format(name)), 'w+') as fout:
@@ -178,6 +202,8 @@ if __name__ == '__main__':
             writer.writerow([
                 name,
                 k_values[i], fitness_values[i], precision_values[i],
+                fitness1_values[i], precision1_values[i],
                 ov_density_values[i], avg_ov_diversity_values[i],
+                silhouette_values[i],
                 execute_time[i]])
     

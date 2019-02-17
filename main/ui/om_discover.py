@@ -254,9 +254,9 @@ if __name__ == '__main__':
     from OrganizationalModelMiner.mode_assignment import assign_by_proportion
     l = list()
     for og in sorted(ogs):
-        #modes = assign_by_any(og, rl)
+        modes = assign_by_any(og, rl)
         #modes = assign_by_all(og, rl)
-        modes = assign_by_proportion(og, rl, p=0.5)
+        #modes = assign_by_proportion(og, rl, p=0.5)
         om.add_group(og, modes)
 
     from Evaluation.l2m import conformance
@@ -264,8 +264,12 @@ if __name__ == '__main__':
     print('Fitness\t\t= {:.6f}'.format(conformance.fitness(rl, om)))
     print('Precision\t= {:.6f}'.format(conformance.precision(rl, om)))
     print()
-    print('Fitness1\t\t= {:.6f}'.format(conformance.fitness1(rl, om)))
+    print('Fitness1\t= {:.6f}'.format(conformance.fitness1(rl, om)))
     print('Precision1\t= {:.6f}'.format(conformance.precision1(rl, om)))
+
+    from Evaluation.m2m.cluster_validation import silhouette_score
+    print('Silhouette score\t= {:.6f}'.format(
+        silhouette_score(om.find_all_groups(), profiles)))
 
     # save the mined organizational model to a file
     with open(fnout_org_model, 'w', encoding='utf-8') as fout:
