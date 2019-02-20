@@ -245,6 +245,9 @@ if __name__ == '__main__':
         raise Exception('Failed to recognize input option!')
         exit(1)
 
+    from Evaluation.m2m.cluster_validation import silhouette_score
+    print('Silhouette score\t= {:.6f}'.format(silhouette_score(ogs, profiles)))
+
     from OrganizationalModelMiner.base import OrganizationalModel
     om = OrganizationalModel()
 
@@ -260,16 +263,17 @@ if __name__ == '__main__':
         om.add_group(og, modes)
 
     from Evaluation.l2m import conformance
+    '''
     print()
     print('Fitness\t\t= {:.6f}'.format(conformance.fitness(rl, om)))
     print('Precision\t= {:.6f}'.format(conformance.precision(rl, om)))
     print()
     print('Fitness1\t= {:.6f}'.format(conformance.fitness1(rl, om)))
     print('Precision1\t= {:.6f}'.format(conformance.precision1(rl, om)))
+    '''
+    print('Precision2\t= {:.6f}'.format(conformance.precision2(rl, om)))
+    print('Precision3\t= {:.6f}'.format(conformance.precision3(rl, om)))
 
-    from Evaluation.m2m.cluster_validation import silhouette_score
-    print('Silhouette score\t= {:.6f}'.format(
-        silhouette_score(om.find_all_groups(), profiles)))
 
     # save the mined organizational model to a file
     with open(fnout_org_model, 'w', encoding='utf-8') as fout:

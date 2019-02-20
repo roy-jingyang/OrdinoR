@@ -120,9 +120,10 @@ def execute(setup, seq_ix, exp_dirpath):
 
     # TODO: Hard-coded evalution measure (TBD) cont.
     # 2. (New) Fitness & Precision values
-    from Evaluation.l2m.conformance import fitness1, precision1
+    from Evaluation.l2m.conformance import fitness1, precision2, precision3
     fitness1 = fitness1(rl, om)
-    precision1 = precision1(rl, om)
+    precision2 = precision2(rl, om)
+    precision3 = precision3(rl, om)
 
     # 3. Overlapping Density & Overlapping Diversity (avg.)
     k = om.size()
@@ -153,7 +154,7 @@ def execute(setup, seq_ix, exp_dirpath):
     #return assigner_name, k, fitness, precision
     return ('{}-{}'.format(discoverer_name, assigner_name), 
             k, fitness, precision, 
-            fitness1, precision1,
+            fitness1, precision2, precision3,
             ov_density, avg_ov_diversity, silhouette)
 
 if __name__ == '__main__':
@@ -171,7 +172,8 @@ if __name__ == '__main__':
     precision_values = list()
 
     fitness1_values = list()
-    precision1_values = list()
+    precision2_values = list()
+    precision3_values = list()
     ov_density_values = list()
     avg_ov_diversity_values = list()
     silhouette_values = list()
@@ -181,7 +183,7 @@ if __name__ == '__main__':
     from time import time
     for i in range(n_tests):
         start_time = time()
-        name, k, f, p, f1, p1, ovden, avg_ovdiv, sil = execute(
+        name, k, f, p, f1, p2, p3, ovden, avg_ovdiv, sil = execute(
                 setup, path, dirout)
         end_time = time()
         k_values.append(k)
@@ -189,7 +191,8 @@ if __name__ == '__main__':
         precision_values.append(p)
 
         fitness1_values.append(f1)
-        precision1_values.append(p1)
+        precision2_values.append(p2)
+        precision3_values.append(p3)
         ov_density_values.append(ovden)
         avg_ov_diversity_values.append(avg_ovdiv)
         silhouette_values.append(sil)
@@ -202,7 +205,8 @@ if __name__ == '__main__':
             writer.writerow([
                 name,
                 k_values[i], fitness_values[i], precision_values[i],
-                fitness1_values[i], precision1_values[i],
+                fitness1_values[i], 
+                precision2_values[i], precision3_values[i],
                 ov_density_values[i], avg_ov_diversity_values[i],
                 silhouette_values[i],
                 execute_time[i]])
