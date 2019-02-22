@@ -108,13 +108,8 @@ def clique_percolation(
     print('Applying overlapping organizational model mining using '
           'community detection (CFinder from Clique Percolation methods):')
     # build network from profiles
-    correlation_based_metrics = ['correlation']
-    if metric in correlation_based_metrics:
-        from SocialNetworkMiner.joint_activities import correlation
-        sn = correlation(profiles, metric=metric, convert=True) 
-    else:
-        from SocialNetworkMiner.joint_activities import distance
-        sn = distance(profiles, metric=metric, convert=True)
+    from SocialNetworkMiner.joint_activities import distance
+    sn = distance(profiles, metric=metric, convert=True)
 
     # step 0. Relabel nodes
     sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
@@ -206,18 +201,8 @@ def link_partitioning(
     print('Applying overlapping organizational model mining using '
           'community detection (Appice\'s method from Link partitioning):')
     # build network from profiles
-    correlation_based_metrics = ['correlation']
-    if metric in correlation_based_metrics:
-        from SocialNetworkMiner.joint_activities import correlation
-        sn = correlation(profiles, metric=metric, convert=True) 
-    else:
-        from SocialNetworkMiner.joint_activities import distance
-        sn = distance(profiles, metric=metric, convert=True)
-
-    # NOTE: Appice's method: keep only the TOP 75% POSITIVE valued edges
-    from SocialNetworkMiner.utilities import select_edges_by_weight
-    sn = select_edges_by_weight(sn, low=0.0)
-    sn = select_edges_by_weight(sn, percentage='+0.75')
+    from SocialNetworkMiner.joint_activities import distance
+    sn = distance(profiles, metric=metric, convert=True)
 
     # step 1. Build the linear network using the original network
     # distinguish the isolated nodes in the original network first
@@ -325,13 +310,8 @@ def local_expansion(
     print('Applying overlapping organizational model mining using '
           'community detection (OSLOM from Local expansion methods):')
     # build network from profiles
-    correlation_based_metrics = ['correlation']
-    if metric in correlation_based_metrics:
-        from SocialNetworkMiner.joint_activities import correlation
-        sn = correlation(profiles, metric=metric, convert=True) 
-    else:
-        from SocialNetworkMiner.joint_activities import distance
-        sn = distance(profiles, metric=metric, convert=True)
+    from SocialNetworkMiner.joint_activities import distance
+    sn = distance(profiles, metric=metric, convert=True)
 
     # step 0. Relabel nodes
     sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
@@ -399,13 +379,8 @@ def agent_copra(
     print('Applying overlapping organizational model mining using '
           'community detection (COPRA from Agent-based methods):')
     # build network from profiles
-    correlation_based_metrics = ['correlation']
-    if metric in correlation_based_metrics:
-        from SocialNetworkMiner.joint_activities import correlation
-        sn = correlation(profiles, metric=metric, convert=True) 
-    else:
-        from SocialNetworkMiner.joint_activities import distance
-        sn = distance(profiles, metric=metric, convert=True)
+    from SocialNetworkMiner.joint_activities import distance
+    sn = distance(profiles, metric=metric, convert=True)
 
     # step 0. Relabel nodes
     sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
@@ -446,7 +421,6 @@ def agent_copra(
     return [frozenset(g) for g in groups.values()]
 
 # 5.2 Agent-based (SLPA by Xie et al.)
-# TODO
 def agent_slpa(
         profiles,
         metric='euclidean'):
@@ -473,13 +447,8 @@ def agent_slpa(
     print('Applying overlapping organizational model mining using '
           'community detection (SLPA from Agent-based methods):')
     # build network from profiles
-    correlation_based_metrics = ['correlation']
-    if metric in correlation_based_metrics:
-        from SocialNetworkMiner.joint_activities import correlation
-        sn = correlation(profiles, metric=metric, convert=True) 
-    else:
-        from SocialNetworkMiner.joint_activities import distance
-        sn = distance(profiles, metric=metric, convert=True)
+    from SocialNetworkMiner.joint_activities import distance
+    sn = distance(profiles, metric=metric, convert=True)
 
     # step 0. Relabel nodes
     sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
