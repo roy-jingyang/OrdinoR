@@ -135,19 +135,19 @@ if __name__ == '__main__':
         method_option = int(input())
         if method_option == 0:
             ogs = overlap.clique_percolation(
-                    profiles, metric='correlation')
+                    profiles, metric='euclidean')
         elif method_option == 1:
             ogs = overlap.link_partitioning(
-                    profiles, metric='correlation')
+                    profiles, metric='euclidean')
         elif method_option == 2:
             ogs = overlap.local_expansion(
-                    profiles, metric='correlation')
+                    profiles, metric='euclidean')
         elif method_option == 3:
             ogs = overlap.agent_copra(
-                    profiles, metric='correlation')
+                    profiles, metric='euclidean')
         elif method_option == 4:
             ogs = overlap.agent_slpa(
-                    profiles, metric='correlation')
+                    profiles, metric='euclidean')
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
@@ -255,23 +255,28 @@ if __name__ == '__main__':
     from OrganizationalModelMiner.mode_assignment import assign_by_any
     from OrganizationalModelMiner.mode_assignment import assign_by_all
     from OrganizationalModelMiner.mode_assignment import assign_by_proportion
-    l = list()
+    from OrganizationalModelMiner.mode_assignment import assign_by_weighting
+    from OrganizationalModelMiner.mode_assignment import assign_by_weighting1
     for og in sorted(ogs):
-        modes = assign_by_any(og, rl)
+        #modes = assign_by_any(og, rl)
         #modes = assign_by_all(og, rl)
         #modes = assign_by_proportion(og, rl, p=0.5)
+        modes = assign_by_weighting(og, rl, profiles)
+
         om.add_group(og, modes)
+    '''
+    g_modes = assign_by_weighting1(ogs, rl, profiles)
+    for i, og in enumerate(ogs):
+        om.add_group(og, g_modes[i])
+    '''
 
     from Evaluation.l2m import conformance
-    '''
     print()
     print('Fitness\t\t= {:.6f}'.format(conformance.fitness(rl, om)))
-    print('Precision\t= {:.6f}'.format(conformance.precision(rl, om)))
+    print('Precision\t= {:.6f}'.format(conformance.rc_measure(rl, om)))
     print()
-    print('Fitness1\t= {:.6f}'.format(conformance.fitness1(rl, om)))
+    #print('Fitness1\t= {:.6f}'.format(conformance.fitness1(rl, om)))
     print('Precision1\t= {:.6f}'.format(conformance.precision1(rl, om)))
-    '''
-    print('Precision2\t= {:.6f}'.format(conformance.precision2(rl, om)))
     print('Precision3\t= {:.6f}'.format(conformance.precision3(rl, om)))
 
 

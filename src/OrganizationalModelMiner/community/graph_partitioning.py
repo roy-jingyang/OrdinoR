@@ -43,16 +43,6 @@ def _mja(
     from networkx import (
             restricted_view, connected_components, number_connected_components)
     # search the cut edge using bisection (i.e. binary search)
-    '''
-    # TODO: DEBUG
-    find_num_cc = (lambda ix: number_connected_components(
-            restricted_view(sn, nodes=[], edges=[(u, v) for u, v, w in
-                edges_sorted[:ix]])) <= n_groups)
-    l_num_cc = map(find_num_cc, range(len(edges_sorted)))
-    ix_to_rm = list(l_num_cc).index(False) - 1
-    sub_sn = restricted_view(
-        sn, nodes=[], edges=[(u, v) for u, v, w in edges_sorted[:ix_to_rm]])
-    '''
     lo = 0
     hi = len(edges_sorted)
     while lo < hi:

@@ -5,8 +5,6 @@ This module contains methods for associating discovered organizational groups
 with execution modes.
 '''
 
-import cProfile
-
 def assign_by_any(group, rl):
     '''Assign an execution mode to a group, as long as there exists a member
     resource of this group that have executed this mode, i.e. everything done
@@ -21,8 +19,8 @@ def assign_by_any(group, rl):
         rl: DataFrame
             The resource log.
     Returns:
-        modes: iterator
-            The execution modes corresponding to the resources.
+        modes: frozenset
+            The execution modes corresponded to the resources.
     '''
     
     print('Applying "assign by any" for mode assignment:')
@@ -47,8 +45,8 @@ def assign_by_all(group, rl):
         rl: DataFrame
             The resource log.
     Returns:
-        modes: iterator
-            The execution modes corresponding to the resources:
+        modes: frozenset/dict of frozensets
+            The execution modes corresponded to the resources:
             - if a splitting is not needed, then a frozenset is returned;
             - if a splitting is needed, then a dict of frozensets is returned,
               with the subgroups as dict keys and the related execution modes
@@ -70,8 +68,8 @@ def assign_by_proportion(group, rl, p):
         p: float, in range (0, 1]
             The designated proportion value.
     Returns:
-        modes: iterator
-            The execution modes corresponding to the resources:
+        modes: frozenset/dict of frozensets
+            The execution modes corresponded to the resources:
             - if a splitting is not needed, then a frozenset is returned;
             - if a splitting is needed, then a dict of frozensets is returned,
               with the subgroups as dict keys and the related execution modes
@@ -229,4 +227,181 @@ def _set_cover_greedy(U, f_cost, search='exhaust'):
                 exit('[Fatal Error] No valid search result produced')
         else:
             return sigma
+
+def assign_by_weighting(group, rl, profiles, proximity_metric='euclidean'):
+    '''Assign execution modes to a group based on how each member resource of
+    this group contribute the clustering effectiveness of this group. Only 
+    cohesion is considered. 
+    Member resources with relatively higher contribution are recognized as 
+    representatives of the group, and by whom the execution modes executed will
+    be assigned to the group.
+
+    Params:
+        group: iterator
+            The ids of resources as a resource group.
+        rl: DataFrame
+            The resource log.
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
+        proximity_metric: str
+            Choice of metrics for measuring the distance while calculating the
+            proximity. Refer to scipy.spatial.distance.pdist for more detailed
+            explanation. This should be consistent with that employed within
+            the mining method.
+    Returns:
+        modes: frozenset
+            The execution modes corresponded to the resources.
+    '''
+    print('Applying "assign by weighting" for mode assignment:')
+    from numpy import mean, amin
+    from math import ceil
+    from scipy.spatial.distance import cdist, pdist
+    from collections import defaultdict
+
+    # pre-computing {resource -> modes) (Resource Capibility)
+    grouped_by_resource = rl.groupby('resource')
+    resource_cap = dict()
+    for r in group:
+        resource_cap[r] = frozenset(
+                (e.case_type, e.activity_type, e.time_type) for e in 
+                grouped_by_resource.get_group(r).itertuples())
+
+    if len(group) == 1:
+        representatives = list(group)
+    else:
+        # find the representatives
+        representatives = list()
+        # calculate the contribution score (use Local Outlier Factor here)
+        from sklearn.neighbors import LocalOutlierFactor
+        lof = LocalOutlierFactor(metric=proximity_metric, contamination='auto')
+        group = sorted(list(group)) # preserve order
+        lof.fit(profiles.loc[group])
+        r_scores = list()
+        for i, r in enumerate(group):
+            r_scores.append((r, lof.negative_outlier_factor_[i]))
+
+        # select the representative(s) with the maximal score
+        # NOTE: there may be more than one object with the maximal score!
+        representatives = list()
+        maximal_score = float('-inf')
+        for x in r_scores:
+            if x[1] >= maximal_score:
+                if x[1] > maximal_score:
+                    representatives.clear()
+                    maximal_score = x[1]
+                representatives.append(x[0])
+            else:
+                pass
+        
+
+        # TODO: could extend to a top-k solution (see below)
+        '''
+        r_scores.sort(key=lambda x: x[1], reverse=True)
+        #ratio_representatives = 0.1
+        #n_representatives = ceil(len(group) * ratio_representatives)
+
+        # select the representative(s) with top-k best scores
+        representatives = [x[0] for x in r_scores[:n_representatives]]
+        '''
+        
+    # determine the modes to be assigned based on the representatives
+    modes = frozenset.union(
+            *list(resource_cap[r] for r in representatives))
+    return modes
+
+#TODO
+def assign_by_weighting1(groups, rl, profiles, proximity_metric='euclidean'):
+    '''Assign execution modes to a group based on how each member resource of
+    this group contribute the clustering effectiveness of this group with
+    respect to all the groups resulted from cluster analysis. Both cohesion and
+    separation are considered.
+    Member resources with relatively higher contribution are recognized as 
+    representatives of the group, and by whom the execution modes executed will 
+    be assigned to the group.
+
+    Params:
+        groups: iterator
+            All resource groups in a discovered resource grouping.
+        rl: DataFrame
+            The resource log.
+        profiles: DataFrame
+            With resource ids as indices and activity names as columns, this
+            DataFrame contains profiles of the specific resources.
+        proximity_metric: str
+            Choice of metrics for measuring the distance while calculating the
+            proximity. Refer to scipy.spatial.distance.pdist for more detailed
+            explanation. This should be consistent with that employed within
+            the mining method.
+    Returns:
+        modes_all: list of frozensets
+            The execution modes corresponded to each of the resource groups (in
+            order) given by the input.
+    '''
+    print('Applying "assign by weighting 1" for mode assignment:')
+    from numpy import mean, amin, median
+    from scipy.spatial.distance import cdist
+    from math import ceil
+
+    # pre-computing {resource -> modes) (Resource Capibility)
+    grouped_by_resource = rl.groupby('resource')
+    resource_cap = dict()
+    for group in groups:
+        for r in group:
+            if r in resource_cap:
+                pass
+            else:
+                resource_cap[r] = frozenset(
+                        (e.case_type, e.activity_type, e.time_type) for e in 
+                        grouped_by_resource.get_group(r).itertuples())
+
+    modes_all = list()
+
+    for group in groups:
+        if len(group) == 1:
+            representatives = list(group)
+        else:
+            # find the representatives
+            l_r_score = list()
+            for r in sorted(group):
+                r_profile = profiles.loc[r].values.reshape(
+                        1, len(profiles.loc[r]))
+                # calculate the contribution score (use silhouette here)
+                # a(o)
+                avg_intra_dist = mean(cdist(
+                    r_profile,
+                    profiles.loc[list(other for other in group if other != r)],
+                    metric=proximity_metric))
+
+                # b(o)
+                avg_inter_dist = list()
+                for other_group in groups:
+                    if not other_group == group:
+                        avg_inter_dist.append(mean(cdist(
+                            r_profile,
+                            profiles.loc[list(other_group)],
+                            metric=proximity_metric)))
+                if len(avg_inter_dist) == 0:
+                    min_avg_inter_dist = 0
+                else:
+                    min_avg_inter_dist = amin(avg_inter_dist)
+
+                r_score = ((min_avg_inter_dist - avg_intra_dist) /
+                        max(avg_intra_dist, min_avg_inter_dist))
+                # contribution score obtained
+                l_r_score.append((r, r_score))
+
+            # NOTE: select the ones with top score
+            #ratio_representatives = 0.1
+            #n_representatives = ceil(len(group) * ratio_representatives)
+            n_representatives = 2
+            representatives = [
+                    x[0] for x in sorted(l_r_score, key=lambda x: x[1],
+                        reverse=True)[:n_representatives]]
+
+        # determine the modes to be assigned based on the representatives
+        modes = frozenset.union(*list(resource_cap[r] for r in representatives))
+        modes_all.append(modes)
+
+    return modes_all
 
