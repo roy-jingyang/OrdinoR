@@ -37,6 +37,7 @@ if __name__ == '__main__':
     print('\t4. Gaussian Mixture Model')
     print('\t5. Model based Overlapping Clustering')
     print('\t6. Fuzzy c-means')
+    print('\t101. "One Group for All"')
     print('Option: ', end='')
     mining_option = int(input())
 
@@ -240,13 +241,18 @@ if __name__ == '__main__':
                 + ' Execution time {:.3f} s. '.format(time() - tm_start)
                 + '-' * 10)
         '''
-
+    elif mining_option == 101:
+        # the "One Group for All" model
+        # build profiles
+        from ResourceProfiler.raw_profiler import count_execution_frequency
+        profiles = count_execution_frequency(rl, use_log_scale=False)
+        group = set(rl['resource'].unique())
+        print(len(group))
+        ogs = [group]
     else:
         raise Exception('Failed to recognize input option!')
         exit(1)
 
-    from Evaluation.m2m.cluster_validation import silhouette_score
-    print('Silhouette score\t= {:.6f}'.format(silhouette_score(ogs, profiles)))
 
     from OrganizationalModelMiner.base import OrganizationalModel
     om = OrganizationalModel()
@@ -256,28 +262,49 @@ if __name__ == '__main__':
     from OrganizationalModelMiner.mode_assignment import assign_by_all
     from OrganizationalModelMiner.mode_assignment import assign_by_proportion
     from OrganizationalModelMiner.mode_assignment import assign_by_weighting
-    from OrganizationalModelMiner.mode_assignment import assign_by_weighting1
-    for og in sorted(ogs):
+    jac_score = list()
+    for og in ogs:
         #modes = assign_by_any(og, rl)
         #modes = assign_by_all(og, rl)
         #modes = assign_by_proportion(og, rl, p=0.5)
-        modes = assign_by_weighting(og, rl, profiles)
+        # TODO
+        modes, jac = assign_by_weighting(og, rl, profiles)
+        jac_score.append(jac)
 
         om.add_group(og, modes)
-    '''
-    g_modes = assign_by_weighting1(ogs, rl, profiles)
-    for i, og in enumerate(ogs):
-        om.add_group(og, g_modes[i])
-    '''
 
-    from Evaluation.l2m import conformance
+    from Evaluation.m2m.cluster_validation import silhouette_score
+    print('Silhouette score\t= {:.6f}'.format(silhouette_score(ogs, profiles)))
     print()
+    from Evaluation.l2m import conformance
     print('Fitness\t\t= {:.6f}'.format(conformance.fitness(rl, om)))
-    print('Precision\t= {:.6f}'.format(conformance.rc_measure(rl, om)))
+    print()
+    print('rc-measure\t= {:.6f}'.format(conformance.rc_measure(rl, om)))
     print()
     #print('Fitness1\t= {:.6f}'.format(conformance.fitness1(rl, om)))
-    print('Precision1\t= {:.6f}'.format(conformance.precision1(rl, om)))
-    print('Precision3\t= {:.6f}'.format(conformance.precision3(rl, om)))
+    print('Precision (freq)\t= {:.6f}'.format(conformance.precision3(rl, om)))
+    print('Precision (no freq)\t= {:.6f}'.format(conformance.precision1(rl, om)))
+    print()
+    # Overlapping Density & Overlapping Diversity (avg.)
+    k = om.size()
+    resources = om.resources()
+    n_ov_res = 0
+    n_ov_res_membership = 0
+    for r in resources:
+        n_res_membership = len(om.find_groups(r))
+        if n_res_membership == 1:
+            pass
+        else:
+            n_ov_res += 1
+            n_ov_res_membership += n_res_membership
+
+    ov_density = n_ov_res / len(resources)
+    avg_ov_diversity = (n_ov_res_membership / n_ov_res 
+            if n_ov_res > 0 else float('nan'))
+    print('Ov. density\t={:.6f}'.format(ov_density))
+    print('Ov. diversity\t={:.6f}'.format(avg_ov_diversity))
+    print()
+    print('Avg. Jaccard\t= {:.6f}'.format(sum(jac_score) / len(jac_score))
 
 
     # save the mined organizational model to a file

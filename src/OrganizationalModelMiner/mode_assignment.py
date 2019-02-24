@@ -79,7 +79,7 @@ def assign_by_proportion(group, rl, p):
         p))
 
     rl = rl.loc[rl['resource'].isin(group)] # flitering irrelated events
-    # pre-computing {mode -> candidate resources} (inv. of Resource Capibility)
+    # pre-computing {mode -> candidate resources} (inv. of Resource Capability)
     inv_resource_cap = dict()
     for m, events in rl.groupby(['case_type', 'activity_type', 'time_type']):
         inv_resource_cap[m] = set(events['resource'])
@@ -259,7 +259,7 @@ def assign_by_weighting(group, rl, profiles, proximity_metric='euclidean'):
     from scipy.spatial.distance import cdist, pdist
     from collections import defaultdict
 
-    # pre-computing {resource -> modes) (Resource Capibility)
+    # pre-computing {resource -> modes) (Resource Capability)
     grouped_by_resource = rl.groupby('resource')
     resource_cap = dict()
     for r in group:
@@ -308,7 +308,14 @@ def assign_by_weighting(group, rl, profiles, proximity_metric='euclidean'):
     # determine the modes to be assigned based on the representatives
     modes = frozenset.union(
             *list(resource_cap[r] for r in representatives))
-    return modes
+    # TODO
+    return modes, jaccard(list(resource_cap[r] for r in representatives))
+
+def jaccard(l_sets):
+    ss = [frozenset(x) for x in l_sets]
+    intersection = frozenset.intersection(*ss)
+    union = frozenset.union(*ss)
+    return len(intersection) / len(union)
 
 #TODO
 def assign_by_weighting1(groups, rl, profiles, proximity_metric='euclidean'):
@@ -343,7 +350,7 @@ def assign_by_weighting1(groups, rl, profiles, proximity_metric='euclidean'):
     from scipy.spatial.distance import cdist
     from math import ceil
 
-    # pre-computing {resource -> modes) (Resource Capibility)
+    # pre-computing {resource -> modes) (Resource Capability)
     grouped_by_resource = rl.groupby('resource')
     resource_cap = dict()
     for group in groups:
