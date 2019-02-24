@@ -263,7 +263,7 @@ if __name__ == '__main__':
     from OrganizationalModelMiner.mode_assignment import assign_by_proportion
     from OrganizationalModelMiner.mode_assignment import assign_by_weighting
     jac_score = list()
-    for og in ogs:
+    for og in sorted(ogs):
         #modes = assign_by_any(og, rl)
         #modes = assign_by_all(og, rl)
         #modes = assign_by_proportion(og, rl, p=0.5)
@@ -273,8 +273,9 @@ if __name__ == '__main__':
 
         om.add_group(og, modes)
 
+    print('-' * 80)
     from Evaluation.m2m.cluster_validation import silhouette_score
-    print('Silhouette score\t= {:.6f}'.format(silhouette_score(ogs, profiles)))
+    print('Silhouette\t= {:.6f}'.format(silhouette_score(ogs, profiles)))
     print()
     from Evaluation.l2m import conformance
     print('Fitness\t\t= {:.6f}'.format(conformance.fitness(rl, om)))
@@ -282,8 +283,8 @@ if __name__ == '__main__':
     print('rc-measure\t= {:.6f}'.format(conformance.rc_measure(rl, om)))
     print()
     #print('Fitness1\t= {:.6f}'.format(conformance.fitness1(rl, om)))
-    print('Precision (freq)\t= {:.6f}'.format(conformance.precision3(rl, om)))
-    print('Precision (no freq)\t= {:.6f}'.format(conformance.precision1(rl, om)))
+    print('Prec. (freq)\t= {:.6f}'.format(conformance.precision3(rl, om)))
+    print('Prec. (no freq)\t= {:.6f}'.format(conformance.precision1(rl, om)))
     print()
     # Overlapping Density & Overlapping Diversity (avg.)
     k = om.size()
@@ -301,10 +302,11 @@ if __name__ == '__main__':
     ov_density = n_ov_res / len(resources)
     avg_ov_diversity = (n_ov_res_membership / n_ov_res 
             if n_ov_res > 0 else float('nan'))
-    print('Ov. density\t={:.6f}'.format(ov_density))
-    print('Ov. diversity\t={:.6f}'.format(avg_ov_diversity))
+    print('Ov. density\t= {:.6f}'.format(ov_density))
+    print('Ov. diversity\t= {:.6f}'.format(avg_ov_diversity))
     print()
-    print('Avg. Jaccard\t= {:.6f}'.format(sum(jac_score) / len(jac_score))
+    print('Avg. Jac.\t= {:.6f}'.format(sum(jac_score) / len(jac_score)))
+    print('-' * 80)
 
 
     # save the mined organizational model to a file
