@@ -37,7 +37,8 @@ if __name__ == '__main__':
     print('\t4. Gaussian Mixture Model')
     print('\t5. Model based Overlapping Clustering')
     print('\t6. Fuzzy c-means')
-    print('\t101. "One Group for All"')
+    print('\t101. "One Group for All" (best fitness)')
+    print('\t102. "One Group for Each" (best rc-measure)')
     print('Option: ', end='')
     mining_option = int(input())
 
@@ -106,17 +107,6 @@ if __name__ == '__main__':
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
-        '''
-        #TODO: [DEPRECATED]
-        elif method_option == 1:
-            # build social network
-            #from SocialNetworkMiner.causality import handover
-            from SocialNetworkMiner.joint_activities import distance
-            sn = distance(el, use_log_scale=True, convert=True)
-            from OrganizationalModelMiner.hierarchical import community_detection
-            ogs, og_hcy = community_detection.betweenness(
-                    sn, num_groups, weight='weight') # consider edge weight, optional
-        '''
                 
         og_hcy.to_csv(fnout_org_model + '_hierarchy')
 
@@ -242,13 +232,59 @@ if __name__ == '__main__':
                 + '-' * 10)
         '''
     elif mining_option == 101:
-        # the "One Group for All" model
+        # the "One Group for All" model (comparable to the flower model)
+
         # build profiles
         from ResourceProfiler.raw_profiler import count_execution_frequency
         profiles = count_execution_frequency(rl, use_log_scale=False)
+
+        print('Total Num. resource event in the log: {}'.format(
+            len(rl.drop_duplicates())))
         group = set(rl['resource'].unique())
-        print(len(group))
         ogs = [group]
+    elif mining_option == 102:
+        # the "One Group for Each" model
+        # NOTE 1: for a given log, more than 1 such models may be possible
+        # NOTE 2: such models achieve best rc_measure (= 1.0), but not
+        # necessarily best fitness (thus not comparable to the enumerating
+        # model)
+        # NOTE 3: the invention of such models needs to guarantee:
+        #       (1) each execution mode has 1 capable resource and 1 only
+        #       (2) all resources in the log are included
+
+        # build profiles
+        from ResourceProfiler.raw_profiler import count_execution_frequency
+        profiles = count_execution_frequency(rl, use_log_scale=False)
+
+        all_resources = set(rl['resource'].unique())
+        from collections import defaultdict
+        ogs_d = defaultdict(lambda: set())
+        from numpy.random import choice
+        grouped_by_mode = rl.groupby([
+            'case_type', 'activity_type', 'time_type'])
+        num_cand_of_modes = list((mode, len(set(events['resource'])))
+                for mode, events in grouped_by_mode)
+        # rarer mode first
+        num_cand_of_modes.sort(key=lambda x: x[1])
+
+        for mode, num_cand in num_cand_of_modes:
+            # for each mode, find a capable resource
+            events = grouped_by_mode.get_group(mode)
+            capable_resources = list(set(events['resource']))
+            while True:
+                r = choice(capable_resources)
+                if not r in ogs_d or len(capable_resources) == 1:
+                    ogs_d[r].add(mode)
+                    break
+                else:
+                    # try to cover more resources asap
+                    capable_resources.remove(r)
+        ogs = list()
+        modes_to_assign = list()
+        for k, v in ogs_d.items():
+            ogs.append(frozenset({k}))
+            modes_to_assign.append(frozenset(v))
+
     else:
         raise Exception('Failed to recognize input option!')
         exit(1)
@@ -257,21 +293,37 @@ if __name__ == '__main__':
     from OrganizationalModelMiner.base import OrganizationalModel
     om = OrganizationalModel()
 
-    # assign execution modes to groups
-    from OrganizationalModelMiner.mode_assignment import assign_by_any
-    from OrganizationalModelMiner.mode_assignment import assign_by_all
-    from OrganizationalModelMiner.mode_assignment import assign_by_proportion
-    from OrganizationalModelMiner.mode_assignment import assign_by_weighting
-    jac_score = list()
-    for og in sorted(ogs):
-        #modes = assign_by_any(og, rl)
-        #modes = assign_by_all(og, rl)
-        #modes = assign_by_proportion(og, rl, p=0.5)
-        # TODO
-        modes, jac = assign_by_weighting(og, rl, profiles)
-        jac_score.append(jac)
+    if mining_option in [101, 102]:
+        # handmade models
+        if mining_option == 101:
+            # the "One Group for All" model
+            from OrganizationalModelMiner.mode_assignment import assign_by_any
+            for og in ogs:
+                modes = assign_by_any(og, rl)
+                om.add_group(og, modes)
+        elif mining_option == 102:
+            # the "One Group for Each" model
+            for i, og in enumerate(ogs):
+                om.add_group(og, modes_to_assign[i])
 
-        om.add_group(og, modes)
+    else:
+        # assign execution modes to groups
+        from OrganizationalModelMiner.mode_assignment import assign_by_any
+        from OrganizationalModelMiner.mode_assignment import assign_by_all
+        from OrganizationalModelMiner.mode_assignment import assign_by_proportion
+        from OrganizationalModelMiner.mode_assignment import assign_by_weighting
+        #jac_score = list()
+        for og in ogs:
+            modes = assign_by_any(og, rl)
+            #modes = assign_by_all(og, rl)
+            #modes = assign_by_proportion(og, rl, p=0.5)
+            '''
+            # TODO
+            modes, jac = assign_by_weighting(og, rl, profiles)
+            jac_score.append(jac)
+            '''
+
+            om.add_group(og, modes)
 
     print('-' * 80)
     measure_values = list()
@@ -318,8 +370,10 @@ if __name__ == '__main__':
     measure_values.append(ov_density)
     measure_values.append(avg_ov_diversity)
     print()
+    '''
     avg_jac_score = sum(jac_score) / len(jac_score)
     print('Avg. Jac.\t= {:.6f}'.format(avg_jac_score))
+    '''
     print('-' * 80)
     print(','.join(str(x) for x in measure_values))
 
