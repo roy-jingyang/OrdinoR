@@ -11,16 +11,16 @@ if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        el = read_disco_csv(f)
-        #el = read_disco_csv(f, mapping={'product': -2})
+        #el = read_disco_csv(f)
+        el = read_disco_csv(f, mapping={'product': -2})
         #el = read_disco_csv(f, mapping={'(case) channel': 6})
 
     # learn execution modes and convert to resource log
     from ExecutionModeMiner.naive_miner import ATonlyMiner
     from ExecutionModeMiner.naive_miner import CTonlyMiner
     from ExecutionModeMiner.naive_miner import ATCTMiner
-    naive_exec_mode_miner = ATonlyMiner(el)
-    #naive_exec_mode_miner = CTonlyMiner(el, case_attr_name='product')
+    #naive_exec_mode_miner = ATonlyMiner(el)
+    naive_exec_mode_miner = CTonlyMiner(el, case_attr_name='product')
     #naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) channel')
 
     rl = naive_exec_mode_miner.derive_resource_log(el)
@@ -273,15 +273,14 @@ if __name__ == '__main__':
         for mode, num_cand in num_cand_of_modes:
             # for each mode, find a capable resource
             events = grouped_by_mode.get_group(mode)
-            capable_resources = list(set(events['resource']))
-            while True:
-                r = choice(capable_resources)
-                if not r in ogs_d or len(capable_resources) == 1:
-                    ogs_d[r].add(mode)
-                    break
-                else:
-                    # try to cover more resources asap
-                    capable_resources.remove(r)
+            capable_resources = set(events['resource'])
+            unused_cap_r = capable_resources.difference(set(ogs_d.keys()))
+            if len(unused_cap_r) > 0:
+                r = choice(list(unused_cap_r))
+            else:
+                r = choice(list(capable_resources))
+            ogs_d[r].add(mode)
+
         ogs = list()
         modes_to_assign = list()
         for k, v in ogs_d.items():
