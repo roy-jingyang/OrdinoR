@@ -309,14 +309,7 @@ def assign_by_weighting(group, rl, profiles, proximity_metric='euclidean'):
     # determine the modes to be assigned based on the representatives
     modes = frozenset.union(
             *list(resource_cap[r] for r in representatives))
-    # TODO
-    return modes, jaccard(list(resource_cap[r] for r in representatives))
-
-def jaccard(l_sets):
-    ss = [frozenset(x) for x in l_sets]
-    intersection = frozenset.intersection(*ss)
-    union = frozenset.union(*ss)
-    return len(intersection) / len(union)
+    return modes
 
 #TODO
 def assign_by_weighting1(groups, rl, profiles, proximity_metric='euclidean'):

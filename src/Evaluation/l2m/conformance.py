@@ -155,7 +155,7 @@ def precision1(rl, om):
     return n_conformed_res_events / n_allowed_res_events
 
 # new precision (with frequencies)
-def precision3(rl, om):
+def precision2(rl, om):
     '''Calculate the precision of an organizational model against a given
     resource log, in which only the "fitting" (conformed) events are considered.
 
@@ -198,4 +198,25 @@ def precision3(rl, om):
             F_allowed_res_events += mode_occurrence[mode]
 
     return F_conformed_res_events / F_allowed_res_events
+
+# TODO: to be tested
+def un_measure(rl, om):
+    non_conformed_events = rl[rl.apply(
+        lambda e: not _is_conformed_event(e, om), axis=1)]
+    n_non_conformed_events = len(non_conformed_events)
+
+    if n_non_conformed_events == 0:
+        return float('nan')
+    else:
+        # RE_nconf
+        non_conformed_res_events = set(
+                (re.resource, re.case_type, re.activity_type, re.time_type)
+                for re in non_conformed_events.drop_duplicates().itertuples())
+
+        mode_occurrence = rl.groupby([
+            'case_type', 'activity_type', 'time_type']).size().to_dict()
+
+        return (1 - (1 / (n_non_conformed_events * len(rl))) *
+                sum(mode_occurrence[(re[1], re[2], re[3])] for re in
+                    non_conformed_res_events))
 

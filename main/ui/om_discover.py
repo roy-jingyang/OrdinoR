@@ -3,7 +3,6 @@
 
 import sys
 sys.path.append('./src/')
-import cProfile
 
 fn_event_log = sys.argv[1]
 fnout_org_model = sys.argv[2]
@@ -13,13 +12,17 @@ if __name__ == '__main__':
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f)
+        #el = read_disco_csv(f, mapping={'product': -2})
         #el = read_disco_csv(f, mapping={'(case) channel': 6})
 
     # learn execution modes and convert to resource log
     from ExecutionModeMiner.naive_miner import ATonlyMiner
+    from ExecutionModeMiner.naive_miner import CTonlyMiner
     from ExecutionModeMiner.naive_miner import ATCTMiner
     naive_exec_mode_miner = ATonlyMiner(el)
+    #naive_exec_mode_miner = CTonlyMiner(el, case_attr_name='product')
     #naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) channel')
+
     rl = naive_exec_mode_miner.derive_resource_log(el)
 
     # TODO: Timer related
@@ -312,16 +315,11 @@ if __name__ == '__main__':
         from OrganizationalModelMiner.mode_assignment import assign_by_all
         from OrganizationalModelMiner.mode_assignment import assign_by_proportion
         from OrganizationalModelMiner.mode_assignment import assign_by_weighting
-        #jac_score = list()
         for og in ogs:
-            modes = assign_by_any(og, rl)
+            #modes = assign_by_any(og, rl)
             #modes = assign_by_all(og, rl)
-            #modes = assign_by_proportion(og, rl, p=0.5)
-            '''
-            # TODO
-            modes, jac = assign_by_weighting(og, rl, profiles)
-            jac_score.append(jac)
-            '''
+            modes = assign_by_proportion(og, rl, p=0.5)
+            #modes = assign_by_weighting(og, rl, profiles)
 
             om.add_group(og, modes)
 
@@ -342,12 +340,16 @@ if __name__ == '__main__':
     measure_values.append(rc_measure_score)
     print()
     #print('Fitness1\t= {:.6f}'.format(conformance.fitness1(rl, om)))
-    precision3_score = conformance.precision3(rl, om)
-    print('Prec. (freq)\t= {:.6f}'.format(precision3_score))
-    measure_values.append(precision3_score)
+    precision2_score = conformance.precision2(rl, om)
+    print('Prec. (freq)\t= {:.6f}'.format(precision2_score))
+    measure_values.append(precision2_score)
     precision1_score = conformance.precision1(rl, om)
     print('Prec. (no freq)\t= {:.6f}'.format(precision1_score))
     measure_values.append(precision1_score)
+    print()
+    un_measure_score = conformance.un_measure(rl, om)
+    print('un-measure\t= {:.6f}'.format(un_measure_score))
+    measure_values.append(un_measure_score)
     print()
     # Overlapping Density & Overlapping Diversity (avg.)
     k = om.size()
@@ -369,11 +371,6 @@ if __name__ == '__main__':
     print('Ov. diversity\t= {:.6f}'.format(avg_ov_diversity))
     measure_values.append(ov_density)
     measure_values.append(avg_ov_diversity)
-    print()
-    '''
-    avg_jac_score = sum(jac_score) / len(jac_score)
-    print('Avg. Jac.\t= {:.6f}'.format(avg_jac_score))
-    '''
     print('-' * 80)
     print(','.join(str(x) for x in measure_values))
 

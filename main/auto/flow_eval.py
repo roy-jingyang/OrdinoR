@@ -81,17 +81,13 @@ def execute(setup, seq_ix, exp_dirpath):
     discoverer_name = sequence[step]['label'].replace(' ', '')
     params = sequence[step].get('params', None)
     if params is None:
-        exit('[Node Error]\t"{}"'.format(sequence[step]['label']))
+        pass
+        ogs = discoverer(profiles)
     else:
         params = eval(params)
-    ogs = discoverer(profiles, **params)
+        ogs = discoverer(profiles, **params)
     if type(ogs) is tuple:
         ogs = ogs[0]
-
-    # TODO: Hard-coded evalution measure (TBD)
-    # `. Intrinsic evaluation of clustering (by Silhouette score)
-    from Evaluation.m2m.cluster_validation import silhouette_score
-    silhouette = silhouette_score(ogs, profiles)
 
     # assign execution modes
     from OrganizationalModelMiner.base import OrganizationalModel
@@ -107,23 +103,23 @@ def execute(setup, seq_ix, exp_dirpath):
             params = eval(params)
             modes = assigner(og, rl, **params)
         om.add_group(og, modes)
+    
+    # TODO: automate Phase 3 (Evaluation)
 
-    # evaluate organizational model: fitness
-    step += 1
-    fitness_eval = _import_block(sequence[step]['invoke'])
-    fitness = fitness_eval(rl, om)
-
-    # evaluate organizational model: precision
-    step += 1
-    precision_eval = _import_block(sequence[step]['invoke'])
-    precision = precision_eval(rl, om)
+    # TODO: Hard-coded evalution measure (TBD)
+    # 1. Intrinsic evaluation of clustering (by Silhouette score)
+    from Evaluation.m2m.cluster_validation import silhouette_score
+    silhouette = silhouette_score(ogs, profiles)
 
     # TODO: Hard-coded evalution measure (TBD) cont.
     # 2. (New) Fitness & Precision values
-    from Evaluation.l2m.conformance import fitness1, precision2, precision3
-    fitness1 = fitness1(rl, om)
+    from Evaluation.l2m.conformance import (
+            fitness, rc_measure, precision2, precision1, un_measure)
+    fitness = fitness(rl, om)
+    rc_measure = rc_measure(rl, om)
     precision2 = precision2(rl, om)
-    precision3 = precision3(rl, om)
+    precision1 = precision1(rl, om)
+    un_measure = un_measure(rl, om)
 
     # 3. Overlapping Density & Overlapping Diversity (avg.)
     k = om.size()
@@ -149,13 +145,10 @@ def execute(setup, seq_ix, exp_dirpath):
         om.to_file_csv(fout)
     '''
 
-    #return exec_mode_miner_name, k, fitness, precision
-    #return discoverer_name, k, fitness, precision
-    #return assigner_name, k, fitness, precision
     return ('{}-{}'.format(discoverer_name, assigner_name), 
-            k, fitness, precision, 
-            fitness1, precision2, precision3,
-            ov_density, avg_ov_diversity, silhouette)
+            silhouette, 
+            k, fitness, rc_measure, precision2, precision1, un_measure,
+            ov_density, avg_ov_diversity)
 
 if __name__ == '__main__':
     fn_setup = sys.argv[1]
@@ -167,47 +160,25 @@ if __name__ == '__main__':
 
     n_tests = 1
     name = ''
-    k_values = list()
-    fitness_values = list()
-    precision_values = list()
+    n_measures = 9
 
-    fitness1_values = list()
-    precision2_values = list()
-    precision3_values = list()
-    ov_density_values = list()
-    avg_ov_diversity_values = list()
-    silhouette_values = list()
-
+    l_test_results = list()
     execute_time = list()
 
     from time import time
     for i in range(n_tests):
         start_time = time()
-        name, k, f, p, f1, p2, p3, ovden, avg_ovdiv, sil = execute(
-                setup, path, dirout)
+        result = list(execute(setup, path, dirout))
         end_time = time()
-        k_values.append(k)
-        fitness_values.append(f)
-        precision_values.append(p)
-
-        fitness1_values.append(f1)
-        precision2_values.append(p2)
-        precision3_values.append(p3)
-        ov_density_values.append(ovden)
-        avg_ov_diversity_values.append(avg_ovdiv)
-        silhouette_values.append(sil)
-
         execute_time.append(end_time - start_time)
+
+        name = result[0]
+        l_test_results.append(result[1:])
 
     with open(join(dirout, '{}_report.csv'.format(name)), 'w+') as fout:
         writer = writer(fout)
         for i in range(n_tests):
-            writer.writerow([
-                name,
-                k_values[i], fitness_values[i], precision_values[i],
-                fitness1_values[i], 
-                precision2_values[i], precision3_values[i],
-                ov_density_values[i], avg_ov_diversity_values[i],
-                silhouette_values[i],
-                execute_time[i]])
+            writer.writerow([name] + 
+                l_test_results[i] + 
+                [execute_time[i]])
     
