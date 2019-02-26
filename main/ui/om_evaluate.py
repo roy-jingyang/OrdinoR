@@ -32,6 +32,11 @@ if __name__ == '__main__':
 
     measure_values = list()
     print('-' * 80)
+    # TODO: debugging use
+    ogs = om.find_all_groups()
+    print('Pct. of solo group\t= {:.1%}'.format(
+        sum(1 for og in ogs if len(og) == 1) / len(ogs)))
+    print('-' * 80)
     from Evaluation.l2m import conformance
     fitness_score = conformance.fitness(rl, om)
     print('Fitness\t\t= {:.6f}'.format(fitness_score))
