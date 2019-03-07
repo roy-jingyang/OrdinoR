@@ -199,24 +199,3 @@ def precision2(rl, om):
 
     return F_conformed_res_events / F_allowed_res_events
 
-# TODO: to be tested
-def un_measure(rl, om):
-    non_conformed_events = rl[rl.apply(
-        lambda e: not _is_conformed_event(e, om), axis=1)]
-    n_non_conformed_events = len(non_conformed_events)
-
-    if n_non_conformed_events == 0:
-        return float('nan')
-    else:
-        # RE_nconf
-        non_conformed_res_events = set(
-                (re.resource, re.case_type, re.activity_type, re.time_type)
-                for re in non_conformed_events.drop_duplicates().itertuples())
-
-        mode_occurrence = rl.groupby([
-            'case_type', 'activity_type', 'time_type']).size().to_dict()
-
-        return (1 - (1 / (n_non_conformed_events * len(rl))) *
-                sum(mode_occurrence[(re[1], re[2], re[3])] for re in
-                    non_conformed_res_events))
-

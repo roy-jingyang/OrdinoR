@@ -257,7 +257,6 @@ def assign_by_weighting(group, rl, profiles, proximity_metric='euclidean'):
     from numpy import mean, amin
     from math import ceil
     from scipy.spatial.distance import cdist, pdist
-    from collections import defaultdict
 
     # pre-computing {resource -> modes) (Resource Capability)
     grouped_by_resource = rl.groupby('resource')

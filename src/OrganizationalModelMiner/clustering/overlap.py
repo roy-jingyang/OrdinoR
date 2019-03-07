@@ -90,38 +90,36 @@ def _gmm(
             init_means.append(mean(profiles.loc[list(g)].values, axis=0))
         gmm_model = GaussianMixture(
                 n_components=n_groups,
+                covariance_type='tied',
                 tol=1e-6,
                 n_init=1,
                 random_state=0,
-                weights_init=[1.0 / n_groups] * n_groups,
                 means_init=init_means).fit(profiles.values)
     else:
         gmm_model = GaussianMixture(
                 n_components=n_groups,
+                covariance_type='tied',
                 tol=1e-6,
                 n_init=n_init,
                 init_params='random').fit(profiles.values)
 
     # step 2. Derive the clusters as the end result
-    posterior_pr = gmm_model.predict_proba(profiles)
+    posterior_pr = gmm_model.predict_proba(profiles.values)
 
-    from numpy import array, nonzero, argmax, median
-    from numpy.random import choice
+    from numpy import array, nonzero, median
     from collections import defaultdict
     groups = defaultdict(set)
-    for i, resource_postpr in enumerate(posterior_pr):
-        if threshold is None:
-            #threshold = median(resource_postpr[resource_postpr != 0])
-            threshold = 1.0 / n_groups
-        membership = array([p >= threshold for p in resource_postpr])
-
-        # check if any valid membership exists for the resource based on
-        # the selection of the threshold
-        if membership.any():
-            for j in nonzero(membership)[0]:
-                groups[j].add(profiles.index[i])
-        else: # invalid, have to choose the maximum one or missing the resource
-            groups[argmax(resource_postpr)].add(profiles.index[i])
+    threshold = median(posterior_pr)
+    dec_rate = 0.2
+    while True:
+        membership_total = posterior_pr > threshold
+        if membership_total.any(axis=0).all():
+            for i, membership in enumerate(membership_total):
+                for j in nonzero(membership)[0]:
+                    groups[j].add(profiles.index[i])
+            break
+        else:
+            threshold *= (1 - dec_rate)
 
     #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]

@@ -57,8 +57,19 @@ if __name__ == '__main__':
     # specify the additional attributes included in each input event log
 
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        el = read_disco_csv(f)
+        #el = read_disco_csv(f)
+        el = read_disco_csv(f, mapping={'(case) channel': 6})
 
+    from collections import defaultdict
+    channel_cases = defaultdict(lambda: 0)
+    for case, events in el.groupby('case_id'):
+        channel = set(events['(case) channel'])
+        if len(channel) == 1:
+            channel_cases[list(channel)[0]] += 1
+        else:
+            exit('Error')
+    print(channel_cases)
+    '''
     # analysis on the input log
     from numpy import mean, std, median
     from datetime import datetime, timedelta
@@ -143,4 +154,5 @@ if __name__ == '__main__':
     print('-' * 35 + 'Time perspective' + '-' * 35)
     print('mean duration per case = \t\t\t{:.1f} seconds (std = {:.1f})'.format(
         mean_duration_per_case, std_duration_per_case))
+    '''
 
