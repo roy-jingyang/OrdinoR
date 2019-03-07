@@ -91,7 +91,8 @@ def _gmm(
         gmm_model = GaussianMixture(
                 n_components=n_groups,
                 covariance_type='tied',
-                tol=1e-6,
+                tol=1e-9,
+                max_iter=1000,
                 n_init=1,
                 random_state=0,
                 means_init=init_means).fit(profiles.values)
@@ -99,14 +100,15 @@ def _gmm(
         gmm_model = GaussianMixture(
                 n_components=n_groups,
                 covariance_type='tied',
-                tol=1e-6,
+                tol=1e-9,
+                max_iter=1000,
                 n_init=n_init,
                 init_params='random').fit(profiles.values)
 
     # step 2. Derive the clusters as the end result
     posterior_pr = gmm_model.predict_proba(profiles.values)
 
-    from numpy import array, nonzero, median
+    from numpy import array, nonzero, median, mean
     from collections import defaultdict
     groups = defaultdict(set)
     threshold = median(posterior_pr)
