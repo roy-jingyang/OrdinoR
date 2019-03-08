@@ -41,8 +41,8 @@ if __name__ == '__main__':
     print_str_count = ''
     for i in range(0, n_resources + 1):
         print('Group of size {}:\t\t{}'.format(i, group_size[i]))
-        print_str_size += '{},'.format(size)
-        print_str_count += '{},'.format(group_size[size])
+        print_str_size += '{},'.format(i)
+        print_str_count += '{},'.format(group_size[i])
 
     print('Avg:\t{:.3f} resources per group;'.format(
         sum(len(g) for g in groups) / n_groups))
