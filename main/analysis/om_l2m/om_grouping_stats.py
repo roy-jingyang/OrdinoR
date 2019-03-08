@@ -44,11 +44,6 @@ if __name__ == '__main__':
         print_str_size += '{},'.format(size)
         print_str_count += '{},'.format(group_size[size])
 
-    print('***** Copy the string below to MS Excel *****')
-    print(print_str_size)
-    print(print_str_count)
-    print('***** Copy the string above to MS Excel *****')
-    print()
     print('Avg:\t{:.3f} resources per group;'.format(
         sum(len(g) for g in groups) / n_groups))
     print()
@@ -68,6 +63,11 @@ if __name__ == '__main__':
             sum([1 for r, mem in resource_membership.items() if len(mem) == i])))
     '''
 
+    print('***** Copy the string below to MS Excel *****')
+    print(print_str_size)
+    print(print_str_count)
+    print('{:.3f}'.format(sum(len(g) for g in groups) / n_groups))
+    print('***** Copy the string above to MS Excel *****')
 
 
 
