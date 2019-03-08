@@ -39,8 +39,8 @@ if __name__ == '__main__':
         group_size[len(g)] += 1
     print_str_size = ''
     print_str_count = ''
-    for size in sorted(group_size.keys()):
-        print('Group of size {}:\t\t{}'.format(size, group_size[size]))
+    for i in range(0, n_resources + 1):
+        print('Group of size {}:\t\t{}'.format(i, group_size[i]))
         print_str_size += '{},'.format(size)
         print_str_count += '{},'.format(group_size[size])
 
