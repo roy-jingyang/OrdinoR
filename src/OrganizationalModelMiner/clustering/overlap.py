@@ -115,7 +115,7 @@ def _gmm(
     dec_rate = 0.2
     while True:
         membership_total = posterior_pr > threshold
-        if membership_total.any(axis=0).all():
+        if membership_total.any(axis=0).all() or threshold == 0.0:
             for i, membership in enumerate(membership_total):
                 for j in nonzero(membership)[0]:
                     groups[j].add(profiles.index[i])
