@@ -137,12 +137,10 @@ def execute(setup, seq_ix, exp_dirpath):
     avg_ov_diversity = (n_ov_res_membership / n_ov_res 
             if n_ov_res > 0 else float('nan'))
     
-    '''
     # export organizational models
-    fnout = discoverer_name + '.om'
+    fnout = '{}-{}.om'.format(discoverer_name, assigner_name)
     with open(join(exp_dirpath, fnout), 'w') as fout:
         om.to_file_csv(fout)
-    '''
 
     return ('{}-{}'.format(discoverer_name, assigner_name), 
             silhouette, 
