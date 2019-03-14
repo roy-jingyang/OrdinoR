@@ -31,13 +31,9 @@ def _mja(
             A list of organizational groups.
     '''
     print('Applying MJA:')
-    correlation_based_metrics = ['correlation']
-    if metric in correlation_based_metrics:
-        from SocialNetworkMiner.joint_activities import correlation
-        sn = correlation(profiles, metric=metric, convert=True) 
-    else:
-        from SocialNetworkMiner.joint_activities import distance
-        sn = distance(profiles, metric=metric, convert=True)
+    from SocialNetworkMiner.joint_activities import distance
+    sn = distance(profiles, metric=metric, convert=True)
+
     from operator import itemgetter
     edges_sorted = sorted(sn.edges.data('weight'), key=itemgetter(2))
     from networkx import (

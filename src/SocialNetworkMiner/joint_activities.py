@@ -53,10 +53,7 @@ def distance(profiles,
             With resource ids as indices and activity names as columns, this
             DataFrame contains profiles of the specific resources.
         metric: str, optional
-            Choice of different distance-related metrices. Options include:
-                - 'cityblock': the Manhattan (Rectilinear) distance
-                - 'euclidean': the Euclidean distance, default
-                - 'hamming': the Hamming distance (the default threshold is 0).
+            Choice of different distance-related metrics.
         convert: boolean, optional
             Boolean flag to determine whether the weight values of the edges in
             the mined network should be converted to similarity flavored
