@@ -203,6 +203,9 @@ def link_partitioning(
     # build network from profiles
     from SocialNetworkMiner.joint_activities import distance
     sn = distance(profiles, metric=metric, convert=True)
+    from SocialNetworkMiner.utilities import select_edges_by_weight
+    sn = select_edges_by_weight(sn, low=0) # Appice's setting
+    sn = select_edges_by_weight(sn, percentage='+0.75') # Appice's setting
 
     # step 1. Build the linear network using the original network
     # distinguish the isolated nodes in the original network first

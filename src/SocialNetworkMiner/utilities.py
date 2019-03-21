@@ -15,7 +15,7 @@ def select_edges_by_weight(sn, weight='weight',
         side, infinity is used instead.
         2. Specify a percentage value and keep only those edges with weight
         values within the range, e.g. with percentage = '+0.75' only edges with
-        the top 75% ranked POSITIVE weight values are kept.
+        the top 75% ranked weight values are kept.
     Note that one of the ways must be specified, and the first criteria over-
     rides the second one when both are defined.
 
