@@ -13,7 +13,7 @@ model instance.
 
 # TODO: is it appropriate using silhouette score for overlapped clusters?
 def silhouette_score(
-        clu, X, proximity_metric='euclidean'):
+        clu, X, metric='euclidean'):
     from numpy import mean, amin
     from scipy.spatial.distance import cdist
     score = list()
@@ -30,7 +30,7 @@ def silhouette_score(
                 avg_intra_dist = mean(cdist(
                     r_profile,
                     X.loc[list(other_r for other_r in g if other_r != r)],
-                    metric=proximity_metric))
+                    metric=metric))
 
                 # b(o)
                 avg_inter_dist = list()
@@ -39,7 +39,7 @@ def silhouette_score(
                         avg_inter_dist.append(mean(cdist(
                             r_profile,
                             X.loc[list(other_g)],
-                            metric=proximity_metric)))
+                            metric=metric)))
                 if len(avg_inter_dist) == 0:
                     min_avg_inter_dist = 0
                 else:
