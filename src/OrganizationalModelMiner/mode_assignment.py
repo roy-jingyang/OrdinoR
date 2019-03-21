@@ -228,7 +228,7 @@ def _set_cover_greedy(U, f_cost, search='exhaust'):
         else:
             return sigma
 
-def assign_by_weighting(group, rl, profiles, proximity_metric='euclidean'):
+def assign_by_weighting(group, rl, profiles, metric='euclidean'):
     '''Assign execution modes to a group based on how each member resource of
     this group contribute the clustering effectiveness of this group. Only 
     cohesion is considered. 
@@ -244,7 +244,7 @@ def assign_by_weighting(group, rl, profiles, proximity_metric='euclidean'):
         profiles: DataFrame
             With resource ids as indices and activity names as columns, this
             DataFrame contains profiles of the specific resources.
-        proximity_metric: str
+        metric: str
             Choice of metrics for measuring the distance while calculating the
             proximity. Refer to scipy.spatial.distance.pdist for more detailed
             explanation. This should be consistent with that employed within
@@ -273,7 +273,7 @@ def assign_by_weighting(group, rl, profiles, proximity_metric='euclidean'):
         representatives = list()
         # calculate the contribution score (use Local Outlier Factor here)
         from sklearn.neighbors import LocalOutlierFactor
-        lof = LocalOutlierFactor(metric=proximity_metric, contamination='auto')
+        lof = LocalOutlierFactor(metric=metric, contamination='auto')
 
         group = sorted(list(group)) # NOTE: order preserved for enumeration
         lof.fit(profiles.loc[group])
@@ -310,7 +310,7 @@ def assign_by_weighting(group, rl, profiles, proximity_metric='euclidean'):
             *list(resource_cap[r] for r in representatives))
     return modes
 
-#TODO
+#TODO: [DEPRECATED]
 def assign_by_weighting1(groups, rl, profiles, proximity_metric='euclidean'):
     '''Assign execution modes to a group based on how each member resource of
     this group contribute the clustering effectiveness of this group with
