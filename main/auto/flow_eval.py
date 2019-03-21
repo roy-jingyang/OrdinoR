@@ -104,7 +104,7 @@ def execute(setup, seq_ix, exp_dirpath):
             modes = assigner(og, rl)
         else:
             params = eval(params)
-            if 'profiles' in params:
+            if 'profiles' in params and prox_metric is not None:
                 params['metric'] = prox_metric
             modes = assigner(og, rl, **params)
         om.add_group(og, modes)
@@ -114,7 +114,7 @@ def execute(setup, seq_ix, exp_dirpath):
     # TODO: Hard-coded evalution measure (TBD)
     # 1. Intrinsic evaluation of clustering (by Silhouette score)
     from Evaluation.m2m.cluster_validation import silhouette_score
-    if prox_metric:
+    if prox_metric is not None:
         silhouette = silhouette_score(ogs, profiles, metric=prox_metric)
     else:
         silhouette = silhouette_score(ogs, profiles)
