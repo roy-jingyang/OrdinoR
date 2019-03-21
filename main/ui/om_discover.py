@@ -129,19 +129,19 @@ if __name__ == '__main__':
         method_option = int(input())
         if method_option == 0:
             ogs = overlap.clique_percolation(
-                    profiles, metric='euclidean')
+                    profiles, metric='correlation')
         elif method_option == 1:
             ogs = overlap.link_partitioning(
-                    profiles, metric='euclidean')
+                    profiles, metric='correlation')
         elif method_option == 2:
             ogs = overlap.local_expansion(
-                    profiles, metric='euclidean')
+                    profiles, metric='correlation')
         elif method_option == 3:
             ogs = overlap.agent_copra(
-                    profiles, metric='euclidean')
+                    profiles, metric='correlation')
         elif method_option == 4:
             ogs = overlap.agent_slpa(
-                    profiles, metric='euclidean')
+                    profiles, metric='correlation')
         else:
             raise Exception('Failed to recognize input option!')
             exit(1)
@@ -324,10 +324,12 @@ if __name__ == '__main__':
 
     print('-' * 80)
     measure_values = list()
+    '''
     from Evaluation.m2m.cluster_validation import silhouette_score
     silhouette_score = silhouette_score(ogs, profiles)
     print('Silhouette\t= {:.6f}'.format(silhouette_score))
     print('-' * 80)
+    '''
     print()
     from Evaluation.l2m import conformance
     fitness_score = conformance.fitness(rl, om)
