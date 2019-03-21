@@ -114,7 +114,10 @@ def execute(setup, seq_ix, exp_dirpath):
     # TODO: Hard-coded evalution measure (TBD)
     # 1. Intrinsic evaluation of clustering (by Silhouette score)
     from Evaluation.m2m.cluster_validation import silhouette_score
-    silhouette = silhouette_score(ogs, profiles, metric=prox_metric)
+    if prox_metric:
+        silhouette = silhouette_score(ogs, profiles, metric=prox_metric)
+    else:
+        silhouette = silhouette_score(ogs, profiles)
 
     # TODO: Hard-coded evalution measure (TBD) cont.
     # 2. (New) Fitness & Precision values
