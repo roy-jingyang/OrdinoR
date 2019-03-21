@@ -81,10 +81,13 @@ def execute(setup, seq_ix, exp_dirpath):
     discoverer_name = sequence[step]['label'].replace(' ', '')
     params = sequence[step].get('params', None)
     if params is None:
-        pass
         ogs = discoverer(profiles)
     else:
         params = eval(params)
+        if 'metric' in params:
+            prox_metric = params['metric']
+        else:
+            prox_metric = None
         ogs = discoverer(profiles, **params)
     if type(ogs) is tuple:
         ogs = ogs[0]
@@ -101,6 +104,8 @@ def execute(setup, seq_ix, exp_dirpath):
             modes = assigner(og, rl)
         else:
             params = eval(params)
+            if 'profiles' in params:
+                params['metric'] = prox_metric
             modes = assigner(og, rl, **params)
         om.add_group(og, modes)
     
