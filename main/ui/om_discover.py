@@ -68,7 +68,7 @@ if __name__ == '__main__':
         if method_option == 0:
             # build profiles
             from ResourceProfiler.raw_profiler import count_execution_frequency
-            profiles = count_execution_frequency(rl, use_log_scale=False)
+            profiles = count_execution_frequency(rl, scale='log')
             from OrganizationalModelMiner.community.graph_partitioning import (
                     mja)
             # MJA -> select metric (Euclidean distance/PCC)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
         if method_option == 0:
             # build profiles
             from ResourceProfiler.raw_profiler import count_execution_frequency
-            profiles = count_execution_frequency(rl, use_log_scale=False)
+            profiles = count_execution_frequency(rl, scale='log')
             from OrganizationalModelMiner.clustering.hierarchical import ahc
             ogs, og_hcy = ahc(
                     profiles, num_groups, method='ward')
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     elif mining_option == 3:
         # build profiles
         from ResourceProfiler.raw_profiler import count_execution_frequency
-        profiles = count_execution_frequency(rl, use_log_scale=False)
+        profiles = count_execution_frequency(rl, scale='log')
 
         from OrganizationalModelMiner.community import overlap
         print('Input a number to choose a method:')
@@ -154,7 +154,7 @@ if __name__ == '__main__':
 
         # build profiles
         from ResourceProfiler.raw_profiler import count_execution_frequency
-        profiles = count_execution_frequency(rl, use_log_scale=False)
+        profiles = count_execution_frequency(rl, scale='log')
 
         print('Input a threshold value [0, 1), in order to determine the ' +
                 'resource membership (Enter to use a "null" threshold):',
@@ -185,7 +185,7 @@ if __name__ == '__main__':
 
         # build profiles
         from ResourceProfiler.raw_profiler import count_execution_frequency
-        profiles = count_execution_frequency(rl, use_log_scale=False)
+        profiles = count_execution_frequency(rl, scale='log')
 
         from OrganizationalModelMiner.clustering.overlap import moc
         ogs = moc(
@@ -210,7 +210,7 @@ if __name__ == '__main__':
 
         # build profiles
         from ResourceProfiler.raw_profiler import count_execution_frequency
-        profiles = count_execution_frequency(rl, use_log_scale=False)
+        profiles = count_execution_frequency(rl, scale='log')
 
         print('Input a threshold value [0, 1), in order to determine the ' +
                 'resource membership (Enter to use a "null" threshold):',
@@ -239,7 +239,7 @@ if __name__ == '__main__':
 
         # build profiles
         from ResourceProfiler.raw_profiler import count_execution_frequency
-        profiles = count_execution_frequency(rl, use_log_scale=False)
+        profiles = count_execution_frequency(rl, scale='log')
 
         print('Total Num. resource event in the log: {}'.format(
             len(rl.drop_duplicates())))
@@ -257,7 +257,7 @@ if __name__ == '__main__':
 
         # build profiles
         from ResourceProfiler.raw_profiler import count_execution_frequency
-        profiles = count_execution_frequency(rl, use_log_scale=False)
+        profiles = count_execution_frequency(rl, scale='log')
 
         all_resources = set(rl['resource'].unique())
         from collections import defaultdict

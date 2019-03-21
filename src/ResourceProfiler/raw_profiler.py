@@ -5,7 +5,8 @@ This module contains the implementation of profiling a resource using the
 "raw" information in the given resource log. Methods include:
 '''
 
-def count_execution_frequency(rl, use_log_scale):
+# TODO
+def count_execution_frequency(rl, scale=None):
     '''
     This method builds a "profile" based on how frequent individuals originated
     events with specific execution modes.
@@ -13,8 +14,11 @@ def count_execution_frequency(rl, use_log_scale):
     Params:
         rl: DataFrame
             The resource log.
-        use_log_scale: boolean
-            Use the logrithm scale if the volume of work varies significantly.
+        scale: string
+            Use whether normalization (div. by total) or logarithm scale. The
+            default is None.
+                - 'normalize'
+                - 'log'
     Returns:
         X: DataFrame
             The contructed resource profiles.
@@ -28,10 +32,16 @@ def count_execution_frequency(rl, use_log_scale):
             pam[res][exec_mode] += 1
 
     from pandas import DataFrame
-    if use_log_scale: 
+    df = DataFrame.from_dict(pam, orient='index').fillna(0)
+    if scale is None:
+        return df
+    elif scale == 'log':
+        print('Using logarithm scale for frequencies')
         from numpy import log
-        return DataFrame.from_dict(pam, orient='index').fillna(0).apply(
-                lambda x: log(x + 1))
+        return df.apply(lambda x: log(x + 1))
+    elif scale == 'normalize':
+        print('Using normalization for frequencies')
+        return df.div(df.sum(axis=1), axis=0)
     else:
-        return DataFrame.from_dict(pam, orient='index').fillna(0)
+        exit('[Error] Unspecified scaling option')
 
