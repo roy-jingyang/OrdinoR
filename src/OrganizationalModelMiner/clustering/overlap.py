@@ -108,9 +108,10 @@ def _gmm(
     # step 2. Derive the clusters as the end result
     posterior_pr = gmm_model.predict_proba(profiles.values)
 
-    from numpy import array, nonzero, median, mean
+    from numpy import array, nonzero, median, mean, unique, count_nonzero
     from collections import defaultdict
     groups = defaultdict(set)
+    '''
     threshold = median(posterior_pr)
     dec_rate = 0.2
     while True:
@@ -122,6 +123,26 @@ def _gmm(
             break
         else:
             threshold *= (1 - dec_rate)
+    '''
+    threshold = 0
+    for pr in sorted(unique(posterior_pr), reverse=True):
+        mbr_mat = posterior_pr >= pr
+        if count_nonzero(mbr_mat.any(axis=1)) < len(profiles):
+            pass
+        else:
+            if count_nonzero(mbr_mat.any(axis=0)) == n_groups:
+                threshold = pr
+                break
+
+    print(threshold)
+    if threshold != 0.0:
+        membership_total = posterior_pr >= threshold
+    else:
+        membership_total = posterior_pr > threshold
+
+    for i, membership in enumerate(membership_total):
+        for j in nonzero(membership)[0]:
+            groups[j].add(profiles.index[i])
 
     #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]

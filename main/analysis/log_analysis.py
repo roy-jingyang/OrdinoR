@@ -58,17 +58,20 @@ if __name__ == '__main__':
 
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         #el = read_disco_csv(f)
-        el = read_disco_csv(f, mapping={'(case) channel': 6})
+        el = read_disco_csv(f, mapping={'(case) AMOUNT_REQ': -3})
 
     from collections import defaultdict
-    channel_cases = defaultdict(lambda: 0)
-    for case, events in el.groupby('case_id'):
-        channel = set(events['(case) channel'])
-        if len(channel) == 1:
-            channel_cases[list(channel)[0]] += 1
-        else:
-            exit('Error')
-    print(channel_cases)
+    from numpy import mean
+    res_amount = dict()
+    for r, events in el.groupby('resource'):
+        count = len(events['(case) AMOUNT_REQ'])
+        avg_amount = events['(case) AMOUNT_REQ'].astype('int').mean()
+        std_amount = events['(case) AMOUNT_REQ'].astype('int').std()
+        res_amount[r] = (count, avg_amount, std_amount) 
+
+    for r in sorted(res_amount.keys()):
+        print('{},{},{},{}'.format(r, 
+            res_amount[r][0], res_amount[r][1], res_amount[r][2]))
     '''
     # analysis on the input log
     from numpy import mean, std, median
