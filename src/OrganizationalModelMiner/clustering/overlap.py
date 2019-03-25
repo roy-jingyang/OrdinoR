@@ -84,7 +84,7 @@ def _gmm(
     # step 1. Train the model
     from sklearn.mixture import GaussianMixture
     if warm_start:
-        from numpy import mean, zeros
+        from numpy import mean
         init_means = list()
         for g in init_groups:
             init_means.append(mean(profiles.loc[list(g)].values, axis=0))
@@ -108,37 +108,25 @@ def _gmm(
     # step 2. Derive the clusters as the end result
     posterior_pr = gmm_model.predict_proba(profiles.values)
 
-    from numpy import array, nonzero, median, mean, unique, count_nonzero
+    from numpy import nonzero, median, unique, count_nonzero, amin, percentile
     from collections import defaultdict
     groups = defaultdict(set)
-    '''
-    threshold = median(posterior_pr)
-    dec_rate = 0.2
-    while True:
-        membership_total = posterior_pr > threshold
-        if membership_total.any(axis=0).all() or threshold == 0.0:
-            for i, membership in enumerate(membership_total):
-                for j in nonzero(membership)[0]:
-                    groups[j].add(profiles.index[i])
-            break
-        else:
-            threshold *= (1 - dec_rate)
-    '''
-    threshold = 0
+
+    threshold_ub = 0
     for pr in sorted(unique(posterior_pr), reverse=True):
         mbr_mat = posterior_pr >= pr
         if count_nonzero(mbr_mat.any(axis=1)) < len(profiles):
             pass
         else:
             if count_nonzero(mbr_mat.any(axis=0)) == n_groups:
-                threshold = pr
+                threshold_ub = pr
                 break
 
-    print(threshold)
-    if threshold != 0.0:
+    if threshold_ub != 0.0:
+        threshold = amin([percentile(posterior_pr, 75), threshold_ub])
         membership_total = posterior_pr >= threshold
     else:
-        membership_total = posterior_pr > threshold
+        membership_total = posterior_pr > 0.0
 
     for i, membership in enumerate(membership_total):
         for j in nonzero(membership)[0]:
