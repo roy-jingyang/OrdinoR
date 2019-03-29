@@ -30,16 +30,16 @@ class OrganizationalModel:
         # TODO: Resource Group should be a mapping from RG id to their descriptions
         # For now the description part is not be used since we don't know how to
         # annotate a resource group.
-        _rg = dict()
-        _mem = dict()
-        _cap = dict()
+        self._rg = dict()
+        self._mem = dict()
+        self._cap = dict()
         
         # An extra python dict recording the belonging of each resource, i.e. a
         # reverse mapping of Membership ("mem") - the individual resource POV.
-        _rmem = defaultdict(lambda: set())
+        self._rmem = defaultdict(lambda: set())
         # An extra python dict recording the qualified groups for each execution
         # mode, i.e. a reverse mapping of Capability ("cap").
-        _rcap = defaultdict(lambda: set())
+        self._rcap = defaultdict(lambda: set())
         
     def add_group(self, og, exec_modes):
         '''Add a new group into the organizational model.
