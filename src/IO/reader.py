@@ -90,8 +90,7 @@ def read_disco_csv(f, mapping=None, header=True):
             # add addtional attributes mapping specified
             if mapping is not None:
                 for attr, col_num in mapping.items():
-                    if attr not in e:
-                        e[attr] = row[col_num]
+                    e[attr] = row[col_num]
 
             ld.append(e)
 
