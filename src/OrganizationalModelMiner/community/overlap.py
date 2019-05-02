@@ -174,7 +174,7 @@ def clique_percolation(
 
 # 2. Line Graph and Link Partitioning (Appice, based on Evans and Lambiotte)
 def link_partitioning(
-        profiles,
+        profiles, n_groups,
         metric='euclidean'):
     '''
     This method implements the three-phased algorithm for discovering over-
@@ -189,6 +189,8 @@ def link_partitioning(
         profiles: DataFrame
             With resource ids as indices and activity names as columns, this
             DataFrame contains profiles of the specific resources.
+        n_groups: int
+            The number of groups to be discovered.
         metric: str, optional
             Choice of metrics for measuring the distance while calculating the
             linkage. Refer to scipy.spatial.distance.pdist for more detailed
@@ -266,10 +268,24 @@ def link_partitioning(
     remove(tmp_file_path)
 
     # apply detection algorithm
-    from leidenalg import find_partition, RBConfigurationVertexPartition
-    ln_communities = find_partition(ln_igraph, 
-            RBConfigurationVertexPartition,
-            weights='weight', n_iterations=-1, seed=0)
+    from leidenalg import find_partition
+    from leidenalg import RBConfigurationVertexPartition as partition
+    # search the resolution parameter using bisection
+    lo = 0.5
+    hi = 1.0
+    eps = 0.01
+    while (lo + hi) / 2 > eps:
+        mid = (lo + hi) / 2
+        ln_communities = find_partition(ln_igraph, 
+                partition,
+                weights='weight', n_iterations=-1, seed=0,
+                resolution_parameter=mid)
+        if len(ln_communities) == n_groups:
+            break
+        elif len(ln_communities) < n_groups:
+            lo = mid
+        else:
+            hi = mid
 
     # step 3. Map communities onto the original network to get the results
     # derive the orgnizational groups
