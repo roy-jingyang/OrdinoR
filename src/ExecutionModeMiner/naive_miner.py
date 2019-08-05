@@ -50,7 +50,6 @@ class ATonlyMiner(BaseMiner):
 
         # iterate through all events in the original log and convert
         # Note: only E_res (resource events) should be considered
-        resource_log = list()
         rl = list()
         for event in el.itertuples(): # keep order
             rl.append({
@@ -123,7 +122,6 @@ class CTonlyMiner(BaseMiner):
 
         # iterate through all events in the original log and convert
         # Note: only E_res (resource events) should be considered
-        resource_log = list()
         rl = list()
         for event in el.itertuples(): # keep order
             rl.append({
@@ -192,7 +190,6 @@ class ATCTMiner(ATonlyMiner):
 
         # iterate through all events in the original log and convert
         # Note: only E_res (resource events) should be considered
-        resource_log = list()
         rl = list()
         for event in el.itertuples(): # keep order
             rl.append({

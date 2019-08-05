@@ -218,17 +218,18 @@ def precision3(rl, om):
         float
             The result precision value.
     '''
-    sum_precision = 0.0
-    n_resources = 0
+    n_events = len(rl) # "|E_res|"
+    precision = 0.0
     mode_occurrence = rl.groupby([
         'case_type', 'activity_type', 'time_type']).size().to_dict()
     for r, events in rl.groupby('resource'):
-        n_resources += 1
         n_originated_events = len(events)
         allowed_modes = om.find_execution_modes(r)
         n_allowed_events = sum(
             mode_occurrence[mode] for mode in allowed_modes)
-        sum_precision += n_originated_events / n_allowed_events
+        wt_originated_events = n_originated_events / n_events
+        precision += (n_originated_events / n_allowed_events *
+            wt_originated_events)
 
-    return sum_precision / n_resources
+    return precision
 

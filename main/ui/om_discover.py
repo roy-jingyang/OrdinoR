@@ -12,8 +12,7 @@ if __name__ == '__main__':
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f)
-        #el = read_disco_csv(f, mapping={'product': -2})
-        #el = read_disco_csv(f, mapping={'(case) channel': 6})
+        #el = read_disco_csv(f, mapping={'(case) LoanGoal': 8})
 
     # learn execution modes and convert to resource log
     from ExecutionModeMiner.naive_miner import ATonlyMiner
@@ -21,7 +20,7 @@ if __name__ == '__main__':
     from ExecutionModeMiner.naive_miner import ATCTMiner
     naive_exec_mode_miner = ATonlyMiner(el)
     #naive_exec_mode_miner = CTonlyMiner(el, case_attr_name='product')
-    #naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) channel')
+    #naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
 
     rl = naive_exec_mode_miner.derive_resource_log(el)
 
@@ -40,9 +39,7 @@ if __name__ == '__main__':
     print('\t4. Gaussian Mixture Model')
     print('\t5. Model based Overlapping Clustering')
     print('\t6. Fuzzy c-means')
-    print('\t101. "One Group for All" (best fitness)')
-    print('\t102. "One Group for Each" (best rc-measure)')
-    print('Option: ', end='')
+
     mining_option = int(input())
 
     if mining_option in []:
@@ -234,59 +231,6 @@ if __name__ == '__main__':
                 + ' Execution time {:.3f} s. '.format(time() - tm_start)
                 + '-' * 10)
         '''
-    elif mining_option == 101:
-        # the "One Group for All" model (comparable to the flower model)
-
-        # build profiles
-        from ResourceProfiler.raw_profiler import count_execution_frequency
-        profiles = count_execution_frequency(rl, scale='log')
-
-        print('Total Num. resource event in the log: {}'.format(
-            len(rl.drop_duplicates())))
-        group = set(rl['resource'].unique())
-        ogs = [group]
-    elif mining_option == 102:
-        # the "One Group for Each" model
-        # NOTE 1: for a given log, more than 1 such models may be possible
-        # NOTE 2: such models achieve best rc_measure (= 1.0), but not
-        # necessarily best fitness (thus not comparable to the enumerating
-        # model)
-        # NOTE 3: the invention of such models needs to guarantee:
-        #       (1) each execution mode has 1 capable resource and 1 only
-        #       (2) all resources in the log are included
-
-        # build profiles
-        from ResourceProfiler.raw_profiler import count_execution_frequency
-        profiles = count_execution_frequency(rl, scale='log')
-
-        all_resources = set(rl['resource'].unique())
-        from collections import defaultdict
-        ogs_d = defaultdict(lambda: set())
-        from numpy.random import choice
-        grouped_by_mode = rl.groupby([
-            'case_type', 'activity_type', 'time_type'])
-        num_cand_of_modes = list((mode, len(set(events['resource'])))
-                for mode, events in grouped_by_mode)
-        # rarer mode first
-        num_cand_of_modes.sort(key=lambda x: x[1])
-
-        for mode, num_cand in num_cand_of_modes:
-            # for each mode, find a capable resource
-            events = grouped_by_mode.get_group(mode)
-            capable_resources = set(events['resource'])
-            unused_cap_r = capable_resources.difference(set(ogs_d.keys()))
-            if len(unused_cap_r) > 0:
-                r = choice(list(unused_cap_r))
-            else:
-                r = choice(list(capable_resources))
-            ogs_d[r].add(mode)
-
-        ogs = list()
-        modes_to_assign = list()
-        for k, v in ogs_d.items():
-            ogs.append(frozenset({k}))
-            modes_to_assign.append(frozenset(v))
-
     else:
         raise Exception('Failed to recognize input option!')
         exit(1)
@@ -295,32 +239,18 @@ if __name__ == '__main__':
     from OrganizationalModelMiner.base import OrganizationalModel
     om = OrganizationalModel()
 
-    if mining_option in [101, 102]:
-        # handmade models
-        if mining_option == 101:
-            # the "One Group for All" model
-            from OrganizationalModelMiner.mode_assignment import assign_by_any
-            for og in ogs:
-                modes = assign_by_any(og, rl)
-                om.add_group(og, modes)
-        elif mining_option == 102:
-            # the "One Group for Each" model
-            for i, og in enumerate(ogs):
-                om.add_group(og, modes_to_assign[i])
+    # assign execution modes to groups
+    from OrganizationalModelMiner.mode_assignment import assign_by_any
+    from OrganizationalModelMiner.mode_assignment import assign_by_all
+    from OrganizationalModelMiner.mode_assignment import assign_by_proportion
+    from OrganizationalModelMiner.mode_assignment import assign_by_weighting
+    for og in ogs:
+        modes = assign_by_any(og, rl)
+        #modes = assign_by_all(og, rl)
+        #modes = assign_by_proportion(og, rl, p=0.5)
+        #modes = assign_by_weighting(og, rl, profiles)
 
-    else:
-        # assign execution modes to groups
-        from OrganizationalModelMiner.mode_assignment import assign_by_any
-        from OrganizationalModelMiner.mode_assignment import assign_by_all
-        from OrganizationalModelMiner.mode_assignment import assign_by_proportion
-        from OrganizationalModelMiner.mode_assignment import assign_by_weighting
-        for og in ogs:
-            modes = assign_by_any(og, rl)
-            #modes = assign_by_all(og, rl)
-            #modes = assign_by_proportion(og, rl, p=0.5)
-            #modes = assign_by_weighting(og, rl, profiles)
-
-            om.add_group(og, modes)
+        om.add_group(og, modes)
 
     print('-' * 80)
     measure_values = list()
