@@ -331,23 +331,32 @@ if __name__ == '__main__':
     print('-' * 80)
     '''
     print()
+    
     from Evaluation.l2m import conformance
     fitness_score = conformance.fitness(rl, om)
     print('Fitness\t\t= {:.6f}'.format(fitness_score))
     measure_values.append(fitness_score)
     print()
+
     rc_measure_score = conformance.rc_measure(rl, om)
     print('rc-measure\t= {:.6f}'.format(rc_measure_score))
     measure_values.append(rc_measure_score)
     print()
+
     #print('Fitness1\t= {:.6f}'.format(conformance.fitness1(rl, om)))
     precision2_score = conformance.precision2(rl, om)
     print('Prec. (freq)\t= {:.6f}'.format(precision2_score))
     measure_values.append(precision2_score)
+
     precision1_score = conformance.precision1(rl, om)
     print('Prec. (no freq)\t= {:.6f}'.format(precision1_score))
     measure_values.append(precision1_score)
+
+    precision3_score = conformance.precision3(rl, om)
+    print('Prec. (new)\t= {:.6f}'.format(precision3_score))
+    measure_values.append(precision3_score)
     print()
+
     # Overlapping Density & Overlapping Diversity (avg.)
     k = om.size()
     resources = om.resources()

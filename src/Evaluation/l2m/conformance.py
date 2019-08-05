@@ -82,7 +82,7 @@ def fitness1(rl, om):
 
 # Wil's precision
 def rc_measure(rl, om):
-    '''Calculate the rc_measure of an organizational model against a given
+    '''Calculate the precision of an organizational model against a given
     resource log, in which only the "fitting" (conformed) events are considered.
 
     Note that a resource log instead of an event log is used here, however this
@@ -126,10 +126,10 @@ def rc_measure(rl, om):
             [(n_cand_E - n_cand_e) / (n_cand_E - 1) for n_cand_e in l_n_cand_e])
         return rc_sum / n_conformed_events
 
-# old precision (no frequencies)
+# precision (no frequency)
 def precision1(rl, om):
     '''Calculate the precision of an organizational model against a given
-    resource log, in which only the "fitting" (conformed) events are considered.
+    resource log.
 
     Note that a resource log instead of an event log is used here, however this
     should be valid since a resource log is (implicitly) one-to-one mapped from
@@ -154,10 +154,10 @@ def precision1(rl, om):
             for r in om.resources())
     return n_conformed_res_events / n_allowed_res_events
 
-# new precision (with frequencies)
+# precision (with frequency)
 def precision2(rl, om):
     '''Calculate the precision of an organizational model against a given
-    resource log, in which only the "fitting" (conformed) events are considered.
+    resource log.
 
     Note that a resource log instead of an event log is used here, however this
     should be valid since a resource log is (implicitly) one-to-one mapped from
@@ -198,4 +198,37 @@ def precision2(rl, om):
             F_allowed_res_events += mode_occurrence[mode]
 
     return F_conformed_res_events / F_allowed_res_events
+
+# precision (event level; resource perspective)
+def precision3(rl, om):
+    '''Calculate the precision of an organizational model against a given
+    resource log.
+
+    Note that a resource log instead of an event log is used here, however this
+    should be valid since a resource log is (implicitly) one-to-one mapped from
+    the corresponding event log.
+
+    Params:
+        rl: DataFrame
+            The resource log.
+        om: OrganizationalModel object
+            The discovered organizational model.
+
+    Returns:
+        float
+            The result precision value.
+    '''
+    sum_precision = 0.0
+    n_resources = 0
+    mode_occurrence = rl.groupby([
+        'case_type', 'activity_type', 'time_type']).size().to_dict()
+    for r, events in rl.groupby('resource'):
+        n_resources += 1
+        n_originated_events = len(events)
+        allowed_modes = om.find_execution_modes(r)
+        n_allowed_events = sum(
+            mode_occurrence[mode] for mode in allowed_modes)
+        sum_precision += n_originated_events / n_allowed_events
+
+    return sum_precision / n_resources
 
