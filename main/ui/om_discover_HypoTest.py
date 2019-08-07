@@ -13,14 +13,15 @@ if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        el = read_disco_csv(f)
-        #el = read_disco_csv(f, mapping={'(case) LoanGoal': 8})
+        #el = read_disco_csv(f)
+        el = read_disco_csv(f, mapping={'(case) LoanGoal': 7})
 
     # discover organizational groups
     print('Input a number to choose a solution:')
     print('\t101. "Flower model" (BEST fitness, WORST precision)')
     print('\t102. "Enumerating model" (BEST fitness, BEST precision)')
-    print('\t103. "rc-measure friendly model" (BEST rc-measure)')
+    print('\t103. "Old Flower model" (BEST fitness, w/many exec. modes)')
+    print('\t104. "rc-measure friendly model" (BEST rc-measure)')
     print('Option: ', end='')
     mining_option = int(input())
 
@@ -85,6 +86,27 @@ if __name__ == '__main__':
                     for e in events.itertuples()))
 
     elif mining_option == 103:
+        #from ExecutionModeMiner.naive_miner import ATonlyMiner
+        #naive_exec_mode_miner = ATonlyMiner(el)
+        from ExecutionModeMiner.naive_miner import ATCTMiner
+        naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
+        rl = naive_exec_mode_miner.derive_resource_log(el)
+
+        # Only 1 resource group, containing ALL resources
+        print('Total Num. resource event in the log: {}'.format(
+            len(rl.drop_duplicates())))
+        resources = set(rl['resource'].unique())
+        ogs = [resources]
+
+        from OrganizationalModelMiner.base import OrganizationalModel
+        om = OrganizationalModel()
+        # assign execution modes to groups
+        from OrganizationalModelMiner.mode_assignment import assign_by_any
+        for og in ogs:
+            modes = assign_by_any(og, rl)
+            om.add_group(og, modes)
+
+    elif mining_option == 104:
         exit(1)
 
         # NOTE 1: for a given log, more than 1 such models may be possible

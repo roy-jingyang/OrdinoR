@@ -273,7 +273,7 @@ def assign_by_weighting(group, rl, profiles, metric='euclidean'):
         representatives = list()
         # calculate the contribution score (use Local Outlier Factor here)
         from sklearn.neighbors import LocalOutlierFactor
-        lof = LocalOutlierFactor(metric=metric, contamination='auto')
+        lof = LocalOutlierFactor(metric=metric)
 
         group = sorted(list(group)) # NOTE: order preserved for enumeration
         lof.fit(profiles.loc[group])

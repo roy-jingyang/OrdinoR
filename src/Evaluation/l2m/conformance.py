@@ -199,7 +199,7 @@ def precision2(rl, om):
 
     return F_conformed_res_events / F_allowed_res_events
 
-# precision (event level; resource perspective)
+# precision (event level; resource perspective; PREVIOUS ONE REVISED)
 def precision3(rl, om):
     '''Calculate the precision of an organizational model against a given
     resource log.
@@ -223,13 +223,13 @@ def precision3(rl, om):
     mode_occurrence = rl.groupby([
         'case_type', 'activity_type', 'time_type']).size().to_dict()
     for r, events in rl.groupby('resource'):
-        n_originated_events = len(events)
+        n_r_conformed_events = len(events[
+            events.apply(lambda e: _is_conformed_event(e, om), axis=1)])
         allowed_modes = om.find_execution_modes(r)
         n_allowed_events = sum(
             mode_occurrence[mode] for mode in allowed_modes)
-        wt_originated_events = n_originated_events / n_events
-        precision += (n_originated_events / n_allowed_events *
-            wt_originated_events)
+        wt_r = len(events) / n_events
+        precision += (wt_r * n_r_conformed_events / n_allowed_events)
 
     return precision
 
