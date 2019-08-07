@@ -13,8 +13,8 @@ if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        #el = read_disco_csv(f)
-        el = read_disco_csv(f, mapping={'(case) LoanGoal': 7})
+        el = read_disco_csv(f)
+        #el = read_disco_csv(f, mapping={'(case) LoanGoal': 7})
 
     # discover organizational groups
     print('Input a number to choose a solution:')
