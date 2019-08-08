@@ -1,4 +1,4 @@
-name: promorg
+name: orgminer
 channels:
   - conda-forge
   - defaults
