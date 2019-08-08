@@ -3,11 +3,12 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - _libgcc_mutex
-  - backcall
-  - blas
   - ca-certificates
   - certifi
+  - openssl
+  - pip
+  - scikit-fuzzy
+  - backcall
   - cycler
   - dbus
   - decorator
@@ -28,11 +29,9 @@ dependencies:
   - libedit
   - libffi
   - libgcc-ng
-  - libgfortran
   - libgfortran-ng
-  - libiconv
   - libopenblas
-  - libpng
+  - libpng=1.6.34
   - libstdcxx-ng
   - libxcb
   - libxml2
@@ -46,31 +45,26 @@ dependencies:
   - networkx
   - numpy
   - numpy-base
-  - openblas
-  - openssl
   - pandas
   - parso
   - pcre
   - pexpect
   - pickleshare
-  - pip
   - prompt_toolkit
-  - pthread-stubs
   - ptyprocess
   - pygments
   - pyparsing
   - pyqt
-  - python
-  - python-dateutil
+  - python=3.6.4
+  - python-dateutil=2.7.3
   - pytz
   - qt
   - readline
-  - scikit-fuzzy
   - scikit-learn
   - scipy
   - setuptools
   - simplegeneric
-  - sip
+  - sip=
   - six
   - sqlite
   - tk
@@ -78,12 +72,14 @@ dependencies:
   - traitlets
   - wcwidth
   - wheel
-  - xorg-libxau
-  - xorg-libxdmcp
   - xz
   - zlib
   - pip:
-    - deap
+    - click
+    - cython
+    - greenlet
     - leidenalg
     - python-igraph
+    - pyzmq
+    - deap
 
