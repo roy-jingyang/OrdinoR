@@ -22,6 +22,7 @@ if __name__ == '__main__':
     print('\t102. "Enumerating model" (BEST fitness, BEST precision)')
     print('\t103. "Old Flower model" (BEST fitness, w/many exec. modes)')
     print('\t104. "rc-measure friendly model" (BEST rc-measure)')
+    print('\t105. "Swap-1 model (from enumerating model)')
     print('Option: ', end='')
     mining_option = int(input())
 
@@ -148,6 +149,48 @@ if __name__ == '__main__':
         for k, v in ogs_d.items():
             ogs.append(frozenset({k}))
             modes_to_assign.append(frozenset(v))
+
+    elif mining_option == 105:
+        # the "swap-1 model"
+        # |E_res| execution modes (equal to #events with resource info)
+        rl = list()
+        for event in el.itertuples(): # keep order
+            rl.append({
+                'resource': event.resource,
+                'case_type': '',
+                'activity_type': event.Index,
+                'time_type': ''
+            })
+
+        from pandas import DataFrame
+        rl = DataFrame(rl)
+
+        # |R| resource groups, i.e. each resource is a group by itself
+        print('Total Num. resource event in the log: {}'.format(
+            len(rl.drop_duplicates())))
+
+        resources = sorted(set(rl['resource'].unique()))
+
+        # pick a pair of resources as "candidates" for swapping
+        # the first one and the last one
+        res_p = resources[0]
+        res_q = resources[-1]
+        # each group is linked with modes (events) originated by the resource
+        from OrganizationalModelMiner.base import OrganizationalModel
+        om = OrganizationalModel()
+        for r, events in rl.groupby('resource'):
+            if r == res_p:
+                om.add_group(frozenset([res_q]), 
+                    frozenset((e.case_type, e.activity_type, e.time_type) 
+                        for e in events.itertuples()))
+            elif r == res_q:
+                om.add_group(frozenset([res_p]), 
+                    frozenset((e.case_type, e.activity_type, e.time_type) 
+                        for e in events.itertuples()))
+            else:
+                om.add_group(frozenset([r]), 
+                    frozenset((e.case_type, e.activity_type, e.time_type) 
+                        for e in events.itertuples()))
 
     else:
         raise Exception('Failed to recognize input option!')
