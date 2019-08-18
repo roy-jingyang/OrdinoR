@@ -290,9 +290,7 @@ def precision4(rl, om):
     n_cand_E = len(cand_E)
 
     n_allowed_events = 0
-    n_conformed_events = 0
-    precision_award = 0.0
-    precision_penalty = 0.0
+    precision = 0.0
 
     for event in rl.itertuples(): # TODO: can we reduce redundancy?
         if _is_allowed_event(event ,om):
@@ -304,18 +302,13 @@ def precision4(rl, om):
             n_cand_e = len(cand_e)
 
             if _is_conformed_event(event, om):
-                n_conformed_events += 1
                 # give reward
-                precision_award += (n_cand_E + 1 - n_cand_e) / n_cand_E
+                precision += (n_cand_E + 1 - n_cand_e) / n_cand_E
             else:
                 # give penalty
-                precision_penalty += n_cand_e / n_cand_E
+                precision -= n_cand_e / n_cand_E
 
-    if precision_award > 0.0 and precision_penalty > 0.0:
-        return ((precision_award / n_conformed_events) -
-                (precision_penalty / (n_allowed_events - n_conformed_events)))
-    elif precision_award > 0.0:
-        return (precision_award / n_conformed_events)
-    else:
-        return 0.0
+    precision *= 1 / n_allowed_events
+
+    return precision
 
