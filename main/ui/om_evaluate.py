@@ -12,16 +12,14 @@ if __name__ == '__main__':
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f)
-        #el = read_disco_csv(f, mapping={'product': -2})
-        #el = read_disco_csv(f, mapping={'(case) channel': 6})
+        #el = read_disco_csv(f, mapping={'(case) LoanGoal': 8})
 
     # learn execution modes and convert to resource log
     from ExecutionModeMiner.naive_miner import ATonlyMiner
     from ExecutionModeMiner.naive_miner import CTonlyMiner
     from ExecutionModeMiner.naive_miner import ATCTMiner
     naive_exec_mode_miner = ATonlyMiner(el)
-    #naive_exec_mode_miner = CTonlyMiner(el, case_attr_name='product')
-    #naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) channel')
+    #naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
 
     rl = naive_exec_mode_miner.derive_resource_log(el)
 
@@ -30,22 +28,25 @@ if __name__ == '__main__':
     with open(fn_model, 'r', encoding='utf-8') as f:
         om = OrganizationalModel.from_file_csv(f)
 
+    from Evaluation.l2m import conformance
     measure_values = list()
     print('-' * 80)
     # TODO: debugging use
+    '''
     ogs = om.find_all_groups()
     print('Pct. of solo group\t= {:.1%}'.format(
         sum(1 for og in ogs if len(og) == 1) / len(ogs)))
     print('-' * 80)
-    from Evaluation.l2m import conformance
     fitness_score = conformance.fitness(rl, om)
     print('Fitness\t\t= {:.6f}'.format(fitness_score))
-    measure_values.append(fitness_score)
+    #measure_values.append(fitness_score)
     print()
+    '''
     rc_measure_score = conformance.rc_measure(rl, om)
     print('rc-measure\t= {:.6f}'.format(rc_measure_score))
     measure_values.append(rc_measure_score)
     print()
+    '''
     precision2_score = conformance.precision2(rl, om)
     print('Prec. (freq)\t= {:.6f}'.format(precision2_score))
     measure_values.append(precision2_score)
@@ -57,7 +58,13 @@ if __name__ == '__main__':
     print('Prec. (new)\t= {:.6f}'.format(precision3_score))
     measure_values.append(precision3_score)
     print()
+    '''
+    precision4_score = conformance.precision4(rl, om)
+    print('Prec. (new2)\t= {:.6f}'.format(precision4_score))
+    measure_values.append(precision4_score)
+    print()
 
+    '''
     # Overlapping Density & Overlapping Diversity (avg.)
     k = om.size()
     resources = om.resources()
@@ -80,4 +87,5 @@ if __name__ == '__main__':
     measure_values.append(avg_ov_diversity)
     print('-' * 80)
     print(','.join(str(x) for x in measure_values))
+    '''
 

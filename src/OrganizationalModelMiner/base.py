@@ -178,7 +178,7 @@ class OrganizationalModel:
         Returns
         -------
         list of frozensets
-            The groups which are capable of this execution mode.
+            The groups of resources which are capable of this execution mode.
         '''
         return [frozenset(self._mem[rg_id]) for rg_id in self._rcap[exec_mode]]
 

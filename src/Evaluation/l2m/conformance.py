@@ -5,12 +5,8 @@ This module contains the implmentation of the conformance checking measures
 proposed in the OrgMining 2.0 framework.
 '''
 def _is_conformed_event(event, om):
-    '''Determine whether an event in the resource log is conformining given an
+    '''Determine whether an event in the resource log is conforming given an
     organizational model.
-
-    Note that a resource log instead of an event log is used here, however this
-    should be valid since a resource log is (implicitly) one-to-one mapped from
-    the corresponding event log.
 
     Params:
         event: row of DataFrame
@@ -29,6 +25,24 @@ def _is_conformed_event(event, om):
             return True
 
     return False
+
+def _is_allowed_event(event, om):
+    '''Determine whether an event in the resource log is allowed to be happened
+    given an organizational model.
+
+    Params:
+        event: row of DataFrame
+            The event in the resource log.
+        om: OrganizationalModel object
+            The discovered organizational model.
+
+    Returns:
+        boolean
+            Boolean value indicating if the event is allowed by the model.
+    '''
+    m = (event.case_type, event.activity_type, event.time_type)
+    cand_groups = om.find_candidate_groups(m)
+    return len(cand_groups) > 0
 
 def fitness(rl, om):
     '''Calculate the fitness of an organizational model against a given
@@ -223,13 +237,85 @@ def precision3(rl, om):
     mode_occurrence = rl.groupby([
         'case_type', 'activity_type', 'time_type']).size().to_dict()
     for r, events in rl.groupby('resource'):
-        n_r_conformed_events = len(events[
-            events.apply(lambda e: _is_conformed_event(e, om), axis=1)])
-        allowed_modes = om.find_execution_modes(r)
-        n_allowed_events = sum(
-            mode_occurrence[mode] for mode in allowed_modes)
         wt_r = len(events) / n_events
-        precision += (wt_r * n_r_conformed_events / n_allowed_events)
+        precision_r = 0.0
+        #n_r_conformed_events = len(events[
+        #    events.apply(lambda e: _is_conformed_event(e, om), axis=1)])
+        r_conformed_events = events[
+            events.apply(lambda e: _is_conformed_event(e, om), axis=1)]
+        r_conformed_events_gb = r_conformed_events.groupby([
+            'case_type', 'activity_type', 'time_type'])
 
+        r_allowed_modes = om.find_execution_modes(r)
+        for mode in r_allowed_modes:
+            if mode in r_conformed_events_gb.groups:
+                precision_r += (
+                    len(r_conformed_events_gb.get_group(mode)) /
+                    mode_occurrence[mode])
+
+        #n_r_allowed_events = sum(
+        #    mode_occurrence[mode] for mode in r_allowed_modes)
+        #precision += (wt_r * n_r_conformed_events / n_r_allowed_events)
+        precision += wt_r * (precision_r / len(r_allowed_modes))
     return precision
+
+# precision (event level; resource perspective; PREVIOUS ONE REVISED, new)
+def precision4(rl, om):
+    '''Calculate the precision of an organizational model against a given
+    resource log.
+
+    Note that a resource log instead of an event log is used here, however this
+    should be valid since a resource log is (implicitly) one-to-one mapped from
+    the corresponding event log.
+
+    Params:
+        rl: DataFrame
+            The resource log.
+        om: OrganizationalModel object
+            The discovered organizational model.
+
+    Returns:
+        float
+            The result precision value.
+    '''
+    cand_E = set()
+
+    for event in rl.itertuples():
+        if _is_allowed_event(event ,om):
+            m = (event.case_type, event.activity_type, event.time_type)
+            cand_groups = om.find_candidate_groups(m)
+
+            cand_e = frozenset.union(*cand_groups) # cand(e)
+            cand_E.update(cand_e) # update cand(E) by union with cand(e)
+    n_cand_E = len(cand_E)
+
+    n_allowed_events = 0
+    n_conformed_events = 0
+    precision_award = 0.0
+    precision_penalty = 0.0
+
+    for event in rl.itertuples(): # TODO: can we reduce redundancy?
+        if _is_allowed_event(event ,om):
+            n_allowed_events += 1
+
+            m = (event.case_type, event.activity_type, event.time_type)
+            cand_groups = om.find_candidate_groups(m)
+            cand_e = frozenset.union(*cand_groups) # cand(e)
+            n_cand_e = len(cand_e)
+
+            if _is_conformed_event(event, om):
+                n_conformed_events += 1
+                # give reward
+                precision_award += (n_cand_E + 1 - n_cand_e) / n_cand_E
+            else:
+                # give penalty
+                precision_penalty += n_cand_e / n_cand_E
+
+    if precision_award > 0.0 and precision_penalty > 0.0:
+        return ((precision_award / n_conformed_events) -
+                (precision_penalty / (n_allowed_events - n_conformed_events)))
+    elif precision_award > 0.0:
+        return (precision_award / n_conformed_events)
+    else:
+        return 0.0
 
