@@ -22,7 +22,8 @@ if __name__ == '__main__':
     print('\t102. "Enumerating model" (BEST fitness, BEST precision)')
     print('\t103. "Old Flower model" (BEST fitness, w/many exec. modes)')
     print('\t104. "rc-measure friendly model" (BEST rc-measure)')
-    print('\t105. "Swap-1 model (from enumerating model)')
+    print('\t105. "Swap-1 model" (from enumerating model)')
+    print('\t106. "Pick-1 model" (from enumerating model)')
     print('Option: ', end='')
     mining_option = int(input())
 
@@ -76,17 +77,17 @@ if __name__ == '__main__':
         # |R| resource groups, i.e. each resource is a group by itself
         print('Total Num. resource event in the log: {}'.format(
             len(rl.drop_duplicates())))
-        resources = set(rl['resource'].unique())
 
         # each group is linked with modes (events) originated by the resource
         from OrganizationalModelMiner.base import OrganizationalModel
         om = OrganizationalModel()
         for r, events in rl.groupby('resource'):
             om.add_group(frozenset([r]), 
-                frozenset((e.case_type, e.activity_type, e.time_type) 
+                frozenset((e.case_type, e.activity_type, e.time_type)
                     for e in events.itertuples()))
 
     elif mining_option == 103:
+        exit('Deprecated.')
         #from ExecutionModeMiner.naive_miner import ATonlyMiner
         #naive_exec_mode_miner = ATonlyMiner(el)
         from ExecutionModeMiner.naive_miner import ATCTMiner
@@ -108,7 +109,7 @@ if __name__ == '__main__':
             om.add_group(og, modes)
 
     elif mining_option == 104:
-        exit(1)
+        exit('Deprecated.')
 
         # NOTE 1: for a given log, more than 1 such models may be possible
         # NOTE 2: such models achieve best rc_measure (= 1.0), but not
@@ -181,16 +182,38 @@ if __name__ == '__main__':
         for r, events in rl.groupby('resource'):
             if r == res_p:
                 om.add_group(frozenset([res_q]), 
-                    frozenset((e.case_type, e.activity_type, e.time_type) 
+                    frozenset((e.case_type, e.activity_type, e.time_type)
                         for e in events.itertuples()))
             elif r == res_q:
                 om.add_group(frozenset([res_p]), 
-                    frozenset((e.case_type, e.activity_type, e.time_type) 
+                    frozenset((e.case_type, e.activity_type, e.time_type)
                         for e in events.itertuples()))
             else:
                 om.add_group(frozenset([r]), 
-                    frozenset((e.case_type, e.activity_type, e.time_type) 
+                    frozenset((e.case_type, e.activity_type, e.time_type)
                         for e in events.itertuples()))
+
+    elif mining_option == 106:
+        # the "pick-1 model"
+        # corresponding to the N_2 model in Sect. 6.4 (pp. 191)
+        rl = list()
+        for event in el.itertuples(): # keep order
+            rl.append({
+                'resource': event.resource,
+                'case_type': '',
+                'activity_type': event.Index,
+                'time_type': ''
+            })
+
+        from pandas import DataFrame
+        rl = DataFrame(rl)
+
+        # 1 resource group, with only 1 resource in it
+        from OrganizationalModelMiner.base import OrganizationalModel
+        om = OrganizationalModel()
+        e = rl.iloc[0]
+        om.add_group(frozenset([e.resource]),
+            frozenset({(e.case_type, e.activity_type, e.time_type)}))
 
     else:
         raise Exception('Failed to recognize input option!')
@@ -227,10 +250,12 @@ if __name__ == '__main__':
     measure_values.append(precision1_score)
     print()
 
+    '''
     precision3_score = conformance.precision3(rl, om)
     print('Prec. (new)\t= {:.6f}'.format(precision3_score))
     measure_values.append(precision3_score)
     print()
+    '''
 
     precision4_score = conformance.precision4(rl, om)
     print('Prec. (new2)\t= {:.6f}'.format(precision4_score))

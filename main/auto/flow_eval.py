@@ -122,12 +122,11 @@ def execute(setup, seq_ix, exp_dirpath):
     # TODO: Hard-coded evalution measure (TBD) cont.
     # 2. (New) Fitness & Precision values
     from Evaluation.l2m.conformance import (
-            fitness, rc_measure, precision2, precision1, precision3, precision4)
+        fitness, rc_measure, precision2, precision1, precision4)
     fitness = fitness(rl, om)
     rc_measure = rc_measure(rl, om)
     precision2 = precision2(rl, om)
     precision1 = precision1(rl, om)
-    precision3 = precision3(rl, om)
     precision4 = precision4(rl, om)
 
     # 3. Overlapping Density & Overlapping Diversity (avg.)
@@ -154,7 +153,7 @@ def execute(setup, seq_ix, exp_dirpath):
 
     return ('{}-{}'.format(discoverer_name, assigner_name), 
             silhouette, 
-            k, fitness, rc_measure, precision2, precision1, precision3,
+            k, fitness, rc_measure, precision2, precision1,
             precision4,
             ov_density, avg_ov_diversity)
 

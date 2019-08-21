@@ -213,6 +213,7 @@ def precision2(rl, om):
 
     return F_conformed_res_events / F_allowed_res_events
 
+# [DEPRECATED] This definition and implementation are problematic even for the idea itself.
 # precision (event level; resource perspective; PREVIOUS ONE REVISED)
 def precision3(rl, om):
     '''Calculate the precision of an organizational model against a given
@@ -232,31 +233,33 @@ def precision3(rl, om):
         float
             The result precision value.
     '''
+    exit('Deprecated.')
     n_events = len(rl) # "|E_res|"
     precision = 0.0
     mode_occurrence = rl.groupby([
         'case_type', 'activity_type', 'time_type']).size().to_dict()
     for r, events in rl.groupby('resource'):
-        wt_r = len(events) / n_events
-        precision_r = 0.0
-        #n_r_conformed_events = len(events[
-        #    events.apply(lambda e: _is_conformed_event(e, om), axis=1)])
-        r_conformed_events = events[
-            events.apply(lambda e: _is_conformed_event(e, om), axis=1)]
-        r_conformed_events_gb = r_conformed_events.groupby([
-            'case_type', 'activity_type', 'time_type'])
+        if r in om.resources():
+            # NOTE: the definition of weighting is inappropriate.
+            wt_r = len(events) / n_events
+            precision_r = 0.0
+            #n_r_conformed_events = len(events[
+            #    events.apply(lambda e: _is_conformed_event(e, om), axis=1)])
+            r_conformed_events = events[
+                events.apply(lambda e: _is_conformed_event(e, om), axis=1)]
+            r_conformed_events_gb = r_conformed_events.groupby([
+                'case_type', 'activity_type', 'time_type'])
+            r_allowed_modes = om.find_execution_modes(r)
+            for mode in r_allowed_modes:
+                if mode in r_conformed_events_gb.groups:
+                    precision_r += (
+                        len(r_conformed_events_gb.get_group(mode)) /
+                        mode_occurrence[mode])
 
-        r_allowed_modes = om.find_execution_modes(r)
-        for mode in r_allowed_modes:
-            if mode in r_conformed_events_gb.groups:
-                precision_r += (
-                    len(r_conformed_events_gb.get_group(mode)) /
-                    mode_occurrence[mode])
-
-        #n_r_allowed_events = sum(
-        #    mode_occurrence[mode] for mode in r_allowed_modes)
-        #precision += (wt_r * n_r_conformed_events / n_r_allowed_events)
-        precision += wt_r * (precision_r / len(r_allowed_modes))
+            #n_r_allowed_events = sum(
+            #    mode_occurrence[mode] for mode in r_allowed_modes)
+            #precision += (wt_r * n_r_conformed_events / n_r_allowed_events)
+            precision += wt_r * (precision_r / len(r_allowed_modes))
     return precision
 
 # precision (event level; resource perspective; PREVIOUS ONE REVISED, new)
@@ -305,8 +308,8 @@ def precision4(rl, om):
                 # give reward
                 precision += (n_cand_E + 1 - n_cand_e) / n_cand_E
             else:
-                # give penalty
-                precision -= n_cand_e / n_cand_E
+                # NOTE: no extra penalty is given
+                precision += 0.0
 
     precision *= 1 / n_allowed_events
 

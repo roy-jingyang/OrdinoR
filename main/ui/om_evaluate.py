@@ -31,22 +31,22 @@ if __name__ == '__main__':
     from Evaluation.l2m import conformance
     measure_values = list()
     print('-' * 80)
-    # TODO: debugging use
     '''
+    # TODO: debugging use
     ogs = om.find_all_groups()
     print('Pct. of solo group\t= {:.1%}'.format(
         sum(1 for og in ogs if len(og) == 1) / len(ogs)))
+    '''
     print('-' * 80)
     fitness_score = conformance.fitness(rl, om)
     print('Fitness\t\t= {:.6f}'.format(fitness_score))
-    #measure_values.append(fitness_score)
+    measure_values.append(fitness_score)
     print()
     '''
     rc_measure_score = conformance.rc_measure(rl, om)
     print('rc-measure\t= {:.6f}'.format(rc_measure_score))
     measure_values.append(rc_measure_score)
     print()
-    '''
     precision2_score = conformance.precision2(rl, om)
     print('Prec. (freq)\t= {:.6f}'.format(precision2_score))
     measure_values.append(precision2_score)
@@ -86,6 +86,6 @@ if __name__ == '__main__':
     measure_values.append(ov_density)
     measure_values.append(avg_ov_diversity)
     print('-' * 80)
-    print(','.join(str(x) for x in measure_values))
     '''
+    print(','.join(str(x) for x in measure_values))
 

@@ -282,10 +282,12 @@ if __name__ == '__main__':
     print('Prec. (no freq)\t= {:.6f}'.format(precision1_score))
     measure_values.append(precision1_score)
 
+    '''
     precision3_score = conformance.precision3(rl, om)
     print('Prec. (new)\t= {:.6f}'.format(precision3_score))
     measure_values.append(precision3_score)
     print()
+    '''
 
     # Overlapping Density & Overlapping Diversity (avg.)
     k = om.size()
