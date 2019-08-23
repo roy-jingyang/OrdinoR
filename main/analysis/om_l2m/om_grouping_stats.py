@@ -26,12 +26,29 @@ if __name__ == '__main__':
     print('{} resources IN {} groups.'.format(
         n_resources, n_groups))
     print()
+
+    # NOTE: debug use only
+    '''
+    for group_id in om._rg.keys():
+        print('Group "{}":\t{} resources,\t{} modes linked'.format(
+            group_id, len(om._mem[group_id]), len(om._cap[group_id])))
+    print()
+    '''
+    n_modes = 0
+    for r in resources:
+        print('Resource "{}":\t{} modes linked'.format(
+            r, len(om.find_execution_modes(r))))
+        n_modes += len(om.find_execution_modes(r))
+    print()
+
     '''
     # contents of groups
     for i, g in enumerate(groups):
         print('Group #{}:\t'.format(i), end='')
         print(sorted(g))
     print()
+    '''
+
     '''
     # size of groups
     group_size = defaultdict(lambda: 0)
@@ -69,6 +86,5 @@ if __name__ == '__main__':
     print(print_str_count)
     print('{:.3f}'.format(sum(len(g) for g in groups) / n_groups))
     print('***** Copy the string above to MS Excel *****')
-
-
+    '''
 

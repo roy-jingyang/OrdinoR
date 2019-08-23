@@ -260,26 +260,29 @@ def link_partitioning(
                 f_pajek_net.write('{} {} {:.9f}\n'.format(i + 1, j + 1, w_ij))
                 f_pajek_net.write('{} {} {:.9f}\n'.format(j + 1, i + 1, w_ji))
 
-    # step 2. Run Leiden (improved Louvain) algorithm to discover communities
+    # step 2. Run Louvain algorithm to discover communities
     # convert the graph to igraph format
     from igraph import Graph as iGraph
     ln_igraph = iGraph.Read_Pajek(tmp_file_path)
     from os import remove
     remove(tmp_file_path)
 
-    # apply detection algorithm
-    from leidenalg import find_partition
-    from leidenalg import RBConfigurationVertexPartition as partition
+    import louvain
+    louvain.set_rng_seed(0)
+    optimiser = louvain.Optimiser()
     # search the resolution parameter using bisection
     lo = 0.5
     hi = 1.0
     eps = 0.01
     while (lo + hi) / 2 > eps:
         mid = (lo + hi) / 2
-        ln_communities = find_partition(ln_igraph, 
-                partition,
-                weights='weight', n_iterations=-1, seed=0,
-                resolution_parameter=mid)
+        partition = louvain.RBConfigurationVertexPartition(
+            ln_igraph, weights='weight', resolution_parameter=mid)
+        diff_inc = 1
+        while diff_inc > 0:
+            diff_inc = optimiser.optimise_partition(partition)
+        ln_communities = partition
+
         if len(ln_communities) == n_groups:
             break
         elif len(ln_communities) < n_groups:

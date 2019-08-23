@@ -11,15 +11,15 @@ if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        el = read_disco_csv(f)
-        #el = read_disco_csv(f, mapping={'(case) LoanGoal': 8})
+        #el = read_disco_csv(f)
+        el = read_disco_csv(f, mapping={'(case) LoanGoal': 7})
 
     # learn execution modes and convert to resource log
     from ExecutionModeMiner.naive_miner import ATonlyMiner
     from ExecutionModeMiner.naive_miner import CTonlyMiner
     from ExecutionModeMiner.naive_miner import ATCTMiner
-    naive_exec_mode_miner = ATonlyMiner(el)
-    #naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
+    #naive_exec_mode_miner = ATonlyMiner(el)
+    naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
 
     rl = naive_exec_mode_miner.derive_resource_log(el)
 
@@ -42,7 +42,6 @@ if __name__ == '__main__':
     print('Fitness\t\t= {:.6f}'.format(fitness_score))
     measure_values.append(fitness_score)
     print()
-    '''
     rc_measure_score = conformance.rc_measure(rl, om)
     print('rc-measure\t= {:.6f}'.format(rc_measure_score))
     measure_values.append(rc_measure_score)
@@ -54,17 +53,11 @@ if __name__ == '__main__':
     print('Prec. (no freq)\t= {:.6f}'.format(precision1_score))
     measure_values.append(precision1_score)
     print()
-    precision3_score = conformance.precision3(rl, om)
-    print('Prec. (new)\t= {:.6f}'.format(precision3_score))
-    measure_values.append(precision3_score)
-    print()
-    '''
     precision4_score = conformance.precision4(rl, om)
     print('Prec. (new2)\t= {:.6f}'.format(precision4_score))
     measure_values.append(precision4_score)
     print()
 
-    '''
     # Overlapping Density & Overlapping Diversity (avg.)
     k = om.size()
     resources = om.resources()
@@ -86,6 +79,5 @@ if __name__ == '__main__':
     measure_values.append(ov_density)
     measure_values.append(avg_ov_diversity)
     print('-' * 80)
-    '''
     print(','.join(str(x) for x in measure_values))
 

@@ -167,7 +167,6 @@ if __name__ == '__main__':
 
     n_tests = 1
     name = ''
-    n_measures = 9
 
     l_test_results = list()
     execute_time = list()

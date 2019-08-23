@@ -87,7 +87,6 @@ if __name__ == '__main__':
                     for e in events.itertuples()))
 
     elif mining_option == 103:
-        exit('Deprecated.')
         #from ExecutionModeMiner.naive_miner import ATonlyMiner
         #naive_exec_mode_miner = ATonlyMiner(el)
         from ExecutionModeMiner.naive_miner import ATCTMiner

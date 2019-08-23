@@ -11,34 +11,27 @@ if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        el = read_disco_csv(f)
+        #el = read_disco_csv(f)
+        el = read_disco_csv(f, mapping={'(case) LoanGoal': 7})
 
     # learn execution modes and convert to resource log
-    from ExecutionModeMiner.naive_miner import NaiveActivityNameExecutionModeMiner
-    naive_exec_mode_miner = NaiveActivityNameExecutionModeMiner(el)
+    from ExecutionModeMiner.naive_miner import ATonlyMiner
+    from ExecutionModeMiner.naive_miner import ATCTMiner
+    #naive_exec_mode_miner = ATonlyMiner(el)
+    naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
     rl = naive_exec_mode_miner.derive_resource_log(el)
 
-    from ResourceProfiler.raw_profiler import performer_activity_frequency
-    profiles = performer_activity_frequency(rl, use_log_scale=False)
+    from ResourceProfiler.raw_profiler import count_execution_frequency
+    profiles = count_execution_frequency(rl, scale='log')
 
     # specify the number of tests to be performed to check consistency
     n_tests = 10
-    #from OrganizationalModelMiner.disjoint.graph_partitioning import mja
-    #from OrganizationalModelMiner.hierarchical.clustering import ahc
-    from OrganizationalModelMiner.overlap.community_detection import link_partitioning
-    from OrganizationalModelMiner.overlap.clustering import gmm
-    from OrganizationalModelMiner.overlap.clustering import moc
-    from OrganizationalModelMiner.overlap.clustering import fcm
+    from OrganizationalModelMiner.community.overlap import link_partitioning
 
     prev_ogs = None
     succ = True
     for t in range(n_tests):
-        #ogs = mja(profiles, range(5, 6), metric='correlation')
-        #ogs, _ = ahc(profiles, range(5, 6), method='ward')
-        ogs = link_partitioning(profiles, metric='correlation')
-        #ogs = gmm(profiles, range(5, 6), init='ahc', threshold=None)
-        #ogs = moc(profiles, range(5, 6), init='ahc')
-        #ogs = fcm(profiles, range(5, 6), init='ahc', threshold=None)
+        ogs = link_partitioning(profiles, n_groups=10, metric='correlation')
         
         if t != 0:
             # compare

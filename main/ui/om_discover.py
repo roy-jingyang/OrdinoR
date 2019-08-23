@@ -128,8 +128,11 @@ if __name__ == '__main__':
             ogs = overlap.clique_percolation(
                     profiles, metric='correlation')
         elif method_option == 1:
+            print('Input the desired number of groups to be discovered:', end=' ')
+            num_groups = int(input())
+
             ogs = overlap.link_partitioning(
-                    profiles, metric='correlation')
+                    profiles, num_groups, metric='correlation')
         elif method_option == 2:
             ogs = overlap.local_expansion(
                     profiles, metric='correlation')
@@ -282,12 +285,10 @@ if __name__ == '__main__':
     print('Prec. (no freq)\t= {:.6f}'.format(precision1_score))
     measure_values.append(precision1_score)
 
-    '''
-    precision3_score = conformance.precision3(rl, om)
-    print('Prec. (new)\t= {:.6f}'.format(precision3_score))
-    measure_values.append(precision3_score)
+    precision4_score = conformance.precision4(rl, om)
+    print('Prec. (new)\t= {:.6f}'.format(precision4_score))
+    measure_values.append(precision4_score)
     print()
-    '''
 
     # Overlapping Density & Overlapping Diversity (avg.)
     k = om.size()
