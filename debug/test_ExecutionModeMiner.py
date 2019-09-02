@@ -6,8 +6,8 @@ sys.path.append('./src/')
 
 # import methods to be tested below
 from IO.reader import read_disco_csv
-from ExecutionModeMiner.naive_miner import ATonlyMiner
-from ExecutionModeMiner.naive_miner import ATCTMiner
+from ExecutionModeMiner.direct_groupby import ATonlyMiner
+from ExecutionModeMiner.direct_groupby import ATCTMiner
 
 # List input parameters from shell
 filename_input = sys.argv[1]

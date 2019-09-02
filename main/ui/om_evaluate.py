@@ -15,9 +15,9 @@ if __name__ == '__main__':
         el = read_disco_csv(f, mapping={'(case) LoanGoal': 7})
 
     # learn execution modes and convert to resource log
-    from ExecutionModeMiner.naive_miner import ATonlyMiner
-    from ExecutionModeMiner.naive_miner import CTonlyMiner
-    from ExecutionModeMiner.naive_miner import ATCTMiner
+    from ExecutionModeMiner.direct_groupby import ATonlyMiner
+    from ExecutionModeMiner.direct_groupby import CTonlyMiner
+    from ExecutionModeMiner.direct_groupby import ATCTMiner
     #naive_exec_mode_miner = ATonlyMiner(el)
     naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
 
