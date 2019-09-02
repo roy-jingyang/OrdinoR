@@ -14,15 +14,19 @@ from abc import ABC, abstractmethod
 
 class BaseMiner(ABC):
     '''This abstract class implements the definition of the data structure for
-    case/activity/time types as python dicts, which contain the mappings from
-    case/activity/time types to their corresponding identifiers.
+    case/activity/time types as python dicts, which contain the mappings from 
+    case/activity/time identifiers to their corresponding types.
     '''
-
     _ctypes = dict()
+    _n_ctypes = None
     is_ctypes_verified = False
+
     _atypes = dict()
+    _n_atypes = None
     is_atypes_verified = False
+
     _ttypes = dict()
+    _n_ttypes = None
     is_ttypes_verified = False
 
     def __init__(self, el):
@@ -96,6 +100,10 @@ class BaseMiner(ABC):
         an event in the source event log exactly (even if the resource log is a
         multiset).
 
+        Note that, such 'resource event's are required to contain resource
+        information, i.e. events with no resource information in the source 
+        event log will be implicitly discarded.
+
         Parameters
         ----------
         el : DataFrame
@@ -109,15 +117,33 @@ class BaseMiner(ABC):
         '''
         pass
 
+    def verify_partition(self, whole_set, partitioning):
+        '''Verify if the given partitioning (as a dict) is indeed a
+        partitioning of values of the given set.
+
+        Parameters
+        ----------
+        whole_set : set
+        partitioning : dict
+
+        Returns
+        -------
+        : a boolean flag 
+        '''
+        # since it is given as a dict, clusters are naturally mutual exclusive
+        is_disjoint = True
+        is_union = set(partitioning.keys()) == whole_set
+        return is_disjoint and is_union
+
     def verify(self):
         if (self.is_ctypes_verified and self.is_atypes_verified and
                 self.is_ttypes_verified):
             print('-' * 80)
             print('Count of Types in the current {}:'.format(
                 self.__class__.__name__))
-            print('Number of C Types:\t\t{}'.format(len(self._ctypes)))
-            print('Number of A Types:\t\t{}'.format(len(self._atypes)))
-            print('Number of T Types:\t\t{}'.format(len(self._ttypes)))
+            print('Number of C Types:\t\t{}'.format(self._n_ctypes))
+            print('Number of A Types:\t\t{}'.format(self._n_atypes))
+            print('Number of T Types:\t\t{}'.format(self._n_ttypes))
             print('-' * 80)
         else:
             print('C Types:\t{}'.format('VERIFIED' if self.is_ctypes_verified

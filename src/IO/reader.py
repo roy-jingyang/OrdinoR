@@ -105,22 +105,3 @@ def read_disco_csv(f, mapping=None, header=True):
 def read_xes(f):
     pass
 
-def read_mxml(f):
-    pass
-
-# 2. Import an organizational model
-# TODO: [Deprecated]
-def read_org_model_csv_old(fn, encoding='utf-8'):
-    from collections import defaultdict
-    model = defaultdict(set)
-    with open(fn, 'r', encoding=encoding) as f:
-        is_header_line = True
-        for row in csv.reader(f):
-            if is_header_line:
-                is_header_line = False
-            else:
-                for r in row[2].split(';'):
-                    model[row[0]].add(r)
-
-    return model
-

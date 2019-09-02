@@ -2,9 +2,11 @@
 
 '''
 This module contains the implementations of some naive execution mode learning
-methods:
+methods that derive C/A/T types directly based on grouping over attribute 
+values accessible in the log data:
     - ATonlyMiner (AT only)
     - ATCTMiner (AT + CT)
+    - ATTTMiner (AT + TT)
 '''
 
 from .base import BaseMiner
@@ -20,21 +22,14 @@ class ATonlyMiner(BaseMiner):
         pass
     
     def _build_atypes(self, el):
-        # designate the partitioning (on A)
-        # (map each activity names to itself)
-        par = [{a} for a in sorted(el['activity'].unique())]
-
-        # validate the partitioning
-        is_disjoint = set.intersection(*par) == set()
-        is_union = set.union(*par) == set(el['activity'])
-
+        # map each activity names to itself
         # build types
-        if is_disjoint and is_union:
-            for i, values in enumerate(par):
-                self._atypes['AT.{}'.format(i)] = values.copy()
-            self.is_atypes_verified = True
-        else:
-            self.is_atypes_verified = False
+        for event in el.itertuples():
+            self._atypes[event.activity] = 'AT.{}'.format(event.activity)
+        self._n_atypes = len(set(self._atypes.values()))
+
+        self.is_atypes_verified = self.verify_partition(
+            set(el['activity']), self._atypes)
 
     def _build_ttypes(self, el):
         # ignoring the time dimension: all events are of the same time type.
@@ -42,22 +37,17 @@ class ATonlyMiner(BaseMiner):
         pass
 
     def derive_resource_log(self, el):
-        # construct reversed dict: A -> AT
-        rev_atypes = dict()
-        for type_name, type_value in self._atypes.items():
-            for v in type_value:
-                rev_atypes[v] = type_name
-
         # iterate through all events in the original log and convert
         # Note: only E_res (resource events) should be considered
         rl = list()
         for event in el.itertuples(): # keep order
-            rl.append({
-                'resource': event.resource,
-                'case_type': '',
-                'activity_type': rev_atypes[event.activity],
-                'time_type': ''
-            })
+            if event.resource != '' and event.resource is not None:
+                rl.append({
+                    'resource': event.resource,
+                    'case_type': '',
+                    'activity_type': self._atypes[event.activity],
+                    'time_type': ''
+                })
 
         from pandas import DataFrame
         return DataFrame(rl)
@@ -74,8 +64,7 @@ class CTonlyMiner(BaseMiner):
         self.verify()
 
     def _build_ctypes(self, el, case_attr_name):
-        # designate the partitioning (on C)
-        # (map the values of a specified attribute to case_ids)
+        # map the values of a specified attribute to case_ids
         par = list()
         # 1) directly let each value correspond to a category (type)
         for v, events in el.groupby(case_attr_name): # sorted by default
@@ -91,17 +80,14 @@ class CTonlyMiner(BaseMiner):
             par.append(set(events['case_id']))
         '''
 
-        # validate the partitioning
-        is_disjoint = set.intersection(*par) == set()
-        is_union = set.union(*par) == set(el['case_id'])
-
         # build types
-        if is_disjoint and is_union:
-            for i, values in enumerate(par):
-                self._ctypes['CT.{}'.format(i)] = values.copy()
-            self.is_ctypes_verified = True
-        else:
-            self.is_ctypes_verified = False
+        for i, values in enumerate(par):
+            for v in values:
+                self._ctypes[v] = 'CT.{}'.format(i)
+        self._n_ctypes = len(set(self._ctypes.values()))
+
+        self.is_ctypes_verified = self.verify_partition(
+            set(el['case_id']), self._ctypes)
 
     def _build_atypes(self, el):
         # ignoring the activity dimension: all events are of the same act type.
@@ -114,22 +100,17 @@ class CTonlyMiner(BaseMiner):
         pass
 
     def derive_resource_log(self, el):
-        # construct reversed dict: C -> CT
-        rev_ctypes = dict()
-        for type_name, type_value in self._ctypes.items():
-            for v in type_value:
-                rev_ctypes[v] = type_name
-
         # iterate through all events in the original log and convert
         # Note: only E_res (resource events) should be considered
         rl = list()
         for event in el.itertuples(): # keep order
-            rl.append({
-                'resource': event.resource,
-                'case_type': rev_ctypes[event.case_id],
-                'activity_type': '',
-                'time_type': ''
-            })
+            if event.resource != '' and event.resource is not None:
+                rl.append({
+                    'resource': event.resource,
+                    'case_type': self._ctypes[event.case_id],
+                    'activity_type': '',
+                    'time_type': ''
+                })
 
         from pandas import DataFrame
         return DataFrame(rl)
@@ -147,8 +128,7 @@ class ATCTMiner(ATonlyMiner):
         self.verify()
 
     def _build_ctypes(self, el, case_attr_name):
-        # designate the partitioning (on C)
-        # (map the values of a specified attribute to case_ids)
+        # map the values of a specified attribute to case_ids
         par = list()
         # 1) directly let each value correspond to a category (type)
         for v, events in el.groupby(case_attr_name): # sorted by default
@@ -164,40 +144,67 @@ class ATCTMiner(ATonlyMiner):
             par.append(set(events['case_id']))
         '''
 
-        # validate the partitioning
-        is_disjoint = set.intersection(*par) == set()
-        is_union = set.union(*par) == set(el['case_id'])
-
         # build types
-        if is_disjoint and is_union:
-            for i, values in enumerate(par):
-                self._ctypes['CT.{}'.format(i)] = values.copy()
-            self.is_ctypes_verified = True
-        else:
-            self.is_ctypes_verified = False
+        for i, values in enumerate(par):
+            for v in values:
+                self._ctypes[v] = 'CT.{}'.format(i)
+        self._n_ctypes = len(set(self._ctypes.values()))
+
+        self.is_ctypes_verified = self.verify_partition(
+            set(el['case_id']), self._ctypes)
 
     def derive_resource_log(self, el):
-        # construct reversed dict: A -> AT
-        rev_atypes = dict()
-        for type_name, type_value in self._atypes.items():
-            for v in type_value:
-                rev_atypes[v] = type_name
-        # construct reversed dict: C -> CT
-        rev_ctypes = dict()
-        for type_name, type_value in self._ctypes.items():
-            for v in type_value:
-                rev_ctypes[v] = type_name
-
         # iterate through all events in the original log and convert
         # Note: only E_res (resource events) should be considered
         rl = list()
         for event in el.itertuples(): # keep order
-            rl.append({
-                'resource': event.resource,
-                'case_type': rev_ctypes[event.case_id],
-                'activity_type': rev_atypes[event.activity],
-                'time_type': ''
-            })
+            if event.resource != '' and event.resource is not None:
+                rl.append({
+                    'resource': event.resource,
+                    'case_type': self._ctypes[event.case_id],
+                    'activity_type': self._atypes[event.activity],
+                    'time_type': ''
+                })
+
+        from pandas import DataFrame
+        return DataFrame(rl)
+
+class ATTTMiner(ATonlyMiner):
+    '''(AT + TT method) Based on ATonlyMiner (AT only), let each possible value
+    of a designated datetime unit be a time type, ignoring the case dimension.
+    '''
+    
+    def __init__(self, el, resolution, datetime_format='%Y/%m/%d %H:%M:%S.%f'):
+        self._build_ctypes(el)
+        self._build_atypes(el)
+        self._build_ttypes(el, resolution, datetime_format)
+        self.verify()
+
+    def _build_ttypes(self, el, resolution, datetime_format):
+        # build types
+        from datetime import datetime
+        from operator import attrgetter
+        for event in el.itertuples():
+            dt = datetime.strptime(event.timestamp, datetime_format)
+            self._ttypes[event.timestamp] = 'TT.{}'.format(
+                attrgetter(resolution)(dt))
+        self._n_ttypes = len(set(self._ttypes.values()))
+
+        self.is_ttypes_verified = self.verify_partition(
+            set(el['timestamp']), self._ttypes)
+
+    def derive_resource_log(self, el):
+        # iterate through all events in the original log and convert
+        # Note: only E_res (resource events) should be considered
+        rl = list()
+        for event in el.itertuples(): # keep order
+            if event.resource != '' and event.resource is not None:
+                rl.append({
+                    'resource': event.resource,
+                    'case_type': '',
+                    'activity_type': self._atypes[event.activity],
+                    'time_type': self._ttypes[event.timestamp],
+                })
 
         from pandas import DataFrame
         return DataFrame(rl)

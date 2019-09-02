@@ -18,9 +18,11 @@ if __name__ == '__main__':
     from ExecutionModeMiner.direct_groupby import ATonlyMiner
     from ExecutionModeMiner.direct_groupby import CTonlyMiner
     from ExecutionModeMiner.direct_groupby import ATCTMiner
-    naive_exec_mode_miner = ATonlyMiner(el)
+    from ExecutionModeMiner.direct_groupby import ATTTMiner
+    #naive_exec_mode_miner = ATonlyMiner(el)
     #naive_exec_mode_miner = CTonlyMiner(el, case_attr_name='product')
     #naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
+    naive_exec_mode_miner = ATTTMiner(el, resolution='day')
 
     rl = naive_exec_mode_miner.derive_resource_log(el)
 
