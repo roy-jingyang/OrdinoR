@@ -2,63 +2,17 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import csv
+sys.path.append('./src')
 
 fn_event_log = sys.argv[1]
-def read_disco_csv(f, mapping=None, header=True):
-    '''
-    Params:
-        f: file object
-            File object of the event log being imported.
-        mapping: dict, optional
-            A python dictionary that denotes the mapping from CSV column
-            numbers to event log attributes.
-        header: boolean, optional
-            True if the event log file contains a header line, False otherwise.
-    Returns:
-        el: DataFrame
-            The event log in pandas DataFrame form.
-    '''
-
-    ld = list()
-    is_header_line = True
-    line_count = 0
-
-    for row in csv.reader(f):
-        line_count += 1
-        if is_header_line:
-            is_header_line = False
-            pass
-        else:
-            # the default mapping is defined as below
-            e = {
-                'case_id': row[0],
-                'activity': row[1],
-                'resource': row[2],
-                'timestamp': row[3]
-            }
-            # add addtional attributes mapping specified
-            if mapping is not None:
-                for attr, col_num in mapping.items():
-                    if attr not in e:
-                        e[attr] = row[col_num]
-
-            ld.append(e)
-
-    from pandas import DataFrame
-    el = DataFrame(ld)
-
-    print('Imported successfully. {} lines scanned.'.format(line_count))
-
-    return el
 
 if __name__ == '__main__':
     # read event log as input
     # specify the additional attributes included in each input event log
-
+    from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        #el = read_disco_csv(f)
-        el = read_disco_csv(f, mapping={'(case) AMOUNT_REQ': -3})
+        el = read_disco_csv(f)
+        #el = read_disco_csv(f, mapping={'(case) AMOUNT_REQ': -3})
 
     from collections import defaultdict
     from numpy import mean

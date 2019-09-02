@@ -22,8 +22,6 @@ class ATonlyMiner(BaseMiner):
         pass
     
     def _build_atypes(self, el):
-        # map each activity names to itself
-        # build types
         for event in el.itertuples():
             self._atypes[event.activity] = 'AT.{}'.format(event.activity)
         self._n_atypes = len(set(self._atypes.values()))
@@ -64,7 +62,6 @@ class CTonlyMiner(BaseMiner):
         self.verify()
 
     def _build_ctypes(self, el, case_attr_name):
-        # map the values of a specified attribute to case_ids
         par = list()
         # 1) directly let each value correspond to a category (type)
         for v, events in el.groupby(case_attr_name): # sorted by default
@@ -79,8 +76,6 @@ class CTonlyMiner(BaseMiner):
             bins=list(range(-1, 50000, 5000)) + [100000])):
             par.append(set(events['case_id']))
         '''
-
-        # build types
         for i, values in enumerate(par):
             for v in values:
                 self._ctypes[v] = 'CT.{}'.format(i)
@@ -128,7 +123,6 @@ class ATCTMiner(ATonlyMiner):
         self.verify()
 
     def _build_ctypes(self, el, case_attr_name):
-        # map the values of a specified attribute to case_ids
         par = list()
         # 1) directly let each value correspond to a category (type)
         for v, events in el.groupby(case_attr_name): # sorted by default
@@ -143,8 +137,6 @@ class ATCTMiner(ATonlyMiner):
             bins=list(range(-1, 50000, 5000)) + [100000])):
             par.append(set(events['case_id']))
         '''
-
-        # build types
         for i, values in enumerate(par):
             for v in values:
                 self._ctypes[v] = 'CT.{}'.format(i)
@@ -181,7 +173,6 @@ class ATTTMiner(ATonlyMiner):
         self.verify()
 
     def _build_ttypes(self, el, resolution, datetime_format):
-        # build types
         from datetime import datetime
         from operator import attrgetter
         for event in el.itertuples():
