@@ -1,0 +1,71 @@
+Case ID,Activity,Resource,Complete Timestamp,Variant,Variant index,concept:instance,concept:name,lifecycle:transition,org:group,org:resource,time:timestamp
+case-4771,Confirmation of receipt,Resource10,2010/12/17 19:17:03.921,Variant 1,1,task-4226,Confirmation of receipt,complete,Group 1,Resource10,2010-12-17T19:17:03.921+10:00
+case-4771,T02 Check confirmation of receipt,Resource10,2010/12/17 19:27:20.636,Variant 1,1,task-4767,T02 Check confirmation of receipt,complete,Group 4,Resource10,2010-12-17T19:27:20.636+10:00
+case-4771,T04 Determine confirmation of receipt,Resource10,2010/12/17 19:38:48.972,Variant 1,1,task-4816,T04 Determine confirmation of receipt,complete,Group 3,Resource10,2010-12-17T19:38:48.972+10:00
+case-4771,T05 Print and send confirmation of receipt,admin1,2010/12/30 22:07:43.684,Variant 1,1,task-4849,T05 Print and send confirmation of receipt,complete,Group 2,admin1,2010-12-30T22:07:43.684+10:00
+case-4771,T06 Determine necessity of stop advice,Resource15,2011/01/04 19:24:29.864,Variant 1,1,task-4768,T06 Determine necessity of stop advice,complete,EMPTY,Resource15,2011-01-04T19:24:29.864+10:00
+case-4771,T07-3 Draft intern advice hold for aspect 3,Resource35,2011/01/11 19:24:48.073,Variant 1,1,task-6660,T07-3 Draft intern advice hold for aspect 3,complete,Group 14,Resource35,2011-01-11T19:24:48.073+10:00
+case-4771,T07-2 Draft intern advice aspect 2,Resource33,2011/01/12 00:14:25.680,Variant 1,1,task-6661,T07-2 Draft intern advice aspect 2,complete,EMPTY,Resource33,2011-01-12T00:14:25.680+10:00
+case-4771,T06 Determine necessity of stop advice,Resource15,2011/01/13 20:07:20.473,Variant 1,1,task-7779,T06 Determine necessity of stop advice,complete,EMPTY,Resource15,2011-01-13T20:07:20.473+10:00
+case-4771,T07-3 Draft intern advice hold for aspect 3,Resource15,2011/01/13 20:07:45.604,Variant 1,1,task-8070,T07-3 Draft intern advice hold for aspect 3,complete,Group 14,Resource15,2011-01-13T20:07:45.604+10:00
+case-4771,T07-2 Draft intern advice aspect 2,Resource15,2011/01/13 20:07:57.393,Variant 1,1,task-8071,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource15,2011-01-13T20:07:57.393+10:00
+case-4771,T06 Determine necessity of stop advice,Resource15,2011/01/13 20:08:12.119,Variant 1,1,task-8073,T06 Determine necessity of stop advice,complete,Group 1,Resource15,2011-01-13T20:08:12.119+10:00
+case-4771,T07-3 Draft intern advice hold for aspect 3,Resource15,2011/01/13 20:08:28.915,Variant 1,1,task-8074,T07-3 Draft intern advice hold for aspect 3,complete,Group 14,Resource15,2011-01-13T20:08:28.915+10:00
+case-4771,T07-2 Draft intern advice aspect 2,Resource15,2011/01/13 20:08:39.178,Variant 1,1,task-8075,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource15,2011-01-13T20:08:39.178+10:00
+case-4771,T06 Determine necessity of stop advice,Resource15,2011/01/13 20:09:01.790,Variant 1,1,task-8076,T06 Determine necessity of stop advice,complete,Group 1,Resource15,2011-01-13T20:09:01.790+10:00
+case-4771,T10 Determine necessity to stop indication,Resource15,2011/01/13 20:09:20.055,Variant 1,1,task-8078,T10 Determine necessity to stop indication,complete,Group 1,Resource15,2011-01-13T20:09:20.055+10:00
+case-4808,Confirmation of receipt,Resource10,2010/12/17 19:22:08.980,Variant 2,2,task-4647,Confirmation of receipt,complete,Group 1,Resource10,2010-12-17T19:22:08.980+10:00
+case-4808,T02 Check confirmation of receipt,Resource10,2010/12/17 19:28:40.301,Variant 2,2,task-4792,T02 Check confirmation of receipt,complete,Group 4,Resource10,2010-12-17T19:28:40.301+10:00
+case-4808,T04 Determine confirmation of receipt,Resource10,2010/12/17 19:38:33.422,Variant 2,2,task-4820,T04 Determine confirmation of receipt,complete,Group 3,Resource10,2010-12-17T19:38:33.422+10:00
+case-4808,T06 Determine necessity of stop advice,Resource15,2010/12/24 19:50:19.906,Variant 2,2,task-4793,T06 Determine necessity of stop advice,complete,EMPTY,Resource15,2010-12-24T19:50:19.906+10:00
+case-4808,T05 Print and send confirmation of receipt,admin1,2010/12/30 22:07:27.346,Variant 2,2,task-4848,T05 Print and send confirmation of receipt,complete,Group 2,admin1,2010-12-30T22:07:27.346+10:00
+case-4808,T07-2 Draft intern advice aspect 2,Resource29,2011/01/18 23:18:44.152,Variant 2,2,task-5613,T07-2 Draft intern advice aspect 2,complete,EMPTY,Resource29,2011-01-18T23:18:44.152+10:00
+case-4808,T06 Determine necessity of stop advice,Resource29,2011/01/18 23:19:49.591,Variant 2,2,task-8823,T06 Determine necessity of stop advice,complete,Group 1,Resource29,2011-01-18T23:19:49.591+10:00
+case-4808,T07-2 Draft intern advice aspect 2,Resource29,2011/01/18 23:20:07.827,Variant 2,2,task-8828,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource29,2011-01-18T23:20:07.827+10:00
+case-4808,T06 Determine necessity of stop advice,Resource29,2011/01/18 23:20:39.983,Variant 2,2,task-8829,T06 Determine necessity of stop advice,complete,Group 1,Resource29,2011-01-18T23:20:39.983+10:00
+case-4808,T07-2 Draft intern advice aspect 2,Resource29,2011/01/18 23:21:26.953,Variant 2,2,task-8830,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource29,2011-01-18T23:21:26.953+10:00
+case-4808,T06 Determine necessity of stop advice,Resource29,2011/01/18 23:21:49.421,Variant 2,2,task-8831,T06 Determine necessity of stop advice,complete,Group 1,Resource29,2011-01-18T23:21:49.421+10:00
+case-4808,T07-2 Draft intern advice aspect 2,Resource29,2011/01/18 23:22:23.694,Variant 2,2,task-8833,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource29,2011-01-18T23:22:23.694+10:00
+case-4808,T06 Determine necessity of stop advice,Resource29,2011/01/18 23:22:55.328,Variant 2,2,task-8834,T06 Determine necessity of stop advice,complete,Group 1,Resource29,2011-01-18T23:22:55.328+10:00
+case-4808,T07-2 Draft intern advice aspect 2,Resource29,2011/01/18 23:24:31.856,Variant 2,2,task-8835,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource29,2011-01-18T23:24:31.856+10:00
+case-4808,T06 Determine necessity of stop advice,Resource15,2011/01/19 19:43:13.997,Variant 2,2,task-8837,T06 Determine necessity of stop advice,complete,Group 7,Resource15,2011-01-19T19:43:13.997+10:00
+case-4808,T07-2 Draft intern advice aspect 2,Resource15,2011/01/19 19:43:31.437,Variant 2,2,task-8929,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource15,2011-01-19T19:43:31.437+10:00
+case-4808,T06 Determine necessity of stop advice,Resource15,2011/01/19 19:43:46.628,Variant 2,2,task-8930,T06 Determine necessity of stop advice,complete,Group 1,Resource15,2011-01-19T19:43:46.628+10:00
+case-4808,T10 Determine necessity to stop indication,Resource15,2011/01/19 19:44:37.479,Variant 2,2,task-8931,T10 Determine necessity to stop indication,complete,Group 1,Resource15,2011-01-19T19:44:37.479+10:00
+case-8989,Confirmation of receipt,Resource12,2011/08/11 22:25:17.524,Variant 3,3,task-35555,Confirmation of receipt,complete,Group 1,Resource12,2011-08-11T22:25:17.524+10:00
+case-8989,T02 Check confirmation of receipt,Resource12,2011/08/11 22:26:04.791,Variant 3,3,task-36294,T02 Check confirmation of receipt,complete,Group 4,Resource12,2011-08-11T22:26:04.791+10:00
+case-8989,T04 Determine confirmation of receipt,Resource12,2011/08/11 22:26:51.380,Variant 3,3,task-36296,T04 Determine confirmation of receipt,complete,Group 3,Resource12,2011-08-11T22:26:51.380+10:00
+case-8989,T05 Print and send confirmation of receipt,Resource12,2011/08/11 22:27:52.790,Variant 3,3,task-36297,T05 Print and send confirmation of receipt,complete,Group 2,Resource12,2011-08-11T22:27:52.790+10:00
+case-8989,T06 Determine necessity of stop advice,Resource12,2011/08/11 22:33:07.403,Variant 3,3,task-36295,T06 Determine necessity of stop advice,complete,Group 1,Resource12,2011-08-11T22:33:07.403+10:00
+case-8989,T07-3 Draft intern advice hold for aspect 3,Resource12,2011/08/11 22:35:16.881,Variant 3,3,task-36299,T07-3 Draft intern advice hold for aspect 3,complete,Group 14,Resource12,2011-08-11T22:35:16.881+10:00
+case-8989,T07-2 Draft intern advice aspect 2,Resource12,2011/08/11 22:45:44.795,Variant 3,3,task-36300,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource12,2011-08-11T22:45:44.795+10:00
+case-8989,T06 Determine necessity of stop advice,Resource12,2011/08/11 22:46:35.333,Variant 3,3,task-36301,T06 Determine necessity of stop advice,complete,Group 1,Resource12,2011-08-11T22:46:35.333+10:00
+case-8989,T07-2 Draft intern advice aspect 2,Resource12,2011/08/11 22:47:03.653,Variant 3,3,task-36303,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource12,2011-08-11T22:47:03.653+10:00
+case-8989,T07-3 Draft intern advice hold for aspect 3,Resource12,2011/08/11 22:47:22.767,Variant 3,3,task-36302,T07-3 Draft intern advice hold for aspect 3,complete,Group 14,Resource12,2011-08-11T22:47:22.767+10:00
+case-8989,T06 Determine necessity of stop advice,Resource12,2011/08/11 22:47:46.348,Variant 3,3,task-36304,T06 Determine necessity of stop advice,complete,Group 1,Resource12,2011-08-11T22:47:46.348+10:00
+case-8989,T10 Determine necessity to stop indication,Resource12,2011/08/11 22:48:34.970,Variant 3,3,task-36305,T10 Determine necessity to stop indication,complete,Group 1,Resource12,2011-08-11T22:48:34.970+10:00
+case-9289,Confirmation of receipt,Resource28,2011/08/31 22:16:45.403,Variant 4,4,task-37428,Confirmation of receipt,complete,EMPTY,Resource28,2011-08-31T22:16:45.403+10:00
+case-9289,T02 Check confirmation of receipt,Resource28,2011/08/31 22:18:49.848,Variant 4,4,task-37713,T02 Check confirmation of receipt,complete,Group 4,Resource28,2011-08-31T22:18:49.848+10:00
+case-9289,T06 Determine necessity of stop advice,Resource28,2011/08/31 22:24:54.608,Variant 4,4,task-37714,T06 Determine necessity of stop advice,complete,Group 1,Resource28,2011-08-31T22:24:54.608+10:00
+case-9289,T08 Draft and send request for advice,Resource28,2011/08/31 23:06:49.707,Variant 4,4,task-37716,T08 Draft and send request for advice,complete,Group 1,Resource28,2011-08-31T23:06:49.707+10:00
+case-9289,T09-3 Process or receive external advice from party 3,Resource28,2011/08/31 23:10:26.204,Variant 4,4,task-37730,T09-3 Process or receive external advice from party 3,complete,Group 1,Resource28,2011-08-31T23:10:26.204+10:00
+case-9289,T04 Determine confirmation of receipt,Resource10,2011/08/31 23:19:13.128,Variant 4,4,task-37715,T04 Determine confirmation of receipt,complete,Group 3,Resource10,2011-08-31T23:19:13.128+10:00
+case-9289,T03 Adjust confirmation of receipt,Resource28,2011/09/01 17:17:53.293,Variant 4,4,task-37733,T03 Adjust confirmation of receipt,complete,Group 1,Resource28,2011-09-01T17:17:53.293+10:00
+case-9289,T02 Check confirmation of receipt,Resource28,2011/09/01 17:18:30.530,Variant 4,4,task-37815,T02 Check confirmation of receipt,complete,Group 4,Resource28,2011-09-01T17:18:30.530+10:00
+case-9289,T04 Determine confirmation of receipt,Resource28,2011/09/01 17:19:59.433,Variant 4,4,task-37816,T04 Determine confirmation of receipt,complete,Group 3,Resource28,2011-09-01T17:19:59.433+10:00
+case-9289,T05 Print and send confirmation of receipt,admin1,2011/09/05 20:47:38.003,Variant 4,4,task-37819,T05 Print and send confirmation of receipt,complete,Group 2,admin1,2011-09-05T20:47:38.003+10:00
+case-9289,T07-2 Draft intern advice aspect 2,Resource28,2011/09/06 21:47:00.452,Variant 4,4,task-37717,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource28,2011-09-06T21:47:00.452+10:00
+case-9289,T06 Determine necessity of stop advice,Resource28,2011/09/06 21:47:37.892,Variant 4,4,task-38084,T06 Determine necessity of stop advice,complete,Group 1,Resource28,2011-09-06T21:47:37.892+10:00
+case-9289,T08 Draft and send request for advice,Resource28,2011/09/06 21:48:32.486,Variant 4,4,task-38085,T08 Draft and send request for advice,complete,Group 1,Resource28,2011-09-06T21:48:32.486+10:00
+case-9289,T09-3 Process or receive external advice from party 3,Resource28,2011/09/06 21:49:06.451,Variant 4,4,task-38087,T09-3 Process or receive external advice from party 3,complete,Group 1,Resource28,2011-09-06T21:49:06.451+10:00
+case-9289,T07-2 Draft intern advice aspect 2,Resource28,2011/09/06 23:32:21.434,Variant 4,4,task-38086,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource28,2011-09-06T23:32:21.434+10:00
+case-9289,T06 Determine necessity of stop advice,Resource28,2011/09/06 23:32:50.799,Variant 4,4,task-38113,T06 Determine necessity of stop advice,complete,Group 1,Resource28,2011-09-06T23:32:50.799+10:00
+case-9289,T07-2 Draft intern advice aspect 2,Resource28,2011/09/06 23:34:32.598,Variant 4,4,task-38115,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource28,2011-09-06T23:34:32.598+10:00
+case-9289,T08 Draft and send request for advice,Resource28,2011/09/06 23:35:00.732,Variant 4,4,task-38114,T08 Draft and send request for advice,complete,Group 1,Resource28,2011-09-06T23:35:00.732+10:00
+case-9289,T09-3 Process or receive external advice from party 3,Resource28,2011/09/06 23:35:27.742,Variant 4,4,task-38116,T09-3 Process or receive external advice from party 3,complete,Group 1,Resource28,2011-09-06T23:35:27.742+10:00
+case-9289,T06 Determine necessity of stop advice,Resource28,2011/09/06 23:35:57.624,Variant 4,4,task-38117,T06 Determine necessity of stop advice,complete,Group 1,Resource28,2011-09-06T23:35:57.624+10:00
+case-9289,T08 Draft and send request for advice,Resource28,2011/09/06 23:36:57.508,Variant 4,4,task-38118,T08 Draft and send request for advice,complete,Group 1,Resource28,2011-09-06T23:36:57.508+10:00
+case-9289,T09-3 Process or receive external advice from party 3,Resource28,2011/09/06 23:37:21.293,Variant 4,4,task-38120,T09-3 Process or receive external advice from party 3,complete,Group 1,Resource28,2011-09-06T23:37:21.293+10:00
+case-9289,T07-2 Draft intern advice aspect 2,Resource28,2011/09/06 23:37:40.982,Variant 4,4,task-38119,T07-2 Draft intern advice aspect 2,complete,Group 15,Resource28,2011-09-06T23:37:40.982+10:00
+case-9289,T06 Determine necessity of stop advice,Resource28,2011/09/06 23:38:06.003,Variant 4,4,task-38121,T06 Determine necessity of stop advice,complete,Group 1,Resource28,2011-09-06T23:38:06.003+10:00
+case-9289,T10 Determine necessity to stop indication,Resource28,2011/09/06 23:41:24.377,Variant 4,4,task-38122,T10 Determine necessity to stop indication,complete,Group 1,Resource28,2011-09-06T23:41:24.377+10:00

@@ -1,0 +1,231 @@
+Case ID,Activity,Resource,Complete Timestamp,Variant,Variant index,(case) channel,(case) department,(case) group,(case) responsible,concept:instance,lifecycle:transition,org:group
+case-5046,Confirmation of receipt,Resource09,2011/01/05 22:50:03.479,Variant 2,2,Internet,General,,Resource09,task-6382,complete,EMPTY
+case-5046,T06 Determine necessity of stop advice,Resource09,2011/01/05 22:51:29.400,Variant 2,2,Internet,General,,Resource09,task-6885,complete,Group 1
+case-5046,T07-2 Draft intern advice aspect 2,Resource25,2011/01/07 23:06:04.017,Variant 2,2,Internet,General,,Resource09,task-6886,complete,EMPTY
+case-5046,T06 Determine necessity of stop advice,Resource09,2011/01/11 23:17:48.704,Variant 2,2,Internet,General,,Resource09,task-7262,complete,Group 1
+case-5046,T07-2 Draft intern advice aspect 2,Resource09,2011/01/11 23:18:59.524,Variant 2,2,Internet,General,,Resource09,task-7718,complete,Group 15
+case-5046,T02 Check confirmation of receipt,Resource24,2011/01/13 19:25:57.769,Variant 2,2,Internet,General,,Resource09,task-6884,complete,EMPTY
+case-5046,T04 Determine confirmation of receipt,Resource24,2011/01/13 19:26:30.641,Variant 2,2,Internet,General,,Resource09,task-8040,complete,Group 3
+case-5046,T06 Determine necessity of stop advice,Resource09,2011/01/17 19:59:36.797,Variant 2,2,Internet,General,,Resource09,task-7723,complete,Group 1
+case-5046,T07-2 Draft intern advice aspect 2,Resource09,2011/01/17 20:00:11.396,Variant 2,2,Internet,General,,Resource09,task-8554,complete,Group 15
+case-5046,T06 Determine necessity of stop advice,Resource09,2011/01/17 20:00:37.651,Variant 2,2,Internet,General,,Resource09,task-8556,complete,Group 1
+case-5046,T10 Determine necessity to stop indication,Resource09,2011/01/17 21:17:15.543,Variant 2,2,Internet,General,,Resource09,task-8557,complete,Group 1
+case-5046,T05 Print and send confirmation of receipt,admin1,2011/01/18 18:38:16.529,Variant 2,2,Internet,General,,Resource09,task-8041,complete,Group 2
+case-5585,Confirmation of receipt,Resource26,2011/06/17 04:22:17.020,Variant 3,3,Internet,General,Group 2,Resource07,task-10012,complete,EMPTY
+case-5585,T06 Determine necessity of stop advice,Resource26,2011/06/17 04:22:44.111,Variant 3,3,Internet,General,Group 2,Resource07,task-28853,complete,Group 1
+case-5585,T07-1 Draft intern advice aspect 1,Resource24,2011/07/18 22:11:32.085,Variant 3,3,Internet,General,Group 2,Resource07,task-28854,complete,Group 13
+case-5585,T07-2 Draft intern advice aspect 2,Resource40,2011/08/09 00:02:07.078,Variant 3,3,Internet,General,Group 2,Resource07,task-28855,complete,Group 15
+case-5585,T06 Determine necessity of stop advice,Resource26,2011/09/15 20:10:48.214,Variant 3,3,Internet,General,Group 2,Resource07,task-35756,complete,Group 1
+case-5585,T07-1 Draft intern advice aspect 1,admin2,2011/09/22 22:45:24.932,Variant 3,3,Internet,General,Group 2,Resource07,task-39061,complete,Group 7
+case-5585,T02 Check confirmation of receipt,admin2,2011/09/22 22:45:25.613,Variant 3,3,Internet,General,Group 2,Resource07,task-28852,complete,EMPTY
+case-5585,T07-2 Draft intern advice aspect 2,admin2,2011/09/22 22:45:26.304,Variant 3,3,Internet,General,Group 2,Resource07,task-39062,complete,Group 15
+case-4978,Confirmation of receipt,Resource12,2010/12/28 22:41:00.042,Variant 4,4,Desk,General,,Resource12,task-5858,complete,EMPTY
+case-4978,T02 Check confirmation of receipt,Resource12,2010/12/28 22:42:16.852,Variant 4,4,Desk,General,,Resource12,task-6059,complete,Group 4
+case-4978,T04 Determine confirmation of receipt,Resource12,2010/12/28 22:44:21.732,Variant 4,4,Desk,General,,Resource12,task-6061,complete,Group 3
+case-4978,T06 Determine necessity of stop advice,Resource12,2010/12/28 22:48:35.091,Variant 4,4,Desk,General,,Resource12,task-6060,complete,Group 1
+case-4978,T07-5 Draft intern advice aspect 5,Resource12,2010/12/28 22:50:35.760,Variant 4,4,Desk,General,,Resource12,task-6064,complete,Group 1
+case-4978,T06 Determine necessity of stop advice,Resource12,2010/12/28 22:51:22.871,Variant 4,4,Desk,General,,Resource12,task-6065,complete,Group 1
+case-4978,T07-5 Draft intern advice aspect 5,Resource12,2010/12/28 22:52:06.561,Variant 4,4,Desk,General,,Resource12,task-6066,complete,Group 1
+case-4978,T06 Determine necessity of stop advice,Resource12,2010/12/28 22:53:08.382,Variant 4,4,Desk,General,,Resource12,task-6067,complete,Group 1
+case-4978,T07-5 Draft intern advice aspect 5,Resource12,2010/12/28 22:54:25.935,Variant 4,4,Desk,General,,Resource12,task-6068,complete,Group 1
+case-4978,T06 Determine necessity of stop advice,Resource12,2010/12/28 22:55:00.162,Variant 4,4,Desk,General,,Resource12,task-6069,complete,Group 1
+case-4978,T07-5 Draft intern advice aspect 5,Resource12,2010/12/28 22:55:43.786,Variant 4,4,Desk,General,,Resource12,task-6070,complete,Group 1
+case-4978,T06 Determine necessity of stop advice,Resource12,2010/12/28 22:57:46.642,Variant 4,4,Desk,General,,Resource12,task-6071,complete,Group 1
+case-4978,T05 Print and send confirmation of receipt,Resource12,2011/01/03 22:52:15.336,Variant 4,4,Desk,General,,Resource12,task-6063,complete,Group 2
+case-4978,T07-5 Draft intern advice aspect 5,Resource12,2011/01/03 22:55:42.514,Variant 4,4,Desk,General,,Resource12,task-6072,complete,Group 1
+case-4978,T06 Determine necessity of stop advice,Resource12,2011/01/03 23:00:58.818,Variant 4,4,Desk,General,,Resource12,task-6579,complete,Group 1
+case-4978,T07-5 Draft intern advice aspect 5,Resource12,2011/01/03 23:01:42.761,Variant 4,4,Desk,General,,Resource12,task-6580,complete,Group 1
+case-4978,T06 Determine necessity of stop advice,Resource12,2011/01/03 23:02:43.156,Variant 4,4,Desk,General,,Resource12,task-6581,complete,Group 1
+case-4978,T10 Determine necessity to stop indication,Resource12,2011/01/03 23:03:13.971,Variant 4,4,Desk,General,,Resource12,task-6582,complete,Group 1
+case-8323,Confirmation of receipt,Resource05,2011/07/04 20:37:42.658,Variant 5,5,Internet,General,Group 5,Resource05,task-30300,complete,Group 1
+case-8323,T06 Determine necessity of stop advice,Resource05,2011/08/01 17:31:06.192,Variant 5,5,Internet,General,Group 5,Resource05,task-30782,complete,Group 1
+case-8323,T02 Check confirmation of receipt,Resource05,2011/08/01 17:46:51.434,Variant 5,5,Internet,General,Group 5,Resource05,task-30781,complete,EMPTY
+case-8323,T07-1 Draft intern advice aspect 1,Resource05,2011/08/01 17:47:15.128,Variant 5,5,Internet,General,Group 5,Resource05,task-34600,complete,Group 13
+case-8323,T04 Determine confirmation of receipt,Resource05,2011/08/01 17:47:40.251,Variant 5,5,Internet,General,Group 5,Resource05,task-34604,complete,Group 3
+case-8323,T05 Print and send confirmation of receipt,Resource05,2011/08/01 17:48:11.577,Variant 5,5,Internet,General,Group 5,Resource05,task-34606,complete,Group 2
+case-8323,T06 Determine necessity of stop advice,Resource05,2011/08/01 17:48:33.074,Variant 5,5,Internet,General,Group 5,Resource05,task-34605,complete,Group 1
+case-8323,T07-1 Draft intern advice aspect 1,Resource05,2011/08/01 17:48:50.433,Variant 5,5,Internet,General,Group 5,Resource05,task-34607,complete,Group 13
+case-8323,T06 Determine necessity of stop advice,Resource05,2011/08/01 17:49:15.388,Variant 5,5,Internet,General,Group 5,Resource05,task-34608,complete,Group 1
+case-8323,T07-1 Draft intern advice aspect 1,Resource05,2011/08/01 17:50:21.355,Variant 5,5,Internet,General,Group 5,Resource05,task-34609,complete,EMPTY
+case-8323,T06 Determine necessity of stop advice,Resource05,2011/08/01 17:50:36.984,Variant 5,5,Internet,General,Group 5,Resource05,task-34611,complete,Group 1
+case-8323,T07-1 Draft intern advice aspect 1,Resource05,2011/08/01 17:51:32.157,Variant 5,5,Internet,General,Group 5,Resource05,task-34612,complete,EMPTY
+case-8323,T06 Determine necessity of stop advice,Resource05,2011/08/01 17:52:36.664,Variant 5,5,Internet,General,Group 5,Resource05,task-34614,complete,Group 1
+case-8323,T07-1 Draft intern advice aspect 1,Resource05,2011/08/01 17:53:44.758,Variant 5,5,Internet,General,Group 5,Resource05,task-34615,complete,EMPTY
+case-8323,T06 Determine necessity of stop advice,Resource05,2011/08/01 17:54:16.734,Variant 5,5,Internet,General,Group 5,Resource05,task-34616,complete,Group 1
+case-8323,T07-1 Draft intern advice aspect 1,Resource05,2011/08/01 17:54:38.139,Variant 5,5,Internet,General,Group 5,Resource05,task-34617,complete,Group 13
+case-8323,T06 Determine necessity of stop advice,Resource05,2011/08/01 17:55:09.509,Variant 5,5,Internet,General,Group 5,Resource05,task-34618,complete,Group 1
+case-8323,T07-1 Draft intern advice aspect 1,Resource05,2011/08/01 17:55:34.741,Variant 5,5,Internet,General,Group 5,Resource05,task-34619,complete,Group 13
+case-8323,T06 Determine necessity of stop advice,Resource05,2011/08/01 17:56:10.861,Variant 5,5,Internet,General,Group 5,Resource05,task-34620,complete,Group 1
+case-8323,T07-1 Draft intern advice aspect 1,Resource05,2011/08/01 17:56:59.387,Variant 5,5,Internet,General,Group 5,Resource05,task-34621,complete,EMPTY
+case-8323,T06 Determine necessity of stop advice,Resource05,2011/08/01 17:57:19.958,Variant 5,5,Internet,General,Group 5,Resource05,task-34623,complete,Group 1
+case-8323,T07-1 Draft intern advice aspect 1,Resource05,2011/08/01 17:58:16.614,Variant 5,5,Internet,General,Group 5,Resource05,task-34625,complete,EMPTY
+case-8323,T06 Determine necessity of stop advice,Resource05,2011/08/01 17:58:48.159,Variant 5,5,Internet,General,Group 5,Resource05,task-34626,complete,Group 1
+case-8323,T10 Determine necessity to stop indication,Resource05,2011/08/01 18:03:44.585,Variant 5,5,Internet,General,Group 5,Resource05,task-34627,complete,Group 1
+case-5042,Confirmation of receipt,Resource02,2011/01/13 21:18:48.641,Variant 6,6,Internet,General,,Resource02,task-6365,complete,EMPTY
+case-5042,T02 Check confirmation of receipt,Resource02,2011/01/13 21:19:49.949,Variant 6,6,Internet,General,,Resource02,task-8127,complete,EMPTY
+case-5042,T04 Determine confirmation of receipt,Resource10,2011/01/13 21:24:35.501,Variant 6,6,Internet,General,,Resource02,task-8129,complete,Group 3
+case-5042,T06 Determine necessity of stop advice,Resource02,2011/01/13 21:27:27.358,Variant 6,6,Internet,General,,Resource02,task-8128,complete,Group 1
+case-5042,T07-2 Draft intern advice aspect 2,Resource41,2011/01/17 23:44:31.552,Variant 6,6,Internet,General,,Resource02,task-8136,complete,EMPTY
+case-5042,T05 Print and send confirmation of receipt,admin1,2011/01/18 18:43:42.315,Variant 6,6,Internet,General,,Resource02,task-8135,complete,Group 2
+case-5042,T06 Determine necessity of stop advice,Resource02,2011/01/18 19:41:00.512,Variant 6,6,Internet,General,,Resource02,task-8673,complete,Group 1
+case-5042,T07-2 Draft intern advice aspect 2,Resource02,2011/01/18 19:46:37.453,Variant 6,6,Internet,General,,Resource02,task-8769,complete,Group 15
+case-5042,T06 Determine necessity of stop advice,Resource02,2011/01/18 19:47:07.678,Variant 6,6,Internet,General,,Resource02,task-8772,complete,Group 1
+case-5042,T07-2 Draft intern advice aspect 2,Resource02,2011/01/18 19:48:04.717,Variant 6,6,Internet,General,,Resource02,task-8773,complete,Group 15
+case-5042,T06 Determine necessity of stop advice,Resource02,2011/01/18 19:53:05.790,Variant 6,6,Internet,General,,Resource02,task-8774,complete,Group 1
+case-5042,T10 Determine necessity to stop indication,Resource02,2011/01/18 20:04:49.352,Variant 6,6,Internet,General,,Resource02,task-8775,complete,Group 1
+case-4808,Confirmation of receipt,Resource10,2010/12/17 19:22:08.980,Variant 7,7,Desk,General,,Resource15,task-4647,complete,Group 1
+case-4808,T02 Check confirmation of receipt,Resource10,2010/12/17 19:28:40.301,Variant 7,7,Desk,General,,Resource15,task-4792,complete,Group 4
+case-4808,T04 Determine confirmation of receipt,Resource10,2010/12/17 19:38:33.422,Variant 7,7,Desk,General,,Resource15,task-4820,complete,Group 3
+case-4808,T06 Determine necessity of stop advice,Resource15,2010/12/24 19:50:19.906,Variant 7,7,Desk,General,,Resource15,task-4793,complete,EMPTY
+case-4808,T05 Print and send confirmation of receipt,admin1,2010/12/30 22:07:27.346,Variant 7,7,Desk,General,,Resource15,task-4848,complete,Group 2
+case-4808,T07-2 Draft intern advice aspect 2,Resource29,2011/01/18 23:18:44.152,Variant 7,7,Desk,General,,Resource15,task-5613,complete,EMPTY
+case-4808,T06 Determine necessity of stop advice,Resource29,2011/01/18 23:19:49.591,Variant 7,7,Desk,General,,Resource15,task-8823,complete,Group 1
+case-4808,T07-2 Draft intern advice aspect 2,Resource29,2011/01/18 23:20:07.827,Variant 7,7,Desk,General,,Resource15,task-8828,complete,Group 15
+case-4808,T06 Determine necessity of stop advice,Resource29,2011/01/18 23:20:39.983,Variant 7,7,Desk,General,,Resource15,task-8829,complete,Group 1
+case-4808,T07-2 Draft intern advice aspect 2,Resource29,2011/01/18 23:21:26.953,Variant 7,7,Desk,General,,Resource15,task-8830,complete,Group 15
+case-4808,T06 Determine necessity of stop advice,Resource29,2011/01/18 23:21:49.421,Variant 7,7,Desk,General,,Resource15,task-8831,complete,Group 1
+case-4808,T07-2 Draft intern advice aspect 2,Resource29,2011/01/18 23:22:23.694,Variant 7,7,Desk,General,,Resource15,task-8833,complete,Group 15
+case-4808,T06 Determine necessity of stop advice,Resource29,2011/01/18 23:22:55.328,Variant 7,7,Desk,General,,Resource15,task-8834,complete,Group 1
+case-4808,T07-2 Draft intern advice aspect 2,Resource29,2011/01/18 23:24:31.856,Variant 7,7,Desk,General,,Resource15,task-8835,complete,Group 15
+case-4808,T06 Determine necessity of stop advice,Resource15,2011/01/19 19:43:13.997,Variant 7,7,Desk,General,,Resource15,task-8837,complete,Group 7
+case-4808,T07-2 Draft intern advice aspect 2,Resource15,2011/01/19 19:43:31.437,Variant 7,7,Desk,General,,Resource15,task-8929,complete,Group 15
+case-4808,T06 Determine necessity of stop advice,Resource15,2011/01/19 19:43:46.628,Variant 7,7,Desk,General,,Resource15,task-8930,complete,Group 1
+case-4808,T10 Determine necessity to stop indication,Resource15,2011/01/19 19:44:37.479,Variant 7,7,Desk,General,,Resource15,task-8931,complete,Group 1
+case-9289,Confirmation of receipt,Resource28,2011/08/31 22:16:45.403,Variant 8,8,Internet,General,Group 11,Resource28,task-37428,complete,EMPTY
+case-9289,T02 Check confirmation of receipt,Resource28,2011/08/31 22:18:49.848,Variant 8,8,Internet,General,Group 11,Resource28,task-37713,complete,Group 4
+case-9289,T06 Determine necessity of stop advice,Resource28,2011/08/31 22:24:54.608,Variant 8,8,Internet,General,Group 11,Resource28,task-37714,complete,Group 1
+case-9289,T08 Draft and send request for advice,Resource28,2011/08/31 23:06:49.707,Variant 8,8,Internet,General,Group 11,Resource28,task-37716,complete,Group 1
+case-9289,T09-3 Process or receive external advice from party 3,Resource28,2011/08/31 23:10:26.204,Variant 8,8,Internet,General,Group 11,Resource28,task-37730,complete,Group 1
+case-9289,T04 Determine confirmation of receipt,Resource10,2011/08/31 23:19:13.128,Variant 8,8,Internet,General,Group 11,Resource28,task-37715,complete,Group 3
+case-9289,T03 Adjust confirmation of receipt,Resource28,2011/09/01 17:17:53.293,Variant 8,8,Internet,General,Group 11,Resource28,task-37733,complete,Group 1
+case-9289,T02 Check confirmation of receipt,Resource28,2011/09/01 17:18:30.530,Variant 8,8,Internet,General,Group 11,Resource28,task-37815,complete,Group 4
+case-9289,T04 Determine confirmation of receipt,Resource28,2011/09/01 17:19:59.433,Variant 8,8,Internet,General,Group 11,Resource28,task-37816,complete,Group 3
+case-9289,T05 Print and send confirmation of receipt,admin1,2011/09/05 20:47:38.003,Variant 8,8,Internet,General,Group 11,Resource28,task-37819,complete,Group 2
+case-9289,T07-2 Draft intern advice aspect 2,Resource28,2011/09/06 21:47:00.452,Variant 8,8,Internet,General,Group 11,Resource28,task-37717,complete,Group 15
+case-9289,T06 Determine necessity of stop advice,Resource28,2011/09/06 21:47:37.892,Variant 8,8,Internet,General,Group 11,Resource28,task-38084,complete,Group 1
+case-9289,T08 Draft and send request for advice,Resource28,2011/09/06 21:48:32.486,Variant 8,8,Internet,General,Group 11,Resource28,task-38085,complete,Group 1
+case-9289,T09-3 Process or receive external advice from party 3,Resource28,2011/09/06 21:49:06.451,Variant 8,8,Internet,General,Group 11,Resource28,task-38087,complete,Group 1
+case-9289,T07-2 Draft intern advice aspect 2,Resource28,2011/09/06 23:32:21.434,Variant 8,8,Internet,General,Group 11,Resource28,task-38086,complete,Group 15
+case-9289,T06 Determine necessity of stop advice,Resource28,2011/09/06 23:32:50.799,Variant 8,8,Internet,General,Group 11,Resource28,task-38113,complete,Group 1
+case-9289,T07-2 Draft intern advice aspect 2,Resource28,2011/09/06 23:34:32.598,Variant 8,8,Internet,General,Group 11,Resource28,task-38115,complete,Group 15
+case-9289,T08 Draft and send request for advice,Resource28,2011/09/06 23:35:00.732,Variant 8,8,Internet,General,Group 11,Resource28,task-38114,complete,Group 1
+case-9289,T09-3 Process or receive external advice from party 3,Resource28,2011/09/06 23:35:27.742,Variant 8,8,Internet,General,Group 11,Resource28,task-38116,complete,Group 1
+case-9289,T06 Determine necessity of stop advice,Resource28,2011/09/06 23:35:57.624,Variant 8,8,Internet,General,Group 11,Resource28,task-38117,complete,Group 1
+case-9289,T08 Draft and send request for advice,Resource28,2011/09/06 23:36:57.508,Variant 8,8,Internet,General,Group 11,Resource28,task-38118,complete,Group 1
+case-9289,T09-3 Process or receive external advice from party 3,Resource28,2011/09/06 23:37:21.293,Variant 8,8,Internet,General,Group 11,Resource28,task-38120,complete,Group 1
+case-9289,T07-2 Draft intern advice aspect 2,Resource28,2011/09/06 23:37:40.982,Variant 8,8,Internet,General,Group 11,Resource28,task-38119,complete,Group 15
+case-9289,T06 Determine necessity of stop advice,Resource28,2011/09/06 23:38:06.003,Variant 8,8,Internet,General,Group 11,Resource28,task-38121,complete,Group 1
+case-9289,T10 Determine necessity to stop indication,Resource28,2011/09/06 23:41:24.377,Variant 8,8,Internet,General,Group 11,Resource28,task-38122,complete,Group 1
+case-4667,Confirmation of receipt,Resource12,2010/12/14 19:10:14.666,Variant 9,9,Internet,General,,Resource12,task-3156,complete,EMPTY
+case-4667,T02 Check confirmation of receipt,Resource24,2010/12/22 23:09:01.192,Variant 9,9,Internet,General,,Resource12,task-4083,complete,EMPTY
+case-4667,T04 Determine confirmation of receipt,Resource10,2010/12/22 23:14:47.466,Variant 9,9,Internet,General,,Resource12,task-5462,complete,Group 3
+case-4667,T05 Print and send confirmation of receipt,admin1,2010/12/24 19:03:05.766,Variant 9,9,Internet,General,,Resource12,task-5465,complete,Group 2
+case-4667,T06 Determine necessity of stop advice,Resource12,2011/01/06 21:21:20.609,Variant 9,9,Internet,General,,Resource12,task-4084,complete,Group 1
+case-4667,T07-5 Draft intern advice aspect 5,Resource12,2011/01/06 21:21:55.888,Variant 9,9,Internet,General,,Resource12,task-7049,complete,Group 1
+case-4667,T06 Determine necessity of stop advice,Resource12,2011/01/06 21:22:24.200,Variant 9,9,Internet,General,,Resource12,task-7050,complete,Group 1
+case-4667,T07-5 Draft intern advice aspect 5,Resource12,2011/01/06 21:22:51.490,Variant 9,9,Internet,General,,Resource12,task-7051,complete,Group 1
+case-4667,T06 Determine necessity of stop advice,Resource12,2011/01/06 21:23:38.884,Variant 9,9,Internet,General,,Resource12,task-7052,complete,Group 1
+case-4667,T10 Determine necessity to stop indication,Resource12,2011/01/06 21:24:09.724,Variant 9,9,Internet,General,,Resource12,task-7053,complete,Group 1
+case-4771,Confirmation of receipt,Resource10,2010/12/17 19:17:03.921,Variant 10,10,Internet,General,,Resource15,task-4226,complete,Group 1
+case-4771,T02 Check confirmation of receipt,Resource10,2010/12/17 19:27:20.636,Variant 10,10,Internet,General,,Resource15,task-4767,complete,Group 4
+case-4771,T04 Determine confirmation of receipt,Resource10,2010/12/17 19:38:48.972,Variant 10,10,Internet,General,,Resource15,task-4816,complete,Group 3
+case-4771,T05 Print and send confirmation of receipt,admin1,2010/12/30 22:07:43.684,Variant 10,10,Internet,General,,Resource15,task-4849,complete,Group 2
+case-4771,T06 Determine necessity of stop advice,Resource15,2011/01/04 19:24:29.864,Variant 10,10,Internet,General,,Resource15,task-4768,complete,EMPTY
+case-4771,T07-3 Draft intern advice hold for aspect 3,Resource35,2011/01/11 19:24:48.073,Variant 10,10,Internet,General,,Resource15,task-6660,complete,Group 14
+case-4771,T07-2 Draft intern advice aspect 2,Resource33,2011/01/12 00:14:25.680,Variant 10,10,Internet,General,,Resource15,task-6661,complete,EMPTY
+case-4771,T06 Determine necessity of stop advice,Resource15,2011/01/13 20:07:20.473,Variant 10,10,Internet,General,,Resource15,task-7779,complete,EMPTY
+case-4771,T07-3 Draft intern advice hold for aspect 3,Resource15,2011/01/13 20:07:45.604,Variant 10,10,Internet,General,,Resource15,task-8070,complete,Group 14
+case-4771,T07-2 Draft intern advice aspect 2,Resource15,2011/01/13 20:07:57.393,Variant 10,10,Internet,General,,Resource15,task-8071,complete,Group 15
+case-4771,T06 Determine necessity of stop advice,Resource15,2011/01/13 20:08:12.119,Variant 10,10,Internet,General,,Resource15,task-8073,complete,Group 1
+case-4771,T07-3 Draft intern advice hold for aspect 3,Resource15,2011/01/13 20:08:28.915,Variant 10,10,Internet,General,,Resource15,task-8074,complete,Group 14
+case-4771,T07-2 Draft intern advice aspect 2,Resource15,2011/01/13 20:08:39.178,Variant 10,10,Internet,General,,Resource15,task-8075,complete,Group 15
+case-4771,T06 Determine necessity of stop advice,Resource15,2011/01/13 20:09:01.790,Variant 10,10,Internet,General,,Resource15,task-8076,complete,Group 1
+case-4771,T10 Determine necessity to stop indication,Resource15,2011/01/13 20:09:20.055,Variant 10,10,Internet,General,,Resource15,task-8078,complete,Group 1
+case-8989,Confirmation of receipt,Resource12,2011/08/11 22:25:17.524,Variant 11,11,Internet,General,Group 5,Resource12,task-35555,complete,Group 1
+case-8989,T02 Check confirmation of receipt,Resource12,2011/08/11 22:26:04.791,Variant 11,11,Internet,General,Group 5,Resource12,task-36294,complete,Group 4
+case-8989,T04 Determine confirmation of receipt,Resource12,2011/08/11 22:26:51.380,Variant 11,11,Internet,General,Group 5,Resource12,task-36296,complete,Group 3
+case-8989,T05 Print and send confirmation of receipt,Resource12,2011/08/11 22:27:52.790,Variant 11,11,Internet,General,Group 5,Resource12,task-36297,complete,Group 2
+case-8989,T06 Determine necessity of stop advice,Resource12,2011/08/11 22:33:07.403,Variant 11,11,Internet,General,Group 5,Resource12,task-36295,complete,Group 1
+case-8989,T07-3 Draft intern advice hold for aspect 3,Resource12,2011/08/11 22:35:16.881,Variant 11,11,Internet,General,Group 5,Resource12,task-36299,complete,Group 14
+case-8989,T07-2 Draft intern advice aspect 2,Resource12,2011/08/11 22:45:44.795,Variant 11,11,Internet,General,Group 5,Resource12,task-36300,complete,Group 15
+case-8989,T06 Determine necessity of stop advice,Resource12,2011/08/11 22:46:35.333,Variant 11,11,Internet,General,Group 5,Resource12,task-36301,complete,Group 1
+case-8989,T07-2 Draft intern advice aspect 2,Resource12,2011/08/11 22:47:03.653,Variant 11,11,Internet,General,Group 5,Resource12,task-36303,complete,Group 15
+case-8989,T07-3 Draft intern advice hold for aspect 3,Resource12,2011/08/11 22:47:22.767,Variant 11,11,Internet,General,Group 5,Resource12,task-36302,complete,Group 14
+case-8989,T06 Determine necessity of stop advice,Resource12,2011/08/11 22:47:46.348,Variant 11,11,Internet,General,Group 5,Resource12,task-36304,complete,Group 1
+case-8989,T10 Determine necessity to stop indication,Resource12,2011/08/11 22:48:34.970,Variant 11,11,Internet,General,Group 5,Resource12,task-36305,complete,Group 1
+case-4532,Confirmation of receipt,Resource05,2010/12/06 20:47:02.080,Variant 12,12,Internet,General,,Resource05,task-1967,complete,EMPTY
+case-4532,T02 Check confirmation of receipt,Resource05,2010/12/06 20:48:57.302,Variant 12,12,Internet,General,,Resource05,task-2943,complete,Group 4
+case-4532,T04 Determine confirmation of receipt,Resource05,2010/12/06 20:49:16.129,Variant 12,12,Internet,General,,Resource05,task-2947,complete,Group 3
+case-4532,T06 Determine necessity of stop advice,Resource05,2010/12/06 20:50:04.994,Variant 12,12,Internet,General,,Resource05,task-2945,complete,Group 1
+case-4532,T07-5 Draft intern advice aspect 5,Resource05,2010/12/06 20:50:30.956,Variant 12,12,Internet,General,,Resource05,task-2950,complete,Group 1
+case-4532,T06 Determine necessity of stop advice,Resource05,2010/12/06 20:50:52.453,Variant 12,12,Internet,General,,Resource05,task-2951,complete,Group 1
+case-4532,T07-5 Draft intern advice aspect 5,Resource05,2010/12/06 20:52:06.628,Variant 12,12,Internet,General,,Resource05,task-2952,complete,Group 1
+case-4532,T06 Determine necessity of stop advice,Resource05,2010/12/06 20:54:10.625,Variant 12,12,Internet,General,,Resource05,task-2954,complete,Group 1
+case-4532,T07-5 Draft intern advice aspect 5,Resource05,2010/12/06 20:55:50.234,Variant 12,12,Internet,General,,Resource05,task-2957,complete,Group 1
+case-4532,T06 Determine necessity of stop advice,Resource05,2010/12/06 20:56:03.915,Variant 12,12,Internet,General,,Resource05,task-2963,complete,Group 1
+case-4532,T10 Determine necessity to stop indication,Resource05,2010/12/06 20:56:22.116,Variant 12,12,Internet,General,,Resource05,task-2964,complete,Group 1
+case-4532,T05 Print and send confirmation of receipt,admin1,2010/12/07 00:04:27.090,Variant 12,12,Internet,General,,Resource05,task-2948,complete,Group 2
+case-6902,Confirmation of receipt,Resource12,2011/05/02 17:53:08.159,Variant 13,13,Internet,General,,admin1,task-19528,complete,EMPTY
+case-6902,T02 Check confirmation of receipt,Resource12,2011/05/02 17:53:55.304,Variant 13,13,Internet,General,,admin1,task-22925,complete,Group 4
+case-6902,T04 Determine confirmation of receipt,Resource12,2011/05/02 17:54:58.525,Variant 13,13,Internet,General,,admin1,task-22928,complete,Group 3
+case-6902,T05 Print and send confirmation of receipt,Resource12,2011/05/02 17:55:21.659,Variant 13,13,Internet,General,,admin1,task-22929,complete,Group 2
+case-6902,T06 Determine necessity of stop advice,Resource12,2011/05/02 17:56:28.248,Variant 13,13,Internet,General,,admin1,task-22926,complete,Group 1
+case-6902,T07-5 Draft intern advice aspect 5,Resource12,2011/05/02 17:57:45.909,Variant 13,13,Internet,General,,admin1,task-22932,complete,Group 1
+case-6902,T06 Determine necessity of stop advice,Resource12,2011/05/02 17:58:06.941,Variant 13,13,Internet,General,,admin1,task-22935,complete,Group 1
+case-6902,T07-5 Draft intern advice aspect 5,Resource12,2011/05/02 17:58:28.736,Variant 13,13,Internet,General,,admin1,task-22937,complete,Group 1
+case-6902,T06 Determine necessity of stop advice,Resource12,2011/05/02 17:58:52.039,Variant 13,13,Internet,General,,admin1,task-22938,complete,Group 1
+case-6902,T07-5 Draft intern advice aspect 5,Resource12,2011/05/02 18:00:14.673,Variant 13,13,Internet,General,,admin1,task-22939,complete,Group 1
+case-6902,T06 Determine necessity of stop advice,Resource12,2011/05/02 18:20:49.180,Variant 13,13,Internet,General,,admin1,task-22944,complete,Group 1
+case-6902,T10 Determine necessity to stop indication,Resource12,2011/05/02 18:21:24.652,Variant 13,13,Internet,General,,admin1,task-22964,complete,Group 1
+case-5135,Confirmation of receipt,Resource02,2011/01/07 01:34:14.660,Variant 1,1,Internet,General,,Resource02,task-6797,complete,EMPTY
+case-5135,T02 Check confirmation of receipt,Resource02,2011/01/07 01:36:03.719,Variant 1,1,Internet,General,,Resource02,task-7129,complete,EMPTY
+case-5135,T06 Determine necessity of stop advice,Resource02,2011/01/07 16:42:40.950,Variant 1,1,Internet,General,,Resource02,task-7130,complete,Group 1
+case-5135,T07-1 Draft intern advice aspect 1,Resource02,2011/01/07 16:51:53.105,Variant 1,1,Internet,General,,Resource02,task-7138,complete,EMPTY
+case-5135,T06 Determine necessity of stop advice,Resource02,2011/01/07 16:52:11.980,Variant 1,1,Internet,General,,Resource02,task-7139,complete,Group 1
+case-5135,T07-1 Draft intern advice aspect 1,Resource02,2011/01/07 16:52:36.087,Variant 1,1,Internet,General,,Resource02,task-7140,complete,Group 13
+case-5135,T06 Determine necessity of stop advice,Resource02,2011/01/07 16:53:00.836,Variant 1,1,Internet,General,,Resource02,task-7141,complete,Group 1
+case-5135,T10 Determine necessity to stop indication,Resource02,2011/01/07 16:53:24.448,Variant 1,1,Internet,General,,Resource02,task-7142,complete,Group 1
+case-5135,T04 Determine confirmation of receipt,Resource10,2011/01/07 17:02:08.049,Variant 1,1,Internet,General,,Resource02,task-7131,complete,Group 3
+case-5135,T05 Print and send confirmation of receipt,admin1,2011/01/08 00:37:17.405,Variant 1,1,Internet,General,,Resource02,task-7144,complete,Group 2
+case-5998,Confirmation of receipt,Resource02,2011/02/22 21:33:34.076,Variant 1,1,Internet,General,,Resource02,task-12281,complete,EMPTY
+case-5998,T02 Check confirmation of receipt,Resource02,2011/02/22 21:33:54.700,Variant 1,1,Internet,General,,Resource02,task-13559,complete,Group 4
+case-5998,T06 Determine necessity of stop advice,Resource02,2011/02/22 21:39:29.929,Variant 1,1,Internet,General,,Resource02,task-13560,complete,Group 1
+case-5998,T07-1 Draft intern advice aspect 1,Resource02,2011/02/22 21:40:09.009,Variant 1,1,Internet,General,,Resource02,task-13562,complete,EMPTY
+case-5998,T06 Determine necessity of stop advice,Resource02,2011/02/22 21:40:22.166,Variant 1,1,Internet,General,,Resource02,task-13563,complete,Group 1
+case-5998,T07-1 Draft intern advice aspect 1,Resource02,2011/02/22 21:40:32.708,Variant 1,1,Internet,General,,Resource02,task-13564,complete,Group 13
+case-5998,T06 Determine necessity of stop advice,Resource02,2011/02/22 21:40:43.308,Variant 1,1,Internet,General,,Resource02,task-13565,complete,Group 1
+case-5998,T10 Determine necessity to stop indication,Resource02,2011/02/22 21:45:06.258,Variant 1,1,Internet,General,,Resource02,task-13566,complete,Group 1
+case-5998,T04 Determine confirmation of receipt,Resource19,2011/02/23 19:31:51.061,Variant 1,1,Internet,General,,Resource02,task-13561,complete,EMPTY
+case-5998,T05 Print and send confirmation of receipt,admin1,2011/02/23 20:57:55.759,Variant 1,1,Internet,General,,Resource02,task-13798,complete,Group 2
+case-5380,Confirmation of receipt,Resource02,2011/02/02 01:35:39.977,Variant 14,14,Desk,General,,Resource02,task-8885,complete,EMPTY
+case-5380,T02 Check confirmation of receipt,Resource02,2011/02/02 01:37:33.275,Variant 14,14,Desk,General,,Resource02,task-10486,complete,EMPTY
+case-5380,T06 Determine necessity of stop advice,Resource02,2011/02/02 18:12:07.958,Variant 14,14,Desk,General,,Resource02,task-10487,complete,Group 1
+case-5380,T07-1 Draft intern advice aspect 1,Resource02,2011/02/02 18:19:05.488,Variant 14,14,Desk,General,,Resource02,task-10545,complete,EMPTY
+case-5380,T06 Determine necessity of stop advice,Resource02,2011/02/02 18:21:52.637,Variant 14,14,Desk,General,,Resource02,task-10554,complete,Group 1
+case-5380,T07-1 Draft intern advice aspect 1,Resource02,2011/02/02 18:22:52.817,Variant 14,14,Desk,General,,Resource02,task-10555,complete,Group 13
+case-5380,T06 Determine necessity of stop advice,Resource02,2011/02/02 18:23:40.770,Variant 14,14,Desk,General,,Resource02,task-10557,complete,Group 1
+case-5380,T07-1 Draft intern advice aspect 1,Resource02,2011/02/02 18:24:33.044,Variant 14,14,Desk,General,,Resource02,task-10559,complete,EMPTY
+case-5380,T06 Determine necessity of stop advice,Resource02,2011/02/02 18:24:55.446,Variant 14,14,Desk,General,,Resource02,task-10560,complete,Group 1
+case-5380,T10 Determine necessity to stop indication,Resource02,2011/02/02 18:25:15.384,Variant 14,14,Desk,General,,Resource02,task-10561,complete,Group 1
+case-5380,T04 Determine confirmation of receipt,Resource02,2011/02/02 19:49:15.212,Variant 14,14,Desk,General,,Resource02,task-10488,complete,EMPTY
+case-5380,T05 Print and send confirmation of receipt,Resource02,2011/02/02 19:51:01.951,Variant 14,14,Desk,General,,Resource02,task-10632,complete,Group 2
+case-5286,Confirmation of receipt,Resource12,2011/02/03 00:31:51.578,Variant 15,15,Internet,General,,Resource12,task-7954,complete,EMPTY
+case-5286,T02 Check confirmation of receipt,Resource12,2011/02/03 00:47:52.354,Variant 15,15,Internet,General,,Resource12,task-10696,complete,Group 4
+case-5286,T04 Determine confirmation of receipt,Resource12,2011/02/03 18:37:37.396,Variant 15,15,Internet,General,,Resource12,task-10698,complete,EMPTY
+case-5286,T05 Print and send confirmation of receipt,Resource12,2011/02/03 18:41:52.753,Variant 15,15,Internet,General,,Resource12,task-10759,complete,Group 2
+case-5286,T06 Determine necessity of stop advice,Resource12,2011/02/03 18:43:18.262,Variant 15,15,Internet,General,,Resource12,task-10697,complete,Group 1
+case-5286,T07-1 Draft intern advice aspect 1,Resource12,2011/02/03 18:44:22.757,Variant 15,15,Internet,General,,Resource12,task-10760,complete,Group 13
+case-5286,T06 Determine necessity of stop advice,Resource12,2011/02/03 18:44:56.122,Variant 15,15,Internet,General,,Resource12,task-10763,complete,Group 1
+case-5286,T07-1 Draft intern advice aspect 1,Resource12,2011/02/03 18:45:20.401,Variant 15,15,Internet,General,,Resource12,task-10764,complete,Group 13
+case-5286,T06 Determine necessity of stop advice,Resource12,2011/02/03 18:45:49.765,Variant 15,15,Internet,General,,Resource12,task-10765,complete,Group 1
+case-5286,T10 Determine necessity to stop indication,Resource12,2011/02/03 18:48:39.077,Variant 15,15,Internet,General,,Resource12,task-10766,complete,Group 1
+case-5748,Confirmation of receipt,Resource05,2011/02/23 19:33:49.721,Variant 16,16,Desk,General,,Resource05,task-10852,complete,EMPTY
+case-5748,T02 Check confirmation of receipt,Resource05,2011/02/23 19:34:09.992,Variant 16,16,Desk,General,,Resource05,task-13800,complete,Group 4
+case-5748,T04 Determine confirmation of receipt,Resource05,2011/02/23 19:34:41.492,Variant 16,16,Desk,General,,Resource05,task-13803,complete,Group 3
+case-5748,T06 Determine necessity of stop advice,Resource05,2011/02/23 19:37:17.249,Variant 16,16,Desk,General,,Resource05,task-13801,complete,Group 1
+case-5748,T07-1 Draft intern advice aspect 1,Resource05,2011/02/23 19:37:58.680,Variant 16,16,Desk,General,,Resource05,task-13811,complete,Group 13
+case-5748,T06 Determine necessity of stop advice,Resource05,2011/02/23 19:38:16.373,Variant 16,16,Desk,General,,Resource05,task-13814,complete,Group 1
+case-5748,T07-1 Draft intern advice aspect 1,Resource05,2011/02/23 19:39:05.733,Variant 16,16,Desk,General,,Resource05,task-13815,complete,Group 13
+case-5748,T06 Determine necessity of stop advice,Resource05,2011/02/23 19:39:20.688,Variant 16,16,Desk,General,,Resource05,task-13816,complete,Group 1
+case-5748,T10 Determine necessity to stop indication,Resource05,2011/02/23 19:39:41.643,Variant 16,16,Desk,General,,Resource05,task-13817,complete,Group 1
+case-5748,T05 Print and send confirmation of receipt,admin1,2011/02/24 21:05:59.893,Variant 16,16,Desk,General,,Resource05,task-13805,complete,Group 2

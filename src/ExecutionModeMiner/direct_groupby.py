@@ -22,9 +22,9 @@ class ATonlyMiner(BaseMiner):
         pass
     
     def _build_atypes(self, el):
+        self._atypes = dict()
         for event in el.itertuples():
             self._atypes[event.activity] = 'AT.{}'.format(event.activity)
-        self._n_atypes = len(set(self._atypes.values()))
 
         self.is_atypes_verified = self.verify_partition(
             set(el['activity']), self._atypes)
@@ -62,6 +62,7 @@ class CTonlyMiner(BaseMiner):
         self.verify()
 
     def _build_ctypes(self, el, case_attr_name):
+        self._ctypes = dict()
         par = list()
         # 1) directly let each value correspond to a category (type)
         for v, events in el.groupby(case_attr_name): # sorted by default
@@ -79,7 +80,6 @@ class CTonlyMiner(BaseMiner):
         for i, values in enumerate(par):
             for v in values:
                 self._ctypes[v] = 'CT.{}'.format(i)
-        self._n_ctypes = len(set(self._ctypes.values()))
 
         self.is_ctypes_verified = self.verify_partition(
             set(el['case_id']), self._ctypes)
@@ -123,6 +123,7 @@ class ATCTMiner(ATonlyMiner):
         self.verify()
 
     def _build_ctypes(self, el, case_attr_name):
+        self._ctypes = dict()
         par = list()
         # 1) directly let each value correspond to a category (type)
         for v, events in el.groupby(case_attr_name): # sorted by default
@@ -140,7 +141,6 @@ class ATCTMiner(ATonlyMiner):
         for i, values in enumerate(par):
             for v in values:
                 self._ctypes[v] = 'CT.{}'.format(i)
-        self._n_ctypes = len(set(self._ctypes.values()))
 
         self.is_ctypes_verified = self.verify_partition(
             set(el['case_id']), self._ctypes)
@@ -173,13 +173,13 @@ class ATTTMiner(ATonlyMiner):
         self.verify()
 
     def _build_ttypes(self, el, resolution, datetime_format):
+        self._ttypes = dict()
         from datetime import datetime
         from operator import attrgetter
         for event in el.itertuples():
             dt = datetime.strptime(event.timestamp, datetime_format)
             self._ttypes[event.timestamp] = 'TT.{}'.format(
                 attrgetter(resolution)(dt))
-        self._n_ttypes = len(set(self._ttypes.values()))
 
         self.is_ttypes_verified = self.verify_partition(
             set(el['timestamp']), self._ttypes)

@@ -17,16 +17,13 @@ class BaseMiner(ABC):
     case/activity/time types as python dicts, which contain the mappings from 
     case/activity/time identifiers to their corresponding types.
     '''
-    _ctypes = dict()
-    _n_ctypes = None
+    _ctypes = None
     is_ctypes_verified = False
 
-    _atypes = dict()
-    _n_atypes = None
+    _atypes = None
     is_atypes_verified = False
 
-    _ttypes = dict()
-    _n_ttypes = None
+    _ttypes = None
     is_ttypes_verified = False
 
     def __init__(self, el):
@@ -141,9 +138,15 @@ class BaseMiner(ABC):
             print('-' * 80)
             print('Count of Types in the current {}:'.format(
                 self.__class__.__name__))
-            print('Number of C Types:\t\t{}'.format(self._n_ctypes))
-            print('Number of A Types:\t\t{}'.format(self._n_atypes))
-            print('Number of T Types:\t\t{}'.format(self._n_ttypes))
+            print('Number of C Types:\t\t{}'.format(
+                len(set(self._ctypes.values())) 
+                if self._ctypes is not None else 'n/a (1)'))
+            print('Number of A Types:\t\t{}'.format(
+                len(set(self._atypes.values()))
+                if self._atypes is not None else 'n/a (1)'))
+            print('Number of T Types:\t\t{}'.format(
+                len(set(self._ttypes.values()))
+                if self._ttypes is not None else 'n/a (1)'))
             print('-' * 80)
         else:
             print('C Types:\t{}'.format('VERIFIED' if self.is_ctypes_verified

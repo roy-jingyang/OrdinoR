@@ -12,13 +12,20 @@ fnout = 'trace_clustering.result'
 
 if __name__ == '__main__':
     from IO.reader import read_disco_csv
-    n_split_logs = 0
-    for fn in listdir(dir_split_logs):
-        if fn.endswith('.csv'):
-            n_split_logs += 1
-            with open(fn, 'r', encoding='utf-8') as f, open(
-                join(dir_split_logs, fnout), 'w+') as fout:
-                el = read_disco_csv(f)
-                for case_id in set(el['case_id']):
-                    fout.write('{}\t{}\n'.format(case_id, n_split_logs))
+    l_split_logs = sorted(
+        fn for fn in listdir(dir_split_logs) if fn.endswith('.csv'))
+    print('{} log files in CSV format detected:'.format(len(l_split_logs)))
+    print(l_split_logs)
+    print()
+
+    results = list()
+    for i, fn in enumerate(l_split_logs):
+        with open(join(dir_split_logs, fn), 'r', encoding='utf-8') as f:
+            el = read_disco_csv(f)
+            for case_id in sorted(set(el['case_id'])):
+                results.append('{}\t{}\n'.format(case_id, i))
+
+    with open(join(dir_split_logs, fnout), 'w+') as fout:
+        for line in results:
+            fout.write(line)
 
