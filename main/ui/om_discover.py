@@ -15,23 +15,60 @@ if __name__ == '__main__':
         #el = read_disco_csv(f, mapping={'(case) LoanGoal': 8})
 
     # learn execution modes and convert to resource log
-    from ExecutionModeMiner.direct_groupby import ATonlyMiner
-    from ExecutionModeMiner.direct_groupby import CTonlyMiner
-    from ExecutionModeMiner.direct_groupby import ATCTMiner
-    from ExecutionModeMiner.direct_groupby import ATTTMiner
-    from ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
-    from ExecutionModeMiner.informed_groupby import TraceClusteringFullMiner
-    #naive_exec_mode_miner = ATonlyMiner(el)
-    #naive_exec_mode_miner = CTonlyMiner(el, case_attr_name='product')
-    #naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
-    #naive_exec_mode_miner = ATTTMiner(el, resolution='day')
-    #naive_exec_mode_miner = TraceClusteringCTMiner(el,
-    #    fn_partition='input/wabo.songk7edsom.tcreport') # TODO: Hardcoding
-    naive_exec_mode_miner = TraceClusteringFullMiner(el,
-        fn_partition='input/wabo.songk7edsom.tcreport',
-        resolution='weekday') # TODO: Hardcoding
+    print('Input a number to choose a solution:')
+    print('\t0. ATonly')
+    print('\t1. CTonly (requires pre-specified case attribute')
+    print('\t2. AT+CT (requires pre-specified case attribute')
+    print('\t3. AT+TT')
+    print('\t4. TraceClustering CTonly')
+    print('\t5. TraceClustering CT+AT+TT')
 
-    rl = naive_exec_mode_miner.derive_resource_log(el)
+    mode_learning_option = int(input())
+
+    if mode_learning_option in []:
+        print('Warning: These options are closed for now. Activate them when necessary.')
+        exit(1)
+
+    elif mode_learning_option == 0:
+        from ExecutionModeMiner.direct_groupby import ATonlyMiner
+        exec_mode_miner = ATonlyMiner(el)
+
+    elif mode_learning_option == 1:
+        from ExecutionModeMiner.direct_groupby import CTonlyMiner
+        exec_mode_miner = CTonlyMiner(el, case_attr_name='')
+
+    elif mode_learning_option == 2:
+        from ExecutionModeMiner.direct_groupby import ATCTMiner
+        exec_mode_miner = ATCTMiner(el, case_attr_name='')
+
+    elif mode_learning_option == 3:
+        from ExecutionModeMiner.direct_groupby import ATTTMiner
+        print('Input the desired datetime resolution:', end=' ')
+        resolution = input()
+        exec_mode_miner = ATTTMiner(el, resolution=resolution)
+
+    elif mode_learning_option == 4:
+        from ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
+        print('Input the path of the partitioning file:', end=' ')
+        fn_partition = input()
+        exec_mode_miner = TraceClusteringCTMiner(
+            el, fn_partition=fn_partition)
+
+    elif mode_learning_option == 5:
+        from ExecutionModeMiner.informed_groupby import TraceClusteringFullMiner
+        print('Input the path of the partitioning file:', end=' ')
+        fn_partition = input()
+        print('Input the desired datetime resolution:', end=' ')
+        resolution = input()
+        naive_exec_mode_miner = TraceClusteringFullMiner(el,
+            fn_partition=fn_partition,
+            resolution=resolution)
+
+    else:
+        raise Exception('Failed to recognize input option!')
+        exit(1)
+
+    rl = exec_mode_miner.derive_resource_log(el)
 
     # TODO: Timer related
     '''
@@ -257,9 +294,9 @@ if __name__ == '__main__':
     from OrganizationalModelMiner.mode_assignment import assign_by_proportion
     from OrganizationalModelMiner.mode_assignment import assign_by_weighting
     for og in ogs:
-        modes = assign_by_any(og, rl)
+        #modes = assign_by_any(og, rl)
         #modes = assign_by_all(og, rl)
-        #modes = assign_by_proportion(og, rl, p=0.5)
+        modes = assign_by_proportion(og, rl, p=0.5)
         #modes = assign_by_weighting(og, rl, profiles)
 
         om.add_group(og, modes)

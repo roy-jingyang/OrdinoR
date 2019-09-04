@@ -175,11 +175,18 @@ class ATTTMiner(ATonlyMiner):
     def _build_ttypes(self, el, resolution, datetime_format):
         self._ttypes = dict()
         from datetime import datetime
-        from operator import attrgetter
+        if resolution in ['weekday', 'isoweekday']:
+            # special case since (iso)weekday is a function of datetime
+            # parse as 'isoweekday', i.e. Monday - 1, ..., Sunday - 7
+            getter = lambda datetimeobj: datetimeobj.isoweekday()
+        else:
+            # otherwise access as read-only attribute
+            from operator import attrgetter
+            getter = attrgetter(resolution)
+
         for event in el.itertuples():
             dt = datetime.strptime(event.timestamp, datetime_format)
-            self._ttypes[event.timestamp] = 'TT.{}'.format(
-                attrgetter(resolution)(dt))
+            self._ttypes[event.timestamp] = 'TT.{}'.format(getter(dt))
 
         self.is_ttypes_verified = self.verify_partition(
             set(el['timestamp']), self._ttypes)
