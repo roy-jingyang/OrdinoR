@@ -152,7 +152,7 @@ class MOC:
             for j in range(self.n_components):
                 if not M[:,j].any(): # invalid, an empty cluster found
                     is_valid = False
-                    break
+                    return M.copy(), float('-nan') # return as NaN score
             if is_valid:
                 #print('Final score =\t{:.8f}'.format(current_log_likelihood))
                 return M.copy(), current_log_likelihood

@@ -66,7 +66,7 @@ class CTonlyMiner(BaseMiner):
         par = list()
         # 1) directly let each value correspond to a category (type)
         for v, events in el.groupby(case_attr_name): # sorted by default
-            par.append(set(events['case_id']))
+            par.append((v, set(events['case_id'])))
 
         '''
         # 2) another way: use bins to convert continuous values to categorical
@@ -77,9 +77,9 @@ class CTonlyMiner(BaseMiner):
             bins=list(range(-1, 50000, 5000)) + [100000])):
             par.append(set(events['case_id']))
         '''
-        for i, values in enumerate(par):
-            for v in values:
-                self._ctypes[v] = 'CT.{}'.format(i)
+        for value_cases in par:
+            for case_id in value_cases[1]:
+                self._ctypes[case_id] = 'CT.{}'.format(value_cases[0])
 
         self.is_ctypes_verified = self.verify_partition(
             set(el['case_id']), self._ctypes)
