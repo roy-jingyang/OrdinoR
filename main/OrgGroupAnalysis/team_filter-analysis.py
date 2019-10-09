@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     num_groups = list(range(3, 17))
 
-    MAX_ITER = 2
+    MAX_ITER = 10
 
     from ExecutionModeMiner.direct_groupby import ATonlyMiner, CTonlyMiner
     from ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
@@ -36,7 +36,7 @@ if __name__ == '__main__':
         - decision drawn from silhouette analysis, cf.
             (https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_silhouette_analysis.html)
     '''
-    ''' {10} items are collected for analysis:
+    ''' {12} items are collected for analysis:
         - the result from silhouette analysis (k_flag),
         - the average value of silhouette score (of all resources), excluding
           those designated to singleton clusters;
@@ -50,6 +50,8 @@ if __name__ == '__main__':
           singletons);
         - percentage of resources having zero/negative silhouette scores;
         - percentage of cases involving the resouces above;
+        - percentage of resources having zero/negative silhouette scores (global);
+        - percentage of cases involving the resouces above (global);
     '''
     items = [
         'VALID_K_value',
@@ -61,11 +63,16 @@ if __name__ == '__main__':
         'num_clu_pos_silhouette_score',
         'num_clu_neg_silhouette_score',
         'pct_resource_to_be_filtered',
-        'pct_case_to_be_filtered'
+        'pct_case_to_be_filtered',
+        'pct_resource_to_be_left__global',
+        'pct_case_to_be_left_global'
     ]
     from Evaluation.m2m.cluster_validation import silhouette_score
     from Evaluation.m2m.cluster_validation import variance_explained_percentage
     from numpy import mean, amin, amax
+
+    num_resources_total = len(set(el['resource']))
+    num_cases_total = len(set(el['case_id']))
 
     log = el
     iteration = 1
@@ -117,7 +124,11 @@ if __name__ == '__main__':
                 if len(l_r_rm.intersection(resources)) > 0:
                     l_case_rm.append(case_id)
             pct_r_rm = len(l_r_rm) / len(set(log['resource']))
+            pct_r_left_global = ((len(set(log['resource'])) - len(l_r_rm))
+                / num_resources_total)
             pct_case_rm = len(l_case_rm) / len(set(log['case_id']))
+            pct_case_left_global = ((len(set(log['case_id'])) - len(l_case_rm))
+                / num_cases_total)
 
             l_measured_values.append((
                 k_flag,
@@ -129,7 +140,10 @@ if __name__ == '__main__':
                 num_pos_score_clusters,
                 num_neg_score_clusters,
                 pct_r_rm,
-                pct_case_rm))
+                pct_case_rm,
+                pct_r_left_global, 
+                pct_case_left_global 
+                ))
 
         print('VALUES of K')
         print(','.join(str(k) for k in num_groups))
