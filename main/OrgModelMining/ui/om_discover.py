@@ -289,15 +289,14 @@ if __name__ == '__main__':
     om = OrganizationalModel()
 
     # assign execution modes to groups
-    from OrganizationalModelMiner.mode_assignment import assign_by_any
-    from OrganizationalModelMiner.mode_assignment import assign_by_all
-    from OrganizationalModelMiner.mode_assignment import assign_by_proportion
-    from OrganizationalModelMiner.mode_assignment import assign_by_weighting
+    from OrganizationalModelMiner.mode_assignment import participation_first
+    from OrganizationalModelMiner.mode_assignment import coverage_first
+    from OrganizationalModelMiner.mode_assignment import overall_score
     for og in ogs:
-        modes = assign_by_any(og, rl)
-        #modes = assign_by_all(og, rl)
-        #modes = assign_by_proportion(og, rl, p=0.5)
-        #modes = assign_by_weighting(og, rl, profiles)
+        #modes = full_recall(og, rl)
+        #modes = participation_first(og, rl, p=0.1)
+        #modes = coverage_first(og, rl, p=5)
+        modes = overall_score(og, rl, p=0.5)
 
         om.add_group(og, modes)
 
@@ -309,7 +308,6 @@ if __name__ == '__main__':
     print('Silhouette\t= {:.6f}'.format(silhouette_score))
     print('-' * 80)
     print()
-    exit()
     
     from Evaluation.l2m import conformance
     fitness_score = conformance.fitness(rl, om)

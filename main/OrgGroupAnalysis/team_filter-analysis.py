@@ -17,8 +17,9 @@ if __name__ == '__main__':
         #el = read_disco_csv(f, mapping={'(case) LoanGoal': 7}) # bpic17
 
     num_groups = list(range(3, 17))
-
     MAX_ITER = 10
+    #FLAG_ANALYSIS_OBJECTS = "kept"
+    #FLAG_ANALYSIS_OBJECTS = "discarded"
 
     from ExecutionModeMiner.direct_groupby import ATonlyMiner, CTonlyMiner
     from ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
@@ -76,6 +77,8 @@ if __name__ == '__main__':
 
     log = el
     iteration = 1
+    discarded_resources_singleton = list()
+    discarded_resources_negative = list()
     while iteration <= MAX_ITER:
         print('-' * 30 + 'Iteration: {}'.format(iteration) + '-' * 30)
 
@@ -156,19 +159,72 @@ if __name__ == '__main__':
 
         # prompt for selecting a 'K'
         if iteration + 1 <= MAX_ITER:
-            print('Select a "K" for the next iteration:\t', end='')
-            next_k = int(input())
+            print('Select a "K":')
+            print('\tfor proceeding to the next iteration, type in the'
+                'number;')
+            print('\tfor generating a final decision and stopping iteration,'
+                'type in the number ended with a hash "#", e.g. 5#')
+            print('K = ', end='')
+            next_k = input()
+            if next_k.endswith('#'):
+                next_k = int(next_k[:-1])
+                stop_iteration = True
+            else:
+                next_k = int(next_k)
+                stop_iteration = False
+
             ogs, _ = _ahc(profiles, next_k)
-            scores = silhouette_score(ogs, profiles)
-            l_r_rm = set(r for r in scores if scores[r] <= 0.0)
-            l_case_rm = list()
-            for case_id, events in log.groupby('case_id'):
-                resources = set(events['resource'])
-                if len(l_r_rm.intersection(resources)) > 0:
-                    l_case_rm.append(case_id)
-            # filter out cases and generate a new log
-            log = log[log['case_id'].map(lambda x: x not in l_case_rm)]
+            if stop_iteration:
+                for i, og in enumerate(ogs):
+                    print('Group {}:'.format(i))
+                    print(profiles.loc[sorted(list(og))])
+                iteration = MAX_ITER
+            else:
+                scores = silhouette_score(ogs, profiles)
+                l_r_rm = set(r for r in scores if scores[r] <= 0.0)
+                discarded_resources_singleton.append(
+                    set(r for r in scores if scores[r] == 0.0))
+                discarded_resources_negative.append(
+                    set(r for r in scores if scores[r] < 0.0))
+                l_case_rm = list()
+                for case_id, events in log.groupby('case_id'):
+                    resources = set(events['resource'])
+                    if len(l_r_rm.intersection(resources)) > 0:
+                        l_case_rm.append(case_id)
+                # filter out cases and generate a new log
+                log = log[log['case_id'].map(lambda x: x not in l_case_rm)]
+
+        else:
+            print('\nMAX iteration reached:')
 
         # proceed to the next iteration
         iteration += 1
+    
+    print('-' * 80)
+    total_rl = mode_miner.derive_resource_log(el)
+    total_profiles = count_execution_frequency(total_rl, scale='log')
+    print('Singletons discarded:')
+    for it, l_r_rm in enumerate(discarded_resources_singleton):
+        print('at Iteration {}:'.format(it+1))
+        print(total_profiles.loc[sorted(list(l_r_rm))])
+    print()
+    print('Negatives discarded:')
+    for it, l_r_rm in enumerate(discarded_resources_negative):
+        print('at Iteration {}:'.format(it+1))
+        print(total_profiles.loc[sorted(list(l_r_rm))])
+
+    # TODO: treat the negatives as of activity-based?
+    profiles_act = count_execution_frequency(
+        ATonlyMiner(el).derive_resource_log(el),
+        scale='log').loc[list(set.union(*discarded_resources_negative))]
+    if len(profiles_act) >= 3:
+        for k in range(2, len(profiles_act)):
+            ogs_negatives, _ = _ahc(
+                profiles_act, k)
+            scores_negatives = silhouette_score(
+                ogs_negatives, profiles_act)
+            print('Silhouette scores (assuming ACT-based) for k={} is\t{}'.format(
+                k, mean(list(scores_negatives.values()))))
+    else:
+        print(profiles_act)
 

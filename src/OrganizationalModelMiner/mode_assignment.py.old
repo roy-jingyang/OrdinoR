@@ -5,74 +5,10 @@ This module contains methods for associating discovered organizational groups
 with execution modes.
 '''
 
-'''
-The following (private) methods are used for assessing the relatedness between
-a group and an execution mode regarding different factors (perspectives).
-'''
-def _participation_rate(group, mode, rl):
-    '''Measure the participation rate of a group with respect to an execution
-    mode.
-
-    Params:
-        group: iterator
-            The ids of resources as a resource group.
-        mode: tuple
-            The execution mode.
-        rl: DataFrame
-            The resource log.
-    Returns:
-        : float
-            The participated rate measured.
-    '''
-    rl = rl.loc[rl['resource'].isin(group)] # flitering irrelated events
-
-    total_par_count = len(rl)
-    par_count = len(
-        rl.loc[
-            (rl['case_type'] == mode[0]) &
-            (rl['activity_type'] == mode[1]) &
-            (rl['time_type'] == mode[2])]
-        )
-            
-    return par_count / total_par_count
-
-def _coverage(group, mode, rl):
-    '''Measure the coverage of a group with respect to an execution mode.
-
-    Params:
-        group: iterator
-            The ids of resources as a resource group.
-        mode: tuple
-            The execution mode.
-        rl: DataFrame
-            The resource log.
-    Returns:
-        : float
-            The coverage measured.
-    '''
-    rl = rl.loc[rl['resource'].isin(group)] # flitering irrelated events
-
-    num_participants = 0
-    for r in group:
-        if len(rl.loc[
-            (rl['resource'] == r) &
-            (rl['case_type'] == mode[0]) &
-            (rl['activity_type'] == mode[1]) &
-            (rl['time_type'] == mode[2])]) > 0:
-            num_participants += 1
-        else:
-            pass
-    
-    return num_participants / len(group)
-
-'''
-The following methods are for determining a set of execution modes for a given
-group.
-'''
-def full_recall(group, rl):
+def assign_by_any(group, rl):
     '''Assign an execution mode to a group, as long as there exists a member
     resource of this group that have executed this mode, i.e. everything done
-    by each of the members matters.
+    by each member matters.
 
     Note: this is the method proposed by Song & van der Aalst, DSS 2008,
     namely "entity_assignment".
@@ -86,7 +22,8 @@ def full_recall(group, rl):
         modes: frozenset
             The execution modes corresponded to the resources.
     '''
-    print('Applying FullRecall for mode assignment:')
+    
+    print('Applying "assign by any" for mode assignment:')
     modes = set()
     grouped_by_resource = rl.groupby('resource')
 
@@ -97,53 +34,27 @@ def full_recall(group, rl):
 
     return frozenset(modes)
 
-def participation_first(group, rl, p):
+def assign_by_all(group, rl):
+    '''Assign an execution mode to a group, only if every member resources of
+    this group have executed this mode, i.e. only things done by every member
+    matter.
+
+    Params:
+        group: iterator
+            The ids of resources as a resource group.
+        rl: DataFrame
+            The resource log.
+    Returns:
+        modes: frozenset/dict of frozensets
+            The execution modes corresponded to the resources:
+            - if a splitting is not needed, then a frozenset is returned;
+            - if a splitting is needed, then a dict of frozensets is returned,
+              with the subgroups as dict keys and the related execution modes
+              as values.
     '''
-    '''
-    print('Applying ParticipationFirst with threshold {} '.format(p) +
-        'for mode assignment:')
-    modes = set()
-    all_execution_modes = set(rl[['case_type', 'activity_type', 'time_type']]
-        .drop_duplicates().itertuples(index=False, name=None))
+    print('Applying "assign by all" for mode assignment:')
+    return assign_by_proportion(group, rl, p=1.0)
 
-    for m in all_execution_modes:
-        if _participation_rate(group, m, rl) >= p:
-            modes.add(m)
-
-    return frozenset(modes)
-
-def coverage_first(group, rl, p):
-    '''
-    '''
-    print('Applying CoverageFirst with threshold {} '.format(p) +
-        'for mode assignment:')
-    modes = set()
-    all_execution_modes = set(rl[['case_type', 'activity_type', 'time_type']]
-        .drop_duplicates().itertuples(index=False, name=None))
-
-    for m in all_execution_modes:
-        if _coverage(group, m, rl) >= p:
-            modes.add(m)
-
-    return frozenset(modes)
-
-def overall_score(group, rl, p, w1=0.5, w2=0.5):
-    '''
-    '''
-    print('Applying OverallScore with weights ({}, {}) '.format(w1, w2) +
-        'and threshold {} '.format(p) + 'for mode assignment:')
-    modes = set()
-    all_execution_modes = set(rl[['case_type', 'activity_type', 'time_type']]
-        .drop_duplicates().itertuples(index=False, name=None))
-
-    for m in all_execution_modes:
-        if (w1 * _participation_rate(group, m, rl) + 
-            w2 * _coverage(group, m, rl)) >= p:
-            modes.add(m)
-
-    return frozenset(modes)
-
-# [DEPRECATED]
 def assign_by_proportion(group, rl, p):
     '''Assign an execution mode to a group, only if certain percentage of
     member resources of this group have executed this mode, i.e.only things

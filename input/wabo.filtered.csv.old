@@ -2984,6 +2984,12 @@ case-5418,T04 Determine confirmation of receipt-complete,Resource19,2011/01/26 2
 case-5418,T05 Print and send confirmation of receipt-complete,Resource07,2011/01/27 18:18:53.526,Variant 1,1,Desk,General,,Resource07,task-9659,T05 Print and send confirmation of receipt,complete,EMPTY
 case-5418,T06 Determine necessity of stop advice-complete,Resource07,2011/01/31 23:17:14.446,Variant 1,1,Desk,General,,Resource07,task-9389,T06 Determine necessity of stop advice,complete,Group 1
 case-5418,T10 Determine necessity to stop indication-complete,Resource07,2011/01/31 23:21:42.504,Variant 1,1,Desk,General,,Resource07,task-10243,T10 Determine necessity to stop indication,complete,Group 1
+case-5503,Confirmation of receipt-complete,Resource11,2011/01/26 19:05:01.299,Variant 2,2,Intern,General,,Resource11,task-9574,Confirmation of receipt,complete,EMPTY
+case-5503,T06 Determine necessity of stop advice-complete,Resource11,2011/01/26 19:05:50.741,Variant 2,2,Intern,General,,Resource11,task-9611,T06 Determine necessity of stop advice,complete,Group 1
+case-5503,T10 Determine necessity to stop indication-complete,Resource11,2011/01/26 19:06:19.899,Variant 2,2,Intern,General,,Resource11,task-9612,T10 Determine necessity to stop indication,complete,Group 1
+case-5503,T02 Check confirmation of receipt-complete,Resource19,2011/01/26 22:17:25.720,Variant 2,2,Intern,General,,Resource11,task-9610,T02 Check confirmation of receipt,complete,EMPTY
+case-5503,T04 Determine confirmation of receipt-complete,Resource19,2011/01/26 22:18:42.196,Variant 2,2,Intern,General,,Resource11,task-9668,T04 Determine confirmation of receipt,complete,Group 3
+case-5503,T05 Print and send confirmation of receipt-complete,Resource07,2011/01/27 18:20:35.668,Variant 2,2,Intern,General,,Resource11,task-9669,T05 Print and send confirmation of receipt,complete,Group 2
 case-5504,Confirmation of receipt-complete,Resource11,2011/01/26 18:23:48.980,Variant 2,2,Internet,General,,Resource11,task-9592,Confirmation of receipt,complete,Group 1
 case-5504,T06 Determine necessity of stop advice-complete,Resource11,2011/01/26 18:24:08.406,Variant 2,2,Internet,General,,Resource11,task-9595,T06 Determine necessity of stop advice,complete,Group 1
 case-5504,T10 Determine necessity to stop indication-complete,Resource11,2011/01/26 18:25:31.414,Variant 2,2,Internet,General,,Resource11,task-9596,T10 Determine necessity to stop indication,complete,Group 1
