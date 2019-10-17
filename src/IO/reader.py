@@ -30,8 +30,6 @@ as well (not mandatory though).
     Other extensible data attributes can be appended according to different 
 purposes of working projects and the event log(s) acquired.
 
-2.
-This module contains methods for importing an organizational model.
 '''
 
 import sys

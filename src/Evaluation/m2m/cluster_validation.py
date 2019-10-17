@@ -7,10 +7,15 @@ evaluation measure, see ./cluster_comparison.py.
 
 Note that to conduct the validation of clusters, the expected input of these
 implemented methods should be the clusters and the resource feature table 
-(profile matrix), rather than an organizational model instance.
+(profile matrix), rather than an organizational model instance;
+
+Despite the situation where the clustering is derived with no feature table
+is used but rather from a graph-like structure, where the modularity of
+clustering should be used. The inputs should include the clusters and the
+original graph-like structure from which the clustering is derived.
+
 '''
 
-# TODO: is it appropriate to define the silhouette score for singletons as 0?
 # TODO: is it appropriate using silhouette score for overlapped clusters?
 def silhouette_score(
         clu, X, metric='euclidean'):
@@ -114,7 +119,6 @@ def _variance_within_cluster(
 
 def _variance_between_cluster(
     clu, X):
-    import numpy as np
     from numpy import mean, sum
     var_between = 0
     samples_mean = mean(X.values, axis=0)
@@ -124,4 +128,55 @@ def _variance_between_cluster(
         var_between += len(g) * sum((g_mean - samples_mean) ** 2)    # B_k
     var_between /= len(clu) - 1                                         # k - 1
     return var_between
+
+def modularity(
+    clu, G, weight=None):
+    '''
+    Reference:
+        "Graph Clustering Methods",
+        Equation (11.39), Sect. 11.3.3, Data Mining: Concepts and Techniques,
+        J. Han, J. Pei, M. Kamber
+    '''
+    from networkx import is_directed, restricted_view
+    q = 0.0
+    if is_directed(G):
+        # Casting from DiGraph to Graph needs to be configured manually
+        # otherwise NetworkX would approach this in an arbitrary fashion
+        from itertools import combinations
+        undirected_edge_list = list()
+        # consider only pairwise links
+        for pair in combinations(G.nodes, r=2):
+            if (G.has_edge(pair[0], pair[1]) and 
+                G.has_edge(pair[1], pair[0])):
+                undirected_edge_wt = 0.5 * (
+                    G[pair[0]][pair[1]]['weight'] +
+                    G[pair[1]][pair[0]]['weight'])
+                undirected_edge_list.append(
+                    (pair[0], pair[1], {'weight': undirected_edge_wt}))
+            else:
+                pass
+        G.clear()
+        del G
+        from networkx import Graph
+        G = Graph()
+        G.add_edges_from(undirected_edge_list)
+        del undirected_edge_list[:]
+        print('[Warning] DiGraph casted to Graph.')
+    else:
+        pass
+
+    sum_total_wt = sum([wt for (u, v, wt) in G.edges.data('weight')])
+    for g in clu:
+        sub_g = restricted_view(G, nodes=list(g), edges=[])
+        if weight is None:
+            sum_within_cluster_edges = len(list(sub_g.edges)) # l_i
+        else:
+            sum_within_cluster_edges = sum([wt
+                for (u, v, wt) in sub_g.edges.data(weight)]) # l_i
+        sum_within_cluster_degree = sum([deg
+            for node, deg in sub_g.degree(weight=weight)]) # d_i
+        q += (
+            (sum_within_cluster_edges / sum_total_wt) - 
+            (sum_within_cluster_degree / (2 * sum_total_wt)) ** 2)
+    return q
 

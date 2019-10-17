@@ -16,32 +16,36 @@ if __name__ == '__main__':
         #el = read_disco_csv(f, mapping={'(case) channel': 6}) # bpic12 TODO
         #el = read_disco_csv(f, mapping={'(case) LoanGoal': 7}) # bpic17
 
-    num_groups = list(range(3, 17))
-    MAX_ITER = 10
-    #FLAG_ANALYSIS_OBJECTS = "kept"
-    #FLAG_ANALYSIS_OBJECTS = "discarded"
+    num_groups = list(range(2, len(set(el['resource']))))
+    MAX_ITER = 1
 
     from ExecutionModeMiner.direct_groupby import ATonlyMiner, CTonlyMiner
     from ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
     from ResourceProfiler.raw_profiler import count_execution_frequency
     from OrganizationalModelMiner.clustering.hierarchical import _ahc
+    from OrganizationalModelMiner.community.graph_partitioning import _mjc
 
     #mode_miner = ATonlyMiner(el)
-    mode_miner = CTonlyMiner(el, case_attr_name='(case) channel')
+    #mode_miner = CTonlyMiner(el, case_attr_name='(case) channel')
     #mode_miner = TraceClusteringCTMiner(el, fn_partition=fn_partition)
 
     '''
-        Each of the particular selection of "k" is evaluated by both:
+        For clustering based approaches:
+        each of the particular selection of "k" is evaluated by both:
         - a value resulted from measuring by elbow method, cf.
             (https://en.wikipedia.org/wiki/Elbow_method_(clustering))
         - decision drawn from silhouette analysis, cf.
             (https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_silhouette_analysis.html)
+        For graph partitioning based approaches:
+        each of the particular selection of "k" is evaluated by both:
+        - the modularity of the network, cf.
+            (Sect. 11.3.3, Data Mining: Concepts and Techniques, J. Han et al.)
     '''
-    ''' {12} items are collected for analysis:
+    ''' {13} items may be collected for analysis:
         - the result from silhouette analysis (k_flag),
         - the average value of silhouette score (of all resources), excluding
           those designated to singleton clusters;
-        - the value from elbow method (cf. TODO) (of the whole clustering);
+        - the value from elbow method (of the whole clustering);
         - the number of singleton clusters;
         - the number of resources with POSITIVE silhouette score;
         - the number of resources with NEGATIVE silhouette score;
@@ -76,14 +80,15 @@ if __name__ == '__main__':
     num_cases_total = len(set(el['case_id']))
 
     log = el
+
     iteration = 1
     discarded_resources_singleton = list()
     discarded_resources_negative = list()
     while iteration <= MAX_ITER:
         print('-' * 30 + 'Iteration: {}'.format(iteration) + '-' * 30)
 
-        rl = mode_miner.derive_resource_log(log)
-        profiles = count_execution_frequency(rl, scale='log')
+        #rl = mode_miner.derive_resource_log(log)
+        #profiles = count_execution_frequency(rl, scale='normalize')
         l_measured_values = list()
         for k in num_groups:
             # calculate silhouette scores and variance explained (for each K)
@@ -92,18 +97,17 @@ if __name__ == '__main__':
             var_pct = variance_explained_percentage(
                 ogs, profiles)
 
-            # analyze the required items (for each K)
             # object-level
             mean_score_overall = mean(
                 list(scores.values()))
-            num_singleton_clusters = sum(
-                [1 for x in scores.values() if x == 0.0])
             num_pos_score_objects = sum(
                 [1 for x in scores.values() if x > 0.0])
             num_neg_score_objects = sum(
                 [1 for x in scores.values() if x < 0.0])
 
             # cluster-level
+            num_singleton_clusters = sum(
+                [1 for og in ogs if len(og) == 1])
             scores_clu = list()
             for g in ogs:
                 if len(g) > 1:
@@ -120,7 +124,8 @@ if __name__ == '__main__':
                 [(x[1] >= mean_score_overall) for x in scores_clu])
 
             # amount of resources, cases to be discarded (for each K)
-            l_r_rm = set(r for r in scores if scores[r] <= 0.0)
+            #l_r_rm = set(r for r in scores if scores[r] <= 0.0)
+            l_r_rm = frozenset.union(*(og for og in ogs if len(og) == 1))
             l_case_rm = list()
             for case_id, events in log.groupby('case_id'):
                 resources = set(events['resource'])
@@ -160,7 +165,7 @@ if __name__ == '__main__':
         # prompt for selecting a 'K'
         if iteration + 1 <= MAX_ITER:
             print('Select a "K":')
-            print('\tfor proceeding to the next iteration, type in the'
+            print('\tfor proceeding to the next iteration, type in the '
                 'number;')
             print('\tfor generating a final decision and stopping iteration,'
                 'type in the number ended with a hash "#", e.g. 5#')
@@ -195,11 +200,12 @@ if __name__ == '__main__':
                 log = log[log['case_id'].map(lambda x: x not in l_case_rm)]
 
         else:
-            print('\nMAX iteration reached:')
+            print('\nMAX iteration reached.')
 
         # proceed to the next iteration
         iteration += 1
     
+    '''
     print('-' * 80)
     total_rl = mode_miner.derive_resource_log(el)
     total_profiles = count_execution_frequency(total_rl, scale='log')
@@ -213,10 +219,13 @@ if __name__ == '__main__':
         print('at Iteration {}:'.format(it+1))
         print(total_profiles.loc[sorted(list(l_r_rm))])
 
-    # TODO: treat the negatives as of activity-based?
+    # TODO: treat the singletons & negatives as of activity-based?
+    print('Assume mixture being ACT-based:')
     profiles_act = count_execution_frequency(
         ATonlyMiner(el).derive_resource_log(el),
-        scale='log').loc[list(set.union(*discarded_resources_negative))]
+        #scale='log').loc[list(set.union(*discarded_resources_negative))]
+        scale='log').loc[list(set.union(
+            *(discarded_resources_singleton + discarded_resources_negative)))]
     if len(profiles_act) >= 3:
         for k in range(2, len(profiles_act)):
             ogs_negatives, _ = _ahc(
@@ -227,4 +236,23 @@ if __name__ == '__main__':
                 k, mean(list(scores_negatives.values()))))
     else:
         print(profiles_act)
+
+    # TODO: treat the singletons & negatives as of case-based?
+    print('Assume mixture being CASE-based:')
+    profiles_case = count_execution_frequency(
+        CTonlyMiner(el, case_attr_name='(case) channel').derive_resource_log(el),
+        #scale='log').loc[list(set.union(*discarded_resources_negative))]
+        scale='log').loc[list(set.union(
+            *(discarded_resources_singleton + discarded_resources_negative)))]
+    if len(profiles_case) >= 3:
+        for k in range(2, len(profiles_case)):
+            ogs_negatives, _ = _ahc(
+                profiles_case, k)
+            scores_negatives = silhouette_score(
+                ogs_negatives, profiles_case)
+            print('Silhouette scores (assuming CASE-based) for k={} is\t{}'.format(
+                k, mean(list(scores_negatives.values()))))
+    else:
+        print(profiles_case)
+    '''
 

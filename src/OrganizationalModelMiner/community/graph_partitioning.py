@@ -37,7 +37,7 @@ def _mja(
     from operator import itemgetter
     edges_sorted = sorted(sn.edges.data('weight'), key=itemgetter(2))
     from networkx import (
-            restricted_view, connected_components, number_connected_components)
+        restricted_view, connected_components, number_connected_components)
     # search the cut edge using bisection (i.e. binary search)
     lo = 0
     hi = len(edges_sorted)
@@ -52,8 +52,11 @@ def _mja(
     sub_sn = restricted_view(
         sn, nodes=[], edges=[(u, v) for u, v, w in edges_sorted[:lo]])
     ogs = list()
-    for comp in connected_components(sub_sn):
-        ogs.append(frozenset(comp))
+    if number_connected_components(sub_sn) == n_groups:
+        for comp in connected_components(sub_sn):
+            ogs.append(frozenset(comp))
+    else:
+        pass
     #print('{} organizational groups discovered.'.format(len(ogs)))
     return ogs
 
@@ -111,43 +114,139 @@ def mja(
             return _mja(profiles, best_k, metric)
 
 def _mjc(
-        el, n_groups):
+        el, n_groups, method='threshold'):
     '''
     This method implements the algorithm of discovering an organizational model
-    using edge thresholding in a network built by metrics based on joint
-    cases (MJC).
+    using a network built by metrics based on joint cases (MJC).
 
     Params:
         el: DataFrame
             The imported event log.
         n_groups: int
             The number of groups to be discovered.
+        method: str
+            The option designating the method to be used for finding
+            sub-networks, can be either of:
+                - 'threshold': using edge thresholding on edges to remove
+                  links. Default.
+                - 'centrality': disconnect nodes with high betweenness 
+                  centrality, i.e. shortest-path centrality.
     Returns:
         ogs: list of frozensets
             A list of organizational groups.
+        sn: NetworkX (Di)Graph
+            A resource social network used for discovering groups.
     '''
     print('Applying MJC:')
     from SocialNetworkMiner.joint_cases import working_together
-    sn = working_together(el)
-    print('[Warning] DiGraph casted to Graph.')
-    sn = sn.to_undirected()
-    from operator import itemgetter
-    edges_sorted = sorted(sn.edges.data('weight'), key=itemgetter(2))
-    from networkx import (
-            restricted_view, connected_components, number_connected_components)
-    for i in range(len(edges_sorted)):
+    from networkx import number_connected_components
+    sn = working_together(el, self_loop=False)
+
+    if method == 'threshold':
+        # Eliminate less-important edges and maintain the stronger ones
+
+        '''
+        # Casting from DiGraph to Graph needs to be configured manually
+        # otherwise NetworkX would approach this in an arbitrary fashion
+        from itertools import combinations
+        undirected_edge_list = list()
+        for pair in combinations(sn.nodes, r=2):
+            if (sn.has_edge(pair[0], pair[1]) and 
+                sn.has_edge(pair[1], pair[0])):
+                undirected_edge_wt = 0.5 * (
+                    sn[pair[0]][pair[1]]['weight'] +
+                    sn[pair[1]][pair[0]]['weight'])
+                undirected_edge_list.append(
+                    (pair[0], pair[1], {'weight': undirected_edge_wt}))
+            else:
+                pass
+        sn.clear()
+        del sn
+        from networkx import Graph
+        sn = Graph()
+        sn.add_edges_from(undirected_edge_list)
+        del undirected_edge_list[:]
+        print('[Warning] DiGraph casted to Graph.')
+        '''
+
+        from operator import itemgetter
+        edges_sorted = sorted(sn.edges.data('weight'), key=itemgetter(2))
+        from networkx import (
+            restricted_view,
+            strongly_connected_components,
+            number_strongly_connected_components)
+        # search the cut edge using bisection (i.e. binary search)
+        lo = 0
+        hi = len(edges_sorted)
+        while lo < hi:
+            mid = (lo + hi) // 2
+            sub_sn = restricted_view(
+                sn, nodes=[], edges=[(u, v) for u, v, w in edges_sorted[:mid]])
+            if number_strongly_connected_components(sub_sn) < n_groups:
+                lo = mid + 1
+            else:
+                hi = mid
         sub_sn = restricted_view(
-                sn, nodes=[], edges=[(u, v) for u, v, w in edges_sorted[:i]])
-        if number_connected_components(sub_sn) == n_groups:
-            ogs = list()
-            for comp in connected_components(sub_sn):
+            sn, nodes=[], edges=[(u, v) for u, v, w in edges_sorted[:lo]])
+        ogs = list()
+        if number_strongly_connected_components(sub_sn) == n_groups:
+            for comp in strongly_connected_components(sub_sn):
                 ogs.append(frozenset(comp))
-            #print('{} organizational groups discovered.'.format(len(ogs)))
-            return ogs
         else:
             pass
+        #print('{} organizational groups discovered.'.format(len(ogs)))
+        return ogs, working_together(el, self_loop=False)
 
-    return None
+    elif method == 'centrality':
+        # Disconnect particular nodes
+        
+        from networkx import betweenness_centrality
+        from networkx import (
+            restricted_view,
+            strongly_connected_components,
+            number_strongly_connected_components)
+        # betweenness centrality can be calculated on directed graphs
+        node_centrality = betweenness_centrality(sn, weight='weight')
+        from operator import itemgetter
+        # sorted the nodes by centrality in a descending order
+        nodes_sorted = list(map(itemgetter(0), sorted(
+            list(node_centrality.items()), key=itemgetter(1), reverse=True)))
+        # search the disconnected node using bisection (i.e. binary search)
+        lo = 0
+        hi = len(nodes_sorted)
+        while lo < hi:
+            mid = (lo + hi) // 2
+            # discard the connecting links but not the nodes themselves
+            nodes_to_disconnect = nodes_sorted[:mid]
+            edges_to_disconnect = (
+                list(sn.in_edges(nbunch=nodes_to_disconnect)) +
+                list(sn.out_edges(nbunch=nodes_to_disconnect)))
+            sub_sn = restricted_view(
+                sn, nodes=[],
+                edges=edges_to_disconnect)
+            if number_strongly_connected_components(sub_sn) < n_groups:
+                lo = mid + 1
+            else:
+                hi = mid
+        nodes_to_disconnect = nodes_sorted[:lo]
+        edges_to_disconnect = (
+            list(sn.in_edges(nbunch=nodes_to_disconnect)) +
+            list(sn.out_edges(nbunch=nodes_to_disconnect)))
+        sub_sn = restricted_view(
+            sn, nodes=[],
+            edges=edges_to_disconnect)
+
+        ogs = list()
+        if number_strongly_connected_components(sub_sn) == n_groups:
+            for comp in strongly_connected_components(sub_sn):
+                ogs.append(frozenset(comp))
+        else:
+            pass
+        #print('{} organizational groups discovered.'.format(len(ogs)))
+        return ogs, working_together(el, self_loop=False)
+
+    else:
+        exit('[Error] Unrecognized option for methods')
 
 # TODO: How to evaluate a result from applying MJC?
 def mjc(
