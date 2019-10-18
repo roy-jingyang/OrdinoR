@@ -16,7 +16,28 @@ if __name__ == '__main__':
         #el = read_disco_csv(f, mapping={'(case) channel': 6}) # bpic12 TODO
         #el = read_disco_csv(f, mapping={'(case) LoanGoal': 7}) # bpic17
 
-    num_groups = list(range(2, len(set(el['resource']))))
+    # event log preprocessing
+    # NOTE: filter cases done by one single resources
+    num_total_cases = len(set(el['case_id']))
+    num_total_resources = len(set(el['resource']))
+    teamwork_cases = set()
+    for case_id, events in el.groupby('case_id'):
+        if len(set(events['resource'])) > 1:
+            teamwork_cases.add(case_id)
+    # NOTE: filter resources with low event frequencies (< 1%)
+    num_total_events = len(el)
+    active_resources = set()
+    for resource, events in el.groupby('resource'):
+        if (len(events) / num_total_events) >= 0.01:
+            active_resources.add(resource)
+
+    el = el.loc[el['resource'].isin(active_resources) 
+                & el['case_id'].isin(teamwork_cases)]
+    print('{}/{} resources found active in {} cases.\n'.format(
+        len(active_resources), num_total_resources,
+        len(set(el['case_id']))))
+
+    num_groups = list(range(2, min(20, len(set(el['resource'])))))
     MAX_ITER = 1
 
     from ExecutionModeMiner.direct_groupby import ATonlyMiner, CTonlyMiner
@@ -101,8 +122,8 @@ if __name__ == '__main__':
             var_pct = variance_explained_percentage(
                 ogs, profiles)
             '''
-            #ogs, sn = _mjc(log, k, method='threshold')
-            ogs, sn = _mjc(log, k, method='centrality')
+            ogs, sn = _mjc(log, k, method='threshold')
+            #ogs, sn = _mjc(log, k, method='centrality')
             if len(ogs) == 0: # invalid selection of K
                 k_flag = False
                 l_measured_values.append((
@@ -160,7 +181,10 @@ if __name__ == '__main__':
 
             # amount of resources, cases to be discarded (for each K)
             #l_r_rm = set(r for r in scores if scores[r] <= 0.0)
-            l_r_rm = frozenset.union(*(og for og in ogs if len(og) == 1))
+            if num_singleton_clusters > 0:
+                l_r_rm = frozenset.union(*(og for og in ogs if len(og) == 1))
+            else:
+                l_r_rm = frozenset({})
             l_case_rm = list()
             for case_id, events in log.groupby('case_id'):
                 resources = set(events['resource'])

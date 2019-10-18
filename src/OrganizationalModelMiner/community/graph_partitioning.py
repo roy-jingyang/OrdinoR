@@ -139,8 +139,15 @@ def _mjc(
     '''
     print('Applying MJC:')
     from SocialNetworkMiner.joint_cases import working_together
-    from networkx import number_connected_components
-    sn = working_together(el, self_loop=False)
+    sn = working_together(el, normalize='resource')
+
+    from networkx import restricted_view
+    if sn.is_directed:
+        from networkx import strongly_connected_components as cc
+        from networkx import number_strongly_connected_components as num_cc
+    else:
+        from networkx import connected_components as cc
+        from networkx import number_connected_components as num_cc
 
     if method == 'threshold':
         # Eliminate less-important edges and maintain the stronger ones
@@ -171,10 +178,6 @@ def _mjc(
 
         from operator import itemgetter
         edges_sorted = sorted(sn.edges.data('weight'), key=itemgetter(2))
-        from networkx import (
-            restricted_view,
-            strongly_connected_components,
-            number_strongly_connected_components)
         # search the cut edge using bisection (i.e. binary search)
         lo = 0
         hi = len(edges_sorted)
@@ -182,29 +185,16 @@ def _mjc(
             mid = (lo + hi) // 2
             sub_sn = restricted_view(
                 sn, nodes=[], edges=[(u, v) for u, v, w in edges_sorted[:mid]])
-            if number_strongly_connected_components(sub_sn) < n_groups:
+            if num_cc(sub_sn) < n_groups:
                 lo = mid + 1
             else:
                 hi = mid
         sub_sn = restricted_view(
             sn, nodes=[], edges=[(u, v) for u, v, w in edges_sorted[:lo]])
-        ogs = list()
-        if number_strongly_connected_components(sub_sn) == n_groups:
-            for comp in strongly_connected_components(sub_sn):
-                ogs.append(frozenset(comp))
-        else:
-            pass
-        #print('{} organizational groups discovered.'.format(len(ogs)))
-        return ogs, working_together(el, self_loop=False)
-
     elif method == 'centrality':
         # Disconnect particular nodes
         
         from networkx import betweenness_centrality
-        from networkx import (
-            restricted_view,
-            strongly_connected_components,
-            number_strongly_connected_components)
         # betweenness centrality can be calculated on directed graphs
         node_centrality = betweenness_centrality(sn, weight='weight')
         from operator import itemgetter
@@ -224,7 +214,7 @@ def _mjc(
             sub_sn = restricted_view(
                 sn, nodes=[],
                 edges=edges_to_disconnect)
-            if number_strongly_connected_components(sub_sn) < n_groups:
+            if num_cc(sub_sn) < n_groups:
                 lo = mid + 1
             else:
                 hi = mid
@@ -233,20 +223,19 @@ def _mjc(
             list(sn.in_edges(nbunch=nodes_to_disconnect)) +
             list(sn.out_edges(nbunch=nodes_to_disconnect)))
         sub_sn = restricted_view(
-            sn, nodes=[],
-            edges=edges_to_disconnect)
-
-        ogs = list()
-        if number_strongly_connected_components(sub_sn) == n_groups:
-            for comp in strongly_connected_components(sub_sn):
-                ogs.append(frozenset(comp))
-        else:
-            pass
-        #print('{} organizational groups discovered.'.format(len(ogs)))
-        return ogs, working_together(el, self_loop=False)
+            sn, nodes=[], edges=edges_to_disconnect)
 
     else:
         exit('[Error] Unrecognized option for methods')
+
+    ogs = list()
+    if num_cc(sub_sn) == n_groups:
+        for comp in cc(sub_sn):
+            ogs.append(frozenset(comp))
+    else:
+        pass
+    #print('{} organizational groups discovered.'.format(len(ogs)))
+    return ogs, working_together(el, normalize='resource')
 
 # TODO: How to evaluate a result from applying MJC?
 def mjc(

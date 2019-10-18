@@ -7,8 +7,8 @@ event log, using metrics based on joint cases (ref. van der Aalst et. al, CSCW
 '''
 
 # Working together metric
-# TODO: should self loops be considered?
-def working_together(el, self_loop=False):
+# NOTE: Self loops are not taken into account (those should be 'handovers').
+def working_together(el, normalize=None):
     '''
     This method implements the mining based on working together metric, which
     considers how often two individuals are performing activities for the same
@@ -27,25 +27,36 @@ def working_together(el, self_loop=False):
     from itertools import permutations
     for case_id, trace in el.groupby('case_id'):
         participants = set(trace['resource'])
-        if len(participants) == 1:
-            # one resource handling the whole case
-            if self_loop:
-                r = participants.pop()
-                mat[r][r]['weight'] += 1
-            else:
-                pass
-        else:
-            # for each pair of participants simultaneously appeared
-            for pair in permutations(participants, r=2):
-                mat[pair[0]][pair[1]]['weight'] += 1
+        # for each pair of participants simultaneously appeared
+        for pair in permutations(participants, r=2):
+            mat[pair[0]][pair[1]]['weight'] += 1
 
-    # relative notation: divide #joint cases by #cases the resource appeared
-    for r, counts in mat.items():
-        total_n_cases = sum(d['weight'] for o, d in counts.items()) * 1.0
-        for o in counts.keys():
-            counts[o]['weight'] /= total_n_cases
-    from networkx import DiGraph
-    sn = DiGraph(mat)
+    if normalize is None:
+        is_directed_sn = False
+    elif normalize == 'resource':
+        is_directed_sn = True
+        # count for number of cases a resource participated
+        res_case_count = defaultdict(lambda: 0)
+        for res_case, events in el.groupby(['resource', 'case_id']):
+            res_case_count[res_case[0]] += 1
+        for r, counts in mat.items():
+            for o in counts.keys():
+                counts[o]['weight'] /= res_case_count[r]
+    elif normalize == 'total':
+        is_directed_sn = False
+        total_num_cases = len(set(el['case_id']))
+        for r, counts in mat.items():
+            for o in counts.keys():
+                counts[o]['weight'] /= total_num_cases
+    else:
+        exit('[Error] Unrecognized option.')
+
+    if is_directed_sn:
+        from networkx import DiGraph
+        sn = DiGraph(mat)
+    else:
+        from networkx import Graph
+        sn = Graph(mat)
     sn.add_nodes_from(el.groupby('resource').groups.keys()) # include isolates
     return sn
 

@@ -17,7 +17,7 @@ def performer_activity_matrix(el, use_log_scale):
         el: DataFrame
             The impoted event log.
         use_log_scale: boolean
-            Use the logrithm scale if the volume of work varies significantly.
+            Whether or not to apply logarithm scale on the values.
     Returns:
         DataFrame
             The contructed resource profiles as a pandas DataFrame.
