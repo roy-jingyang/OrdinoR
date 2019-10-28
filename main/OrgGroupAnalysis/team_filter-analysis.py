@@ -12,22 +12,40 @@ if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        el = read_disco_csv(f, mapping={'(case) channel': 6}) # wabo
-        #el = read_disco_csv(f, mapping={'(case) channel': 6}) # bpic12 TODO
+        #el = read_disco_csv(f, mapping={'action_code': 18}) # bpic15-*
+        el = read_disco_csv(f, mapping={'(case) last_phase': 14}) # bpic15-*
+        #el = read_disco_csv(f, mapping={'(case) channel': 6}) # wabo
         #el = read_disco_csv(f, mapping={'(case) LoanGoal': 7}) # bpic17
 
+    # event log preprocessing
+    # NOTE: filter cases done by one single resources
+    num_total_cases = len(set(el['case_id']))
+    num_total_resources = len(set(el['resource']))
+    teamwork_cases = set()
+    for case_id, events in el.groupby('case_id'):
+        if len(set(events['resource'])) > 1:
+            teamwork_cases.add(case_id)
+    # NOTE: filter resources with low event frequencies (< 1%)
+    num_total_events = len(el)
+    active_resources = set()
+    for resource, events in el.groupby('resource'):
+        if (len(events) / num_total_events) >= 0.01:
+            active_resources.add(resource)
+
+    el = el.loc[el['resource'].isin(active_resources) 
+                & el['case_id'].isin(teamwork_cases)]
+    print('{}/{} resources found active in {} cases.\n'.format(
+        len(active_resources), num_total_resources,
+        len(set(el['case_id']))))
+
     num_groups = list(range(2, len(set(el['resource']))))
-    MAX_ITER = 1
+    MAX_ITER = 2
 
     from ExecutionModeMiner.direct_groupby import ATonlyMiner, CTonlyMiner
     from ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
     from ResourceProfiler.raw_profiler import count_execution_frequency
     from OrganizationalModelMiner.clustering.hierarchical import _ahc
     from OrganizationalModelMiner.community.graph_partitioning import _mjc
-
-    #mode_miner = ATonlyMiner(el)
-    #mode_miner = CTonlyMiner(el, case_attr_name='(case) channel')
-    #mode_miner = TraceClusteringCTMiner(el, fn_partition=fn_partition)
 
     '''
         For clustering based approaches:
@@ -80,19 +98,40 @@ if __name__ == '__main__':
     num_cases_total = len(set(el['case_id']))
 
     log = el
+    '''
+    # NOTE: activity "cluster" by decoding action_code (bpic15-*)
+    from re import search as regex_search
+    def modify_activity(row):
+        match = regex_search(r'_\d\d\d', row['action_code'])
+        if match is None:
+            row['activity'] = 'unknown'
+        else:
+            row['activity'] = row['action_code'][:match.start()]
+        return row
+    log = log.apply(modify_activity, axis=1)
+    print('\t\tNumber of activity "clusters": {}'.format(
+        len(set(log['activity']))))
+    '''
+
+    #mode_miner = ATonlyMiner(log)
+    mode_miner = CTonlyMiner(log, case_attr_name='(case) last_phase')
+    #mode_miner = TraceClusteringCTMiner(log, fn_partition=fn_partition)
 
     iteration = 1
     discarded_resources_singleton = list()
     discarded_resources_negative = list()
     while iteration <= MAX_ITER:
         print('-' * 30 + 'Iteration: {}'.format(iteration) + '-' * 30)
+        rl = mode_miner.derive_resource_log(log)
+        profiles = count_execution_frequency(rl)
+        # drop the "unknowns" (bpic15-*)
+        if 'AT.unknown' in profiles.columns:
+            profiles.drop(columns='AT.unknown', inplace=True)
 
-        #rl = mode_miner.derive_resource_log(log)
-        #profiles = count_execution_frequency(rl, scale='normalize')
         l_measured_values = list()
         for k in num_groups:
             # calculate silhouette scores and variance explained (for each K)
-            ogs, _ = _ahc(profiles, k)
+            ogs, _ = _ahc(profiles, k, method='ward')
             scores = silhouette_score(ogs, profiles)
             var_pct = variance_explained_percentage(
                 ogs, profiles)
@@ -124,8 +163,12 @@ if __name__ == '__main__':
                 [(x[1] >= mean_score_overall) for x in scores_clu])
 
             # amount of resources, cases to be discarded (for each K)
-            #l_r_rm = set(r for r in scores if scores[r] <= 0.0)
-            l_r_rm = frozenset.union(*(og for og in ogs if len(og) == 1))
+            l_r_rm = set()
+            for og in ogs:
+                if len(og) == 1:
+                    l_r_rm.update(og)
+                else:
+                    pass
             l_case_rm = list()
             for case_id, events in log.groupby('case_id'):
                 resources = set(events['resource'])
@@ -180,10 +223,39 @@ if __name__ == '__main__':
 
             ogs, _ = _ahc(profiles, next_k)
             if stop_iteration:
+                from numpy import set_printoptions
+                set_printoptions(linewidth=100)
+                
+                resources = list(profiles.index)
+                group_labels = [-1] * len(resources)
                 for i, og in enumerate(ogs):
                     print('Group {}:'.format(i))
-                    print(profiles.loc[sorted(list(og))])
+                    print(profiles.loc[sorted(list(og))].values)
+                    for r in og:
+                        group_labels[resources.index(r)] = i # construct labels
                 iteration = MAX_ITER
+
+                # TODO: output "core" features (using feature selection)
+                from skfeature.utility.construct_W import construct_W
+                from skfeature.function.similarity_based import lap_score
+                group_labels = None
+                score = lap_score.lap_score(profiles.values,
+                    W=construct_W(profiles.values, kwargs_W={
+                        'metric': 'euclidean',
+                        'neighbor_mode': 'supervised',
+                        'weight_mode': 'binary',
+                        'k': 5, # TODO: why knn's K == 5? Can we neglect it?
+                        'y': group_labels})
+                    )
+                ranking_by_score = lap_score.feature_ranking(score) # ascending
+                print('Ranking of columns by feature selection:')
+                for i, col_idx in enumerate(ranking_by_score):
+                    print('Rank-{}: {}'.format(
+                        i+1, profiles.columns[col_idx]))
+                print('\t(Feature scores range from [{}, {}])'.format(
+                    score[ranking_by_score[0]],
+                    score[ranking_by_score[-1]]))
+
             else:
                 scores = silhouette_score(ogs, profiles)
                 l_r_rm = set(r for r in scores if scores[r] <= 0.0)

@@ -12,7 +12,30 @@ if __name__ == '__main__':
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f)
-        #el = read_disco_csv(f, mapping='(case) ')
+        '''
+        el = read_disco_csv(f, mapping={
+            '(case) IDofConceptCase': 6,
+            '(case) Includes_subCases': 7,
+            '(case) Responsible_actor': 8,
+            '(case) SUMleges': 9,
+            '(case) caseProcedure': 10,
+            '(case) caseStatus': 11,
+            '(case) case_type': 12,
+            '(case) landRegisterID': 13,
+            '(case) last_phase': 14,
+            '(case) parts': 15,
+            '(case) requestComplete': 16,
+            '(case) termName': 17,
+            'action_code': 18,
+            'activityNameNL': 19,
+            'dateFinished': 21,
+            'dateStop': 22,
+            'dueDate': 23,
+            'monitoringResource': 25,
+            'planned': 26,
+            'question': 27
+            })
+        '''
 
     # analysis on the input log
     from numpy import mean, std, median
@@ -22,6 +45,22 @@ if __name__ == '__main__':
     n_cases = len(el.groupby('case_id'))
     n_activities = len(el.groupby('activity'))
     n_resources = len(el.groupby('resource'))
+
+    '''
+    import re
+    regex = re.compile(r'_\d\d\d')
+    code_set = set()
+    for code in set(el['action_code']):
+        match = regex.search(code)
+        if match is not None:
+            code_set.add(code[:match.start()])
+        else:
+            exit('[Error] Non-matching action code')
+
+    print('total# of codes: {}'.format(len(code_set)))
+    print(code_set)
+    '''
+
 
     fmt = '%Y/%m/%d %H:%M:%S.%f'
     start_time = datetime.strptime(sorted(el['timestamp'])[0], fmt)
