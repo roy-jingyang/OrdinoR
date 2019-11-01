@@ -14,7 +14,7 @@ def search_k(profiles, num_groups, method):
             search_only=True)
     elif method == 'ahc':
         from OrganizationalModelMiner.clustering.hierarchical import ahc
-        return ahc(profiles, num_groups, method='average',
+        return ahc(profiles, num_groups, method='ward', metric='euclidean',
             search_only=True)
     elif method == 'gmm':
         from OrganizationalModelMiner.clustering.overlap import gmm
@@ -35,15 +35,21 @@ if __name__ == '__main__':
     # read event log as input
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        el = read_disco_csv(f)
-        #el = read_disco_csv(f, mapping={'(case) LoanGoal': 8})
+        #el = read_disco_csv(f)
+        el = read_disco_csv(f, mapping={'(case) channel': 6})
 
     # learn execution modes and convert to resource log
     from ExecutionModeMiner.direct_groupby import ATonlyMiner
-    from ExecutionModeMiner.direct_groupby import ATCTMiner
-    naive_exec_mode_miner = ATonlyMiner(el)
-    #naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
-    rl = naive_exec_mode_miner.derive_resource_log(el)
+    from ExecutionModeMiner.direct_groupby import FullMiner
+    from ExecutionModeMiner.informed_groupby import TraceClusteringFullMiner
+
+    #mode_miner = ATonlyMiner(el)
+    #mode_miner = FullMiner(el, 
+    #    case_attr_name='(case) channel', resolution='weekday')
+    mode_miner = TraceClusteringFullMiner(el,
+        fn_partition='input/extra_knowledge/wabo.bosek5.tcreport', resolution='weekday')
+
+    rl = mode_miner.derive_resource_log(el)
 
     print('Input the desired range [low, high): ', end=' ')
     num_groups = input()
@@ -52,9 +58,9 @@ if __name__ == '__main__':
 
     # build profiles
     from ResourceProfiler.raw_profiler import count_execution_frequency
-    profiles = count_execution_frequency(rl, scale='log')
+    profiles = count_execution_frequency(rl, scale='normalize')
 
-    methods = ['gmm', 'moc', 'mja', 'ahc']
+    methods = ['moc']
     from multiprocessing import Pool
     from functools import partial
     partial_search_k = partial(search_k,

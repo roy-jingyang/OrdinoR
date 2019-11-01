@@ -68,6 +68,7 @@ def fitness(rl, om):
     n_events = len(rl) # "|E_res|"
     return n_conformed_events / n_events
 
+# [DEPRECATED]
 def fitness1(rl, om):
     '''Calculate the fitness of an organizational model against a given
     resource log.
@@ -132,7 +133,7 @@ def rc_measure(rl, om):
     if n_cand_E == 0:
         print('[Warning] No candidate resource.')
         return float('nan')
-    if n_cand_E == 1:
+    elif n_cand_E == 1:
         print('[Warning] The overall number of candidate resources is 1.')
         return 1.0
     else:
@@ -140,6 +141,7 @@ def rc_measure(rl, om):
             [(n_cand_E - n_cand_e) / (n_cand_E - 1) for n_cand_e in l_n_cand_e])
         return rc_sum / n_conformed_events
 
+# [DEPRECATED]
 # precision (no frequency)
 def precision1(rl, om):
     '''Calculate the precision of an organizational model against a given
@@ -168,6 +170,7 @@ def precision1(rl, om):
             for r in om.resources())
     return n_conformed_res_events / n_allowed_res_events
 
+# [DEPRECATED]
 # precision (with frequency)
 def precision2(rl, om):
     '''Calculate the precision of an organizational model against a given
@@ -263,7 +266,7 @@ def precision3(rl, om):
     return precision
 
 # precision (event level; resource perspective; PREVIOUS ONE REVISED, new)
-def precision4(rl, om):
+def precision(rl, om):
     '''Calculate the precision of an organizational model against a given
     resource log.
 
@@ -292,26 +295,29 @@ def precision4(rl, om):
             cand_E.update(cand_e) # update cand(E) by union with cand(e)
     n_cand_E = len(cand_E)
 
-    n_allowed_events = 0
-    precision = 0.0
+    if n_cand_E == 0:
+        print('[Warning] No candidate resource.')
+        return float('nan')
+    else:
+        n_allowed_events = 0
+        precision = 0.0
 
-    for event in rl.itertuples(): # TODO: can we reduce redundancy?
-        if _is_allowed_event(event ,om):
-            n_allowed_events += 1
+        for event in rl.itertuples(): # TODO: can we reduce redundancy?
+            if _is_allowed_event(event ,om):
+                n_allowed_events += 1
 
-            m = (event.case_type, event.activity_type, event.time_type)
-            cand_groups = om.find_candidate_groups(m)
-            cand_e = frozenset.union(*cand_groups) # cand(e)
-            n_cand_e = len(cand_e)
+                m = (event.case_type, event.activity_type, event.time_type)
+                cand_groups = om.find_candidate_groups(m)
+                cand_e = frozenset.union(*cand_groups) # cand(e)
+                n_cand_e = len(cand_e)
 
-            if _is_conformed_event(event, om):
-                # give reward
-                precision += (n_cand_E + 1 - n_cand_e) / n_cand_E
-            else:
-                # NOTE: no extra penalty is given
-                precision += 0.0
+                if _is_conformed_event(event, om):
+                    # give reward
+                    precision += (n_cand_E + 1 - n_cand_e) / n_cand_E
+                else:
+                    # NOTE: no extra penalty is given
+                    precision += 0.0
 
-    precision *= 1 / n_allowed_events
-
-    return precision
+        precision *= 1 / n_allowed_events
+        return precision
 

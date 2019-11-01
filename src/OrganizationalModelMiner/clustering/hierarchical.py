@@ -101,10 +101,13 @@ def ahc(
     if len(n_groups) == 1:
         return _ahc(profiles, n_groups[0], method, metric)
     else:
-        from OrganizationalModelMiner.utilities import cross_validation_score
         best_k = -1
         best_score = float('-inf')
+        from OrganizationalModelMiner.utilities import cross_validation_score
+        from Evaluation.m2m.cluster_validation import silhouette_score
+        from numpy import mean, amax
         for k in n_groups:
+            # NOTE: use Cross Validation
             score = cross_validation_score(
                 X=profiles, miner=_ahc,
                 miner_params={
@@ -114,9 +117,32 @@ def ahc(
                 },
                 proximity_metric = metric
             )
+            '''
+
+            # NOTE: use Silhouette score
+            ogs, _ = _ahc(profiles, k, method, metric)
+            sil_scores = silhouette_score(ogs, profiles, metric=metric)
+            mean_sil_score = mean(list(sil_scores.values()))
+            scores_clu = list()
+            for g in ogs:
+                if len(g) > 1:
+                    score_g = mean([sil_scores[r]
+                        for r in g if sil_scores[r] != 0.0])
+                    max_score_g = amax([sil_scores[r]
+                        for r in g if sil_scores[r] != 0.0])
+                    scores_clu.append((score_g, max_score_g))
+            if all([(x[1] >= mean_sil_score) for x in scores_clu]):
+                # if it is a valid 'K'
+                score = mean_sil_score
+            else:
+                # if it is an invalid 'K'
+                score = float('-inf')
+            '''
+
             if score > best_score:
                 best_score = score
                 best_k = k
+
         print('-' * 80)
         print('Selected "K" = {}'.format(best_k))
         if search_only:

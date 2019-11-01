@@ -177,10 +177,13 @@ def gmm(
     if len(n_groups) == 1:
         return _gmm(profiles, n_groups[0], threshold, init, n_init)
     else:
-        from OrganizationalModelMiner.utilities import cross_validation_score
         best_k = -1
         best_score = float('-inf')
+        from OrganizationalModelMiner.utilities import cross_validation_score
+        from Evaluation.m2m.cluster_validation import silhouette_score
+        from numpy import mean, amax
         for k in n_groups:
+            # NOTE: use Cross Validation
             score = cross_validation_score(
                 X=profiles, miner=_gmm,
                 miner_params={
@@ -191,6 +194,28 @@ def gmm(
                 },
                 proximity_metric='euclidean'
             )
+            '''
+
+            # NOTE: use Silhouette score
+            ogs = _gmm(profiles, k, threshold, init, n_init)
+            sil_scores = silhouette_score(ogs, profiles, metric='euclidean')
+            mean_sil_score = mean(list(sil_scores.values()))
+            scores_clu = list()
+            for g in ogs:
+                if len(g) > 1:
+                    score_g = mean([sil_scores[r]
+                        for r in g if sil_scores[r] != 0.0])
+                    max_score_g = amax([sil_scores[r]
+                        for r in g if sil_scores[r] != 0.0])
+                    scores_clu.append((score_g, max_score_g))
+            if all([(x[1] >= mean_sil_score) for x in scores_clu]):
+                # if it is a valid 'K'
+                score = mean_sil_score
+            else:
+                # if it is an invalid 'K'
+                score = float('-inf')
+            '''
+
             if score > best_score:
                 best_score = score
                 best_k = k
@@ -339,10 +364,13 @@ def moc(
     if len(n_groups) == 1:
         return _moc(profiles, n_groups[0], init, n_init)
     else:
-        from OrganizationalModelMiner.utilities import cross_validation_score
         best_k = -1
         best_score = float('-inf')
+        from OrganizationalModelMiner.utilities import cross_validation_score
+        from Evaluation.m2m.cluster_validation import silhouette_score
+        from numpy import mean, amax
         for k in n_groups:
+            # NOTE: use Cross Validation
             score = cross_validation_score(
                 X=profiles, miner=_moc,
                 miner_params={
@@ -352,6 +380,28 @@ def moc(
                 },
                 proximity_metric='euclidean'
             )
+            '''
+
+            # NOTE: use Silhouette score
+            ogs, _ = _moc(profiles, k, init, n_init)
+            sil_scores = silhouette_score(ogs, profiles, metric='euclidean')
+            mean_sil_score = mean(list(sil_scores.values()))
+            scores_clu = list()
+            for g in ogs:
+                if len(g) > 1:
+                    score_g = mean([sil_scores[r]
+                        for r in g if sil_scores[r] != 0.0])
+                    max_score_g = amax([sil_scores[r]
+                        for r in g if sil_scores[r] != 0.0])
+                    scores_clu.append((score_g, max_score_g))
+            if all([(x[1] >= mean_sil_score) for x in scores_clu]):
+                # if it is a valid 'K'
+                score = mean_sil_score
+            else:
+                # if it is an invalid 'K'
+                score = float('-inf')
+            '''
+
             if score > best_score:
                 best_score = score
                 best_k = k

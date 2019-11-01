@@ -70,10 +70,10 @@ def execute(setup, seq_ix, exp_dirpath):
     profiler = _import_block(sequence[step]['invoke'])
     params = sequence[step].get('params', None)
     if params is None:
-        exit('[Node Error]\t"{}"'.format(sequence[step]['label']))
+        profiles = profiler(rl)
     else:
         params = eval(params)
-    profiles = profiler(rl, **params)
+        profiles = profiler(rl, **params)
 
     # Step 3: discover resource grouping
     step += 1
@@ -125,12 +125,10 @@ def execute(setup, seq_ix, exp_dirpath):
     # TODO: Hard-coded evalution measure (TBD) cont.
     # 2. (New) Fitness & Precision values
     from Evaluation.l2m.conformance import (
-        fitness, rc_measure, precision2, precision1, precision4)
+        fitness, rc_measure, precision)
     fitness = fitness(rl, om)
     rc_measure = rc_measure(rl, om)
-    precision2 = precision2(rl, om)
-    precision1 = precision1(rl, om)
-    precision4 = precision4(rl, om)
+    precision = precision(rl, om)
 
     # 3. Overlapping Density & Overlapping Diversity (avg.)
     k = om.size()
@@ -150,15 +148,18 @@ def execute(setup, seq_ix, exp_dirpath):
             if n_ov_res > 0 else float('nan'))
     
     # export organizational models
-    fnout = '{}-{}.om'.format(discoverer_name, assigner_name)
+    fnout = '{}-{}-{}.om'.format(
+        exec_mode_miner_name, discoverer_name, assigner_name)
     with open(join(exp_dirpath, fnout), 'w') as fout:
         om.to_file_csv(fout)
 
-    return ('{}-{}'.format(discoverer_name, assigner_name), 
-            silhouette, 
-            k, fitness, rc_measure, precision2, precision1,
-            precision4,
-            ov_density, avg_ov_diversity)
+    return ('{}-{}-{}'.format(
+            exec_mode_miner_name, discoverer_name, assigner_name), 
+        silhouette, 
+        k, fitness, rc_measure,
+        precision,
+        ov_density,
+        avg_ov_diversity)
 
 if __name__ == '__main__':
     fn_setup = sys.argv[1]

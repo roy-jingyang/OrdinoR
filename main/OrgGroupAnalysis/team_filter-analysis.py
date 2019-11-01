@@ -5,6 +5,7 @@ import sys
 sys.path.append('./src/')
 
 fn_event_log = sys.argv[1]
+fnout = sys.argv[2]
 
 if __name__ == '__main__':
     # Configuration based on given log (hard-coded)
@@ -223,11 +224,11 @@ if __name__ == '__main__':
 
             ogs, _ = _ahc(profiles, next_k)
             if stop_iteration:
-                from numpy import set_printoptions
+                from numpy import set_printoptions, array
                 set_printoptions(linewidth=100)
                 
                 resources = list(profiles.index)
-                group_labels = [-1] * len(resources)
+                group_labels = array([-1] * len(resources))
                 for i, og in enumerate(ogs):
                     print('Group {}:'.format(i))
                     print(profiles.loc[sorted(list(og))].values)
@@ -235,18 +236,25 @@ if __name__ == '__main__':
                         group_labels[resources.index(r)] = i # construct labels
                 iteration = MAX_ITER
 
+                # NOTE: for export use
+                from copy import deepcopy
+                df = deepcopy(profiles)
+                df['Group label'] = group_labels
+                df.to_csv(fnout)
+                exit()
+
                 # TODO: output "core" features (using feature selection)
                 from skfeature.utility.construct_W import construct_W
                 from skfeature.function.similarity_based import lap_score
-                group_labels = None
                 score = lap_score.lap_score(profiles.values,
-                    W=construct_W(profiles.values, kwargs_W={
-                        'metric': 'euclidean',
-                        'neighbor_mode': 'supervised',
-                        'weight_mode': 'binary',
-                        'k': 5, # TODO: why knn's K == 5? Can we neglect it?
-                        'y': group_labels})
-                    )
+                    W=construct_W(profiles.values,
+                        y=array(group_labels).reshape(len(resources), 1),
+                        metric='euclidean',
+                        neighbor_mode='supervised',
+                        weight_mode='heat_kernel',
+                        k=2,
+                        t=1))
+                print(score)
                 ranking_by_score = lap_score.feature_ranking(score) # ascending
                 print('Ranking of columns by feature selection:')
                 for i, col_idx in enumerate(ranking_by_score):

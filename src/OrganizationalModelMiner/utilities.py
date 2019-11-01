@@ -39,7 +39,7 @@ def cross_validation_score(
     # split input dataset into specific number of folds
     from copy import copy
     index = copy(list(X.index))
-    # TODO
+    # NOTE: shuffle / not?
     #from numpy.random import shuffle
     #shuffle(index)
     from numpy import array_split

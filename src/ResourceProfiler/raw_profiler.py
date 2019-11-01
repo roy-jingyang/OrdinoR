@@ -5,7 +5,6 @@ This module contains the implementation of profiling a resource using the
 "raw" information in the given resource log. Methods include:
 '''
 
-# TODO
 def count_execution_frequency(rl, scale=None):
     '''
     This method builds a "profile" based on how frequent individuals originated

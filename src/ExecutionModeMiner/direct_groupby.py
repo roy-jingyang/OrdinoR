@@ -207,3 +207,30 @@ class ATTTMiner(ATonlyMiner):
         from pandas import DataFrame
         return DataFrame(rl)
 
+class FullMiner(CTonlyMiner, ATTTMiner):
+    '''(CT + AT + TT method) Based on CTonlyMiner (CT only) and
+    ATTTMiner (AT + TT). All three dimensions are considered.
+    '''
+
+    def __init__(self, el, 
+        case_attr_name, resolution, datetime_format='%Y/%m/%d %H:%M:%S.%f'):
+        CTonlyMiner._build_ctypes(self, el, case_attr_name)
+        ATTTMiner._build_atypes(self, el)
+        ATTTMiner._build_ttypes(self, el, resolution, datetime_format)
+        self.verify()
+
+    def derive_resource_log(self, el):
+        # Note: only E_res (resource events) should be considered
+        rl = list()
+        for event in el.itertuples(): # keep order
+            if event.resource != '' and event.resource is not None:
+                rl.append({
+                    'resource': event.resource,
+                    'case_type': self._ctypes[event.case_id],
+                    'activity_type': self._atypes[event.activity],
+                    'time_type': self._ttypes[event.timestamp],
+                })
+
+        from pandas import DataFrame
+        return DataFrame(rl)
+
