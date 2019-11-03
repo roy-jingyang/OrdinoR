@@ -83,65 +83,78 @@ def full_recall(group, rl):
         rl: DataFrame
             The resource log.
     Returns:
-        modes: frozenset
+        modes: list
             The execution modes corresponded to the resources.
     '''
     print('Applying FullRecall for mode assignment:')
-    modes = set()
+    modes = list()
     grouped_by_resource = rl.groupby('resource')
 
     for r in group:
         for event in grouped_by_resource.get_group(r).itertuples():
             m = (event.case_type, event.activity_type, event.time_type)
-            modes.add(m)
+            if m not in modes:
+                modes.append(m)
 
-    return frozenset(modes)
+    return modes
 
 def participation_first(group, rl, p):
     '''
     '''
     print('Applying ParticipationFirst with threshold {} '.format(p) +
         'for mode assignment:')
-    modes = set()
+    tmp_modes = list()
     all_execution_modes = set(rl[['case_type', 'activity_type', 'time_type']]
         .drop_duplicates().itertuples(index=False, name=None))
 
     for m in all_execution_modes:
-        if _participation_rate(group, m, rl) >= p:
-            modes.add(m)
+        par_rate = _participation_rate(group, m, rl)
+        if par_rate >= p:
+            tmp_modes.append((m, par_rate))
 
-    return frozenset(modes)
+    from operator import itemgetter
+    modes = list(item[0] 
+        for item in sorted(tmp_modes, key=itemgetter(1), reverse=True))
+    return modes
 
 def coverage_first(group, rl, p):
     '''
     '''
     print('Applying CoverageFirst with threshold {} '.format(p) +
         'for mode assignment:')
-    modes = set()
+    tmp_modes = list()
     all_execution_modes = set(rl[['case_type', 'activity_type', 'time_type']]
         .drop_duplicates().itertuples(index=False, name=None))
 
     for m in all_execution_modes:
-        if _coverage(group, m, rl) >= p:
-            modes.add(m)
+        coverage = _coverage(group, m, rl)
+        if coverage >= p:
+            tmp_modes.append((m, coverage))
 
-    return frozenset(modes)
+    from operator import itemgetter
+    modes = list(item[0] 
+        for item in sorted(tmp_modes, key=itemgetter(1), reverse=True))
+    return modes
 
 def overall_score(group, rl, p, w1=0.5, w2=0.5):
     '''
     '''
     print('Applying OverallScore with weights ({}, {}) '.format(w1, w2) +
         'and threshold {} '.format(p) + 'for mode assignment:')
-    modes = set()
+    tmp_modes = list()
     all_execution_modes = set(rl[['case_type', 'activity_type', 'time_type']]
         .drop_duplicates().itertuples(index=False, name=None))
 
     for m in all_execution_modes:
-        if (w1 * _participation_rate(group, m, rl) + 
-            w2 * _coverage(group, m, rl)) >= p:
-            modes.add(m)
+        score = (w1 * _participation_rate(group, m, rl) + 
+            w2 * _coverage(group, m, rl))
+        if score >= p:
+            tmp_modes.append((m, score))
 
-    return frozenset(modes)
+    from operator import itemgetter
+    modes = list(item[0] 
+        for item in sorted(tmp_modes, key=itemgetter(1), reverse=True))
+    return modes
 
 # [DEPRECATED]
 def assign_by_proportion(group, rl, p):

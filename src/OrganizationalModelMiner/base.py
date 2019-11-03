@@ -10,8 +10,6 @@ by Song & van der Aalst (ref. Song & van der Aalst, DSS 2008), as a simple
 approach.
 '''
 
-from collections import defaultdict
-
 class OrganizationalModel:
     '''This class provides mainly the definition of the underly data structure:
         * Resource Group ("rg")
@@ -34,12 +32,13 @@ class OrganizationalModel:
         self._mem = dict()
         self._cap = dict()
         
+        from collections import defaultdict
         # An extra python dict recording the belonging of each resource, i.e. a
         # reverse mapping of Membership ("mem") - the individual resource POV.
-        self._rmem = defaultdict(lambda: set())
+        self._rmem = defaultdict(set)
         # An extra python dict recording the qualified groups for each execution
         # mode, i.e. a reverse mapping of Capability ("cap").
-        self._rcap = defaultdict(lambda: set())
+        self._rcap = defaultdict(set)
         
     def add_group(self, og, exec_modes):
         '''Add a new group into the organizational model.
@@ -48,14 +47,14 @@ class OrganizationalModel:
         ----------
         og: iterator
             The ids of resources to be added as a resource group.
-        exec_modes: iterator (frozenset or dict of frozensets)
+        exec_modes: iterator (list or dict of lists)
             The execution modes corresponding to the group.
 
         Returns
         -------
         '''
 
-        if type(exec_modes) == frozenset:
+        if type(exec_modes) == list:
             # no refinement applied
             self._rg_id += 1
             self._rg[self._rg_id] = '' # TODO: further description of a group
@@ -67,11 +66,12 @@ class OrganizationalModel:
                 self._rmem[r].add(self._rg_id)
 
             # another two-way dict here
-            self._cap[self._rg_id] = set()
+            self._cap[self._rg_id] = list()
             for m in exec_modes:
-                self._cap[self._rg_id].add(m)
+                self._cap[self._rg_id].append(m)
                 self._rcap[m].add(self._rg_id)
-        elif type(exec_modes) == dict:
+
+        elif type(exec_modes) == list:
             # refinement applied
             for subog, subm in exec_modes.items():
                 if subog not in self._mem.values():
@@ -83,17 +83,17 @@ class OrganizationalModel:
                         self._mem[self._rg_id].add(r)
                         self._rmem[r].add(self._rg_id)
 
-                    self._cap[self._rg_id] = set()
+                    self._cap[self._rg_id] = list()
                     for m in subm:
-                        self._cap[self._rg_id].add(m)
+                        self._cap[self._rg_id].append(m)
                         self._rcap[m].add(self._rg_id)
+
                 else:
                     pass
+
         else:
             exit('[Error] Invalid execution modes')
             
-        return
-
     def size(self):
         '''Query the size (number of organizational groups) of the model.
 
@@ -165,7 +165,7 @@ class OrganizationalModel:
         '''
         return list(set.union(
             *[self._cap[rg_id] for rg_id in self._rmem[r]]))
-
+    
     def find_candidate_groups(self, exec_mode):
         '''Query the capable groups (i.e. groups that can perform the execution
         mode according to the model) given an execution mode.
@@ -183,31 +183,47 @@ class OrganizationalModel:
         return [frozenset(self._mem[rg_id]) for rg_id in self._rcap[exec_mode]]
 
     def find_all_groups(self):
-        '''Simply return all the discovered groups.
+        '''Simply return all the groups.
 
         Parameters
         ----------
 
         Returns
         -------
-        list of frozensets
-            The groups of resources.
+        list of 2-tuples: (int, frozenset)
+            The ids and member resources of the groups.
         '''
-        return [frozenset(g) for g in self._mem.values()]
+        return [(rg_id, frozenset(self._mem[rg_id])) 
+            for rg_id in self._rg.keys()]
+
+    def find_group_execution_modes(self, rg_id):
+        '''Query the capable execution modes given a group identified by its
+        id.
+
+        Parameters
+        ----------
+        rg_id: int
+            The given group id.
+
+        Returns
+        -------
+        list of 3-tuples
+            The allowed execution modes specific to the given group.
+        '''
+        return self._cap[rg_id]
     
     def find_all_execution_modes(self):
-        '''Simply return all the execution modes related to the discovered
-        groups.
+        '''Simply return all the execution modes related to the groups.
 
         Parameters
         ----------
 
         Returns
         -------
-        list of frozensets of 3-tuples
+        list of lists of 3-tuples
             The execution modes related.
         '''
-        return [frozenset(em) for em in self._cap.values()]
+        return [em for em in self._cap.values()]
     
     # IO related methods
     def to_file_csv(self, f):
@@ -266,7 +282,7 @@ class OrganizationalModel:
             exec_modes = list()
             for str_mode in row[2].split(';'):
                 exec_modes.append(tuple(str_mode.split('|')))
-            om_obj.add_group(group, frozenset(exec_modes))
+            om_obj.add_group(group, exec_modes)
         return om_obj
 
 
