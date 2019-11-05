@@ -20,7 +20,7 @@ if __name__ == '__main__':
     n_groups = om.size()
     resources = om.resources()
     n_resources = len(resources)
-    groups = om.find_all_groups()
+    groups = [og for og_id, og in om.find_all_groups()]
 
     # overview
     print('{} resources IN {} groups.'.format(

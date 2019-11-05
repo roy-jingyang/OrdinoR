@@ -36,18 +36,20 @@ if __name__ == '__main__':
     from IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         #el = read_disco_csv(f)
-        el = read_disco_csv(f, mapping={'(case) channel': 6})
+        #el = read_disco_csv(f, mapping={'(case) channel': 6})
+        #el = read_disco_csv(f, mapping={'(case) channel': 6})
 
     # learn execution modes and convert to resource log
     from ExecutionModeMiner.direct_groupby import ATonlyMiner
     from ExecutionModeMiner.direct_groupby import FullMiner
     from ExecutionModeMiner.informed_groupby import TraceClusteringFullMiner
 
-    #mode_miner = ATonlyMiner(el)
+    mode_miner = ATonlyMiner(el)
     #mode_miner = FullMiner(el, 
     #    case_attr_name='(case) channel', resolution='weekday')
-    mode_miner = TraceClusteringFullMiner(el,
-        fn_partition='input/extra_knowledge/wabo.bosek5.tcreport', resolution='weekday')
+    #mode_miner = TraceClusteringFullMiner(el,
+        #fn_partition='input/extra_knowledge/wabo.bosek5.tcreport', resolution='weekday')
+    #    fn_partition='input/extra_knowledge/bpic12.bosek5.tcreport', resolution='weekday')
 
     rl = mode_miner.derive_resource_log(el)
 
@@ -58,16 +60,14 @@ if __name__ == '__main__':
 
     # build profiles
     from ResourceProfiler.raw_profiler import count_execution_frequency
-    profiles = count_execution_frequency(rl, scale='normalize')
+    profiles = count_execution_frequency(rl)
 
-    methods = ['moc']
+    methods = ['ahc', 'moc']
     from multiprocessing import Pool
     from functools import partial
     partial_search_k = partial(search_k,
             profiles, num_groups)
     best_ks = list(map(partial_search_k, methods))
-    #with Pool(len(methods)) as p:
-    #    best_ks = p.map(partial_search_k, methods)
 
     with open(fnout, 'w') as f:
         f.write('-' * 35 + 'Best "K"' + '-' * 35 + '\n')

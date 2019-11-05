@@ -25,7 +25,7 @@ if __name__ == '__main__':
     with open(fn_om, 'r', encoding='utf-8') as f:
         om = OrganizationalModelMiner.from_file_csv(f)
 
-    ogs = om.find_all_groups()
+    ogs = [og for og_id, og in om.find_all_groups()]
 
     from OrganizationalModelMiner.mode_assignment import assign_by_any as assign
     om_new = OrganizationalModel()

@@ -133,6 +133,15 @@ class BaseMiner(ABC):
         return is_disjoint and is_union
 
     def verify(self):
+        '''Verify if the built execution modes are valid and print prompting
+        information.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        '''
         if (self.is_ctypes_verified and self.is_atypes_verified and
                 self.is_ttypes_verified):
             print('-' * 80)
@@ -156,4 +165,8 @@ class BaseMiner(ABC):
             print('T Types:\t{}'.format('VERIFIED' if self.is_ttypes_verified
                 else 'INVALID'))
             exit('[Error] Failed to verify the collected execution modes: ')
+
+    # TODO: provide two translation functions:
+    # from original activity labels/case ids/timestamps to types
+    # from types to the originals
     

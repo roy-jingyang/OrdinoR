@@ -9,44 +9,216 @@ sys.path.append('./src/')
 import matplotlib
 matplotlib.use("Agg") 
 from matplotlib import pyplot as plt
-from numpy import array, mean, min, max
+
+from numpy import array, mean, min, max, concatenate
+from pandas import DataFrame
+
+import seaborn as sns
 
 fn_event_log = sys.argv[1]
 fn_org_model = sys.argv[2]
 dirout_graph = sys.argv[3]
 
-def plot_clustering_2d(clustering):
-    xy = X_dict['x']
-    dot_labels = array(list(('Group {}'.format(g)) for g in labels))
+def normalize(x):
+    x_min = min(x)
+    x_max = max(x)
+    return (x - x_min) / (x_max - x_min)
 
-    import matplotlib.gridspec as gridspec
-    from scipy.spatial.distance import pdist, squareform
+# [DEPRECATED]
+def plot_clustering_2d(clustering):
+    from matplotlib.offsetbox import TextArea, AnnotationBbox
 
     import sklearn.manifold as manifold
-
     N_components = 2
     methods = {
-        'Isomap': {}, 
+        #'Isomap': {}, 
         'MDS': {'metric': True},
     }
 
     for i, method in enumerate(methods.keys()):
-        fig = plt.figure(figsize=(10, 10), dpi=100)
-        #fig(figsize=(8, 6), dpi=100, facecolor='w', edgecolor='k')
-        ax = fig.add_subplot(111) 
-        ax.set_title(method)
+        fig = plt.figure(figsize=(10, 10), dpi=300)
+        ax = fig.add_subplot(1, 1, 1) 
+
+        # transform to 2d
         class_name = method.split('-')[0]
         Method = getattr(manifold, class_name)
-        xy_red = Method(n_components=2, **methods[method]).fit_transform(
-            array(X))
-        ax.scatter(x=xy_red[:, 0], y=xy_red[:, 1], c=labels,
-            s=clustering['size'])
-        for ig, g in enumerate(dot_labels):
-            ax.annotate(g, (xy[ig, 0], xy[ig, 1]))
-        #texts = 
+
+        mf = Method(n_components=2, **methods[method]).fit(
+            array(clustering['xy_centroids']))
+        xy_c_red = mf.embedding_[:len(clustering['xy_centroids']), :]
+
+        # plot scatters
+        ax.scatter(x=xy_c_red[:, 0], y=xy_c_red[:, 1],
+            c=clustering['labels_centroids'],
+            s=array(list(150 * n for n in clustering['size'])))
+
+        # annotate with textbox
+        description_template = '''
+            Group #{} with {} resources:
+            {}
+            Capabilities (Top-3 most-related):
+            {}'''
+
+        for ig, g in enumerate(clustering['labels_centroids']):
+            description = description_template.format(
+                g, clustering['size'][ig],
+                ','.join(list((clustering['members'][ig]))),
+                '\n'.join(str(x) for x in clustering['modes'][ig][:3]))
+            offsetbox = TextArea(description, minimumdescent=False,
+                textprops={'fontsize': 6})
+
+            ab = AnnotationBbox(offsetbox, 
+                xy=(xy_c_red[ig, 0], xy_c_red[ig, 1]),
+                xybox=(-0.01+ xy_c_red[ig, 0], -0.03 + xy_c_red[ig, 1]),
+                #boxcoords='offset points',
+                arrowprops=dict(arrowstyle="->"))
+            ax.add_artist(ab)
+
         ax.axis('off')
         plt.savefig(dirout_graph + '/' + method) 
 
+def plot_clustering_2d(clustering):
+    from matplotlib.offsetbox import TextArea, AnnotationBbox
+
+    import sklearn.manifold as manifold
+    N_components = 2
+    methods = {
+        #'Isomap': {}, 
+        'MDS': {'metric': True},
+    }
+
+    for i, method in enumerate(methods.keys()):
+        # transform to 2d
+        class_name = method.split('-')[0]
+        Method = getattr(manifold, class_name)
+
+        mf = Method(n_components=2, **methods[method]).fit(
+            array(clustering['xy_centroids']))
+        xy_c_red = mf.embedding_
+
+        df = {
+            'Group': list('G{}'.format(x) 
+                for x in clustering['labels_centroids']),
+            'x_c_red': xy_c_red[:, 0],
+            'y_c_red': xy_c_red[:, 1],
+            'size': clustering['size'],
+        }
+
+        df = DataFrame.from_dict(df)
+
+        sns.set(font_scale=0.5)
+        ax = sns.scatterplot(data=df,
+            x='x_c_red', y='y_c_red',
+            hue='Group', size='size',
+            sizes=(10, 200),
+            legend=False)
+
+        description_template = '''
+            Group #{} with {} resources:
+            Capabilities (Top-3 most-related):
+            {}'''
+
+        for ig, g in enumerate(clustering['labels_centroids']):
+            description = description_template.format(
+                g, clustering['size'][ig],
+                #','.join(list((clustering['members'][ig]))),
+                '\n'.join(str(x) for x in clustering['modes'][ig][:3]))
+            #ax.text(df    
+
+        plt.tight_layout()
+        fig = ax.get_figure()
+        fig.savefig(dirout_graph + '/' + method, dpi=300) 
+
+def plot_clustering_heatmap(clustering, labeled_by='object'):
+    df = DataFrame(clustering['xy'], index=clustering['index'])
+    df['labels'] = clustering['labels']
+    df.sort_values('labels', inplace=True)
+
+    from scipy.spatial.distance import pdist, squareform
+    mat_pdist = squareform(pdist(df.values, metric='euclidean'))
+    mat_pdist = normalize(mat_pdist)
+
+    #sns.set(font_scale=0.5)
+
+    from matplotlib.patches import Rectangle
+    if labeled_by == 'object':
+        patch_pos = [0]
+
+        for i, s in enumerate(clustering['size']):
+            if i >= 1:
+                patch_pos.append(patch_pos[i-1] + clustering['size'][i-1])
+
+        ax = sns.heatmap(data=mat_pdist,
+            cmap='vlag',
+            xticklabels=df.index,
+            yticklabels=df.index)
+
+        # annotate groups
+        for i, s in enumerate(clustering['size']):
+            pos = patch_pos[i]
+            ax.add_patch(Rectangle((pos, pos),
+                width=s, height=s,
+                fill=False, edgecolor='yellow', 
+                linewidth=1))
+
+    elif labeled_by == 'cluster':
+        new_labels = list()
+        patch_pos = [0]
+
+        for i, s in enumerate(clustering['size']):
+            new_labels.append('Group {} (size {})'.format(
+                clustering['labels_centroids'][i], s))
+            if i >= 1:
+                patch_pos.append(patch_pos[i-1] + clustering['size'][i-1])
+            for n in range(s - 1):
+                new_labels.append('')
+
+        # create a copy for modification
+        from copy import deepcopy
+        from itertools import permutations
+        mat_pdist_md = deepcopy(mat_pdist)
+        # step-1: fill cells within clusters
+        for i, s in enumerate(clustering['size']):
+            pos = patch_pos[i]
+            if s > 1:
+                new_value = mean(mat_pdist[pos:pos+s, pos:pos+s])
+                mat_pdist_md[pos:pos+s, pos:pos+s] = new_value
+
+        # step-2: fill cells between clusters
+        l = list()
+        for i, s in enumerate(clustering['size']):
+            pos = patch_pos[i]
+            if i == 0:
+                continue
+
+            for prev_i in range(i):
+                u = pos
+                v = patch_pos[prev_i]
+                s_x = clustering['size'][prev_i]
+                new_value = mean(mat_pdist[u:u+s, v:v+s_x])
+                mat_pdist_md[u:u+s, v:v+s_x] = new_value
+                mat_pdist_md[v:v+s_x, u:u+s] = new_value
+
+        #print(len(l))
+
+        ax = sns.heatmap(data=mat_pdist_md,
+            cmap='vlag',
+            xticklabels=new_labels,
+            yticklabels=new_labels)
+
+        # annotate groups
+        for i, s in enumerate(clustering['size']):
+            pos = patch_pos[i]
+            ax.add_patch(Rectangle((pos, pos),
+                width=s, height=s,
+                fill=False, edgecolor='yellow', 
+                linewidth=1))
+    else:
+        exit('[Error] Unrecognized labelling option.')
+        
+    plt.tight_layout()
+    fig = ax.get_figure()
+    fig.savefig(dirout_graph + '/' + 'heatmap', dpi=300)
 
 if __name__ == '__main__':
     from OrganizationalModelMiner.base import OrganizationalModel
@@ -76,44 +248,43 @@ if __name__ == '__main__':
     rl = mode_miner.derive_resource_log(el)
     # build profiles
     from ResourceProfiler.raw_profiler import count_execution_frequency
-    profiles = count_execution_frequency(rl, scale='normalize')
+    profiles = count_execution_frequency(rl)
 
-    '''
-    resources = list(profiles.index)
-    labels = array([-1] * len(resources))
-    for i, og in enumerate(om.find_all_groups()):
-        for r in og:
-            labels[resources.index(r)] = i
-
-    plot_clustering_2d(profiles.values, labels)
-    print('{} resources plotted'.format(len(resources)))
-    '''
     # calculate the centroids
+    resources = list(profiles.index)
+    labels = [-1] * len(resources)
+
     centroids = list()
+    centroid_labels = list()
+
     group_members = list()
     group_modes = list()
     group_size = list()
+    num = 0
     for og_id, og in om.find_all_groups():
+        for r in og:
+            labels[resources.index(r)] = og_id
+
         centroids.append(mean(profiles.loc[list(og)].values, axis=0))
+        centroid_labels.append(og_id)  
+
         group_members.append(og)
         group_modes.append(om.find_group_execution_modes(og_id))
         group_size.append(len(og))
-    centroid_labels = array(range(om.size()))
 
-    print(om._mem[2])
-    print(group_members[2])
-    print(group_size[2])
-    print(om._cap[2])
-    print(group_modes[2])
-    exit()
+    #plot_clustering_2d({
+    plot_clustering_heatmap({
+        'index': list(profiles.index),
+        'xy': profiles.values,
+        'labels': labels,
+        'xy_centroids': centroids,
+        'labels_centroids': centroid_labels,
+        'size': group_size,
+        'members': group_members,
+        'modes': group_modes
+        },
+        labeled_by='object'
+    )
 
-    plot_clustering_2d({
-        'xy': centroids,
-        'label': centroid_labels,
-        'size': list(40 * n for n in group_size),
-        #'members': 
-    })
-    print('{} groups plotted (as centroids)'.format(om.size()))
-
-    
+    print('Plotting exported.')
 

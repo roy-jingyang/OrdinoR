@@ -19,6 +19,8 @@ dependencies:
   - glib
   - gst-plugins-base
   - gstreamer
+  - graphviz
+  - python-graphviz
   - icu
   - intel-openmp
   - ipython
@@ -62,6 +64,7 @@ dependencies:
   - readline
   - scikit-learn
   - scipy
+  - seaborn
   - setuptools
   - simplegeneric
   - scikit-feature

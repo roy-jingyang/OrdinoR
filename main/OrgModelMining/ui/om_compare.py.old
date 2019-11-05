@@ -16,7 +16,7 @@ if __name__ == '__main__':
     with open(fn_org_model, 'r', encoding='utf-8') as f:
         om = OrganizationalModel.from_file_csv(f)
 
-    groups = om.find_all_groups()
+    groups = [og for og_id, og in om.find_all_groups()]
     model = dict()
     for i, group in enumerate(groups):
         model[i] = group

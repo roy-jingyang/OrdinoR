@@ -25,7 +25,8 @@ class TraceClusteringCTMiner(CTonlyMiner):
         par = list()
         with open(fn_partition, 'r') as f_par:
             for line in f_par:
-                case_id, cluster = line.split('\t')[0], line.split('\t')[1]
+                case_id, cluster = (line.split('\t')[0].strip(), 
+                    line.split('\t')[1].strip())
                 self._ctypes[case_id] = 'CT.{}'.format(cluster)
 
         self.is_ctypes_verified = self.verify_partition(
