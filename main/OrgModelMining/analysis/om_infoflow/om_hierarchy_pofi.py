@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./src/')
+sys.path.append('./')
 
 fn_event_log = sys.argv[1]
 fn_org_model_hcy = sys.argv[2]
@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     # calculate the (normalized) index using the event log
     pofi_values = list()
-    from IO.reader import read_disco_csv
+    from orgminer.IO.reader import read_disco_csv
     cases = read_disco_csv(fn_event_log)
     for case_id, trace in cases.groupby('case_id'):
         pofi_case = 0

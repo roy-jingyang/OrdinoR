@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./src')
+sys.path.append('./')
 
 fn_event_log = sys.argv[1]
 
 if __name__ == '__main__':
     # read event log as input
     # specify the additional attributes included in each input event log
-    from IO.reader import read_disco_csv
+    from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f)
         '''

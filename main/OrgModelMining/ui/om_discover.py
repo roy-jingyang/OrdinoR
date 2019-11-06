@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./src/')
+sys.path.append('./')
 
 fn_event_log = sys.argv[1]
 fnout_org_model = sys.argv[2]
 
 if __name__ == '__main__':
     # read event log as input
-    from IO.reader import read_disco_csv
+    from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         #el = read_disco_csv(f)
         el = read_disco_csv(f, mapping={'(case) LoanGoal': 7})
@@ -30,32 +30,32 @@ if __name__ == '__main__':
         exit(1)
 
     elif mode_learning_option == 0:
-        from ExecutionModeMiner.direct_groupby import ATonlyMiner
+        from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner
         exec_mode_miner = ATonlyMiner(el)
 
     elif mode_learning_option == 1:
-        from ExecutionModeMiner.direct_groupby import CTonlyMiner
+        from orgminer.ExecutionModeMiner.direct_groupby import CTonlyMiner
         exec_mode_miner = CTonlyMiner(el, case_attr_name='')
 
     elif mode_learning_option == 2:
-        from ExecutionModeMiner.direct_groupby import ATCTMiner
+        from orgminer.ExecutionModeMiner.direct_groupby import ATCTMiner
         exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
 
     elif mode_learning_option == 3:
-        from ExecutionModeMiner.direct_groupby import ATTTMiner
+        from orgminer.ExecutionModeMiner.direct_groupby import ATTTMiner
         print('Input the desired datetime resolution:', end=' ')
         resolution = input()
         exec_mode_miner = ATTTMiner(el, resolution=resolution)
 
     elif mode_learning_option == 4:
-        from ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
+        from orgminer.ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
         print('Input the path of the partitioning file:', end=' ')
         fn_partition = input()
         exec_mode_miner = TraceClusteringCTMiner(
             el, fn_partition=fn_partition)
 
     elif mode_learning_option == 5:
-        from ExecutionModeMiner.informed_groupby import TraceClusteringFullMiner
+        from orgminer.ExecutionModeMiner.informed_groupby import TraceClusteringFullMiner
         print('Input the path of the partitioning file:', end=' ')
         fn_partition = input()
         print('Input the desired datetime resolution:', end=' ')
@@ -93,7 +93,7 @@ if __name__ == '__main__':
         exit(1)
 
     elif mining_option == 0:
-        from OrganizationalModelMiner.base import default_mining
+        from orgminer.OrganizationalModelMiner.base import default_mining
         ogs = default_mining(rl)
 
     elif mining_option == 1:
@@ -110,10 +110,9 @@ if __name__ == '__main__':
         method_option = int(input())
         if method_option == 0:
             # build profiles
-            from ResourceProfiler.raw_profiler import count_execution_frequency
+            from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
             profiles = count_execution_frequency(rl, scale='log')
-            from OrganizationalModelMiner.community.graph_partitioning import (
-                    mja)
+            from orgminer.OrganizationalModelMiner.community.graph_partitioning import mja
             # MJA -> select metric (Euclidean distance/PCC)
             print('Input a number to choose a metric:')
             print('\t0. Distance (Euclidean)')
@@ -125,8 +124,7 @@ if __name__ == '__main__':
                     profiles, num_groups, 
                     metric=metrics[metric_option])
         elif method_option == 1:
-            from OrganizationalModelMiner.clustering.graph_partitioning import (
-                    mjc)
+            from orgminer.OrganizationalModelMiner.clustering.graph_partitioning import mjc
             ogs = mjc(el, num_groups)
         else:
             raise Exception('Failed to recognize input option!')
@@ -145,9 +143,9 @@ if __name__ == '__main__':
         method_option = int(input())
         if method_option == 0:
             # build profiles
-            from ResourceProfiler.raw_profiler import count_execution_frequency
+            from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
             profiles = count_execution_frequency(rl, scale='log')
-            from OrganizationalModelMiner.clustering.hierarchical import ahc
+            from orgminer.OrganizationalModelMiner.clustering.hierarchical import ahc
             ogs, og_hcy = ahc(
                     profiles, num_groups, method='ward')
         else:
@@ -158,10 +156,10 @@ if __name__ == '__main__':
 
     elif mining_option == 3:
         # build profiles
-        from ResourceProfiler.raw_profiler import count_execution_frequency
+        from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
         profiles = count_execution_frequency(rl, scale='log')
 
-        from OrganizationalModelMiner.community import overlap
+        from orgminer.OrganizationalModelMiner.community import overlap
         print('Input a number to choose a method:')
         print('\t0. CFinder (Clique Percolation Method)') 
         print('\t1. LN + Louvain (Link partitioning)')
@@ -199,7 +197,7 @@ if __name__ == '__main__':
         num_groups = range(int(num_groups[0]), int(num_groups[1]))
 
         # build profiles
-        from ResourceProfiler.raw_profiler import count_execution_frequency
+        from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
         profiles = count_execution_frequency(rl, scale='log')
 
         print('Input a threshold value [0, 1), in order to determine the ' +
@@ -209,7 +207,7 @@ if __name__ == '__main__':
         user_selected_threshold = (float(user_selected_threshold)
                 if user_selected_threshold != '' else None)
 
-        from OrganizationalModelMiner.clustering.overlap import gmm
+        from orgminer.OrganizationalModelMiner.clustering.overlap import gmm
         ogs = gmm(
                 profiles, num_groups, threshold=user_selected_threshold,
                 init='kmeans')
@@ -230,10 +228,10 @@ if __name__ == '__main__':
         num_groups = range(int(num_groups[0]), int(num_groups[1]))
 
         # build profiles
-        from ResourceProfiler.raw_profiler import count_execution_frequency
+        from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
         profiles = count_execution_frequency(rl, scale='log')
 
-        from OrganizationalModelMiner.clustering.overlap import moc
+        from orgminer.OrganizationalModelMiner.clustering.overlap import moc
         ogs = moc(
                 profiles, num_groups,
                 init='kmeans')
@@ -255,7 +253,7 @@ if __name__ == '__main__':
         num_groups = range(int(num_groups[0]), int(num_groups[1]))
 
         # build profiles
-        from ResourceProfiler.raw_profiler import count_execution_frequency
+        from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
         profiles = count_execution_frequency(rl, scale='log')
 
         print('Input a threshold value [0, 1), in order to determine the ' +
@@ -265,7 +263,7 @@ if __name__ == '__main__':
         user_selected_threshold = (float(user_selected_threshold)
                 if user_selected_threshold != '' else None)
 
-        from OrganizationalModelMiner.clustering.overlap import fcm
+        from orgminer.OrganizationalModelMiner.clustering.overlap import fcm
         ogs = fcm(
                 profiles, num_groups, threshold=user_selected_threshold,
                 init='kmeans')
@@ -285,13 +283,14 @@ if __name__ == '__main__':
         exit(1)
 
 
-    from OrganizationalModelMiner.base import OrganizationalModel
+    from orgminer.OrganizationalModelMiner.base import OrganizationalModel
     om = OrganizationalModel()
 
     # assign execution modes to groups
-    from OrganizationalModelMiner.mode_assignment import participation_first
-    from OrganizationalModelMiner.mode_assignment import coverage_first
-    from OrganizationalModelMiner.mode_assignment import overall_score
+    from orgminer.OrganizationalModelMiner.mode_assignment import full_recall
+    from orgminer.OrganizationalModelMiner.mode_assignment import participation_first
+    from orgminer.OrganizationalModelMiner.mode_assignment import coverage_first
+    from orgminer.OrganizationalModelMiner.mode_assignment import overall_score
     for og in ogs:
         #modes = full_recall(og, rl)
         #modes = participation_first(og, rl, p=0.1)
@@ -302,14 +301,14 @@ if __name__ == '__main__':
 
     print('-' * 80)
     measure_values = list()
-    from Evaluation.m2m.cluster_validation import silhouette_score
+    from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
     from numpy import mean
     silhouette_score = mean(list(silhouette_score(ogs, profiles).values()))
     print('Silhouette\t= {:.6f}'.format(silhouette_score))
     print('-' * 80)
     print()
     
-    from Evaluation.l2m import conformance
+    from orgminer.Evaluation.l2m import conformance
     fitness_score = conformance.fitness(rl, om)
     print('Fitness\t\t= {:.6f}'.format(fitness_score))
     measure_values.append(fitness_score)

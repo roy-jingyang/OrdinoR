@@ -27,7 +27,7 @@ node attributes as well as convenient visualization features.
 '''
 
 import sys
-sys.path.append('./src/')
+sys.path.append('./')
 
 from os.path import join
 from csv import writer
@@ -93,7 +93,7 @@ def execute(setup, seq_ix, exp_dirpath):
         ogs = ogs[0]
 
     # assign execution modes
-    from OrganizationalModelMiner.base import OrganizationalModel
+    from orgminer.OrganizationalModelMiner.base import OrganizationalModel
     om = OrganizationalModel()
     step += 1
     assigner = _import_block(sequence[step]['invoke'])
@@ -113,7 +113,7 @@ def execute(setup, seq_ix, exp_dirpath):
 
     # TODO: Hard-coded evalution measure (TBD)
     # 1. Intrinsic evaluation of clustering (by Silhouette score)
-    from Evaluation.m2m.cluster_validation import silhouette_score
+    from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
     from numpy import mean
     if prox_metric is not None:
         silhouette = mean(list(
@@ -124,7 +124,7 @@ def execute(setup, seq_ix, exp_dirpath):
 
     # TODO: Hard-coded evalution measure (TBD) cont.
     # 2. (New) Fitness & Precision values
-    from Evaluation.l2m.conformance import (
+    from orgminer.Evaluation.l2m.conformance import (
         fitness, rc_measure, precision)
     fitness = fitness(rl, om)
     rc_measure = rc_measure(rl, om)

@@ -25,7 +25,7 @@
 </node>
 <node id="2">
 <data key="label">Phase 1: AT only</data>
-<data key="invoke">ExecutionModeMiner.direct_groupby.ATonlyMiner</data>
+<data key="invoke">orgminer.ExecutionModeMiner.direct_groupby.ATonlyMiner</data>
 <data key="phase">1</data>
 <data key="size">25.0</data>
 <data key="r">192</data>
@@ -36,7 +36,7 @@
 </node>
 <node id="3">
 <data key="label">Phase 2.1: CountExecutionFrequency</data>
-<data key="invoke">ResourceProfiler.raw_profiler.count_execution_frequency</data>
+<data key="invoke">orgminer.ResourceProfiler.raw_profiler.count_execution_frequency</data>
 <data key="params"/>
 <data key="phase">2.1</data>
 <data key="size">25.0</data>
@@ -48,7 +48,7 @@
 </node>
 <node id="5">
 <data key="label">Phase 2.2: MOC</data>
-<data key="invoke">OrganizationalModelMiner.clustering.overlap.moc</data>
+<data key="invoke">orgminer.OrganizationalModelMiner.clustering.overlap.moc</data>
 <data key="params">{'n_groups': range(9, 11), 'init': 'kmeans'}</data>
 <data key="phase">2.2</data>
 <data key="size">25.0</data>
@@ -60,7 +60,7 @@
 </node>
 <node id="8">
 <data key="label">Phase 2.3: FullRecall</data>
-<data key="invoke">OrganizationalModelMiner.mode_assignment.full_recall</data>
+<data key="invoke">orgminer.OrganizationalModelMiner.mode_assignment.full_recall</data>
 <data key="params"/>
 <data key="phase">2.3</data>
 <data key="size">25.0</data>
@@ -72,7 +72,7 @@
 </node>
 <node id="9">
 <data key="label">Phase 2.3: ParticipationFirst</data>
-<data key="invoke">OrganizationalModelMiner.mode_assignment.participation_first</data>
+<data key="invoke">orgminer.OrganizationalModelMiner.mode_assignment.participation_first</data>
 <data key="params">{'p': 0.05}</data>
 <data key="phase">2.3</data>
 <data key="size">25.0</data>
@@ -94,7 +94,7 @@
 </node>
 <node id="21">
 <data key="label">Phase 2.2: AHC</data>
-<data key="invoke">OrganizationalModelMiner.clustering.hierarchical.ahc</data>
+<data key="invoke">orgminer.OrganizationalModelMiner.clustering.hierarchical.ahc</data>
 <data key="params">{'n_groups': range(9, 11), 'method': 'ward', 'metric': 'euclidean'}</data>
 <data key="phase">2.2</data>
 <data key="size">25.0</data>
@@ -106,7 +106,7 @@
 </node>
 <node id="20">
 <data key="label">input log: WABO_rp</data>
-<data key="invoke">IO.reader.read_disco_csv</data>
+<data key="invoke">orgminer.IO.reader.read_disco_csv</data>
 <data key="params">{'filepath': './input/wabo.csv', 'mapping': {"(case) channel": 6}}</data>
 <data key="phase">0</data>
 <data key="size">25.0</data>
@@ -118,7 +118,7 @@
 </node>
 <node id="22">
 <data key="label">Phase 1: CT + AT + TT (case attribute)</data>
-<data key="invoke">ExecutionModeMiner.direct_groupby.FullMiner</data>
+<data key="invoke">orgminer.ExecutionModeMiner.direct_groupby.FullMiner</data>
 <data key="params">{'case_attr_name': '(case) channel', 'resolution': 'weekday'}</data>
 <data key="phase">1</data>
 <data key="size">25.0</data>
@@ -130,7 +130,7 @@
 </node>
 <node id="24">
 <data key="label">Phase 2.3: CoverageFirst</data>
-<data key="invoke">OrganizationalModelMiner.mode_assignment.coverage_first</data>
+<data key="invoke">orgminer.OrganizationalModelMiner.mode_assignment.coverage_first</data>
 <data key="params">{'p': 0.25}</data>
 <data key="phase">2.3</data>
 <data key="size">25.0</data>
@@ -142,7 +142,7 @@
 </node>
 <node id="26">
 <data key="label">Phase 2.3: OverallScore</data>
-<data key="invoke">OrganizationalModelMiner.mode_assignment.overall_score</data>
+<data key="invoke">orgminer.OrganizationalModelMiner.mode_assignment.overall_score</data>
 <data key="params">{'p': 0.25}</data>
 <data key="phase">2.3</data>
 <data key="size">25.0</data>
@@ -154,7 +154,7 @@
 </node>
 <node id="30">
 <data key="label">Phase 1: CT + AT + TT (trace clustering)</data>
-<data key="invoke">ExecutionModeMiner.informed_groupby.TraceClusteringFullMiner</data>
+<data key="invoke">orgminer.ExecutionModeMiner.informed_groupby.TraceClusteringFullMiner</data>
 <data key="params">{'fn_partition': 'input/extra_knowledge/wabo.bosek5.tcreport', 'resolution': 'weekday'}</data>
 <data key="phase">1</data>
 <data key="size">25.0</data>

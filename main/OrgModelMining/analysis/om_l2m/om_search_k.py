@@ -2,30 +2,30 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./src/')
+sys.path.append('./')
 
 fn_event_log = sys.argv[1]
 fnout = sys.argv[2]
 
 def search_k(profiles, num_groups, method):
     if method == 'mja':
-        from OrganizationalModelMiner.community.graph_partitioning import mja
+        from orgminer.OrganizationalModelMiner.community.graph_partitioning import mja
         return mja(profiles, num_groups, metric='correlation',
             search_only=True)
     elif method == 'ahc':
-        from OrganizationalModelMiner.clustering.hierarchical import ahc
+        from orgminer.OrganizationalModelMiner.clustering.hierarchical import ahc
         return ahc(profiles, num_groups, method='ward', metric='euclidean',
             search_only=True)
     elif method == 'gmm':
-        from OrganizationalModelMiner.clustering.overlap import gmm
+        from orgminer.OrganizationalModelMiner.clustering.overlap import gmm
         return gmm(profiles, num_groups, threshold=None, init='kmeans',
             search_only=True)
     elif method == 'moc':
-        from OrganizationalModelMiner.clustering.overlap import moc
+        from orgminer.OrganizationalModelMiner.clustering.overlap import moc
         return moc(profiles, num_groups, init='kmeans',
             search_only=True)
     elif method == 'fcm':
-        from OrganizationalModelMiner.clustering.overlap import fcm
+        from orgminer.OrganizationalModelMiner.clustering.overlap import fcm
         return fcm(profiles, num_groups, threshold=None, init='kmeans',
             search_only=True)
     else:
@@ -33,16 +33,16 @@ def search_k(profiles, num_groups, method):
 
 if __name__ == '__main__':
     # read event log as input
-    from IO.reader import read_disco_csv
+    from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         #el = read_disco_csv(f)
         #el = read_disco_csv(f, mapping={'(case) channel': 6})
         #el = read_disco_csv(f, mapping={'(case) channel': 6})
 
     # learn execution modes and convert to resource log
-    from ExecutionModeMiner.direct_groupby import ATonlyMiner
-    from ExecutionModeMiner.direct_groupby import FullMiner
-    from ExecutionModeMiner.informed_groupby import TraceClusteringFullMiner
+    from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner
+    from orgminer.ExecutionModeMiner.direct_groupby import FullMiner
+    from orgminer.ExecutionModeMiner.informed_groupby import TraceClusteringFullMiner
 
     mode_miner = ATonlyMiner(el)
     #mode_miner = FullMiner(el, 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     num_groups = range(int(num_groups[0]), int(num_groups[1]))
 
     # build profiles
-    from ResourceProfiler.raw_profiler import count_execution_frequency
+    from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
     profiles = count_execution_frequency(rl)
 
     methods = ['ahc', 'moc']

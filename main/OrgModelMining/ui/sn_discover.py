@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./src/')
+sys.path.append('./')
 
 fn_event_log = sys.argv[1]
 fnout_social_network = sys.argv[2]
@@ -11,7 +11,7 @@ fnout_social_network = sys.argv[2]
 
 if __name__ == '__main__':
     # read event log as input
-    from IO.reader import read_disco_csv
+    from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f)
 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
         print('Ignore real Causality dependencies by default.')
 
-        from SocialNetworkMiner import causality
+        from orgminer.SocialNetworkMiner import causality
 
         print('Input a number to specify a metric:')
         print('\t0. Handover of work')
@@ -72,11 +72,11 @@ if __name__ == '__main__':
             exit(1)
 
     elif mining_option == 1:
-        from SocialNetworkMiner import joint_cases 
+        from orgminer.SocialNetworkMiner import joint_cases 
         sn = joint_cases.working_together(el)
 
     elif mining_option == 2:
-        from SocialNetworkMiner import joint_activities
+        from orgminer.SocialNetworkMiner import joint_activities
         print('Should log scale be used? y/N NO by default: ', end='')
         opt_ls = input()
         if opt_ls in ['y', 'Y']:

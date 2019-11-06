@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./src/')
+sys.path.append('./')
 
 fn_event_log = sys.argv[1]
 fnout_org_model = sys.argv[2]
@@ -11,7 +11,7 @@ if __name__ == '__main__':
     print('This program is developed to test "Hypo" models.')
 
     # read event log as input
-    from IO.reader import read_disco_csv
+    from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f)
         #el = read_disco_csv(f, mapping={'(case) LoanGoal': 7})
@@ -53,7 +53,7 @@ if __name__ == '__main__':
         ogs = [resources]
 
         # the only group is linked with the only execution mode
-        from OrganizationalModelMiner.base import OrganizationalModel
+        from orgminer.OrganizationalModelMiner.base import OrganizationalModel
         om = OrganizationalModel()
         for og in ogs:
             modes = frozenset([('', '', '')])
@@ -79,7 +79,7 @@ if __name__ == '__main__':
             len(rl.drop_duplicates())))
 
         # each group is linked with modes (events) originated by the resource
-        from OrganizationalModelMiner.base import OrganizationalModel
+        from orgminer.OrganizationalModelMiner.base import OrganizationalModel
         om = OrganizationalModel()
         for r, events in rl.groupby('resource'):
             om.add_group(frozenset([r]), 
@@ -87,11 +87,11 @@ if __name__ == '__main__':
                     for e in events.itertuples()))
 
     elif mining_option == 103:
-        #from ExecutionModeMiner.direct_groupby import ATonlyMiner
-        #naive_exec_mode_miner = ATonlyMiner(el)
-        from ExecutionModeMiner.direct_groupby import ATCTMiner
-        naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
-        rl = naive_exec_mode_miner.derive_resource_log(el)
+        #from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner
+        #mode_miner = ATonlyMiner(el)
+        from orgminer.ExecutionModeMiner.direct_groupby import ATCTMiner
+        mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
+        rl = mode_miner.derive_resource_log(el)
 
         # Only 1 resource group, containing ALL resources
         print('Total Num. resource event in the log: {}'.format(
@@ -99,12 +99,12 @@ if __name__ == '__main__':
         resources = set(rl['resource'].unique())
         ogs = [resources]
 
-        from OrganizationalModelMiner.base import OrganizationalModel
+        from orgminer.OrganizationalModelMiner.base import OrganizationalModel
         om = OrganizationalModel()
         # assign execution modes to groups
-        from OrganizationalModelMiner.mode_assignment import assign_by_any
+        from orgminer.OrganizationalModelMiner.mode_assignment import full_recall
         for og in ogs:
-            modes = assign_by_any(og, rl)
+            modes = full_recall(og, rl)
             om.add_group(og, modes)
 
     elif mining_option == 104:
@@ -119,7 +119,7 @@ if __name__ == '__main__':
         #       (2) all resources in the log are included
 
         # build profiles
-        from ResourceProfiler.raw_profiler import count_execution_frequency
+        from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
         profiles = count_execution_frequency(rl, scale='log')
 
         all_resources = set(rl['resource'].unique())
@@ -176,7 +176,7 @@ if __name__ == '__main__':
         res_p = resources[0]
         res_q = resources[-1]
         # each group is linked with modes (events) originated by the resource
-        from OrganizationalModelMiner.base import OrganizationalModel
+        from orgminer.OrganizationalModelMiner.base import OrganizationalModel
         om = OrganizationalModel()
         for r, events in rl.groupby('resource'):
             if r == res_p:
@@ -208,7 +208,7 @@ if __name__ == '__main__':
         rl = DataFrame(rl)
 
         # 1 resource group, with only 1 resource in it
-        from OrganizationalModelMiner.base import OrganizationalModel
+        from orgminer.OrganizationalModelMiner.base import OrganizationalModel
         om = OrganizationalModel()
         e = rl.iloc[0]
         om.add_group(frozenset([e.resource]),
@@ -221,14 +221,14 @@ if __name__ == '__main__':
     print('-' * 80)
     measure_values = list()
     '''
-    from Evaluation.m2m.cluster_validation import silhouette_score
-    silhouette_score = silhouette_score(ogs, profiles)
+    from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
+    silhouette_score = mean(list(silhouette_score(ogs, profiles).values()))
     print('Silhouette\t= {:.6f}'.format(silhouette_score))
     print('-' * 80)
     '''
     print()
     
-    from Evaluation.l2m import conformance
+    from orgminer.Evaluation.l2m import conformance
     fitness_score = conformance.fitness(rl, om)
     print('Fitness\t\t= {:.6f}'.format(fitness_score))
     measure_values.append(fitness_score)
@@ -239,26 +239,9 @@ if __name__ == '__main__':
     measure_values.append(rc_measure_score)
     print()
 
-    precision2_score = conformance.precision2(rl, om)
-    print('Prec. (freq)\t= {:.6f}'.format(precision2_score))
-    measure_values.append(precision2_score)
-    print()
-
-    precision1_score = conformance.precision1(rl, om)
-    print('Prec. (no freq)\t= {:.6f}'.format(precision1_score))
-    measure_values.append(precision1_score)
-    print()
-
-    '''
-    precision3_score = conformance.precision3(rl, om)
-    print('Prec. (new)\t= {:.6f}'.format(precision3_score))
-    measure_values.append(precision3_score)
-    print()
-    '''
-
-    precision4_score = conformance.precision4(rl, om)
-    print('Prec. (new2)\t= {:.6f}'.format(precision4_score))
-    measure_values.append(precision4_score)
+    precision_score = conformance.precision(rl, om)
+    print('Precision\t= {:.6f}'.format(precision_score))
+    measure_values.append(precision_score)
     print()
 
     # Overlapping Density & Overlapping Diversity (avg.)

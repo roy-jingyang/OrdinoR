@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./src')
+sys.path.append('./')
 import os
 from os import listdir
 from os.path import join
@@ -11,7 +11,7 @@ dir_split_logs = sys.argv[1]
 fnout = 'trace_clustering.result'
 
 if __name__ == '__main__':
-    from IO.reader import read_disco_csv
+    from orgminer.IO.reader import read_disco_csv
     l_split_logs = sorted(
         fn for fn in listdir(dir_split_logs) if fn.endswith('.csv'))
     print('{} log files in CSV format detected:'.format(len(l_split_logs)))

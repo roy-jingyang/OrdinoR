@@ -19,8 +19,6 @@ dependencies:
   - glib
   - gst-plugins-base
   - gstreamer
-  - graphviz
-  - python-graphviz
   - icu
   - intel-openmp
   - ipython

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./src/')
+sys.path.append('./')
 
 fn_event_log = sys.argv[1]
 fn_model = sys.argv[2]
@@ -15,20 +15,20 @@ if __name__ == '__main__':
         el = read_disco_csv(f, mapping={'(case) LoanGoal': 7})
 
     # learn execution modes and convert to resource log
-    from ExecutionModeMiner.direct_groupby import ATonlyMiner
-    from ExecutionModeMiner.direct_groupby import CTonlyMiner
-    from ExecutionModeMiner.direct_groupby import ATCTMiner
-    #naive_exec_mode_miner = ATonlyMiner(el)
-    naive_exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
+    from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner
+    from orgminer.ExecutionModeMiner.direct_groupby import CTonlyMiner
+    from orgminer.ExecutionModeMiner.direct_groupby import ATCTMiner
+    #mode_miner = ATonlyMiner(el)
+    mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
 
-    rl = naive_exec_mode_miner.derive_resource_log(el)
+    rl = mode_miner.derive_resource_log(el)
 
     # read organizational model as input
-    from OrganizationalModelMiner.base import OrganizationalModel
+    from orgminer.OrganizationalModelMiner.base import OrganizationalModel
     with open(fn_model, 'r', encoding='utf-8') as f:
         om = OrganizationalModel.from_file_csv(f)
 
-    from Evaluation.l2m import conformance
+    from orgminer.Evaluation.l2m import conformance
     measure_values = list()
     print('-' * 80)
     '''
@@ -46,16 +46,9 @@ if __name__ == '__main__':
     print('rc-measure\t= {:.6f}'.format(rc_measure_score))
     measure_values.append(rc_measure_score)
     print()
-    precision2_score = conformance.precision2(rl, om)
-    print('Prec. (freq)\t= {:.6f}'.format(precision2_score))
-    measure_values.append(precision2_score)
-    precision1_score = conformance.precision1(rl, om)
-    print('Prec. (no freq)\t= {:.6f}'.format(precision1_score))
-    measure_values.append(precision1_score)
-    print()
-    precision4_score = conformance.precision4(rl, om)
-    print('Prec. (new2)\t= {:.6f}'.format(precision4_score))
-    measure_values.append(precision4_score)
+    precision_score = conformance.precision(rl, om)
+    print('Prec. (new2)\t= {:.6f}'.format(precision_score))
+    measure_values.append(precision_score)
     print()
 
     # Overlapping Density & Overlapping Diversity (avg.)
@@ -73,7 +66,7 @@ if __name__ == '__main__':
 
     ov_density = n_ov_res / len(resources)
     avg_ov_diversity = (n_ov_res_membership / n_ov_res 
-            if n_ov_res > 0 else float('nan'))
+        if n_ov_res > 0 else float('nan'))
     print('Ov. density\t= {:.6f}'.format(ov_density))
     print('Ov. diversity\t= {:.6f}'.format(avg_ov_diversity))
     measure_values.append(ov_density)

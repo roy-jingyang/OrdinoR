@@ -4,9 +4,9 @@
 # Build resource social network depending on group membership. 
 
 import sys
-sys.path.append('./src/')
+sys.path.append('./')
 
-from OrganizationalModelMiner.base import OrganizationalModel
+from orgminer.OrganizationalModelMiner.base import OrganizationalModel
 from collections import defaultdict
 
 fn_org_model = sys.argv[1]
