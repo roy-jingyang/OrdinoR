@@ -5,6 +5,7 @@
 *.un~
 *.swp
 
-# Ignore output file
+# Ignore input and output files
+input/
 output/
 
