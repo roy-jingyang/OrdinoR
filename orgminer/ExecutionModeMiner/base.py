@@ -166,7 +166,51 @@ class BaseMiner(ABC):
                 else 'INVALID'))
             exit('[Error] Failed to verify the collected execution modes: ')
 
-    # TODO: provide two translation functions:
     # from original activity labels/case ids/timestamps to types
+    # TODO:
+    def get_type_by_value(self, value):
+        '''Query the built type given a value (of either an activity label, a
+        case id, or a timestamp).
+
+        Parameters
+        ----------
+        value : str
+            The given value to be queried.
+
+        Returns
+        -------
+        type_name : str
+            The corresponding type name.
+        '''
+        pass
+
     # from types to the originals
+    def get_values_by_type(self, type_name):
+        '''Query the original values (of activity labels, case ids, or 
+        timestamps) given a type name.
+
+        Parameters
+        ----------
+        type_name : str
+            The given type name to be queried.
+
+        Returns
+        -------
+        values : list of str
+            The corresponding values.
+        '''
+        if type_name.startswith('CT'):
+            return list(k for k, v in self._ctypes.items()
+                if v == type_name)
+
+        if type_name.startswith('AT'):
+            return list(k for k, v in self._atypes.items()
+                if v == type_name)
+
+        if type_name.startswith('TT'):
+            return list(k for k, v in self._ttypes.items()
+                if v == type_name)
+
+        exit('[Error] Failed to parse the queried type.')
+
     

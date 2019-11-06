@@ -84,4 +84,6 @@ dependencies:
     - python-igraph
     - pyzmq
     - deap
+    - pm4py
+    - pygraphviz
 
