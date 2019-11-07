@@ -1,28 +1,48 @@
 # -*- coding: utf-8 -*-
 
-'''
-This module provides a set of intrinsic evaluation measures for the latent
-clusters (grouping of resources in the organizational models. For extrinsic
-evaluation measure, see ./cluster_comparison.py.
+"""This module provides a set of intrinsic evaluation measures for the 
+latent clusters (grouping of resources in the organizational models). 
 
-Note that to conduct the validation of clusters, the expected input of these
-implemented methods should be the clusters and the resource feature table 
-(profile matrix), rather than an organizational model instance;
+Notes
+-----
+To conduct the validation of clusters, the expected inputs of the 
+included functions should be both the clusters and the resource feature 
+table (profile matrix), rather than an organizational model instance.
 
-Despite the situation where the clustering is derived with no feature table
-is used but rather from a graph-like structure, where the modularity of
-clustering should be used. The inputs should include the clusters and the
-original graph-like structure from which the clustering is derived.
-
-'''
+Under the situation where the clustering was derived with no feature 
+table was used but rather from a graph-like structure, the modularity 
+measure should be used. The inputs should be the clusters and the
+original graph-like structure from which the clustering was derived.
+"""
 
 # TODO: is it appropriate using silhouette score for overlapped clusters?
-def silhouette_score(
-        clu, X, metric='euclidean'):
-    '''
+def silhouette_score(clu, X, metric='euclidean'):
+    """Calculate the silhouette scores of the latent clustering.
+    
+    Parameters
+    ----------
+    clu : list of frozensets
+        Resource groups in an organizational model.
+    X : DataFrame
+        The corresponding resource feature table used for deriving the 
+        resource groups.
+    metric : str, optional
+        Distance measure used for deriving the resource groups. Refer to
+        `scipy.spatial.distance <https://docs.scipy.org/doc/scipy/
+        reference/spatial.distance.html>`_.
+
+    Returns
+    -------
+    scores : dict
+        The result silhouette score (of each resource, respectively).
+
+    Notes
+    -----
     This is merely a wrap-up of the function:
-        sklearn.metrics.silhouette_samples
-    '''
+        `sklearn.metrics.silhouette_samples
+        <https://scikit-learn.org/stable/modules/generated/
+        sklearn.metrics.silhouette_samples.html>`_.
+    """
 
     from sklearn.metrics import silhouette_samples
     resources = list(X.index)
@@ -36,55 +56,35 @@ def silhouette_score(
     for ir, r in enumerate(resources):
         scores[r] = scores_samples[ir]
     return scores
-    '''
-    from numpy import mean, amin
-    from scipy.spatial.distance import cdist
-    scores = dict()
-    count = 0
 
-    for g in clu:
-        for r in g:
-            if len(g) < 2:
-                # set silhouette score to 0 for size-1 clusters
-                # set to value 0 ("unclear", should be 'nan')
-                #scores[r] = 'nan'
-                scores[r] = 0
-            else:
-                r_profile = X.loc[r].values.reshape(1, len(X.loc[r]))
-                # a(o)
-                avg_intra_dist = mean(cdist(
-                    r_profile,
-                    X.loc[list(other_r for other_r in g if other_r != r)],
-                    metric=metric))
 
-                # b(o)
-                avg_inter_dist = list()
-                for other_g in clu:
-                    if not other_g == g:
-                        avg_inter_dist.append(mean(cdist(
-                            r_profile,
-                            X.loc[list(other_g)],
-                            metric=metric)))
-                if len(avg_inter_dist) == 0:
-                    min_avg_inter_dist = 0
-                else:
-                    min_avg_inter_dist = amin(avg_inter_dist)
+def variance_explained_score(clu, X):
+    """Calculate the degree of variance explained by the latent 
+    clustering, i.e. Calinski-Harabasz score.
+    
+    Parameters
+    ----------
+    clu : list of frozensets
+        Resource groups in an organizational model.
+    X : DataFrame
+        The corresponding resource feature table used for deriving the 
+        resource groups.
 
-                score = ((min_avg_inter_dist - avg_intra_dist) /
-                    max(avg_intra_dist, min_avg_inter_dist))
-                scores[r] = score                  # silhouette(o)
+    Returns
+    -------
+    float
+        The result score representing the degree of variance explained.
 
-    return scores
-    '''
-
-def variance_explained_score(
-    clu, X):
-    '''
+    Notes
+    -----
     This is merely a wrap-up of the function:
-        sklearn.metrics.calinski_harabasz_score
-    which is equal to
-        variance_between_cluster / variance_within_cluster
-    '''
+        `sklearn.metrics.calinski_harabasz_score
+        <https://scikit-learn.org/stable/modules/generated/
+        sklearn.metrics.calinski_harabasz_score.html>`_.
+
+    Equivalent to:
+        ``_variance_between_cluster / _variance_within_cluster``
+    """
     
     from sklearn.metrics import calinski_harabasz_score 
     resources = list(X.index)
@@ -94,54 +94,117 @@ def variance_explained_score(
             labels[resources.index(r)] = ig
     return calinski_harabasz_score(X.values, labels)
 
-def variance_explained_percentage(
-    clu, X):
-    '''
-    This is another version which uses percentage to characterize:
-        variance_between_cluster / (var_between... + var_within...)
-    '''
+
+def variance_explained_percentage(clu, X):
+    """Calculate the percentage of variance explained by the latent 
+    clustering.
+    
+    Parameters
+    ----------
+    clu : list of frozensets
+        Resource groups in an organizational model.
+    X : DataFrame
+        The corresponding resource feature table used for deriving the 
+        resource groups.
+
+    Returns
+    -------
+    float
+        The result percentage of variance explained (in range 0-100).
+    """
+
     var_between = _variance_between_cluster(clu, X)
     var_within = _variance_within_cluster(clu, X)
-
     return 100 * var_between / (var_between + var_within)
 
-def _variance_within_cluster(
-    clu, X):
+
+def _variance_within_cluster(clu, X):
+    """Calculate the variance for objects within the same clusters.
+    
+    Parameters
+    ----------
+    clu : list of frozensets
+        Resource groups in an organizational model.
+    X : DataFrame
+        The corresponding resource feature table used for deriving the 
+        resource groups.
+
+    Returns
+    -------
+    var_between : float
+        The result within-cluster variance.
+    """
+
     from numpy import mean, sum
     var_within = 0
 
     for ig, g in enumerate(clu):
         g_mean = mean(X.loc[g].values, axis=0)
-        var_within += sum((X.loc[g].values - g_mean) ** 2)       # W_k
-    var_within /= len(X) - len(clu)                                 # N - k
+        var_within += sum((X.loc[g].values - g_mean) ** 2) # W_k
+    var_within /= (len(X) - len(clu)) # N - k
     return var_within
 
 
-def _variance_between_cluster(
-    clu, X):
+def _variance_between_cluster(clu, X):
+    """Calculate the variance for objects between different clusters.
+    
+    Parameters
+    ----------
+    clu : list of frozensets
+        Resource groups in an organizational model.
+    X : DataFrame
+        The corresponding resource feature table used for deriving the 
+        resource groups.
+
+    Returns
+    -------
+    var_between : float
+        The result between-cluster variance.
+    """
+
     from numpy import mean, sum
     var_between = 0
     samples_mean = mean(X.values, axis=0)
 
     for ig, g in enumerate(clu):
         g_mean = mean(X.loc[g].values, axis=0)
-        var_between += len(g) * sum((g_mean - samples_mean) ** 2)    # B_k
-    var_between /= len(clu) - 1                                         # k - 1
+        var_between += len(g) * sum((g_mean - samples_mean) ** 2) # B_k
+    var_between /= (len(clu) - 1) # k - 1
     return var_between
 
-def modularity(
-    clu, G, weight=None):
-    '''
-    Reference:
-        "Graph Clustering Methods",
-        Equation (11.39), Sect. 11.3.3, Data Mining: Concepts and Techniques,
-        J. Han, J. Pei, M. Kamber
-    '''
+
+def modularity(clu, G, weight=None):
+    """Calculate the modularity score [1]_ of the latent clustering.
+    
+    Parameters
+    ----------
+    clu : list of frozensets
+        Resource groups in an organizational model.
+    G : NetworkX Graph or DiGraph
+        The corresponding resource feature table used for deriving the 
+        resource groups.
+    weight : str, optional
+        The name of the key defining the weight value of edges in `G`.
+
+    Returns
+    -------
+    q : float
+        The result modularity score.
+
+    References
+    ----------
+    .. [1] "Graph Clustering Methods",
+        Equation (11.39), Sect. 11.3.3, Data Mining: Concepts and 
+        Techniques, J. Han, J. Pei, M. Kamber.
+    """
+
     from networkx import is_directed, restricted_view
     q = 0.0
     if is_directed(G):
-        # Casting from DiGraph to Graph needs to be configured manually
-        # otherwise NetworkX would approach this in an arbitrary fashion
+        """Note: Casting from DiGraph to Graph needs to be configured 
+        manually otherwise NetworkX would approach this in an arbitrary 
+        fashion.
+        """
         from itertools import combinations
         undirected_edge_list = list()
         # consider only pairwise links
