@@ -33,8 +33,8 @@ def working_together(el, normalize=None):
     from collections import defaultdict
     mat = defaultdict(lambda: defaultdict(lambda: {'weight': 0.0}))
     from itertools import permutations
-    for case_id, trace in el.groupby('case_id'):
-        participants = set(trace['resource'])
+    for case_id, events in el.groupby('case_id'):
+        participants = set(events['resource'])
         # for each pair of participants simultaneously appeared
         for pair in permutations(participants, r=2):
             mat[pair[0]][pair[1]]['weight'] += 1
@@ -92,8 +92,8 @@ def working_similarly(el, case_class_mapping, normalize=None):
     '''
     from collections import defaultdict
     counts_by_class = defaultdict(lambda: defaultdict(lambda: 0))
-    for case_id, trace in el.groupby('case_id'):
-        participants = set(trace['resource'])
+    for case_id, events in el.groupby('case_id'):
+        participants = set(events['resource'])
         case_class = case_class_mapping[case_id]
         for r in participants:
             counts_by_class[r][case_class] += 1

@@ -41,11 +41,11 @@ if __name__ == '__main__':
 
     # derive case-classes
     case_classes = dict()
-    for case_id, trace in el.groupby('case_id'):
-        if len(set(trace['(case) channel'])) > 1:
+    for case_id, events in el.groupby('case_id'):
+        if len(set(events['(case) channel'])) > 1:
             exit('[Error] Multiple values for the case-level attribute')
         else:
-            case_classes[case_id] = set(trace['(case) channel']).pop()
+            case_classes[case_id] = set(events['(case) channel']).pop()
     
     from SocialNetworkMiner.joint_cases import working_together
     from SocialNetworkMiner.joint_cases import working_similarly
