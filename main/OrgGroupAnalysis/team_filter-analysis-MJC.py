@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./src/')
+sys.path.append('./')
 
 fn_event_log = sys.argv[1]
 
@@ -10,7 +10,7 @@ if __name__ == '__main__':
     # Configuration based on given log (hard-coded)
 
     # read event log as input
-    from IO.reader import read_disco_csv
+    from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f, mapping={'(case) channel': 6}) # wabo
         #el = read_disco_csv(f, mapping={'(case) channel': 6}) # bpic12 TODO
@@ -40,11 +40,11 @@ if __name__ == '__main__':
     num_groups = list(range(2, min(20, len(set(el['resource'])))))
     MAX_ITER = 1
 
-    from ExecutionModeMiner.direct_groupby import ATonlyMiner, CTonlyMiner
-    from ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
-    from ResourceProfiler.raw_profiler import count_execution_frequency
-    from OrganizationalModelMiner.clustering.hierarchical import _ahc
-    from OrganizationalModelMiner.community.graph_partitioning import _mjc
+    from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner, CTonlyMiner
+    from orgminer.ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
+    from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
+    from orgminer.OrganizationalModelMiner.clustering.hierarchical import _ahc
+    from orgminer.OrganizationalModelMiner.community.graph_partitioning import _mjc
 
     #mode_miner = ATonlyMiner(el)
     #mode_miner = CTonlyMiner(el, case_attr_name='(case) channel')
@@ -95,9 +95,9 @@ if __name__ == '__main__':
         'pct_resource_to_be_left__global',
         'pct_case_to_be_left_global'
     ]
-    from Evaluation.m2m.cluster_validation import silhouette_score
-    from Evaluation.m2m.cluster_validation import variance_explained_percentage
-    from Evaluation.m2m.cluster_validation import modularity
+    from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
+    from orgminer.Evaluation.m2m.cluster_validation import variance_explained_percentage
+    from orgminer.Evaluation.m2m.cluster_validation import modularity
     from numpy import mean, amin, amax
 
     num_resources_total = len(set(el['resource']))

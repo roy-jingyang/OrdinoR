@@ -2,10 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./src/')
-
-# import methods to be tested below
-
+sys.path.append('./')
 
 # List input parameters from shell
 fn_event_log = sys.argv[1]
@@ -13,7 +10,7 @@ fnout_network = sys.argv[2]
 
 if __name__ == '__main__':
     # read event log as input
-    from IO.reader import read_disco_csv
+    from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         #el = read_disco_csv(f)
         el = read_disco_csv(f, mapping={'(case) channel': 6})
@@ -47,14 +44,14 @@ if __name__ == '__main__':
         else:
             case_classes[case_id] = set(events['(case) channel']).pop()
     
-    from SocialNetworkMiner.joint_cases import working_together
-    from SocialNetworkMiner.joint_cases import working_similarly
+    from orgminer.SocialNetworkMiner.joint_cases import working_together
+    from orgminer.SocialNetworkMiner.joint_cases import working_similarly
     #sn = working_together(el, normalize='resource')
     sn = working_similarly(el, case_classes, normalize=None)
     from networkx import write_gexf
     sn = write_gexf(sn, fnout_network)
     '''
-    from OrganizationalModelMiner.community.graph_partitioning import (
+    from orgminer.OrganizationalModelMiner.community.graph_partitioning import (
         _mjc)
     for k in range(2, 10):
         ogs, _ = _mjc(el, k, method='centrality')

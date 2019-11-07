@@ -8,13 +8,13 @@ successful "paths" found will be delivered as output.
 '''
 
 import sys
-sys.path.append('./src/')
+sys.path.append('./')
 
-from ExecutionModeMiner.direct_groupby import ATonlyMiner, CTonlyMiner
-from ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
-from ResourceProfiler.raw_profiler import count_execution_frequency
-from OrganizationalModelMiner.clustering.hierarchical import _ahc
-from Evaluation.m2m.cluster_validation import silhouette_score
+from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner, CTonlyMiner
+from orgminer.ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
+from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
+from orgminer.OrganizationalModelMiner.clustering.hierarchical import _ahc
+from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
 from numpy import mean, amin, amax
 
 fn_event_log = sys.argv[1]
@@ -78,10 +78,10 @@ if __name__ == '__main__':
     # Configuration based on given log (hard-coded)
 
     # read event log as input
-    from IO.reader import read_disco_csv
+    from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f, mapping={'(case) channel': 6}) # wabo
-        #el = read_disco_csv(f, mapping={'(case) channel': 6}) # bpic12 TODO
+        #el = read_disco_csv(f, mapping={'(case) channel': 6}) # bpic12
         #el = read_disco_csv(f, mapping={'(case) LoanGoal': 7}) # bpic17
 
     num_groups = list(range(2, 10))
@@ -110,9 +110,9 @@ if __name__ == '__main__':
         - the number of clusters with NEG average silhouette score (excluding
           singletons);
         - percentage of resources having zero/negative silhouette scores;
-        - percentage of cases involving the resouces above;
+        - percentage of cases involving the resources above;
         - percentage of resources having zero/negative silhouette scores (global);
-        - percentage of cases involving the resouces above (global);
+        - percentage of cases involving the resources above (global);
     '''
 
     foo(mode_miner, num_groups, el, '')

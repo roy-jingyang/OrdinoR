@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./src/')
+sys.path.append('./')
 
 fn_event_log = sys.argv[1]
 fn_report = sys.argv[2]
@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # Configuration based on given log (hard-coded)
 
     # read event log as input
-    from IO.reader import read_disco_csv
+    from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f, mapping={'(case) channel': 6}) # wabo
         #el = read_disco_csv(f, mapping={'(case) channel': 6}) # bpic12 TODO
@@ -21,10 +21,10 @@ if __name__ == '__main__':
     #num_groups = list(range(3, 24)) # bpic12: k \in [3, 14)
     #num_groups = list(range(3, 49)) # bpic17: k \in [3, 49)
 
-    from ExecutionModeMiner.direct_groupby import ATonlyMiner, CTonlyMiner
-    from ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
-    from ResourceProfiler.raw_profiler import count_execution_frequency
-    from OrganizationalModelMiner.clustering.hierarchical import _ahc
+    from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner, CTonlyMiner
+    from orgminer.ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
+    from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
+    from orgminer.OrganizationalModelMiner.clustering.hierarchical import _ahc
 
     # Mining and Evaluating activity-based teams
     act_based_miner = ATonlyMiner(el)
@@ -77,8 +77,8 @@ if __name__ == '__main__':
         'num_clu_neg_silhouette_score',
     ]
 
-    from Evaluation.m2m.cluster_validation import silhouette_score
-    from Evaluation.m2m.cluster_validation import variance_explained_percentage
+    from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
+    from orgminer.Evaluation.m2m.cluster_validation import variance_explained_percentage
     from numpy import mean, amin, amax
     l_measured_values_act = list()
     l_measured_values_case = list()

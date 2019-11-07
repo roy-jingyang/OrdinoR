@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
+"""This module contains the implementation of the conformance checking 
+measures proposed in the OrgMining framework.
+"""
 
-'''
-This module contains the implmentation of the conformance checking measures
-proposed in the OrgMining 2.0 framework.
-'''
 def _is_conformed_event(event, om):
-    '''Determine whether an event in the resource log is conforming given an
-    organizational model.
+    '''Determine whether an event in a resource log is conforming given 
+    an organizational model.
 
-    Params:
+    Parameters
+    ----------
         event: row of DataFrame
             The event in the resource log.
         om: OrganizationalModel object
             The discovered organizational model.
 
     Returns:
-        boolean
+        bool
             Boolean value indicating if the event is conformed with the model.
     '''
     m = (event.case_type, event.activity_type, event.time_type)
