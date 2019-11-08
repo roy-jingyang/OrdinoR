@@ -1,22 +1,70 @@
 # -*- coding: utf-8 -*-
 
-'''
-This module contains the definition of the abstract class
-'BaseMiner', which is the base class for any approach for discovering 
-execution modes.
-
-An execution mode miner class inherited from the BaseMiner should
-learn and store the mappings C -> CT, A -> AT, T -> TT, and should enable the
-conversion from a source event log to a derived resource log.
-'''
-
 from abc import ABC, abstractmethod
 
 class BaseMiner(ABC):
-    '''This abstract class implements the definition of the data structure for
-    case/activity/time types as python dicts, which contain the mappings from 
-    case/activity/time identifiers to their corresponding types.
-    '''
+    """This abstract class acts as an interface and should be used as a
+    base class for implementing any approach for learning execution 
+    modes.
+
+    Parameters
+    ----------
+    el : DataFrame
+        An event log from which the execution modes are learned.
+
+    Attributes
+    ----------
+    _ctypes : 
+
+    is_ctypes_verified : bool
+
+    _atypes : 
+
+    is_atypes_verified : bool
+
+    _ttypes : 
+
+    is_ttypes_verified : bool
+
+    Methods
+    -------
+    derive_resource_log(el)
+
+    verify_partition(whole_set, partitioning)
+
+    verify():
+
+    get_type_by_value(value)
+
+    get_values_by_type(type_name)
+    
+
+    Notes
+    -----
+
+    get_type_by_value(value)
+
+    get_values_by_type(type_name)
+    An execution mode miner class should inherit from the BaseMiner and 
+    enables learning and storing the mappings:
+
+    - from case ids to Case Types,
+
+    .. math:: \\mathcal{C} \\rightarrow \\mathcal{CT}
+
+    - from activity labels to Activity Types,
+
+    .. math:: \\mathcal{A} \\rightarrow \\mathcal{AT}
+
+    - from timestamps to Time Types,
+
+    .. math:: \\mathcal{T} \\rightarrow \\mathcal{TT}
+
+    These mappings should be built using python `dicts`.
+
+    Also, it should enable the conversion from a source event log to a 
+    derived resource log.
+    """
     _ctypes = None
     is_ctypes_verified = False
 

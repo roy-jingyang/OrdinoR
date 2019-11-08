@@ -86,7 +86,7 @@ def foo(x):
 
 # NOTE: Class
 class foo_class:
-    """Function docstring summary.
+    """Class docstring summary.
 
     .. deprecated:: 1.6.0
       `ndobj_old` will be removed in NumPy 2.0.0, it is replaced by
