@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Ref: Amigó, E., Gonzalo, J., Artiles, J., & Verdejo, F. (2009). A comparison
 of extrinsic clustering evaluation metrics based on formal constraints.
 Information retrieval, 12(4), 461-486.
@@ -13,7 +13,7 @@ evaluation measure, see ./cluster_validation.py.
 Note that to conduct the evaluation of comparing clusters, the expected input
 of these implemented methods should be (extracted) clusters rather than an
 organizational model instance.
-'''
+"""
 
 from math import sqrt, log2
 from numpy import eye, zeros

@@ -1,176 +1,82 @@
 # -*- coding: utf-8 -*-
 
-'''
-This module contains the implementations of some naive execution mode learning
-methods that derive C/A/T types directly based on grouping over attribute 
-values accessible in the log data:
+"""This module provides several simple execution mode learning 
+approaches, namely
+
     - ATonlyMiner (AT only)
-    - ATCTMiner (AT + CT)
-    - ATTTMiner (AT + TT)
-'''
+    - CTonlyMiner (CT only)
+    - ATCTMiner (CT & AT)
+    - ATTTMiner (AT & TT)
+    - FullMiner (CT & AT & TT)
+
+"""
 
 from .base import BaseMiner
 
 class ATonlyMiner(BaseMiner):
-    '''(AT only method) Each value of activity (task) label is taken as
-    an activity type, ignoring the case and time dimensions.
-    '''
+    """Each value of activity (task) label is taken as an activity type.
+    """
+    def __init__(self, el):
+        BaseMiner.__init__(self, el)
 
-    def _build_ctypes(self, el):
-        # ignoring the case dimension: all events are of the same case type.
-        self.is_ctypes_verified = True
-        pass
-    
+
     def _build_atypes(self, el):
         self._atypes = dict()
-        for event in el.itertuples():
-            self._atypes[event.activity] = 'AT.{}'.format(event.activity)
+        for activity_label in set(el['activity']):
+            self._atypes[activity_label] = 'AT.{}'.format(activity_label)
 
-        self.is_atypes_verified = self.verify_partition(
+        self.is_atypes_verified = self._verify_partition(
             set(el['activity']), self._atypes)
 
-    def _build_ttypes(self, el):
-        # ignoring the time dimension: all events are of the same time type.
-        self.is_ttypes_verified = True
-        pass
-
-    def derive_resource_log(self, el):
-        # iterate through all events in the original log and convert
-        # Note: only E_res (resource events) should be considered
-        rl = list()
-        for event in el.itertuples(): # keep order
-            if event.resource != '' and event.resource is not None:
-                rl.append({
-                    'resource': event.resource,
-                    'case_type': '',
-                    'activity_type': self._atypes[event.activity],
-                    'time_type': ''
-                })
-
-        from pandas import DataFrame
-        return DataFrame(rl)
 
 class CTonlyMiner(BaseMiner):
-    '''(CT only method) The attribute values of events and their cases are used
-    to derive case types, ignoring the activity and time dimensions.
-    '''
+    """Each value of a selected case-level attribute is taken as a case
+    type.
+    """
     
     def __init__(self, el, case_attr_name):
         self._build_ctypes(el, case_attr_name)
-        self._build_atypes(el)
-        self._build_ttypes(el)
-        self.verify()
+        BaseMiner._build_atypes(self, el)
+        BaseMiner._build_ttypes(self, el)
+        self._verify()
+
 
     def _build_ctypes(self, el, case_attr_name):
         self._ctypes = dict()
-        par = list()
-        # 1) directly let each value correspond to a category (type)
         for v, events in el.groupby(case_attr_name): # sorted by default
-            par.append((v, set(events['case_id'])))
+            for case_id in set(events['case_id']):
+                if case_id in self._ctypes:
+                    raise ValueError('Events from case "{}"'.format(case_id) +
+                        ' have more than 1 values for the selected attribute.')
+                else:
+                    self._ctypes[case_id] = 'CT.{}'.format(v)
 
-        '''
-        # 2) another way: use bins to convert continuous values to categorical
-        # NOTE: BPIC12 case (AMOUNT_REQ): from 0 to 50k, seg size 5k; + others
-        # 11 bins in total
-        from pandas import cut
-        for v, events in el.groupby(cut(el[case_attr_name].astype('int'), 
-            bins=list(range(-1, 50000, 5000)) + [100000])):
-            par.append(set(events['case_id']))
-        '''
-        for value_cases in par:
-            for case_id in value_cases[1]:
-                self._ctypes[case_id] = 'CT.{}'.format(value_cases[0])
-
-        self.is_ctypes_verified = self.verify_partition(
+        self.is_ctypes_verified = self._verify_partition(
             set(el['case_id']), self._ctypes)
 
-    def _build_atypes(self, el):
-        # ignoring the activity dimension: all events are of the same act type.
-        self.is_atypes_verified = True
-        pass
 
-    def _build_ttypes(self, el):
-        # ignoring the time dimension: all events are of the same time type.
-        self.is_ttypes_verified = True
-        pass
-
-    def derive_resource_log(self, el):
-        # iterate through all events in the original log and convert
-        # Note: only E_res (resource events) should be considered
-        rl = list()
-        for event in el.itertuples(): # keep order
-            if event.resource != '' and event.resource is not None:
-                rl.append({
-                    'resource': event.resource,
-                    'case_type': self._ctypes[event.case_id],
-                    'activity_type': '',
-                    'time_type': ''
-                })
-
-        from pandas import DataFrame
-        return DataFrame(rl)
-
-class ATCTMiner(ATonlyMiner):
-    '''(AT + CT method) Based on ATonlyMiner (AT only), let each value of a
-    designated case attribute in the events be a case type, ignoring the time
-    dimension.
-    '''
-    
+class ATCTMiner(ATonlyMiner, CTonlyMiner):
+    """Each value of activity (task) label is taken as an activity type, 
+    and each value of a selected case-level attribute is taken as a case 
+    type.
+    """
     def __init__(self, el, case_attr_name):
-        self._build_ctypes(el, case_attr_name)
-        self._build_atypes(el)
-        self._build_ttypes(el)
-        self.verify()
+        CTonlyMiner._build_ctypes(self, el, case_attr_name)
+        ATonlyMiner._build_atypes(self, el)
+        ATonlyMiner._build_ttypes(self, el)
+        self._verify()
 
-    def _build_ctypes(self, el, case_attr_name):
-        self._ctypes = dict()
-        par = list()
-        # 1) directly let each value correspond to a category (type)
-        for v, events in el.groupby(case_attr_name): # sorted by default
-            par.append(set(events['case_id']))
-
-        '''
-        # 2) another way: use bins to convert continuous values to categorical
-        # NOTE: BPIC12 case (AMOUNT_REQ): from 0 to 50k, seg size 5k; + others
-        # 11 bins in total
-        from pandas import cut
-        for v, events in el.groupby(cut(el[case_attr_name].astype('int'), 
-            bins=list(range(-1, 50000, 5000)) + [100000])):
-            par.append(set(events['case_id']))
-        '''
-        for i, values in enumerate(par):
-            for v in values:
-                self._ctypes[v] = 'CT.{}'.format(i)
-
-        self.is_ctypes_verified = self.verify_partition(
-            set(el['case_id']), self._ctypes)
-
-    def derive_resource_log(self, el):
-        # iterate through all events in the original log and convert
-        # Note: only E_res (resource events) should be considered
-        rl = list()
-        for event in el.itertuples(): # keep order
-            if event.resource != '' and event.resource is not None:
-                rl.append({
-                    'resource': event.resource,
-                    'case_type': self._ctypes[event.case_id],
-                    'activity_type': self._atypes[event.activity],
-                    'time_type': ''
-                })
-
-        from pandas import DataFrame
-        return DataFrame(rl)
 
 class ATTTMiner(ATonlyMiner):
-    '''(AT + TT method) Based on ATonlyMiner (AT only), let each possible value
-    of a designated datetime unit be a time type, ignoring the case dimension.
-    '''
-    
+    """Each value of activity (task) label is taken as an activity type, 
+    and each possible value of a designated datetime unit is taken as a 
+    time type.
+    """
     def __init__(self, el, resolution, datetime_format='%Y/%m/%d %H:%M:%S.%f'):
-        self._build_ctypes(el)
-        self._build_atypes(el)
+        ATonlyMiner._build_ctypes(self, el)
+        ATonlyMiner._build_atypes(self, el)
         self._build_ttypes(el, resolution, datetime_format)
-        self.verify()
+        self._verify()
 
     def _build_ttypes(self, el, resolution, datetime_format):
         self._ttypes = dict()
@@ -188,49 +94,20 @@ class ATTTMiner(ATonlyMiner):
             dt = datetime.strptime(event.timestamp, datetime_format)
             self._ttypes[event.timestamp] = 'TT.{}'.format(getter(dt))
 
-        self.is_ttypes_verified = self.verify_partition(
+        self.is_ttypes_verified = self._verify_partition(
             set(el['timestamp']), self._ttypes)
 
-    def derive_resource_log(self, el):
-        # iterate through all events in the original log and convert
-        # Note: only E_res (resource events) should be considered
-        rl = list()
-        for event in el.itertuples(): # keep order
-            if event.resource != '' and event.resource is not None:
-                rl.append({
-                    'resource': event.resource,
-                    'case_type': '',
-                    'activity_type': self._atypes[event.activity],
-                    'time_type': self._ttypes[event.timestamp],
-                })
-
-        from pandas import DataFrame
-        return DataFrame(rl)
 
 class FullMiner(CTonlyMiner, ATTTMiner):
-    '''(CT + AT + TT method) Based on CTonlyMiner (CT only) and
-    ATTTMiner (AT + TT). All three dimensions are considered.
-    '''
-
+    """Each value of activity (task) label is taken as an activity type, 
+    each value of a selected case-level attribute is taken as a case 
+    type, and each possible value of a designated datetime unit is taken 
+    as a time type.
+    """
     def __init__(self, el, 
         case_attr_name, resolution, datetime_format='%Y/%m/%d %H:%M:%S.%f'):
         CTonlyMiner._build_ctypes(self, el, case_attr_name)
         ATTTMiner._build_atypes(self, el)
         ATTTMiner._build_ttypes(self, el, resolution, datetime_format)
-        self.verify()
-
-    def derive_resource_log(self, el):
-        # Note: only E_res (resource events) should be considered
-        rl = list()
-        for event in el.itertuples(): # keep order
-            if event.resource != '' and event.resource is not None:
-                rl.append({
-                    'resource': event.resource,
-                    'case_type': self._ctypes[event.case_id],
-                    'activity_type': self._atypes[event.activity],
-                    'time_type': self._ttypes[event.timestamp],
-                })
-
-        from pandas import DataFrame
-        return DataFrame(rl)
+        self._verify()
 

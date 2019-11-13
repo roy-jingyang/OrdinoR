@@ -1,61 +1,47 @@
 # -*- coding: utf-8 -*-
 
-'''
-This module contains the implementations of execution mode learning methods
-that derive C/A/T types based on externally provided information other than the
-log data that informs the subsequent mappings of C/A/T:
-    - TraceClusteringCTMiner
-'''
+"""This module provides several simple execution mode learning 
+approaches based on external information other than the log data, namely
+
+    - TraceClusteringCTMiner (CT only)
+    - TraceClusteringFullMiner (CT & AT & TT)
+
+"""
 
 from .direct_groupby import CTonlyMiner, ATTTMiner
 
 class TraceClusteringCTMiner(CTonlyMiner):
-    '''(CT only method) Let each of the trace clusters be a case type and the 
-    corresponding (identifiers of) cases be mapped onto the types.
-    '''
-
+    """Informed by the result of applying trace clustering, each 
+    variant of cases is taken as a case type.
+    """
     def __init__(self, el, fn_partition):
         self._build_ctypes(el, fn_partition)
-        self._build_atypes(el)
-        self._build_ttypes(el)
-        self.verify()
+        CTonlyMiner._build_atypes(self, el)
+        CTonlyMiner._build_ttypes(self, el)
+        self._verify()
+
 
     def _build_ctypes(self, el, fn_partition):
         self._ctypes = dict()
-        par = list()
         with open(fn_partition, 'r') as f_par:
             for line in f_par:
                 case_id, cluster = (line.split('\t')[0].strip(), 
                     line.split('\t')[1].strip())
                 self._ctypes[case_id] = 'CT.{}'.format(cluster)
-
-        self.is_ctypes_verified = self.verify_partition(
+        self.is_ctypes_verified = self._verify_partition(
             set(el['case_id']), self._ctypes)
 
-# TODO: better ways to handle multiple inheritance?
+
 class TraceClusteringFullMiner(TraceClusteringCTMiner, ATTTMiner):
-    '''(CT + AT + TT method) Based on TraceClusteringCTMiner (CT only) and
-    ATTTMiner (AT + TT). All three dimensions are considered.
-    '''
+    """Informed by the result of applying trace clustering, each 
+    variant of cases is taken as a case type, each value of activity 
+    (task) label is taken as an activity type, and each possible value 
+    of a designated datetime unit is taken as a time type.
+    """
     def __init__(self, el, 
         fn_partition, resolution, datetime_format='%Y/%m/%d %H:%M:%S.%f'):
         TraceClusteringCTMiner._build_ctypes(self, el, fn_partition)
         ATTTMiner._build_atypes(self, el)
         ATTTMiner._build_ttypes(self, el, resolution, datetime_format)
-        self.verify()
-
-    def derive_resource_log(self, el):
-        # Note: only E_res (resource events) should be considered
-        rl = list()
-        for event in el.itertuples(): # keep order
-            if event.resource != '' and event.resource is not None:
-                rl.append({
-                    'resource': event.resource,
-                    'case_type': self._ctypes[event.case_id],
-                    'activity_type': self._atypes[event.activity],
-                    'time_type': self._ttypes[event.timestamp],
-                })
-
-        from pandas import DataFrame
-        return DataFrame(rl)
+        self._verify()
 

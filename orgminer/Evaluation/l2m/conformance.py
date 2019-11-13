@@ -44,7 +44,6 @@ def fitness(rl, om):
     is valid since a resource log is (implicitly) one-to-one 
     corresponded with an event log.
     """
-
     conformed_events = rl[rl.apply(
         lambda e: _is_conformed_event(e, om), axis=1)]
     n_conformed_events = len(conformed_events) # "|E_conf|"
@@ -63,6 +62,7 @@ def fitness_re(rl, om):
     return n_conformed_res_events / n_actual_res_events
 
 
+@deprecated(reason='This definition is not being used.')
 # Wil's precision
 def rc_measure(rl, om):
     """Calculate the precision of an organizational model against a 
@@ -89,7 +89,6 @@ def rc_measure(rl, om):
     is valid since a resource log is (implicitly) one-to-one 
     corresponded with an event log.
     """
-
     conformed_events = rl[rl.apply(
         lambda e: _is_conformed_event(e, om), axis=1)]
     n_conformed_events = len(conformed_events) # "|E_conf|"
@@ -186,7 +185,6 @@ def precision(rl, om):
     is valid since a resource log is (implicitly) one-to-one 
     corresponded with an event log.
     """
-
     cand_E = set()
 
     for event in rl.itertuples():

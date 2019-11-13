@@ -4,6 +4,8 @@
 import sys
 sys.path.append('./')
 
+from math import ceil
+
 fn_event_log = sys.argv[1]
 fnout = sys.argv[2]
 
@@ -42,11 +44,16 @@ if __name__ == '__main__':
     num_groups = list(range(2, len(set(el['resource']))))
     MAX_ITER = 2
 
-    from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner, CTonlyMiner
-    from orgminer.ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
-    from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
-    from orgminer.OrganizationalModelMiner.clustering.hierarchical import _ahc
-    from orgminer.OrganizationalModelMiner.community.graph_partitioning import _mjc
+    from orgminer.ExecutionModeMiner.direct_groupby import (
+        ATonlyMiner, CTonlyMiner)
+    from orgminer.ExecutionModeMiner.informed_groupby import (
+        TraceClusteringCTMiner)
+    from orgminer.ResourceProfiler.raw_profiler import (
+        count_execution_frequency)
+    from orgminer.OrganizationalModelMiner.clustering.hierarchical import (
+        _ahc)
+    from orgminer.OrganizationalModelMiner.community.graph_partitioning import (
+        _mjc)
 
     '''
         For clustering based approaches:
@@ -86,13 +93,14 @@ if __name__ == '__main__':
         'num_res_neg_silhouette_score',
         'num_clu_pos_silhouette_score',
         'num_clu_neg_silhouette_score',
-        'pct_resource_to_be_filtered',
-        'pct_case_to_be_filtered',
-        'pct_resource_to_be_left__global',
-        'pct_case_to_be_left_global'
+        #'pct_resource_to_be_filtered',
+        #'pct_case_to_be_filtered',
+        #'pct_resource_to_be_left__global',
+        #'pct_case_to_be_left_global'
     ]
     from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
-    from orgminer.Evaluation.m2m.cluster_validation import variance_explained_percentage
+    from orgminer.Evaluation.m2m.cluster_validation import (
+        variance_explained_percentage)
     from numpy import mean, amin, amax
 
     num_resources_total = len(set(el['resource']))
@@ -103,13 +111,15 @@ if __name__ == '__main__':
     # NOTE: activity "cluster" by decoding action_code (bpic15-*)
     from re import search as regex_search
     def modify_activity(row):
-        match = regex_search(r'_\d\d\d', row['action_code'])
+        patt = r'_\d\d\d\w*'
+        match = regex_search(patt, row['action_code'])
         if match is None:
             row['activity'] = 'unknown'
         else:
-            row['activity'] = row['action_code'][:match.start()]
+            row['activity'] = row['action_code'][:match.start()+2]
         return row
     log = log.apply(modify_activity, axis=1)
+
     print('\t\tNumber of activity "clusters": {}'.format(
         len(set(log['activity']))))
     '''
@@ -125,9 +135,21 @@ if __name__ == '__main__':
         print('-' * 30 + 'Iteration: {}'.format(iteration) + '-' * 30)
         rl = mode_miner.derive_resource_log(log)
         profiles = count_execution_frequency(rl)
+
         # drop the "unknowns" (bpic15-*)
         if 'AT.unknown' in profiles.columns:
             profiles.drop(columns='AT.unknown', inplace=True)
+
+        # drop low-variance columns
+        top_col_by_var = profiles.var(axis=0).sort_values(ascending=False)
+        top_col_by_var = list(
+            top_col_by_var[:ceil(len(profiles.columns)*0.25)].index)
+            #top_col_by_var[0:1].index)
+            #top_col_by_var[1:].index)
+        profiles = profiles[top_col_by_var]
+
+        print('{} columns remain in the profiles'.format(
+            len(profiles.columns)))
 
         l_measured_values = list()
         for k in num_groups:
@@ -191,10 +213,10 @@ if __name__ == '__main__':
                 num_neg_score_objects,
                 num_pos_score_clusters,
                 num_neg_score_clusters,
-                pct_r_rm,
-                pct_case_rm,
-                pct_r_left_global, 
-                pct_case_left_global 
+                #pct_r_rm,
+                #pct_case_rm,
+                #pct_r_left_global, 
+                #pct_case_left_global 
                 ))
 
         print('VALUES of K')
@@ -222,7 +244,8 @@ if __name__ == '__main__':
                 next_k = int(next_k)
                 stop_iteration = False
 
-            ogs, _ = _ahc(profiles, next_k)
+            ogs, _ = _ahc(profiles, next_k, method='ward')
+
             if stop_iteration:
                 from numpy import set_printoptions, array
                 set_printoptions(linewidth=100)
@@ -243,6 +266,7 @@ if __name__ == '__main__':
                 df.to_csv(fnout)
                 exit()
 
+                '''
                 # TODO: output "core" features (using feature selection)
                 from skfeature.utility.construct_W import construct_W
                 from skfeature.function.similarity_based import lap_score
@@ -263,6 +287,7 @@ if __name__ == '__main__':
                 print('\t(Feature scores range from [{}, {}])'.format(
                     score[ranking_by_score[0]],
                     score[ranking_by_score[-1]]))
+                '''
 
             else:
                 scores = silhouette_score(ogs, profiles)
@@ -284,55 +309,4 @@ if __name__ == '__main__':
 
         # proceed to the next iteration
         iteration += 1
-    
-    '''
-    print('-' * 80)
-    total_rl = mode_miner.derive_resource_log(el)
-    total_profiles = count_execution_frequency(total_rl, scale='log')
-    print('Singletons discarded:')
-    for it, l_r_rm in enumerate(discarded_resources_singleton):
-        print('at Iteration {}:'.format(it+1))
-        print(total_profiles.loc[sorted(list(l_r_rm))])
-    print()
-    print('Negatives discarded:')
-    for it, l_r_rm in enumerate(discarded_resources_negative):
-        print('at Iteration {}:'.format(it+1))
-        print(total_profiles.loc[sorted(list(l_r_rm))])
-
-    # TODO: treat the singletons & negatives as of activity-based?
-    print('Assume mixture being ACT-based:')
-    profiles_act = count_execution_frequency(
-        ATonlyMiner(el).derive_resource_log(el),
-        #scale='log').loc[list(set.union(*discarded_resources_negative))]
-        scale='log').loc[list(set.union(
-            *(discarded_resources_singleton + discarded_resources_negative)))]
-    if len(profiles_act) >= 3:
-        for k in range(2, len(profiles_act)):
-            ogs_negatives, _ = _ahc(
-                profiles_act, k)
-            scores_negatives = silhouette_score(
-                ogs_negatives, profiles_act)
-            print('Silhouette scores (assuming ACT-based) for k={} is\t{}'.format(
-                k, mean(list(scores_negatives.values()))))
-    else:
-        print(profiles_act)
-
-    # TODO: treat the singletons & negatives as of case-based?
-    print('Assume mixture being CASE-based:')
-    profiles_case = count_execution_frequency(
-        CTonlyMiner(el, case_attr_name='(case) channel').derive_resource_log(el),
-        #scale='log').loc[list(set.union(*discarded_resources_negative))]
-        scale='log').loc[list(set.union(
-            *(discarded_resources_singleton + discarded_resources_negative)))]
-    if len(profiles_case) >= 3:
-        for k in range(2, len(profiles_case)):
-            ogs_negatives, _ = _ahc(
-                profiles_case, k)
-            scores_negatives = silhouette_score(
-                ogs_negatives, profiles_case)
-            print('Silhouette scores (assuming CASE-based) for k={} is\t{}'.format(
-                k, mean(list(scores_negatives.values()))))
-    else:
-        print(profiles_case)
-    '''
 

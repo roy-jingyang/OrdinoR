@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from abc import ABC, abstractmethod
+from collections import defaultdict
 
-class BaseMiner(ABC):
-    """This abstract class acts as an interface and should be used as a
-    base class for implementing any approach for learning execution 
-    modes.
+class BaseMiner:
+    """This class should be used as an interface base class for 
+    implementing any approach for learning execution modes.
 
     Parameters
     ----------
@@ -14,39 +13,48 @@ class BaseMiner(ABC):
 
     Attributes
     ----------
-    _ctypes : 
+    _ctypes : (dummy value)
 
     is_ctypes_verified : bool
+        Boolean flag indicating whether the case types are verified.
 
-    _atypes : 
+    _atypes : (dummy value)
 
     is_atypes_verified : bool
+        Boolean flag indicating whether the activity types are verified.
 
-    _ttypes : 
+    _ttypes : (dummy value)
 
     is_ttypes_verified : bool
+        Boolean flag indicating whether the time types are verified.
 
     Methods
     -------
     derive_resource_log(el)
-
-    verify_partition(whole_set, partitioning)
-
-    verify():
+        Derive a resource log given the original log, after the 
+        execution modes have been discovered and verified (which is done 
+        the moment when an object is instantiated).
 
     get_type_by_value(value)
+        Query the built type given a value (of either an activity 
+        label, a case id, or a timestamp).
 
     get_values_by_type(type_name)
-    
+        Query the original values (of activity labels, case ids, or 
+        timestamps) given a type name.
 
     Notes
     -----
+    The docstrings for this class and its methods provide the guidelines 
+    for any child class that implements a specific way of learning 
+    execution modes by overwriting the three methods, respectively:
 
-    get_type_by_value(value)
-
-    get_values_by_type(type_name)
-    An execution mode miner class should inherit from the BaseMiner and 
-    enables learning and storing the mappings:
+        - `self._build_ctypes`
+        - `self._build_atypes`
+        - `self._build_ttypes`
+    
+    Any child class should inherit from class `BaseMiner` and enables 
+    learning and storing the mappings:
 
     - from case ids to Case Types,
 
@@ -60,10 +68,16 @@ class BaseMiner(ABC):
 
     .. math:: \\mathcal{T} \\rightarrow \\mathcal{TT}
 
-    These mappings should be built using python `dicts`.
+    These mappings should be built as python `dicts` of strings.
 
-    Also, it should enable the conversion from a source event log to a 
-    derived resource log.
+    Please note that, any approach inherited from class `BaseMiner` and 
+    implementing some execution mode learning strategy must ensure that:
+
+        - the derived types are disjoint, and
+        - the derived types form a partitioning of the original values.
+
+    For example, a learning approach must map each case captured in the 
+    event log to one case type and one case type only.
     """
     _ctypes = None
     is_ctypes_verified = False
@@ -74,114 +88,174 @@ class BaseMiner(ABC):
     _ttypes = None
     is_ttypes_verified = False
 
-    def __init__(self, el):
+    def __init__(self, el, **kwargs):
+        """Instantiate an instance that implements a way of execution
+        mode learning.
+
+        The constructor method should call the three methods for 
+        building case types, activity types and time types, 
+        respectively:
+
+        - `self._build_ctypes`
+        - `self._build_atypes`
+        - `self._build_ttypes`
+
+        The function signature may vary depending on the exact strategy 
+        of learning execution modes.
+
+        And invoke method `self._verify()` to ensure that the built 
+        types are valid, i.e., a set of such types would form a 
+        partitioning of the original corresponding values.
+
+        Note that any child class is required to have its own 
+        constructor method written as there may be different 
+        requirements for the input arguments. Even if there is no
+        additional requirements as in the base class, it is expected
+        that constructor of the child class explicitly invokes this 
+        method.
+
+        Parameters
+        ----------
+        el : DataFrame
+            An event log from which the execution modes are learned.
+
+        Returns
+        -------
+        """
         self._build_ctypes(el)
         self._build_atypes(el)
         self._build_ttypes(el)
-        self.verify()
+        self._verify()
 
-    @abstractmethod
+
     def _build_ctypes(self, el, **kwargs):
-        '''Mine the case types.
-        Each type should be stored as a key-value pair where the key is of
-        string type and the value is a set of strings.
+        """Mine the case types.
+
+        Each type should be stored as a key-value pair where the key is 
+        of string type and the value is a set of strings.
+
+        By default, this dimension is neglected, i.e., no case types are
+        built, or you may consider all cases belonging to the same dummy
+        type marked by an empty python string, ``''``.
 
         Parameters
         ----------
         el : DataFrame
-            The event log in pandas DataFrame form, from which the current
-            execution mode is discovered.
+            An event log from which the execution modes are learned.
 
         Returns
         -------
-        is_valid : a boolean flag indicating the status of the operation.
-        '''
-        pass
 
-    @abstractmethod
+        """
+        self._ctypes = defaultdict(lambda: '')
+        self.is_ctypes_verified = True
+
+
     def _build_atypes(self, el, **kwargs):
-        '''Mine the activity types.
-        Each type should be stored as a key-value pair where the key is of
-        string type and the value is a set of strings.
+        """Mine the activity types.
+
+        Each type should be stored as a key-value pair where the key is 
+        of string type and the value is a set of strings.
+
+        By default, this dimension is neglected, i.e., no activity types
+        are built, or you may consider all activity labels belonging to 
+        the same dummy type marked by an empty python string, ``''``.
 
         Parameters
         ----------
         el : DataFrame
-            The event log in pandas DataFrame form, from which the current
-            execution mode is discovered.
+            An event log from which the execution modes are learned.
 
         Returns
         -------
-        is_valid : a boolean flag indicating the status of the operation.
-        '''
-        pass
+        """
+        self._atypes = defaultdict(lambda: '')
+        self.is_atypes_verified = True
 
-    @abstractmethod
+
     def _build_ttypes(self, el, **kwargs):
-        '''Mine the time types.
-        Each type should be stored as a key-value pair where the key is of
-        string type and the value is a set of strings.
+        """Mine the time types.
+
+        Each type should be stored as a key-value pair where the key is 
+        of string type and the value is a set of strings.
+
+        By default, this dimension is neglected, i.e., no time types
+        are built, or you may consider all timestamps belonging to 
+        the same dummy type marked by an empty python string, ``''``.
 
         Parameters
         ----------
         el : DataFrame
-            The event log in pandas DataFrame form, from which the current
-            execution mode is discovered.
+            An event log from which the execution modes are learned.
 
         Returns
         -------
-        is_valid : a boolean flag indicating the status of the operation.
-        '''
-        pass
+        """
+        self._ttypes = defaultdict(lambda: '')
+        self.is_ttypes_verified = True
 
-    @abstractmethod
+
     def derive_resource_log(self, el):
-        '''Derive a 'resource log' given the original log AFTER the execution
-        modes have been discovered and verified. The collections of case/
-        activity/time identifiers in the original event log will be mapped
-        onto the corresponding execution modes.
+        """Derive a resource log given the original log, after the 
+        execution modes have been discovered and verified (which is done 
+        the moment when an object is instantiated).
 
-        Each 'resource event' in the derived resource log is corresponded with
-        an event in the source event log exactly (even if the resource log is a
-        multiset).
+        Each resource event in the derived resource log is corresponded 
+        with exactly an event in the source event log even when the 
+        resource log is defined as a multiset.
 
-        Note that, such 'resource event's are required to contain resource
-        information, i.e. events with no resource information in the source 
-        event log will be implicitly discarded.
+        Note that, such resource events are required to contain resource
+        information, i.e. events with no resource information in the 
+        source event log will be discarded.
 
         Parameters
         ----------
         el : DataFrame
-            The event log in pandas DataFrame form, from which the current
-            execution mode is discovered.
+            An event log from which the execution modes are learned.
 
         Returns
         -------
-        rl: DataFrame
-            The derived resource log in pandas DataFrame form.
-        '''
-        pass
+        DataFrame
+            The derived resource log as a pandas DataFrame.
+        """
+        rl = list()
+        for event in el.itertuples(): # keep order
+            # NOTE: only events with resource information are considered
+            if event.resource != '' and event.resource is not None:
+                rl.append({
+                    'resource': event.resource,
+                    'case_type': self._ctypes[event.case_id],
+                    'activity_type': self._atypes[event.activity],
+                    'time_type': self._ttypes[event.timestamp]
+                })
 
-    def verify_partition(self, whole_set, partitioning):
-        '''Verify if the given partitioning (as a dict) is indeed a
-        partitioning of values of the given set.
+        from pandas import DataFrame
+        return DataFrame(rl)
+
+
+    def _verify_partition(self, whole_set, partitioning):
+        """A helper function that is used for verifying if the keys in a 
+        given partitioning (as a dict) is indeed a partitioning of 
+        values in a given set.
 
         Parameters
         ----------
         whole_set : set
+
         partitioning : dict
 
         Returns
         -------
-        : a boolean flag 
-        '''
-        # since it is given as a dict, clusters are naturally mutual exclusive
-        is_disjoint = True
+        bool
+            The result of verification.
+        """
+        is_disjoint = True # given the internal data structure as a dict
         is_union = set(partitioning.keys()) == whole_set
         return is_disjoint and is_union
 
-    def verify(self):
-        '''Verify if the built execution modes are valid and print prompting
+
+    def _verify(self):
+        """Verify if the built execution modes are valid and print prompting
         information.
 
         Parameters
@@ -189,7 +263,7 @@ class BaseMiner(ABC):
 
         Returns
         -------
-        '''
+        """
         if (self.is_ctypes_verified and self.is_atypes_verified and
                 self.is_ttypes_verified):
             print('-' * 80)
@@ -212,13 +286,14 @@ class BaseMiner(ABC):
                 else 'INVALID'))
             print('T Types:\t{}'.format('VERIFIED' if self.is_ttypes_verified
                 else 'INVALID'))
-            exit('[Error] Failed to verify the collected execution modes: ')
+            raise Exception('Failed to verify execution modes.')
 
-    # from original activity labels/case ids/timestamps to types
+
     # TODO:
+    # from original activity labels/case ids/timestamps to types
     def get_type_by_value(self, value):
-        '''Query the built type given a value (of either an activity label, a
-        case id, or a timestamp).
+        """Query the built type given a value (of either an activity 
+        label, a case id, or a timestamp).
 
         Parameters
         ----------
@@ -229,12 +304,13 @@ class BaseMiner(ABC):
         -------
         type_name : str
             The corresponding type name.
-        '''
-        pass
+        """
+        raise NotImplementedError
+
 
     # from types to the originals
     def get_values_by_type(self, type_name):
-        '''Query the original values (of activity labels, case ids, or 
+        """Query the original values (of activity labels, case ids, or 
         timestamps) given a type name.
 
         Parameters
@@ -246,7 +322,7 @@ class BaseMiner(ABC):
         -------
         values : list of str
             The corresponding values.
-        '''
+        """
         if type_name.startswith('CT'):
             return list(k for k, v in self._ctypes.items()
                 if v == type_name)
@@ -259,6 +335,5 @@ class BaseMiner(ABC):
             return list(k for k, v in self._ttypes.items()
                 if v == type_name)
 
-        exit('[Error] Failed to parse the queried type.')
-
+        raise ValueError('Unrecognized type name.')
     

@@ -43,7 +43,6 @@ def silhouette_score(clu, X, metric='euclidean'):
         <https://scikit-learn.org/stable/modules/generated/
         sklearn.metrics.silhouette_samples.html>`_.
     """
-
     from sklearn.metrics import silhouette_samples
     resources = list(X.index)
     labels = [-1] * len(resources)
@@ -85,7 +84,6 @@ def variance_explained_score(clu, X):
     Equivalent to:
         ``_variance_between_cluster / _variance_within_cluster``
     """
-    
     from sklearn.metrics import calinski_harabasz_score 
     resources = list(X.index)
     labels = [-1] * len(resources)
@@ -112,7 +110,6 @@ def variance_explained_percentage(clu, X):
     float
         The result percentage of variance explained (in range 0-100).
     """
-
     var_between = _variance_between_cluster(clu, X)
     var_within = _variance_within_cluster(clu, X)
     return 100 * var_between / (var_between + var_within)
@@ -134,7 +131,6 @@ def _variance_within_cluster(clu, X):
     var_between : float
         The result within-cluster variance.
     """
-
     from numpy import mean, sum
     var_within = 0
 
@@ -161,7 +157,6 @@ def _variance_between_cluster(clu, X):
     var_between : float
         The result between-cluster variance.
     """
-
     from numpy import mean, sum
     var_between = 0
     samples_mean = mean(X.values, axis=0)
@@ -197,7 +192,6 @@ def modularity(clu, G, weight=None):
         Equation (11.39), Sect. 11.3.3, Data Mining: Concepts and 
         Techniques, J. Han, J. Pei, M. Kamber.
     """
-
     from networkx import is_directed, restricted_view
     q = 0.0
     if is_directed(G):
