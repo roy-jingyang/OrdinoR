@@ -24,23 +24,20 @@ def count_execution_frequency(rl, scale=None):
     '''
 
     from collections import defaultdict
-    pam = defaultdict(lambda: defaultdict(lambda: 0))
+    mat = defaultdict(lambda: defaultdict(lambda: 0))
     for res, trace in rl.groupby('resource'):
         for event in trace.itertuples():
             exec_mode = (event.case_type, event.activity_type, event.time_type)
-            pam[res][exec_mode] += 1
+            mat[res][exec_mode] += 1
 
     from pandas import DataFrame
-    df = DataFrame.from_dict(pam, orient='index').fillna(0)
+    df = DataFrame.from_dict(mat, orient='index').fillna(0)
     if scale is None:
         return df
     elif scale == 'log':
         print('Using logarithm scale for frequencies')
-        from numpy import log # NOTE: be careful, this is a "ln"
+        from numpy import log # NOTE: be careful, this is "ln"
         return df.apply(lambda x: log(x + 1))
-    elif scale == 'normalize':
-        print('Using normalization for frequencies')
-        return df.div(df.sum(axis=1), axis=0)
     else:
         exit('[Error] Unspecified scaling option')
 

@@ -15,19 +15,24 @@ if __name__ == '__main__':
     # read event log as input
     from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        #el = read_disco_csv(f, mapping={'action_code': 18}) # bpic15-*
-        el = read_disco_csv(f, mapping={'(case) last_phase': 14}) # bpic15-*
+        el = read_disco_csv(f, mapping={
+            'action_code': 18,
+            '(case) last_phase': 14}) # bpic15-*
         #el = read_disco_csv(f, mapping={'(case) channel': 6}) # wabo
         #el = read_disco_csv(f, mapping={'(case) LoanGoal': 7}) # bpic17
 
-    # event log preprocessing
-    # NOTE: filter cases done by one single resources
     num_total_cases = len(set(el['case_id']))
     num_total_resources = len(set(el['resource']))
+
+    # event log preprocessing
+    '''
+    # NOTE: filter cases done by one single resources
     teamwork_cases = set()
     for case_id, events in el.groupby('case_id'):
         if len(set(events['resource'])) > 1:
             teamwork_cases.add(case_id)
+    el = el.loc[el['case_id'].isin(teamwork_cases)]
+    '''
     # NOTE: filter resources with low event frequencies (< 1%)
     num_total_events = len(el)
     active_resources = set()
@@ -35,17 +40,16 @@ if __name__ == '__main__':
         if (len(events) / num_total_events) >= 0.01:
             active_resources.add(resource)
 
-    el = el.loc[el['resource'].isin(active_resources) 
-                & el['case_id'].isin(teamwork_cases)]
-    print('{}/{} resources found active in {} cases.\n'.format(
+    el = el.loc[el['resource'].isin(active_resources)] 
+    print('{}/{} resources found active in {}/{} cases.\n'.format(
         len(active_resources), num_total_resources,
-        len(set(el['case_id']))))
+        len(set(el['case_id'])), num_total_cases))
 
     num_groups = list(range(2, len(set(el['resource']))))
     MAX_ITER = 2
 
     from orgminer.ExecutionModeMiner.direct_groupby import (
-        ATonlyMiner, CTonlyMiner)
+        ATonlyMiner, CTonlyMiner, ATCTMiner)
     from orgminer.ExecutionModeMiner.informed_groupby import (
         TraceClusteringCTMiner)
     from orgminer.ResourceProfiler.raw_profiler import (
@@ -107,25 +111,27 @@ if __name__ == '__main__':
     num_cases_total = len(set(el['case_id']))
 
     log = el
-    '''
-    # NOTE: activity "cluster" by decoding action_code (bpic15-*)
+    # NOTE: activity "cluster" by (decoding) action_code (bpic15-*)
     from re import search as regex_search
     def modify_activity(row):
+        row['activity'] = row['action_code']
+        '''
         patt = r'_\d\d\d\w*'
         match = regex_search(patt, row['action_code'])
         if match is None:
             row['activity'] = 'unknown'
         else:
             row['activity'] = row['action_code'][:match.start()+2]
+        '''
         return row
     log = log.apply(modify_activity, axis=1)
 
     print('\t\tNumber of activity "clusters": {}'.format(
         len(set(log['activity']))))
-    '''
 
     #mode_miner = ATonlyMiner(log)
-    mode_miner = CTonlyMiner(log, case_attr_name='(case) last_phase')
+    #mode_miner = CTonlyMiner(log, case_attr_name='(case) last_phase')
+    mode_miner = ATCTMiner(log, case_attr_name='(case) last_phase')
     #mode_miner = TraceClusteringCTMiner(log, fn_partition=fn_partition)
 
     iteration = 1
@@ -136,16 +142,17 @@ if __name__ == '__main__':
         rl = mode_miner.derive_resource_log(log)
         profiles = count_execution_frequency(rl)
 
+        '''
         # drop the "unknowns" (bpic15-*)
         if 'AT.unknown' in profiles.columns:
             profiles.drop(columns='AT.unknown', inplace=True)
+        '''
 
         # drop low-variance columns
         top_col_by_var = profiles.var(axis=0).sort_values(ascending=False)
         top_col_by_var = list(
-            top_col_by_var[:ceil(len(profiles.columns)*0.25)].index)
-            #top_col_by_var[0:1].index)
-            #top_col_by_var[1:].index)
+            top_col_by_var[:ceil(len(profiles.columns)*0.05)].index)
+            #top_col_by_var[:].index)
         profiles = profiles[top_col_by_var]
 
         print('{} columns remain in the profiles'.format(
@@ -263,7 +270,9 @@ if __name__ == '__main__':
                 from copy import deepcopy
                 df = deepcopy(profiles)
                 df['Group label'] = group_labels
-                df.to_csv(fnout)
+                var_row = profiles.var(axis=0)
+                var_row.name = 'Variance'
+                df.append(var_row).to_csv(fnout)
                 exit()
 
                 '''
