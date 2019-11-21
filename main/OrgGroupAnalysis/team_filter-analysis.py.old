@@ -5,165 +5,116 @@ import sys
 sys.path.append('./')
 
 from math import ceil
-from re import search as regex_search
-from pandas import read_csv
 
 fn_event_log = sys.argv[1]
 fnout = sys.argv[2]
-
-def filter_cases_by_frequency(log, case_attr, threshold=0.1):
-    frequent_case_classes = set()
-    num_total_cases = len(set(log['case_id']))
-
-    for case_class, events in log.groupby(case_attr):
-        num_cases = len(set(events['case_id']))
-        if (num_cases / num_total_cases) >= threshold:
-            frequent_case_classes.add(case_class)
-    
-    filtered = log.loc[log[case_attr].isin(frequent_case_classes)]
-    print('''[filter_cases_by_frequency] 
-        Frequent values of attribute "{}": {}
-        {} / {} ({:.1%}) cases are kept.'''.format(
-        case_attr, set(frequent_case_classes),
-        len(set(filtered['case_id'])),
-        num_total_cases,
-        len(set(filtered['case_id'])) / num_total_cases))
-    return filtered
-
-def filter_events_by_frequency(log, event_attr, threshold=0.1):
-    frequent_classes = set()
-    num_total_events = len(log)
-
-    for class_name, events in log.groupby(event_attr):
-        if (len(events) / num_total_events) >= threshold:
-            frequent_classes.add(class_name)
-
-    filtered = log.loc[log[event_attr].isin(frequent_classes)]
-    print('''[filter_events_by_frequency] 
-        Frequent values of attribute "{}": {}
-        {} / {} ({:.1%}) events are kept.'''.format(
-        event_attr, set(frequent_classes),
-        len(filtered),
-        num_total_events,
-        len(filtered) / num_total_events))
-    return filtered
-
-def filter_events_by_active_resources(log, threshold=0.01):
-    active_resources = set()
-    num_total_events = len(log)
-
-    for resource, events in log.groupby('resource'):
-        if (len(events) / num_total_events) >= threshold and resource != '':
-            active_resources.add(resource)
-
-    filtered = log.loc[log['resource'].isin(active_resources)]
-    print('''{} resources found active with {} events.\n'''.format(
-        len(set(filtered['resource'])), len(log)))
-    return filtered
 
 if __name__ == '__main__':
     # Configuration based on given log (hard-coded)
 
     # read event log as input
     from orgminer.IO.reader import read_disco_csv
-    # TODO
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f, mapping={
-            'action_code': 4,
-            '(case) last_phase': 5,
-            'subprocess': 6,
-            'phase': 7}) # bpic15-* (decoded)
+            'action_code': 18,
+            '(case) last_phase': 14}) # bpic15-*
+        #el = read_disco_csv(f, mapping={'(case) channel': 6}) # wabo
+        #el = read_disco_csv(f, mapping={'(case) LoanGoal': 7}) # bpic17
         #el = read_disco_csv(f)
 
+    num_total_cases = len(set(el['case_id']))
+    num_total_resources = len(set(el['resource']))
+
     # event log preprocessing
-    log = el
-    """
-    print('''Select the desired data granularity for analysis:\n
-        [1] Event-level\n
-        [2] Case-level\n
-    Input a number: ''', end='')
-    OPT_granularity = input()
-    if OPT_granularity == '1':
-        convert_to_cases = False
-    elif OPT_granularity == '2':
-        convert_to_cases = True
-    else:
-        raise ValueError("Unrecognized selection.")
-    """
-
-    # NOTE: Case-level analysis
-    # -------------------------
-    # NOTE: convert the log to a case log (keep only 1 event for each case)
-    # (for case-level analysis)
-    l_index = list()
-    for case_id, events in log.groupby('case_id'):
-        l_index.extend(events.drop_duplicates(subset=['resource']).index)
-    log = log.loc[l_index]
-
-    # NOTE: filter infrequent case classes (< 10%)
-    log = filter_cases_by_frequency(log, '(case) last_phase', 0.1)
-    print('Select a case class to perform analysis: ', end='')
-    selected_case_class = input()
-    if selected_case_class == '':
-        print('\tOmitted')
-    else:
-        frequent_case_classes = {selected_case_class}
-        log = log.loc[log['(case) last_phase'].isin(frequent_case_classes)]
-    # -------------------------
     '''
+    # NOTE: filter cases done by one single resources
+    teamwork_cases = set()
+    for case_id, events in el.groupby('case_id'):
+        if len(set(events['resource'])) > 1:
+            teamwork_cases.add(case_id)
+    el = el.loc[el['case_id'].isin(teamwork_cases)]
     '''
 
-    # NOTE: Event-level analysis
-    # -------------------------
     '''
-    # NOTE: filter infrequent case classes (< 10%)
-    log = filter_cases_by_frequency(log, '(case) last_phase', 0.1)
-    print('Select a case class to perform analysis: ', end='')
-    selected_case_class = input()
-    if selected_case_class == '':
-        print('\tOmitted')
-    else:
-        frequent_case_classes = {selected_case_class}
-        log = log.loc[log['(case) last_phase'].isin(frequent_case_classes)]
+    # NOTE: filter resources with low event frequencies (< 1%)
+    num_total_events = len(el)
+    active_resources = set()
+    for resource, events in el.groupby('resource'):
+        if (len(events) / num_total_events) >= 0.01 and resource != '':
+            active_resources.add(resource)
+    el = el.loc[el['resource'].isin(active_resources)] 
+    '''
 
-    # NOTE: filter infrequent subprocesses (< 10%)
-    log = filter_events_by_frequency(log, 'subprocess', 0.1)
+    # NOTE: select only cases with particular case values
+    frequent_case_types = set()
+    for last_phase, events in el.groupby('(case) last_phase'):
+        num_cases = len(set(events['case_id']))
+        if (num_cases / len(set(el['case_id']))) >= 0.1:
+            frequent_case_types.add(last_phase)
+    el = el.loc[el['(case) last_phase'].isin(frequent_case_types)]
 
-    # NOTE: filter infrequent activity classes, "phase" (< 10%)
-    log = filter_events_by_frequency(log, 'phase', 0.1)
-    print('Select an activity class to perform analysis: ', end='')
+    '''
+    # NOTE: select only events related to particular subprocess phases
+    # NOTE: activity "cluster" by (decoding) 'action_code' (bpic15-*)
+    #patt = r'_\d\d\d\w*'
+    #patt = r'01_HOOFD_\d\d\d\w*'
+    patt = r'01_HOOFD_\d'
+    #patt = r'\d\d_[A-Za-z0-9]+_'
+    from re import search as regex_search
+
+    event_clusters = dict()
+    for action_code, events in el.groupby('action_code'):
+        match = regex_search(patt, action_code)
+        if match is None:
+            pass
+        else:
+            decoded_code = action_code[:match.end()]
+            if decoded_code not in event_clusters:
+                event_clusters[decoded_code] = list()
+            event_clusters[decoded_code].extend(list(events.index))
+    for activity_class, indices in event_clusters.items():
+        print('\t{}\tclass with\t{} ({:.2%})\tevents.'.format(
+            activity_class, len(indices), len(indices) / len(el)))
+    print('Select a class to perform analysis: ', end='')
     selected_activity_class = input()
-    if selected_activity_class == '':
-        print('\tOmitted')
-    else:
-        frequent_activity_classes = {selected_activity_class}
-        log = log.loc[log['phase'].isin(frequent_activity_classes)]
 
-    # NOTE: filter infrequent activity instances (action_codes) (< 1%)
-    log = filter_events_by_frequency(log, 'action_code', 0.01)
-
-    log['activity'] = log['phase']
+    el = el.loc[event_clusters[selected_activity_class]]
     '''
-    # -------------------------
 
-    # NOTE: filter resources with low involvement (< 1%)
-    log = filter_events_by_active_resources(log, 0.01)
+    '''
+    print("""{}/{} resources found active in {}/{} frequent cases with
+            {} events.\n""".format(
+        len(set(el['resource'])), num_total_resources,
+        len(set(el['case_id'])), num_total_cases,
+        len(el)))
+    '''
 
+    MAX_ITER = 2
 
     from orgminer.ExecutionModeMiner.direct_groupby import (
         ATonlyMiner, CTonlyMiner, ATCTMiner)
+    from orgminer.ExecutionModeMiner.informed_groupby import (
+        TraceClusteringCTMiner)
     from orgminer.ResourceProfiler.raw_profiler import (
         count_execution_frequency)
     from orgminer.OrganizationalModelMiner.clustering.hierarchical import (
         _ahc)
+    from orgminer.OrganizationalModelMiner.community.graph_partitioning import (
+        _mjc)
 
     '''
         For clustering based approaches:
         each of the particular selection of "k" is evaluated by both:
-        - a value resulted from measuring by elbow method
-        - decision drawn from silhouette analysis
+        - a value resulted from measuring by elbow method, cf.
+            (https://en.wikipedia.org/wiki/Elbow_method_(clustering))
+        - decision drawn from silhouette analysis, cf.
+            (https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_silhouette_analysis.html)
+        For graph partitioning based approaches:
+        each of the particular selection of "k" is evaluated by both:
+        - the modularity of the network, cf.
+            (Sect. 11.3.3, Data Mining: Concepts and Techniques, J. Han et al.)
     '''
-    ''' {8} items may be collected for analysis:
+    ''' {13} items may be collected for analysis:
         - the result from silhouette analysis (k_flag),
         - the average value of silhouette score (of all resources), excluding
           those designated to singleton clusters;
@@ -175,6 +126,10 @@ if __name__ == '__main__':
           singletons);
         - the number of clusters with NEG average silhouette score (excluding
           singletons);
+        - percentage of resources having zero/negative silhouette scores;
+        - percentage of cases involving the resouces above;
+        - percentage of resources having zero/negative silhouette scores (global);
+        - percentage of cases involving the resouces above (global);
     '''
     items = [
         'VALID_K_value',
@@ -185,32 +140,70 @@ if __name__ == '__main__':
         'num_res_neg_silhouette_score',
         'num_clu_pos_silhouette_score',
         'num_clu_neg_silhouette_score',
+        #'pct_resource_to_be_filtered',
+        #'pct_case_to_be_filtered',
+        #'pct_resource_to_be_left__global',
+        #'pct_case_to_be_left_global'
     ]
     from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
     from orgminer.Evaluation.m2m.cluster_validation import (
         variance_explained_percentage)
     from numpy import mean, amin, amax
 
+    log = el
+    def decode(row):
+        row['activity'] = row['action_code']
+        '''
+        match = regex_search(patt, row['action_code'])
+        if match is None:
+            row['activity'] = 'unknown'
+        else:
+            row['activity'] = row['action_code'][:match.start()+2]
+        '''
+        return row
+    #log = log.apply(decode, axis=1)
+
+    '''
+    # NOTE: convert the log to a case log (keep only 1 event for each case)
+    l_index = list()
+    for case_id, events in el.groupby('case_id'):
+        l_index.append(events.iloc[0].name)
+    log = el.loc[l_index]
+    '''
+
+    # NOTE: filter resources with low involvement (< 1%)
+    num_total_events = len(log)
+    active_resources = set()
+    for resource, events in log.groupby('resource'):
+        if (len(events) / num_total_events) >= 0.01 and resource != '':
+            active_resources.add(resource)
+    log = log.loc[log['resource'].isin(active_resources)] 
+
+    print("""{}/{} resources found active in {}/{} frequent cases with
+            {} events.\n""".format(
+        len(set(log['resource'])), num_total_resources,
+        len(set(log['case_id'])), num_total_cases,
+        len(log)))
+
     num_groups = list(range(2, len(set(log['resource']))))
 
     #mode_miner = ATonlyMiner(log)
     mode_miner = CTonlyMiner(log, case_attr_name='(case) last_phase')
     #mode_miner = ATCTMiner(log, case_attr_name='(case) last_phase')
+    #mode_miner = TraceClusteringCTMiner(log, fn_partition=fn_partition)
+
 
     iteration = 1
-    MAX_ITER = 2
     discarded_resources_singleton = list()
     discarded_resources_negative = list()
     while iteration <= MAX_ITER:
         print('-' * 30 + 'Iteration: {}'.format(iteration) + '-' * 30)
         rl = mode_miner.derive_resource_log(log)
-
-        #profiles = count_execution_frequency(rl)
-        profiles = count_execution_frequency(rl, scale='normalize')
+        profiles = count_execution_frequency(rl)
 
         # drop the "unknowns" (bpic15-*)
-        if 'AT.' in profiles.columns:
-            profiles.drop(columns='AT.', inplace=True)
+        if 'AT.unknown' in profiles.columns:
+            profiles.drop(columns='AT.unknown', inplace=True)
 
         # drop low-variance columns
         top_col_by_var = profiles.var(axis=0).sort_values(ascending=False)
@@ -227,7 +220,7 @@ if __name__ == '__main__':
         for k in num_groups:
             # calculate silhouette scores and variance explained (for each K)
             ogs, _ = _ahc(profiles, k, method='ward')
-
+            #ogs, _ = _ahc(profiles, k, metric='minkowski', method='average')
             scores = silhouette_score(ogs, profiles)
             var_pct = variance_explained_percentage(
                 ogs, profiles)
@@ -258,6 +251,27 @@ if __name__ == '__main__':
             k_flag = all(
                 [(x[1] >= mean_score_overall) for x in scores_clu])
 
+            '''
+            # amount of resources, cases to be discarded (for each K)
+            l_r_rm = set()
+            for og in ogs:
+                if len(og) == 1:
+                    l_r_rm.update(og)
+                else:
+                    pass
+            l_case_rm = list()
+            for case_id, events in log.groupby('case_id'):
+                resources = set(events['resource'])
+                if len(l_r_rm.intersection(resources)) > 0:
+                    l_case_rm.append(case_id)
+            pct_r_rm = len(l_r_rm) / len(set(log['resource']))
+            pct_r_left_global = ((len(set(log['resource'])) - len(l_r_rm))
+                / num_resources_total)
+            pct_case_rm = len(l_case_rm) / len(set(log['case_id']))
+            pct_case_left_global = ((len(set(log['case_id'])) - len(l_case_rm))
+                / num_cases_total)
+            '''
+
             l_measured_values.append((
                 k_flag,
                 mean_score_overall,
@@ -267,6 +281,10 @@ if __name__ == '__main__':
                 num_neg_score_objects,
                 num_pos_score_clusters,
                 num_neg_score_clusters,
+                #pct_r_rm,
+                #pct_case_rm,
+                #pct_r_left_global, 
+                #pct_case_left_global 
                 ))
 
         print('VALUES of K')
@@ -295,6 +313,8 @@ if __name__ == '__main__':
                 stop_iteration = False
 
             ogs, _ = _ahc(profiles, next_k, method='ward')
+            #ogs, _ = _ahc(profiles, next_k, metric='minkowski',
+            #    method='average')
 
             if stop_iteration:
                 from numpy import set_printoptions, array
@@ -318,9 +338,30 @@ if __name__ == '__main__':
                 df.append(var_row).to_csv(fnout)
                 exit()
 
-            else:
-                exit()
                 '''
+                # TODO: output "core" features (using feature selection)
+                from skfeature.utility.construct_W import construct_W
+                from skfeature.function.similarity_based import lap_score
+                score = lap_score.lap_score(profiles.values,
+                    W=construct_W(profiles.values,
+                        y=array(group_labels).reshape(len(resources), 1),
+                        metric='euclidean',
+                        neighbor_mode='supervised',
+                        weight_mode='heat_kernel',
+                        k=2,
+                        t=1))
+                print(score)
+                ranking_by_score = lap_score.feature_ranking(score) # ascending
+                print('Ranking of columns by feature selection:')
+                for i, col_idx in enumerate(ranking_by_score):
+                    print('Rank-{}: {}'.format(
+                        i+1, profiles.columns[col_idx]))
+                print('\t(Feature scores range from [{}, {}])'.format(
+                    score[ranking_by_score[0]],
+                    score[ranking_by_score[-1]]))
+                '''
+
+            else:
                 scores = silhouette_score(ogs, profiles)
                 l_r_rm = set(r for r in scores if scores[r] <= 0.0)
                 discarded_resources_singleton.append(
@@ -334,7 +375,6 @@ if __name__ == '__main__':
                         l_case_rm.append(case_id)
                 # filter out cases and generate a new log
                 log = log[log['case_id'].map(lambda x: x not in l_case_rm)]
-                '''
 
         else:
             print('\nMAX iteration reached.')

@@ -38,6 +38,10 @@ def count_execution_frequency(rl, scale=None):
         print('Using logarithm scale for frequencies')
         from numpy import log # NOTE: be careful, this is "ln"
         return df.apply(lambda x: log(x + 1))
+    elif scale == 'normalize':
+        print('Using normalization for frequencies')
+        # normalize by row
+        return df.div(df.sum(axis=1), axis=0)
     else:
         exit('[Error] Unspecified scaling option')
 
