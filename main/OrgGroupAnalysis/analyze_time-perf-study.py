@@ -58,7 +58,7 @@ def filter_events_by_active_resources(log, threshold=0.01):
 
     filtered = log.loc[log['resource'].isin(active_resources)]
     print('''{} resources found active with {} events.\n'''.format(
-        len(set(filtered['resource'])), len(log)))
+        len(set(filtered['resource'])), len(filtered)))
     return filtered
 
 if __name__ == '__main__':
@@ -93,6 +93,7 @@ if __name__ == '__main__':
 
     # NOTE: Case-level analysis
     # -------------------------
+    '''
     # NOTE: convert the log to a case log (keep only 1 event for each case)
     # (for case-level analysis)
     l_index = list()
@@ -109,13 +110,11 @@ if __name__ == '__main__':
     else:
         frequent_case_classes = {selected_case_class}
         log = log.loc[log['(case) last_phase'].isin(frequent_case_classes)]
+    '''
     # -------------------------
-    '''
-    '''
 
     # NOTE: Event-level analysis
     # -------------------------
-    '''
     # NOTE: filter infrequent case classes (< 10%)
     log = filter_cases_by_frequency(log, '(case) last_phase', 0.1)
     print('Select a case class to perform analysis: ', end='')
@@ -139,11 +138,7 @@ if __name__ == '__main__':
         frequent_activity_classes = {selected_activity_class}
         log = log.loc[log['phase'].isin(frequent_activity_classes)]
 
-    # NOTE: filter infrequent activity instances (action_codes) (< 1%)
-    log = filter_events_by_frequency(log, 'action_code', 0.01)
-
     log['activity'] = log['phase']
-    '''
     # -------------------------
 
     # NOTE: filter resources with low involvement (< 1%)
@@ -193,8 +188,8 @@ if __name__ == '__main__':
 
     num_groups = list(range(2, len(set(log['resource']))))
 
-    #mode_miner = ATonlyMiner(log)
-    mode_miner = CTonlyMiner(log, case_attr_name='(case) last_phase')
+    mode_miner = ATonlyMiner(log)
+    #mode_miner = CTonlyMiner(log, case_attr_name='(case) last_phase')
     #mode_miner = ATCTMiner(log, case_attr_name='(case) last_phase')
 
     iteration = 1
