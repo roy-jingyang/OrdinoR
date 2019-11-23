@@ -6,10 +6,12 @@ sys.path.append('./')
 
 from math import ceil
 from pandas import DataFrame
+from collections import defaultdict, Counter
 
 fn_event_log = sys.argv[1]
 fnout_resource_profiles = sys.argv[2]
 fnout_group_profiles = sys.argv[3]
+fnout_time_results = sys.argv[4]
 
 if __name__ == '__main__':
     # Configuration based on given log (hard-coded)
@@ -24,6 +26,8 @@ if __name__ == '__main__':
         #el = read_disco_csv(f)
 
     # event log preprocessing
+    from orgminer.Preprocessing.log_augmentation import append_case_duration
+    el = append_case_duration(el)
     log = el
 
     from filters import filter_cases_by_frequency
@@ -51,6 +55,19 @@ if __name__ == '__main__':
     log = filter_cases_by_frequency(log, '(case) last_phase', 0.1)
     '''
     # -------------------------
+
+    # NOTE: Time-related analysis
+    resource_case_timer = defaultdict(lambda: defaultdict(lambda: 0))
+    resource_case_counter = defaultdict(lambda: Counter())
+    for case_id, events in log.groupby('case_id'):
+        case_class = set(events['(case) last_phase']).pop()
+        case_duration = set(events['case_duration']).pop()
+
+        for participant in set(events['resource']):
+            resource_case_timer[participant][case_class] += case_duration
+            resource_case_counter[participant][case_class] += 1
+
+    resource_case_time_mat = defaultdict(lambda: defaultdict(lambda: None))
 
     # NOTE: filter resources with low involvement (< 1%)
     log = filter_events_by_active_resources(log, 0.01)
@@ -198,13 +215,12 @@ if __name__ == '__main__':
     df = deepcopy(profiles)
     df['Group label'] = group_labels
 
-    # resource profiles annotated with variance information
+    # 1. resource profiles annotated with variance information
     var_row = profiles.var(axis=0)
     var_row.name = 'Variance'
     df.append(var_row).to_csv(fnout_resource_profiles)
 
-    # group profiles
-    from collections import defaultdict
+    # 2. group profiles
     group_profiles_mat = defaultdict(lambda: defaultdict(lambda: 0))
     for resource, events in rl.groupby('resource'):
         group = 'Group {}'.format(membership[resource])
@@ -216,4 +232,24 @@ if __name__ == '__main__':
     print('Group profiles:')
     print(df2)
     df2.to_csv(fnout_group_profiles)
+
+    # 3. time performance analysis at resource-level (cont'd)
+    resource_case_average_timer = defaultdict(
+        lambda: defaultdict(lambda: None))
+    from datetime import timedelta
+    for case_class in set(log['(case) last_phase']):
+        for resource in df.index:
+            if resource_case_counter[resource][case_class] > 0:
+                time = timedelta(seconds=(
+                    resource_case_timer[resource][case_class] /
+                    resource_case_counter[resource][case_class]))
+            else:
+                time = ''
+            resource_case_average_timer[resource][case_class] = str(time)
+    df3 = DataFrame.from_dict(
+        resource_case_average_timer, orient='index').fillna('nan')
+    df3['Group label'] = group_labels
+    print('Average cycle time of cases participated:')
+    print(df3)
+    df3.to_csv(fnout_time_results)
 
