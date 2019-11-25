@@ -6,12 +6,14 @@ sys.path.append('./')
 
 from math import ceil
 from pandas import DataFrame
-from collections import defaultdict, Counter
+from collections import defaultdict
+from csv import writer
 
 fn_event_log = sys.argv[1]
 fnout_resource_profiles = sys.argv[2]
 fnout_group_profiles = sys.argv[3]
 fnout_time_results = sys.argv[4]
+fnout_time_results1 = sys.argv[5]
 
 if __name__ == '__main__':
     # Configuration based on given log (hard-coded)
@@ -44,30 +46,24 @@ if __name__ == '__main__':
 
     # NOTE: filter infrequent case classes (< 10%)
     log = filter_cases_by_frequency(log, '(case) last_phase', 0.1)
-    '''
-    '''
     # -------------------------
 
+    '''
     # Event-level analysis
     # -------------------------
-    '''
     # NOTE: filter infrequent case classes (< 10%)
     log = filter_cases_by_frequency(log, '(case) last_phase', 0.1)
-    '''
     # -------------------------
+    '''
 
     # NOTE: Time-related analysis
-    resource_case_timer = defaultdict(lambda: defaultdict(lambda: 0))
-    resource_case_counter = defaultdict(lambda: Counter())
+    resource_case_timer = defaultdict(lambda: defaultdict(lambda: list()))
     for case_id, events in log.groupby('case_id'):
         case_class = set(events['(case) last_phase']).pop()
         case_duration = set(events['case_duration']).pop()
 
         for participant in set(events['resource']):
-            resource_case_timer[participant][case_class] += case_duration
-            resource_case_counter[participant][case_class] += 1
-
-    resource_case_time_mat = defaultdict(lambda: defaultdict(lambda: None))
+            resource_case_timer[participant][case_class].append(case_duration)
 
     # NOTE: filter resources with low involvement (< 1%)
     log = filter_events_by_active_resources(log, 0.01)
@@ -223,12 +219,14 @@ if __name__ == '__main__':
     # 2. group profiles
     group_profiles_mat = defaultdict(lambda: defaultdict(lambda: 0))
     for resource, events in rl.groupby('resource'):
-        group = 'Group {}'.format(membership[resource])
+        group = membership[resource]
         for case_type, related_events in events.groupby('case_type'):
             group_profiles_mat[group][case_type] += len(related_events)
+    l_group_size = list(len(ogs[group]) for group in group_profiles_mat.keys())
     df2 = DataFrame.from_dict(group_profiles_mat, orient='index').fillna(0)
     df2 = df2.div(df2.sum(axis=1), axis=0)
     df2 = df2[list(t[0] for t in df.columns if 'Group label' not in t)]
+    df2['Group size'] = l_group_size
     print('Group profiles:')
     print(df2)
     df2.to_csv(fnout_group_profiles)
@@ -236,20 +234,37 @@ if __name__ == '__main__':
     # 3. time performance analysis at resource-level (cont'd)
     resource_case_average_timer = defaultdict(
         lambda: defaultdict(lambda: None))
+
     from datetime import timedelta
     for case_class in set(log['(case) last_phase']):
         for resource in df.index:
-            if resource_case_counter[resource][case_class] > 0:
-                time = timedelta(seconds=(
-                    resource_case_timer[resource][case_class] /
-                    resource_case_counter[resource][case_class]))
+            if len(resource_case_timer[resource][case_class]) > 0:
+                avg_duration = timedelta(seconds=(
+                    mean(resource_case_timer[resource][case_class])))
             else:
-                time = ''
-            resource_case_average_timer[resource][case_class] = str(time)
+                avg_duration = ''
+            resource_case_average_timer[resource][case_class] = str(
+                avg_duration)
+
     df3 = DataFrame.from_dict(
         resource_case_average_timer, orient='index').fillna('nan')
     df3['Group label'] = group_labels
     print('Average cycle time of cases participated:')
     print(df3)
     df3.to_csv(fnout_time_results)
+
+    # 4. original time performance information at resource-level
+    rows = list()
+    for case_id, events in log.groupby('case_id'):
+        case_class = set(events['(case) last_phase']).pop()
+        case_duration = set(events['case_duration']).pop()
+        resources = set(events['resource'])
+        for r in resources:
+            rows.append(
+                (membership[r], r, case_id, case_class, case_duration))
+    with open(fnout_time_results1, 'w') as fout:
+        writer = writer(fout)
+        writer.writerow(
+            ['Group', 'resource', 'case_id', 'case_type', 'case_duration'])
+        writer.writerows(rows)
 

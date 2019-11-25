@@ -6,10 +6,14 @@ sys.path.append('./')
 
 from math import ceil
 from pandas import DataFrame
+from collections import defaultdict
+from csv import writer
 
 fn_event_log = sys.argv[1]
 fnout_resource_profiles = sys.argv[2]
 fnout_group_profiles = sys.argv[3]
+fnout_time_results = sys.argv[4]
+fnout_time_results1 = sys.argv[5]
 
 if __name__ == '__main__':
     # Configuration based on given log (hard-coded)
@@ -46,6 +50,20 @@ if __name__ == '__main__':
     log = filter_events_by_frequency(log, 'phase', 0.1)
     log['activity'] = log['phase']
     # -------------------------
+
+    # NOTE: Time-related analysis
+    resource_phase_timer = defaultdict(lambda: defaultdict(lambda: list()))
+    from datetime import datetime
+    for case_id, trace in log.groupby('case_id'):
+        for phase, events in trace.groupby('phase'):
+            start_time = datetime.strptime(
+                events.iloc[0]['timestamp'], '%Y/%m/%d %H:%M:%S.%f')
+            end_time = datetime.strptime(
+                events.iloc[-1]['timestamp'], '%Y/%m/%d %H:%M:%S.%f')
+            resources = set(events['resource'])
+            phase_duration = (end_time - start_time).total_seconds()
+            for r in resources:
+                resource_phase_timer[r][phase].append(phase_duration)
 
     # NOTE: filter resources with low involvement (< 1%)
     log = filter_events_by_active_resources(log, 0.01)
@@ -193,22 +211,65 @@ if __name__ == '__main__':
     df = deepcopy(profiles)
     df['Group label'] = group_labels
 
-    # resource profiles annotated with variance information
+    # 1. resource profiles annotated with variance information
     var_row = profiles.var(axis=0)
     var_row.name = 'Variance'
     df.append(var_row).to_csv(fnout_resource_profiles)
 
-    # group profiles
+    # 2. group profiles
     from collections import defaultdict
     group_profiles_mat = defaultdict(lambda: defaultdict(lambda: 0))
     for resource, events in rl.groupby('resource'):
-        group = 'Group {}'.format(membership[resource])
+        group = membership[resource]
         for act_type, related_events in events.groupby('activity_type'):
             group_profiles_mat[group][act_type] += len(related_events)
+    l_group_size = list(len(ogs[group]) for group in group_profiles_mat.keys())
     df2 = DataFrame.from_dict(group_profiles_mat, orient='index').fillna(0)
     df2 = df2.div(df2.sum(axis=1), axis=0)
     df2 = df2[list(t[1] for t in df.columns if 'Group label' not in t)]
+    df2['Group size'] = l_group_size
     print('Group profiles:')
     print(df2)
     df2.to_csv(fnout_group_profiles)
+
+    # 3. time performance analysis at resource-level (cont'd)
+    resource_phase_average_timer = defaultdict(
+        lambda: defaultdict(lambda: None))
+
+    from datetime import timedelta
+    for phase in set(log['phase']):
+        for resource in df.index:
+            if len(resource_phase_timer[resource][phase]) > 0:
+                avg_duration = timedelta(seconds=(
+                    mean(resource_phase_timer[resource][phase])))
+            else:
+                avg_duration = ''
+            resource_phase_average_timer[resource][phase] = str(
+                avg_duration)
+
+    df3 = DataFrame.from_dict(
+        resource_phase_average_timer, orient='index').fillna('nan')
+    df3['Group label'] = group_labels
+    print('Average cycle time of phases participated:')
+    print(df3)
+    df3.to_csv(fnout_time_results)
+
+    # 4. original time performance information at resource-level
+    rows = list()
+    for case_id, trace in log.groupby('case_id'):
+        for phase, events in trace.groupby('phase'):
+            start_time = datetime.strptime(
+                events.iloc[0]['timestamp'], '%Y/%m/%d %H:%M:%S.%f')
+            end_time = datetime.strptime(
+                events.iloc[-1]['timestamp'], '%Y/%m/%d %H:%M:%S.%f')
+            resources = set(events['resource'])
+            phase_duration = (end_time - start_time).total_seconds()
+            for r in resources:
+                rows.append(
+                    (membership[r], r, case_id, phase, phase_duration))
+    with open(fnout_time_results1, 'w') as fout:
+        writer = writer(fout)
+        writer.writerow(
+            ['Group', 'resource', 'case_id', 'phase', 'phase_duration'])
+        writer.writerows(rows)
 
