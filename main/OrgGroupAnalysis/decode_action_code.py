@@ -15,6 +15,7 @@ if __name__ == '__main__':
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f, mapping={
             'action_code': 18,
+            '(case) parts': 15,
             '(case) last_phase': 14}) # bpic15-*
 
     patt = r'_\d\d\d\w*'

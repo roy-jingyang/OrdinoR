@@ -7,13 +7,14 @@ sys.path.append('./')
 from math import ceil
 from pandas import DataFrame
 from collections import defaultdict
-from csv import writer
+from os.path import join
 
 fn_event_log = sys.argv[1]
-fnout_resource_profiles = sys.argv[2]
-fnout_group_profiles = sys.argv[3]
-fnout_time_results = sys.argv[4]
-fnout_time_results1 = sys.argv[5]
+dirout = sys.argv[2]
+fnout_resource_profiles = join(dirout, 'act-focused.profiles.csv')
+fnout_group_profiles = join(dirout, 'act-focused.group-profiles.csv')
+fnout_time_results = join(dirout, 'act-focused.time-avg.csv')
+fnout_time_results1 = join(dirout, 'act-focused.time-full-info.csv')
 
 if __name__ == '__main__':
     # Configuration based on given log (hard-coded)
@@ -41,7 +42,7 @@ if __name__ == '__main__':
     print('Select a subprocess to perform analysis: ', end='')
     selected_subprocess = input()
     if selected_subprocess == '':
-        print('\tOmitted')
+        print('\t(Omitted)')
     else:
         frequent_activity_classes = {selected_activity_class}
         log = log.loc[log['subprocess'] == selected_subprocess]
@@ -70,41 +71,25 @@ if __name__ == '__main__':
 
 
     from orgminer.ExecutionModeMiner.direct_groupby import (
-        ATonlyMiner, CTonlyMiner, ATCTMiner)
+        ATonlyMiner, CTonlyMiner)
     from orgminer.ResourceProfiler.raw_profiler import (
         count_execution_frequency)
-    from orgminer.OrganizationalModelMiner.clustering.hierarchical import (
-        _ahc)
+    from orgminer.OrganizationalModelMiner.clustering.hierarchical import _ahc
 
     '''
         For clustering based approaches:
-        each of the particular selection of "k" is evaluated by both:
+        each of the particular selection of "k" is evaluated by:
+        - silhouette score
         - a value resulted from measuring by elbow method
-        - decision drawn from silhouette analysis
-    '''
-    ''' {8} items may be collected for analysis:
-        - the result from silhouette analysis (k_flag),
-        - the average value of silhouette score (of all resources), excluding
-          those designated to singleton clusters;
-        - the value from elbow method (of the whole clustering);
-        - the number of singleton clusters;
-        - the number of resources with POSITIVE silhouette score;
-        - the number of resources with NEGATIVE silhouette score;
-        - the number of clusters with POS average silhouette score (excluding
-          singletons);
-        - the number of clusters with NEG average silhouette score (excluding
-          singletons);
     '''
     items = [
-        'VALID_K_value',
         'average_silhouette_score_overall',
         'value_elbow_method',
         'num_singletons',
         'num_res_pos_silhouette_score',
         'num_res_neg_silhouette_score',
-        'num_clu_pos_silhouette_score',
-        'num_clu_neg_silhouette_score',
     ]
+
     from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
     from orgminer.Evaluation.m2m.cluster_validation import (
         variance_explained_percentage)
@@ -119,16 +104,12 @@ if __name__ == '__main__':
     #profiles = count_execution_frequency(rl)
     profiles = count_execution_frequency(rl, scale='normalize')
 
-    # drop low-variance columns
+    # sort columns based on variance
     top_col_by_var = profiles.var(axis=0).sort_values(ascending=False)
-    top_col_by_var = list(
-        #top_col_by_var[:ceil(len(profiles.columns)*0.5)].index)
-        #top_col_by_var[:min(10, len(profiles.columns))].index)
-        top_col_by_var[:].index)
+    top_col_by_var = list(top_col_by_var.index)
     profiles = profiles[top_col_by_var]
 
-    print('{} columns remain in the profiles'.format(
-        len(profiles.columns)))
+    print('{} columns remain in the profiles'.format(len(profiles.columns)))
 
     l_measured_values = list()
     for k in num_groups:
@@ -150,30 +131,13 @@ if __name__ == '__main__':
         # cluster-level
         num_singleton_clusters = sum(
             [1 for og in ogs if len(og) == 1])
-        scores_clu = list()
-        for g in ogs:
-            if len(g) > 1:
-                score_g = mean([scores[r]
-                    for r in g if scores[r] != 0.0])
-                max_score_g = amax([scores[r]
-                    for r in g if scores[r] != 0.0])
-                scores_clu.append((score_g, max_score_g))
-        num_pos_score_clusters = sum(
-            [1 for x in scores_clu if x[0] > 0])
-        num_neg_score_clusters = sum(
-            [1 for x in scores_clu if x[0] <= 0])
-        k_flag = all(
-            [(x[1] >= mean_score_overall) for x in scores_clu])
 
         l_measured_values.append((
-            k_flag,
             mean_score_overall,
             var_pct,
             num_singleton_clusters,
             num_pos_score_objects,
             num_neg_score_objects,
-            num_pos_score_clusters,
-            num_neg_score_clusters,
             ))
 
     print('VALUES of K')
@@ -198,7 +162,7 @@ if __name__ == '__main__':
     group_labels = array([-1] * len(resources))
     membership = dict()
     
-    print('Resource profiles in groups:')
+    print('\nResource profiles in groups:')
     for i, og in enumerate(ogs):
         print('Group {}:'.format(i))
         print(profiles.loc[sorted(list(og))].values)
@@ -210,6 +174,7 @@ if __name__ == '__main__':
     from copy import deepcopy
     df = deepcopy(profiles)
     df['Group label'] = group_labels
+    df.sort_values(by='Group label', axis=0, inplace=True)
 
     # 1. resource profiles annotated with variance information
     var_row = profiles.var(axis=0)
@@ -228,11 +193,11 @@ if __name__ == '__main__':
     df2 = df2.div(df2.sum(axis=1), axis=0)
     df2 = df2[list(t[1] for t in df.columns if 'Group label' not in t)]
     df2['Group size'] = l_group_size
-    print('Group profiles:')
+    print('\nGroup profiles:')
     print(df2)
     df2.to_csv(fnout_group_profiles)
 
-    # 3. time performance analysis at resource-level (cont'd)
+    # 3. time performance (on average) at resource-level (cont'd)
     resource_phase_average_timer = defaultdict(
         lambda: defaultdict(lambda: None))
 
@@ -249,8 +214,8 @@ if __name__ == '__main__':
 
     df3 = DataFrame.from_dict(
         resource_phase_average_timer, orient='index').fillna('nan')
-    df3['Group label'] = group_labels
-    print('Average cycle time of phases participated:')
+    df3['Group label'] = df['Group label']
+    print('\nAverage cycle time of phases participated:')
     print(df3)
     df3.to_csv(fnout_time_results)
 
@@ -267,6 +232,8 @@ if __name__ == '__main__':
             for r in resources:
                 rows.append(
                     (membership[r], r, case_id, phase, phase_duration))
+
+    from csv import writer
     with open(fnout_time_results1, 'w') as fout:
         writer = writer(fout)
         writer.writerow(

@@ -56,7 +56,7 @@ dependencies:
   - pygments
   - pyparsing
   - pyqt
-  - python >=3.6.4
+  - python
   - pytz
   - qt
   - readline

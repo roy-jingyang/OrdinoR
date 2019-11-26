@@ -7,13 +7,14 @@ sys.path.append('./')
 from math import ceil
 from pandas import DataFrame
 from collections import defaultdict
-from csv import writer
+from os.path import join
 
 fn_event_log = sys.argv[1]
-fnout_resource_profiles = sys.argv[2]
-fnout_group_profiles = sys.argv[3]
-fnout_time_results = sys.argv[4]
-fnout_time_results1 = sys.argv[5]
+dirout = sys.argv[2]
+fnout_resource_profiles = join(dirout, 'case-focused.profiles.csv')
+fnout_group_profiles = join(dirout, 'case-focused.group-profiles.csv')
+fnout_time_results = join(dirout, 'case-focused.time-avg.csv')
+fnout_time_results1 = join(dirout, 'case-focused.time-full-info.csv')
 
 if __name__ == '__main__':
     # Configuration based on given log (hard-coded)
@@ -22,14 +23,27 @@ if __name__ == '__main__':
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f, mapping={
             'action_code': 4,
-            '(case) last_phase': 5,
-            'subprocess': 6,
-            'phase': 7}) # bpic15-* (decoded)
+            '(case) parts': 5,
+            '(case) last_phase': 6,
+            'subprocess': 7,
+            'phase': 8}) # bpic15-* (decoded)
         #el = read_disco_csv(f)
 
     # event log preprocessing
     from orgminer.Preprocessing.log_augmentation import append_case_duration
     el = append_case_duration(el)
+
+    # NOTE: append case type information by "types of permit"
+    # TODO: this part should be incorporated into decoding/removed
+    # -------------------------
+    l_permit_type = ['Non Bouw'] * len(el) 
+    for case_id, trace in el.groupby('case_id'):
+        if 'Bouw' in set(trace['(case) parts']).pop():
+            for event_index in trace.index:
+                l_permit_type[event_index] = 'Bouw'
+    el['permit_type'] = l_permit_type
+    # -------------------------
+
     log = el
 
     from filters import filter_cases_by_frequency
@@ -44,22 +58,17 @@ if __name__ == '__main__':
         l_index.extend(events.drop_duplicates(subset=['resource']).index)
     log = log.loc[l_index]
 
+    
     # NOTE: filter infrequent case classes (< 10%)
-    log = filter_cases_by_frequency(log, '(case) last_phase', 0.1)
+    #log = filter_cases_by_frequency(log, '(case) last_phase', 0.1)
+    log = filter_cases_by_frequency(log, 'permit_type', 0.1)
     # -------------------------
-
-    '''
-    # Event-level analysis
-    # -------------------------
-    # NOTE: filter infrequent case classes (< 10%)
-    log = filter_cases_by_frequency(log, '(case) last_phase', 0.1)
-    # -------------------------
-    '''
 
     # NOTE: Time-related analysis
     resource_case_timer = defaultdict(lambda: defaultdict(lambda: list()))
     for case_id, events in log.groupby('case_id'):
-        case_class = set(events['(case) last_phase']).pop()
+        #case_class = set(events['(case) last_phase']).pop()
+        case_class = set(events['permit_type']).pop()
         case_duration = set(events['case_duration']).pop()
 
         for participant in set(events['resource']):
@@ -70,41 +79,25 @@ if __name__ == '__main__':
 
 
     from orgminer.ExecutionModeMiner.direct_groupby import (
-        ATonlyMiner, CTonlyMiner, ATCTMiner)
+        ATonlyMiner, CTonlyMiner)
     from orgminer.ResourceProfiler.raw_profiler import (
         count_execution_frequency)
-    from orgminer.OrganizationalModelMiner.clustering.hierarchical import (
-        _ahc)
+    from orgminer.OrganizationalModelMiner.clustering.hierarchical import _ahc
 
     '''
         For clustering based approaches:
-        each of the particular selection of "k" is evaluated by both:
+        each of the particular selection of "k" is evaluated by:
+        - silhouette score
         - a value resulted from measuring by elbow method
-        - decision drawn from silhouette analysis
-    '''
-    ''' {8} items may be collected for analysis:
-        - the result from silhouette analysis (k_flag),
-        - the average value of silhouette score (of all resources), excluding
-          those designated to singleton clusters;
-        - the value from elbow method (of the whole clustering);
-        - the number of singleton clusters;
-        - the number of resources with POSITIVE silhouette score;
-        - the number of resources with NEGATIVE silhouette score;
-        - the number of clusters with POS average silhouette score (excluding
-          singletons);
-        - the number of clusters with NEG average silhouette score (excluding
-          singletons);
     '''
     items = [
-        'VALID_K_value',
         'average_silhouette_score_overall',
         'value_elbow_method',
         'num_singletons',
         'num_res_pos_silhouette_score',
         'num_res_neg_silhouette_score',
-        'num_clu_pos_silhouette_score',
-        'num_clu_neg_silhouette_score',
     ]
+
     from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
     from orgminer.Evaluation.m2m.cluster_validation import (
         variance_explained_percentage)
@@ -112,7 +105,8 @@ if __name__ == '__main__':
 
     num_groups = list(range(2, len(set(log['resource']))))
 
-    mode_miner = CTonlyMiner(log, case_attr_name='(case) last_phase')
+    #mode_miner = CTonlyMiner(log, case_attr_name='(case) last_phase')
+    mode_miner = CTonlyMiner(log, case_attr_name='permit_type')
 
     rl = mode_miner.derive_resource_log(log)
 
@@ -121,10 +115,7 @@ if __name__ == '__main__':
 
     # drop low-variance columns
     top_col_by_var = profiles.var(axis=0).sort_values(ascending=False)
-    top_col_by_var = list(
-        #top_col_by_var[:ceil(len(profiles.columns)*0.5)].index)
-        #top_col_by_var[:min(10, len(profiles.columns))].index)
-        top_col_by_var[:].index)
+    top_col_by_var = list(top_col_by_var.index)
     profiles = profiles[top_col_by_var]
 
     print('{} columns remain in the profiles'.format(
@@ -150,30 +141,13 @@ if __name__ == '__main__':
         # cluster-level
         num_singleton_clusters = sum(
             [1 for og in ogs if len(og) == 1])
-        scores_clu = list()
-        for g in ogs:
-            if len(g) > 1:
-                score_g = mean([scores[r]
-                    for r in g if scores[r] != 0.0])
-                max_score_g = amax([scores[r]
-                    for r in g if scores[r] != 0.0])
-                scores_clu.append((score_g, max_score_g))
-        num_pos_score_clusters = sum(
-            [1 for x in scores_clu if x[0] > 0])
-        num_neg_score_clusters = sum(
-            [1 for x in scores_clu if x[0] <= 0])
-        k_flag = all(
-            [(x[1] >= mean_score_overall) for x in scores_clu])
 
         l_measured_values.append((
-            k_flag,
             mean_score_overall,
             var_pct,
             num_singleton_clusters,
             num_pos_score_objects,
             num_neg_score_objects,
-            num_pos_score_clusters,
-            num_neg_score_clusters,
             ))
 
     print('VALUES of K')
@@ -198,7 +172,7 @@ if __name__ == '__main__':
     group_labels = array([-1] * len(resources))
     membership = dict()
     
-    print('Resource profiles in groups:')
+    print('\nResource profiles in groups:')
     for i, og in enumerate(ogs):
         print('Group {}:'.format(i))
         print(profiles.loc[sorted(list(og))].values)
@@ -210,6 +184,7 @@ if __name__ == '__main__':
     from copy import deepcopy
     df = deepcopy(profiles)
     df['Group label'] = group_labels
+    df.sort_values(by='Group label', axis=0, inplace=True)
 
     # 1. resource profiles annotated with variance information
     var_row = profiles.var(axis=0)
@@ -227,7 +202,7 @@ if __name__ == '__main__':
     df2 = df2.div(df2.sum(axis=1), axis=0)
     df2 = df2[list(t[0] for t in df.columns if 'Group label' not in t)]
     df2['Group size'] = l_group_size
-    print('Group profiles:')
+    print('\nGroup profiles:')
     print(df2)
     df2.to_csv(fnout_group_profiles)
 
@@ -236,7 +211,8 @@ if __name__ == '__main__':
         lambda: defaultdict(lambda: None))
 
     from datetime import timedelta
-    for case_class in set(log['(case) last_phase']):
+    #for case_class in set(log['(case) last_phase']):
+    for case_class in set(log['permit_type']):
         for resource in df.index:
             if len(resource_case_timer[resource][case_class]) > 0:
                 avg_duration = timedelta(seconds=(
@@ -248,23 +224,25 @@ if __name__ == '__main__':
 
     df3 = DataFrame.from_dict(
         resource_case_average_timer, orient='index').fillna('nan')
-    df3['Group label'] = group_labels
-    print('Average cycle time of cases participated:')
+    df3['Group label'] = df['Group label']
+    print('\nAverage cycle time of cases participated:')
     print(df3)
     df3.to_csv(fnout_time_results)
 
     # 4. original time performance information at resource-level
     rows = list()
     for case_id, events in log.groupby('case_id'):
-        case_class = set(events['(case) last_phase']).pop()
+        #case_class = set(events['(case) last_phase']).pop()
+        case_class = set(events['permit_type']).pop()
         case_duration = set(events['case_duration']).pop()
         resources = set(events['resource'])
         for r in resources:
             rows.append(
                 (membership[r], r, case_id, case_class, case_duration))
+    from csv import writer
     with open(fnout_time_results1, 'w') as fout:
         writer = writer(fout)
         writer.writerow(
-            ['Group', 'resource', 'case_id', 'case_type', 'case_duration'])
+            ['Group', 'resource', 'case_id', 'permit_type', 'case_duration'])
         writer.writerows(rows)
 
