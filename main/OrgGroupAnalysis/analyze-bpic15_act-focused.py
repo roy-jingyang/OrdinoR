@@ -39,13 +39,6 @@ if __name__ == '__main__':
     # -------------------------
     # NOTE: filter infrequent subprocesses (< 10%)
     log = filter_events_by_frequency(log, 'subprocess', 0.1)
-    print('Select a subprocess to perform analysis: ', end='')
-    selected_subprocess = input()
-    if selected_subprocess == '':
-        print('\t(Omitted)')
-    else:
-        frequent_activity_classes = {selected_activity_class}
-        log = log.loc[log['subprocess'] == selected_subprocess]
 
     # NOTE: filter infrequent activity classes, "phase" (< 10%)
     log = filter_events_by_frequency(log, 'phase', 0.1)

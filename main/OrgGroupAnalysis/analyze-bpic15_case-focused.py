@@ -23,27 +23,14 @@ if __name__ == '__main__':
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f, mapping={
             'action_code': 4,
-            '(case) parts': 5,
-            '(case) last_phase': 6,
-            'subprocess': 7,
-            'phase': 8}) # bpic15-* (decoded)
+            '(case) last_phase': 5,
+            'subprocess': 6,
+            'phase': 7}) # bpic15-* (decoded)
         #el = read_disco_csv(f)
 
     # event log preprocessing
     from orgminer.Preprocessing.log_augmentation import append_case_duration
     el = append_case_duration(el)
-
-    # NOTE: append case type information by "types of permit"
-    # TODO: this part should be incorporated into decoding/removed
-    # -------------------------
-    l_permit_type = ['Non Bouw'] * len(el) 
-    for case_id, trace in el.groupby('case_id'):
-        if 'Bouw' in set(trace['(case) parts']).pop():
-            for event_index in trace.index:
-                l_permit_type[event_index] = 'Bouw'
-    el['permit_type'] = l_permit_type
-    # -------------------------
-
     log = el
 
     from filters import filter_cases_by_frequency
@@ -57,18 +44,15 @@ if __name__ == '__main__':
     for case_id, events in log.groupby('case_id'):
         l_index.extend(events.drop_duplicates(subset=['resource']).index)
     log = log.loc[l_index]
-
     
     # NOTE: filter infrequent case classes (< 10%)
-    #log = filter_cases_by_frequency(log, '(case) last_phase', 0.1)
-    log = filter_cases_by_frequency(log, 'permit_type', 0.1)
+    log = filter_cases_by_frequency(log, '(case) last_phase', 0.1)
     # -------------------------
 
     # NOTE: Time-related analysis
     resource_case_timer = defaultdict(lambda: defaultdict(lambda: list()))
     for case_id, events in log.groupby('case_id'):
-        #case_class = set(events['(case) last_phase']).pop()
-        case_class = set(events['permit_type']).pop()
+        case_class = set(events['(case) last_phase']).pop()
         case_duration = set(events['case_duration']).pop()
 
         for participant in set(events['resource']):
@@ -105,8 +89,7 @@ if __name__ == '__main__':
 
     num_groups = list(range(2, len(set(log['resource']))))
 
-    #mode_miner = CTonlyMiner(log, case_attr_name='(case) last_phase')
-    mode_miner = CTonlyMiner(log, case_attr_name='permit_type')
+    mode_miner = CTonlyMiner(log, case_attr_name='(case) last_phase')
 
     rl = mode_miner.derive_resource_log(log)
 
@@ -211,8 +194,7 @@ if __name__ == '__main__':
         lambda: defaultdict(lambda: None))
 
     from datetime import timedelta
-    #for case_class in set(log['(case) last_phase']):
-    for case_class in set(log['permit_type']):
+    for case_class in set(log['(case) last_phase']):
         for resource in df.index:
             if len(resource_case_timer[resource][case_class]) > 0:
                 avg_duration = timedelta(seconds=(
@@ -232,8 +214,7 @@ if __name__ == '__main__':
     # 4. original time performance information at resource-level
     rows = list()
     for case_id, events in log.groupby('case_id'):
-        #case_class = set(events['(case) last_phase']).pop()
-        case_class = set(events['permit_type']).pop()
+        case_class = set(events['(case) last_phase']).pop()
         case_duration = set(events['case_duration']).pop()
         resources = set(events['resource'])
         for r in resources:
