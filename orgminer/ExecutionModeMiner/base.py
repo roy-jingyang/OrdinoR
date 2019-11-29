@@ -221,7 +221,7 @@ class BaseMiner:
         rl = list()
         for event in el.itertuples(): # keep order
             # NOTE: only events with resource information are considered
-            if event.resource != '' and event.resource is not None:
+            if event.resource is not None and event.resource != '':
                 rl.append({
                     'resource': event.resource,
                     'case_type': self._ctypes[event.case_id],

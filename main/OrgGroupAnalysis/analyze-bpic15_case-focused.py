@@ -207,6 +207,7 @@ if __name__ == '__main__':
     df3 = DataFrame.from_dict(
         resource_case_average_timer, orient='index').fillna('nan')
     df3['Group label'] = df['Group label']
+    df3.sort_values(by='Group label', axis=0, inplace=True)
     print('\nAverage cycle time of cases participated:')
     print(df3)
     df3.to_csv(fnout_time_results)
