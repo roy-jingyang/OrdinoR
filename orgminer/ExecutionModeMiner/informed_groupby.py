@@ -7,7 +7,6 @@ approaches based on external information other than the log data, namely
     - TraceClusteringFullMiner (CT & AT & TT)
 
 """
-
 from .direct_groupby import CTonlyMiner, ATTTMiner
 
 class TraceClusteringCTMiner(CTonlyMiner):
@@ -18,6 +17,7 @@ class TraceClusteringCTMiner(CTonlyMiner):
     --------
     direct_groupby.CTonlyMiner
     """
+
     def __init__(self, el, fn_partition):
         self._build_ctypes(el, fn_partition)
         CTonlyMiner._build_atypes(self, el)
@@ -47,6 +47,7 @@ class TraceClusteringFullMiner(TraceClusteringCTMiner, ATTTMiner):
     direct_groupby.FullMiner
     TraceClusteringCTMiner
     """
+
     def __init__(self, el, 
         fn_partition, resolution, datetime_format='%Y/%m/%d %H:%M:%S.%f'):
         TraceClusteringCTMiner._build_ctypes(self, el, fn_partition)

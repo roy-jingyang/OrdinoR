@@ -10,12 +10,12 @@ approaches, namely
     - FullMiner (CT & AT & TT)
 
 """
-
 from .base import BaseMiner
 
 class ATonlyMiner(BaseMiner):
     """Each value of activity (task) label is taken as an activity type.
     """
+
     def __init__(self, el):
         BaseMiner.__init__(self, el)
 
@@ -60,6 +60,7 @@ class ATCTMiner(ATonlyMiner, CTonlyMiner):
     and each value of a selected case-level attribute is taken as a case 
     type.
     """
+
     def __init__(self, el, case_attr_name):
         CTonlyMiner._build_ctypes(self, el, case_attr_name)
         ATonlyMiner._build_atypes(self, el)
@@ -72,11 +73,13 @@ class ATTTMiner(ATonlyMiner):
     and each possible value of a designated datetime unit is taken as a 
     time type.
     """
+
     def __init__(self, el, resolution, datetime_format='%Y/%m/%d %H:%M:%S.%f'):
         ATonlyMiner._build_ctypes(self, el)
         ATonlyMiner._build_atypes(self, el)
         self._build_ttypes(el, resolution, datetime_format)
         self._verify()
+
 
     def _build_ttypes(self, el, resolution, datetime_format):
         self._ttypes = dict()
@@ -104,6 +107,7 @@ class FullMiner(CTonlyMiner, ATTTMiner):
     type, and each possible value of a designated datetime unit is taken 
     as a time type.
     """
+
     def __init__(self, el, 
         case_attr_name, resolution, datetime_format='%Y/%m/%d %H:%M:%S.%f'):
         CTonlyMiner._build_ctypes(self, el, case_attr_name)

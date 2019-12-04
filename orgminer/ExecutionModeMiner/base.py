@@ -79,6 +79,7 @@ class BaseMiner:
     For example, a learning approach must map each case captured in the 
     event log to one case type and one case type only.
     """
+
     _ctypes = None
     is_ctypes_verified = False
 
@@ -145,7 +146,6 @@ class BaseMiner:
 
         Returns
         -------
-
         """
         self._ctypes = defaultdict(lambda: '')
         self.is_ctypes_verified = True

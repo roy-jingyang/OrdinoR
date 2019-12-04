@@ -3,7 +3,6 @@
 """This module contains the implementation of the conformance checking 
 measures proposed in the OrgMining framework.
 """
-
 from deprecated import deprecated
 
 def _is_conformed_event(event, om):
