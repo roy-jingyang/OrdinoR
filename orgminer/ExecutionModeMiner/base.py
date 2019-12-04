@@ -93,7 +93,7 @@ class BaseMiner:
         """Instantiate an instance that implements a way of execution
         mode learning.
 
-        The constructor method should call the three methods for 
+        The constructor method should invoke the three methods for 
         building case types, activity types and time types, 
         respectively:
 

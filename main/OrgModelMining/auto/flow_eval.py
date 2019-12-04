@@ -131,8 +131,8 @@ def execute(setup, seq_ix, exp_dirpath):
     precision = precision(rl, om)
 
     # 3. Overlapping Density & Overlapping Diversity (avg.)
-    k = om.size()
-    resources = om.resources()
+    k = om.group_number
+    resources = om.resources
     n_ov_res = 0
     n_ov_res_membership = 0
     for r in resources:

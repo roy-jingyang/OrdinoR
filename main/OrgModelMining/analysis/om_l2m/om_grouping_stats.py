@@ -17,8 +17,8 @@ if __name__ == '__main__':
         om = OrganizationalModel.from_file_csv(f)
 
 
-    n_groups = om.size()
-    resources = om.resources()
+    n_groups = om.group_number
+    resources = om.resources
     n_resources = len(resources)
     groups = [og for og_id, og in om.find_all_groups()]
 
