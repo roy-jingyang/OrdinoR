@@ -361,5 +361,5 @@ if __name__ == '__main__':
     with open(fnout_org_model, 'w', encoding='utf-8') as fout:
         om.to_file_csv(fout)
     print('\n[Org. model of {} resources in {} groups exported to "{}"]'
-            .format(len(om.resources()), om.size(), fnout_org_model))
+        .format(len(om.resources), om.group_number, fnout_org_model))
 
