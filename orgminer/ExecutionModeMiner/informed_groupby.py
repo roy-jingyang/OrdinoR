@@ -13,6 +13,10 @@ from .direct_groupby import CTonlyMiner, ATTTMiner
 class TraceClusteringCTMiner(CTonlyMiner):
     """Informed by the result of applying trace clustering, each 
     variant of cases is taken as a case type.
+
+    See Also
+    --------
+    direct_groupby.CTonlyMiner
     """
     def __init__(self, el, fn_partition):
         self._build_ctypes(el, fn_partition)
@@ -37,6 +41,11 @@ class TraceClusteringFullMiner(TraceClusteringCTMiner, ATTTMiner):
     variant of cases is taken as a case type, each value of activity 
     (task) label is taken as an activity type, and each possible value 
     of a designated datetime unit is taken as a time type.
+
+    See Also
+    --------
+    direct_groupby.FullMiner
+    TraceClusteringCTMiner
     """
     def __init__(self, el, 
         fn_partition, resolution, datetime_format='%Y/%m/%d %H:%M:%S.%f'):

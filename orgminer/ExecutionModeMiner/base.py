@@ -255,8 +255,8 @@ class BaseMiner:
 
 
     def _verify(self):
-        """Verify if the built execution modes are valid and print prompting
-        information.
+        """Verify if the built execution modes are valid and output
+        prompting information.
 
         Parameters
         ----------

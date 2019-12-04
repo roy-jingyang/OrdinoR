@@ -6,7 +6,6 @@ measures proposed in the OrgMining framework.
 
 from deprecated import deprecated
 
-
 def _is_conformed_event(event, om):
     m = (event.case_type, event.activity_type, event.time_type)
     cand_groups = om.find_candidate_groups(m)
