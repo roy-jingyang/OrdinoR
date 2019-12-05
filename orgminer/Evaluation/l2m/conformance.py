@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-"""This module contains the implementation of the conformance checking 
-measures proposed in the OrgMining framework.
+"""This module contains the implementation of the global conformance 
+checking measures.
 """
 from deprecated import deprecated
 
@@ -125,7 +125,7 @@ def precision_re_nofreq(rl, om):
     n_conformed_res_events = len(conformed_events.drop_duplicates())
     # count of all possible resource events allowed by the model
     n_allowed_res_events = sum(len(om.find_execution_modes(r))
-        for r in om.resources())
+        for r in om.resources)
     return n_conformed_res_events / n_allowed_res_events
 
 
@@ -147,7 +147,7 @@ def precision_re_freq(rl, om):
     F_conformed_res_events = 0.0
     F_allowed_res_events = 0.0
     F_model_false_res_events = 0.0
-    for r in om.resources():
+    for r in om.resources:
         for mode in om.find_execution_modes(r):
             res_event = (r, mode[0], mode[1], mode[2])
             if res_event in conformed_res_events:
