@@ -1,28 +1,33 @@
 # -*- coding: utf-8 -*-
 
-'''
-This module contains the implementation of profiling a resource using the 
-"raw" information in the given resource log. Methods include:
-'''
-
+"""This module contains the implementation of methods for profiling 
+resources using information directly accessible in a resource log.
+"""
 def count_execution_frequency(rl, scale=None):
-    '''
-    This method builds a "profile" based on how frequent individuals originated
-    events with specific execution modes.
+    """Build resource profiles based on how frequently resources 
+    originated events of execution modes.
+    
+    Each column in the result profiles corresponds with an execution
+    mode captured in the given resource log.
 
-    Params:
-        rl: DataFrame
-            The resource log.
-        scale: string
-            Use whether normalization (div. by total) or logarithm scale. The
-            default is None.
-                - 'normalize'
-                - 'log'
-    Returns:
-        X: DataFrame
-            The contructed resource profiles.
-    '''
+    Parameters
+    ----------
+    rl : DataFrame
+        A resource log.
+    scale : {None, 'normalize', log'}, optional
+        Options for deciding how to scale the values of frequency
+        counting. Could be one of the followings:
+            
+            - None, no scaling will be performed. Default.
+            - 'normalize', scale the frequency values by the total
+              count of executions by each resource.
+            - 'log', scale the frequency values by logarithm.
 
+    Returns
+    -------
+    DataFrame
+        The constructed resource profiles.
+    """
     from collections import defaultdict
     mat = defaultdict(lambda: defaultdict(lambda: 0))
     for res, trace in rl.groupby('resource'):
@@ -34,14 +39,12 @@ def count_execution_frequency(rl, scale=None):
     df = DataFrame.from_dict(mat, orient='index').fillna(0)
     if scale is None:
         return df
-    elif scale == 'log':
-        print('Using logarithm scale for frequencies')
-        from numpy import log # NOTE: be careful, this is "ln"
-        return df.apply(lambda x: log(x + 1))
     elif scale == 'normalize':
-        print('Using normalization for frequencies')
-        # normalize by row
         return df.div(df.sum(axis=1), axis=0)
+    elif scale == 'log':
+        # NOTE: log_e(x + 1)
+        from numpy import log 
+        return df.apply(lambda x: log(x + 1))
     else:
-        exit('[Error] Unspecified scaling option')
+        raise ValueError('Unrecognized scaling option.')
 

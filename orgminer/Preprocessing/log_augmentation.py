@@ -1,6 +1,29 @@
 # -*- coding: utf-8 -*-
 
+"""This module contains methods for augmenting (extending) an event log
+(as DataFrame) using the original information recorded in the log. 
+
+For example, obtain the duration time of cases by calculating the time 
+difference between the first and the last events in each case.
+"""
 def append_case_duration(el, datetime_format='%Y/%m/%d %H:%M:%S.%f'):
+    """Calculate and append case duration information to cases in a 
+    given event log.
+
+    Parameters
+    ----------
+    el : DataFrame
+        An event log.
+    datetime_format : str, optional
+        The format string for parsing the timestamps in the given event
+        log. Defaults to '%Y/%m/%d %H:%M:%S.%f', e.g. 2019/12/6 
+        10:48:51.0. See `Python strftime() and strptime() Behavior` for 
+        more information.
+
+    Returns
+    el : DataFrame
+        An event log.
+    """
     from datetime import datetime
     l_case_duration = [float('nan')] * len(el)
     for case_id, trace in el.groupby('case_id'):

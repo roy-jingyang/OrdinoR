@@ -13,18 +13,10 @@ class BaseMiner:
 
     Attributes
     ----------
-    _ctypes : (dummy value)
-
     is_ctypes_verified : bool
         Boolean flag indicating whether the case types are verified.
-
-    _atypes : (dummy value)
-
     is_atypes_verified : bool
         Boolean flag indicating whether the activity types are verified.
-
-    _ttypes : (dummy value)
-
     is_ttypes_verified : bool
         Boolean flag indicating whether the time types are verified.
 
@@ -34,11 +26,9 @@ class BaseMiner:
         Derive a resource log given the original log, after the 
         execution modes have been discovered and verified (which is done 
         the moment when an object is instantiated).
-
     get_type_by_value(value)
         Query the built type given a value (of either an activity 
         label, a case id, or a timestamp).
-
     get_values_by_type(type_name)
         Query the original values (of activity labels, case ids, or 
         timestamps) given a type name.
@@ -286,7 +276,7 @@ class BaseMiner:
                 else 'INVALID'))
             print('T Types:\t{}'.format('VERIFIED' if self.is_ttypes_verified
                 else 'INVALID'))
-            raise Exception('Failed to verify execution modes.')
+            raise ValueError('Failed to verify execution modes.')
 
 
     # TODO:

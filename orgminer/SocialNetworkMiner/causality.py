@@ -1,43 +1,57 @@
 # -*- coding: utf-8 -*-
 
-'''
-This module contains the implementation of mining a social network from an
-event log, using metrics based on (possible) causality (ref. van der Aalst et.
-al, CSCW 2005).
+"""This module contains the implementation of methods for mining social 
+networks from an event log, using metrics based on causality [1]_.
 
-Warning: Including real causality into consideration requires support of a
-process model (related to the event log). Ignore this option for now.
-'''
+See Also
+--------
+SocialNetworkMiner.joint_activities
+SocialNetworkMiner.joint_cases
 
-# Handover of work metric
+Notes
+-----
+Including real causality into consideration requires the presence of a
+process model related to the given event log.
+
+References
+----------
+.. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005). 
+Discovering social networks from event logs. Computer Supported 
+Cooperative Work (CSCW), 14(6), 549-593.
+"""
 def handover(el,
-        real_causality, direct_succession, multiple_transfers,
-        depth=1, beta=1):
-    '''
-    This method implements the mining based on handover of work metric, which
-    considers the relationship between a pair of resources completing sub-
-    sequent activities in process execution.
+    real_causality, direct_succession, multiple_transfers,
+    depth=1, beta=1):
+    """Discover a social network from an event log based on handover of 
+    work metric, which considers the relationship between a pair of 
+    resources completing subsequent activities in process execution.
 
-    Params:
-        el: DataFrame
-            The imported event log.
-        real_causality: boolean
-            Consider arbitrary transfers of work OR only those where there is a
-            causal dependency (determined by the process model).
-        direct_succession: boolean
-            Consider the degree of causality - direct OR indirect succession.
-        multiple_transfers: boolean
-            Consider multiple transfers within one instance (case) OR not.
-        depth: int, optional
-            The degree of causality specified. Only use when
-            'direct_succession' is False, i.e. indirect succession considered.
-        beta: float, in range [0, 1], optional
-            The causality fall factor.
-    Returns:
-        sn: NetworkX DiGraph
-            The mined social network as a NetworkX DiGraph object.
-    '''
+    Parameters
+    ----------
+    el : DataFrame
+        An event log.
+    real_causality : bool
+        A boolean flag indicating whether to consider arbitrary 
+        transfers of work, or only those for which there is a causal 
+        dependency according to the process model.
+    direct_succession : bool
+        A boolean flag indicating whether to consider the degree of 
+        causality, i.e., direct or indirect succession.
+    multiple_transfers : bool
+        A boolean flag indicating whether to consider multiple transfers 
+        within one case or not.
+    depth : int, optional
+        The degree of causality to be considered. Only use when 
+        ``direct_succession`` is False, i.e., indirect succession 
+        considered. Defaults to 1.
+    beta : float, optional
+        The causality fall factor. Defaults to 1.
 
+    Returns
+    -------
+    sn : NetworkX DiGraph
+        The discovered social network.
+    """
     from collections import defaultdict
     mat = defaultdict(lambda: defaultdict(lambda: {'weight': 0.0}))
     if direct_succession and multiple_transfers: # CDCM
@@ -64,7 +78,8 @@ def handover(el,
                 mat[pair[0]][pair[1]]['weight'] += 1 / sf
 
     elif not direct_succession and multiple_transfers: # CICM 
-        # scale_factor: SIGMA_Case c in Log (SIGMA_n=1:min(|c| - 1, depth) (beta^n-1 * (|c| - n)))
+        # scale_factor: SIGMA_Case c in 
+        # Log (SIGMA_n=1:min(|c| - 1, depth) (beta^n-1 * (|c| - n)))
         sf = 0
         for case_id, trace in el.groupby('case_id'):
             num_events = len(trace)
@@ -80,11 +95,12 @@ def handover(el,
                         res_prev = trace.iloc[i]['resource']
                         res_next = trace.iloc[i + 1]['resource']
                         if res_prev != res_next: # self-loop ignored
-                            mat[res_prev][res_next]['weight'] += (beta
-                                    ** (n - 1) * 1 / sf)
+                            mat[res_prev][res_next]['weight'] += (
+                                beta ** (n - 1) * 1 / sf)
 
     else: # CIIM
-        # scale_factor: SIGMA_Case c in Log (SIGMA_n=1:min(|c| - 1, depth) (beta^n-1))
+        # scale_factor: SIGMA_Case c in 
+        # Log (SIGMA_n=1:min(|c| - 1, depth) (beta^n-1))
         sf = 0
         for case_id, trace in el.groupby('case_id'):
             num_events = len(trace)
@@ -111,8 +127,8 @@ def handover(el,
     sn.add_nodes_from(el.groupby('resource').groups.keys())
     return sn
 
-# TODO
-# Subcontracting metric
+
+# TODO: Subcontracting metric
 def subcontracting():
-    pass
+    raise NotImplementedError
 

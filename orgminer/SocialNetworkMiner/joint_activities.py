@@ -1,26 +1,43 @@
 # -*- coding: utf-8 -*-
 
-'''
-This module contains the implementation of mining a social network from an
-event log, using metrics based on joint activities (ref. van der Aalst et.
-al, CSCW 2005).
-'''
+"""This module contains the implementation of methods for mining social 
+networks from an event log, using metrics based on joint activities [1]_.
 
+See Also
+--------
+SocialNetworkMiner.causality
+SocialNetworkMiner.joint_cases
+
+References
+----------
+.. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005). 
+Discovering social networks from event logs. Computer Supported 
+Cooperative Work (CSCW), 14(6), 549-593.
+"""
 def performer_activity_matrix(el, use_log_scale):
-    '''
-    This method builds a "profile" based on how frequent individuals originate
-    events with specific activity names, i.e. the performer-by-activity matrix.
+    """Build a resource profile matrix solely based on how frequently
+    resources originated activities, i.e., performer-by-activity matrix.
 
-    Params:
-        el: DataFrame
-            The impoted event log.
-        use_log_scale: boolean
-            Whether or not to apply logarithm scale on the values.
-    Returns:
-        DataFrame
-            The contructed resource profiles as a pandas DataFrame.
-    '''
+    Each column in the result profile matrix corresponds with an 
+    activity captured in the given event log.
 
+    Parameters
+    ----------
+    el : DataFrame
+        An event log.
+    use_log_scale : bool
+        A boolean flag indicating whether to apply logarithm scaling on 
+        the values of the result profile matrix.
+
+    Returns
+    -------
+    DataFrame
+        The constructed resource profile matrix.
+
+    See Also
+    --------
+    orgminer.ResourceProfiler.raw_profiler.count_execution_frequency
+    """
     from collections import defaultdict
     pam = defaultdict(lambda: defaultdict(lambda: 0))
     for res, trace in el.groupby('resource'):
@@ -31,47 +48,61 @@ def performer_activity_matrix(el, use_log_scale):
     if use_log_scale: 
         from numpy import log
         return DataFrame.from_dict(pam, orient='index').fillna(0).apply(
-                lambda x: log(x + 1))
+            lambda x: log(x + 1))
     else:
         return DataFrame.from_dict(pam, orient='index').fillna(0)
 
-def distance(profiles, 
-        metric='euclidean',
-        convert=False):
-    '''
-    This method implements the mining based on metrics based on joint activi-
-    ties where distance-related measures are used. Notice that the weight
-    values correspond to the distances between the "profiles", thus:
-        1. A HIGHER weight value means FARTHER relationships, which is
-        DIFFERENT with other metrics, and
-        2. The generated network is naturally a undirected graph.
 
-    Params:
-        profiles: DataFrame
-            With resource ids as indices and activity names as columns, this
-            DataFrame contains profiles of the specific resources.
-        metric: str, optional
-            Choice of different distance-related metrics.
-        convert: boolean, optional
-            Boolean flag to determine whether the weight values of the edges in
-            the mined network should be converted to similarity flavored
-            measure. The default is to keep the original distance values 
-            ranged [0, inf).
-    Returns:
-        sn: NetworkX Graph
-            The mined social network as a NetworkX Graph object.
-    '''
+def distance(profiles, metric='euclidean', convert=False):
+    """Discover a social network from an event log based on joint
+    activities where distance-related measures are used. 
+    
+    Parameters
+    ----------
+    profiles : DataFrame
+        A resource profile matrix.
+    metric : str, optional
+        Choice of metrics for measuring the distance while calculating 
+        distance.
+        Defaults to ``euclidean``, meaning that euclidean distance is 
+        used for measuring distance.
+    convert : bool, optional
+        A boolean flag indicating whether to convert the edge weight 
+        values of the discovered network should be converted to 
+        similarity measure values. Defaults to False, i.e., keep as 
+        distance measure.
+
+    Returns
+    -------
+    sn : NetworkX Graph
+        The discovered social network.
+
+    Notes
+    -----
+    The edge weight values in a discovered social network correspond to 
+    the distances between a pair of rows in the input profile matrix, 
+    thus:
+
+        1. A higher weight value indicates the two rows are less related. 
+           This is different from rest of the social network discovery 
+           metrics defined.
+        2. The generated social network is undirected due to the nature 
+           of distance (or similarity) measures.
+
+    Refer to scipy.spatial.distance.pdist for more detailed explanation 
+    of distance metrics.
+    """
     from scipy.spatial.distance import squareform, pdist
     x = squareform(pdist(profiles, metric=metric)) # preserve index
 
     if convert:
-        print('[Warning] Distance measure has been converted to similarity.')
-        # NOTE: different strategies may be employed for the transformation
-        # from distance measure to similarity measure
+        raise RuntimeWarning('Distance measure values converted to 
+            similarity measure values')
+        # NOTE: different strategies may be employed for the conversion
         min_v = x.min()
         max_v = x.max()
         x = 1 - (x - min_v) / (max_v - min_v)
-    # convert to Graph
+
     from networkx import Graph, relabel_nodes
     from numpy import fill_diagonal
     fill_diagonal(x, 0) # ignore self-loops
@@ -83,8 +114,5 @@ def distance(profiles,
         node_mapping[nodes[i]] = profiles.index[i] 
     sn = relabel_nodes(G, node_mapping)
     sn.add_nodes_from(profiles.index)
-    if not sn.is_directed():
-        return sn
-    else:
-        exit('[Error] Social network based on joint activities found directed')
+    return sn
 

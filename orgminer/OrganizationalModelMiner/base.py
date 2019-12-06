@@ -28,20 +28,38 @@ class OrganizationalModel:
 
     Attributes
     ----------
-    _rg_id : int
-
-    _rg : dict
-
-    _mem : dict
-
-    _cap : dict
-
-    _rmem : defaultdict
-
-    _rcap : defaultdict
+    group_number : int
+        The number of resource groups in the model.
+    resources : frozenset
+        All the resources involved in the model.
 
     Methods
     -------
+    add_group(og, exec_modes)
+        Add a resource group into the organizational model.
+    find_group_ids(r)
+        Query the id of groups which contain a resource given its 
+        identifier.
+    find_groups(r)
+        Query the groups which contain a resource given its identifier.
+    find_execution_modes(r)
+        Query the allowed execution modes of a resource given its 
+        identifier.
+    find_candidate_groups(exec_mode)
+        Query the capable groups (i.e., groups that can perform the 
+        execution mode according to the model) given an execution mode.
+    find_all_groups()
+        Return all resource groups involved in the model.
+    find_group_execution_modes(rg_id)
+        Query the capable execution modes given a group identified by 
+        its id.
+    find_all_execution_modes()
+        Return all execution modes involved in the model.
+    to_file_csv(f):
+        Export the organizational model to an external CSV file (with no 
+        header line).
+    from_file_csv(f):
+        Import an organizational model from an external CSV file.
 
     Notes
     -----
@@ -192,7 +210,7 @@ class OrganizationalModel:
     
 
     def find_candidate_groups(self, exec_mode):
-        """Query the capable groups (i.e. groups that can perform the 
+        """Query the capable groups (i.e., groups that can perform the 
         execution mode according to the model) given an execution mode.
 
         Parameters
