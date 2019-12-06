@@ -1,56 +1,79 @@
 # -*- coding: utf-8 -*-
 
-# TODO: in the current implementation, we assume a Gaussian distribution for
-# the latent categories of the data samples, thus the Bregman divergence is the
-# square Euclidean distance.
+"""This module contains definitions of several classes that are used by 
+the clustering-based methods for organizational model discovery.
+
+See Also
+--------
+OrganizationalModelMiner.overlap
+"""
 class MOC:
-    '''
-    This class implements the method of Model-based Overlapping Clustering.
+    """This class implements the method of Model-based Overlapping 
+    Clustering (MOC) [1]_.
 
-    n_components: int, defaults to 1.
-        The number of components in the model.
+    Methods
+    -------
 
-    tol: float, defaults to 1e-6.
-        The convergence threshold.
+    Notes
+    -----
+    In the current implementation, Gaussian distributions are assumed for
+    the latent categories of the data samples, thus squared Euclidean
+    distance measure is used as the Bregman divergence.
 
-    n_init: int, defaults to 1.
-        The number of initializations to perform. The best results are kept.
-        This parameter would be override if M_init is present.
-
-    max_iter: int, defaults to 1000.
-        The number of iterative alternating updates to run.
-
-    M_init: array-like, shape (n_samples, n_components), optional
-        The user-provided initial membership matrix M (binary), defaults to None.
-        If None, random initialization is used.
-
-    is_disjoint: Boolean, defaults to False
-        The Boolean flag indicating whether a disjoint result (the reduced
-        case) is required.
-
-    '''
+    References
+    ----------
+    .. [1] Banerjee, A., Krumpelman, C., Ghosh, J., Basu, S., & Mooney,
+    R. J. (2005, August). Model-based overlapping clustering. In
+    Proceedings of the eleventh ACM SIGKDD international conference on
+    Knowledge discovery in data mining (pp. 532-537). ACM.
+    """
 
     def __init__(self, 
-            n_components=1, tol=1e-6, n_init=1, max_iter=1000, M_init=None,
-            is_disjoint=False):
-        self.n_components = n_components
-        self.tol = tol
-        self.n_init = n_init if M_init is None else 1
-        self.max_iter = max_iter
-        self.M_init = M_init
-        self.is_disjoint = is_disjoint
-
-    def _init_M(self, n_init, shape):
-        '''Initialize a list of random guesses of membership M.
+        n_components=1, tol=1e-6, n_init=1, max_iter=1000, M_init=None,
+        is_disjoint=False):
+        """Instantiate an MOC class instance.
 
         Parameters
-        __________
+        ----------
+        n_components : int
+            Number of components in the model. Defaults to 1.
+        tol : float
+            The convergence threshold. Defaults to 1e-6.
         n_init : int
+            Number of initializations to perform. The best results 
+            are kept. This parameter would be override M_init if 
+            specified. Defaults to 1.
+        max_iter : int
+            Number of iterative alternating updates to run. Defaults to 
+            1000.
+        M_init : array-like, shape (n_samples, n_components), optional 
+            User-provided initial membership matrix M (binary-valued). 
+            If None, random initialization is used. Defaults to None.
+        is_disjoint : bool
+            A boolean flag indicating whether a disjoint result is 
+            required. Defaults to False.
+        """
+        self._n_components = n_components
+        self._tol = tol
+        self._n_init = n_init if M_init is None else 1
+        self._max_iter = max_iter
+        self._M_init = M_init
+        self._is_disjoint = is_disjoint
+
+
+    def _init_M(self, n_init, shape):
+        """Initialize a list of random guesses of membership M.
+
+        Parameters
+        ----------
+        n_init : int
+            Number of iterations to be used.
 
         Returns
         -------
         l_rand_M : list
-        '''
+            The result of random initialization.
+        """
         from numpy import zeros
         from numpy.random import randint, choice
 
@@ -60,9 +83,9 @@ class MOC:
             # Random initialization (non-repeat)
             while True:
                 M = zeros(shape)
-                if self.is_disjoint:
+                if self._is_disjoint:
                     for row in M:
-                        row[randint(self.n_components)] = 1 # only 1
+                        row[randint(self._n_components)] = 1 # only 1
                 else:
                     for row in M:
                         row[choice(range(shape[1]),
@@ -78,24 +101,27 @@ class MOC:
                     break
         return l_rand_M
     
+
     def fit_predict(self, X):
-        '''Fit and then predict labels for samples.
+        """Fit and then predict labels for the input samples.
 
         Parameters
-        __________
+        ----------
         X : array-like, shape (n_samples, n_features)
+            The input samples.
 
         Returns
         -------
-        best_m : array-like, shape (n_samples, n_components), component membership
-        '''
+        best_m : array-like, shape (n_samples, n_components)
+            The membership component in the model.
+        """
         from numpy import array, dot, infty
         from numpy.linalg import pinv
 
-        if self.M_init is not None:
-            l_M = [self.M_init.copy()]
+        if self._M_init is not None:
+            l_M = [self._M_init.copy()]
         else:
-            l_M = self._init_M(self.n_init, shape=(len(X), self.n_components))
+            l_M = self._init_M(self._n_init, shape=(len(X), self._n_components))
             
         def _e_m(M):
             # Start fitting with valid initialized value of M
@@ -106,10 +132,9 @@ class MOC:
 
             while not converged:
                 iteration += 1
-                if iteration >= self.max_iter:
-                    print('[Warning] Model did not converged within a max. of '
-                            + '{} iterations (delta= {:.4f}).'.format(
-                                self.max_iter, self.tol))
+                if iteration >= self._max_iter:
+                    raise RuntimeWarning('Convergence did not reach'
+                        + 'within {} iterations'.format(self._max_iter))
                     return M
 
                 #print('\n\tIteration {}:'.format(iteration), end=' ')
@@ -136,7 +161,7 @@ class MOC:
                     delta_log_likelihood = (current_log_likelihood
                             - prev_log_likelihood)
 
-                if delta_log_likelihood is not infty and delta_log_likelihood < self.tol:
+                if delta_log_likelihood is not infty and delta_log_likelihood < self._tol:
                     converged = True
                     if delta_log_likelihood >= 0:
                         pass
@@ -149,7 +174,7 @@ class MOC:
 
             # check if the solution is valid
             is_valid = True
-            for j in range(self.n_components):
+            for j in range(self._n_components):
                 if not M[:,j].any(): # invalid, an empty cluster found
                     is_valid = False
                     return M.copy(), float('-nan') # return as NaN score
@@ -161,8 +186,30 @@ class MOC:
         best_M, best_score = max(l_fitted_M, key=lambda x: x[1])
         return best_M
 
+
     # Definition of the likelihood function: log p(X, M, A) to be maximized
     def score(self, X, M, A):
+        """Calculate the likelihood score of a solution from fitting the 
+        samples.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The input samples.
+        M : array-like, shape (n_samples, n_components)
+            The membership component in the model.
+        A : array-like, shape (n_components, n_features)
+            The parameter component in the model.
+        
+        Returns
+        -------
+        float
+            The result score.
+
+        See Also
+        --------
+        MOC.fit_and_predict
+        """
         from numpy import dot, log, power
         #print('Calculating the score: ', end='')
         # calculate alpha_ih
@@ -189,9 +236,37 @@ class MOC:
         #print('{:.4f}'.format(score))
         return score
 
+
     # search on each separate threads with different initial setting
     # greedily proceed on the fly (idea similar to DP)
     def _dynamicm(self, x, m0, A):
+        """A dynamic algorithm (using parallel threads) to search for a 
+        "best" solution.
+
+        Parameters
+        ----------
+        x : array-like, shape (n_features, )
+            A row of the input samples.
+        m0 : array-like, shape (n_components, )
+            A row of the membership component in the model.
+        A : array-like, shape (n_components, n_features)
+            The parameter component in the model.
+        
+        Returns
+        -------
+        m_best : array-lie, shape (n_components, )
+            A "best" solution with respect to the given values.
+
+        Notes
+        -----
+        The idea is similar to Dynamic Programming. The returned result 
+        is prone to be sub-optimal. Refer to the paper for more 
+        information.
+
+        See Also
+        --------
+        MOC.fit_predict
+        """
         from threading import Thread, local
         from numpy import array, dot, infty, where
         from scipy.spatial.distance import sqeuclidean
@@ -215,7 +290,7 @@ class MOC:
                         candidate_m = self.m.copy()
                         candidate_m[i] = 1 # try turning on 1 cluster
                         candidate_L = sqeuclidean(
-                                self.x, dot(candidate_m, self.A))
+                            self.x, dot(candidate_m, self.A))
                         if candidate_L < L_min:
                             # update if better than the current one
                             best_candidate = i
@@ -233,7 +308,7 @@ class MOC:
         m_best = m0
 
         separate_search_threads = list()
-        if self.is_disjoint:
+        if self._is_disjoint:
             for h in range(n_components):
                 m = array([0] * n_components)
                 m[h] = 1
@@ -294,14 +369,15 @@ class FCM:
         If None, random initialization is used and assigns random-valued 
         weights for samples.
     '''
+
     def __init__(self,
             n_components=1, tol=1e-6, p=2, n_init=1, max_iter=1000,
             means_init=None):
-        self.n_components = n_components
-        self.tol = tol
+        self._n_components = n_components
+        self._tol = tol
         self.p = p
-        self.n_init = n_init if means_init is None else 1
-        self.max_iter = max_iter
+        self._n_init = n_init if means_init is None else 1
+        self._max_iter = max_iter
         self.means_init = means_init
 
     def _init_w(self, n_init, shape):
@@ -329,6 +405,7 @@ class FCM:
             l_rand_w.append(array(w))
         return l_rand_w
 
+
     def fit_predict(self, X):
         '''Fit and then predict labels for samples.
 
@@ -349,35 +426,35 @@ class FCM:
         best_w = None
         if self.means_init is not None:
             # if seed centroids given, compute initial fuzzy pseudo partition
-            w = zeros((len(X), self.n_components))
+            w = zeros((len(X), self._n_components))
             exp = 1 / (self.p - 1)
             for i in range(len(X)):
                 l_sqd_xi_c = [power(dist(X[i,:], self.means_init[q,:]), 2)
-                        for q in range(self.n_components)]
+                        for q in range(self._n_components)]
                 if 0.0 in l_sqd_xi_c:
                     # special case: current point is one of the centroids
                     cntr_cluster_ix = l_sqd_xi_c.index(0.0)
                     w[i,cntr_cluster_ix] = 1.0 # leave others 0
                 else:
-                    for j in range(self.n_components):
+                    for j in range(self._n_components):
                         sqd_xi_cj = power(dist(X[i,:], self.means_init[j,:]), 2)
                         w[i,j] = (
                                 power((1 / sqd_xi_cj), exp)
                                 / sum([power(
                                     (1 / power(dist(X[i,:], self.means_init[q,:]), 2)), 
-                                    exp) for q in range(self.n_components)]))
+                                    exp) for q in range(self._n_components)]))
             l_w = [w.copy()]
         else:
-            l_w = self._init_w(self.n_init, shape=(len(X), self.n_components))
+            l_w = self._init_w(self._n_init, shape=(len(X), self._n_components))
 
         def _e_m(w):
             _, w, w0, _, sse, _, _ = cmeans(data=X.T,
-                    c=self.n_components, m=self.p, error=self.tol, 
-                    maxiter=self.max_iter, init=w.T)
+                    c=self._n_components, m=self.p, error=self._tol, 
+                    maxiter=self._max_iter, init=w.T)
              
             # check if the solution is valid
             is_valid = True
-            for j in range(self.n_components):
+            for j in range(self._n_components):
                 if not w[:,j].any():
                     is_valid = False
                     break
