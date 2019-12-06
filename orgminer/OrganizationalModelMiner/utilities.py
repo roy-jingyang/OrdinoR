@@ -22,9 +22,9 @@ def cross_validation_score(
     miner_params : dict
         Other keyword parameters for the specified miner.
     proximity_metric : str, optional
-        Choice of metrics for measuring the distance while calculating 
-        proximity. This should remain consistent with that employed by
-        the specific mining method. 
+        Metric for measuring the distance while calculating proximity. 
+        This should remain consistent with that employed by the specific 
+        mining method. 
         Defaults to ``euclidean``, meaning that euclidean distance is 
         used for measuring proximity.
     cv_fold : int, or float in range (0, 1.0)
