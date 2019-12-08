@@ -14,6 +14,8 @@ table was used but rather from a graph-like structure, the modularity
 measure should be used. The inputs should be the clusters and the
 original graph-like structure from which the clustering was derived.
 """
+from warnings import warn
+
 # TODO: is it appropriate using silhouette score for overlapped clusters?
 def silhouette_score(clu, X, metric='euclidean'):
     """Calculate the silhouette scores of the latent clustering.
@@ -217,7 +219,7 @@ def modularity(clu, G, weight=None):
         G = Graph()
         G.add_edges_from(undirected_edge_list)
         del undirected_edge_list[:]
-        print('[Warning] DiGraph casted to Graph.')
+        warn('DiGraph casted to Graph.', RuntimeWarning)
     else:
         pass
 

@@ -4,6 +4,7 @@
 checking measures.
 """
 from deprecated import deprecated
+from warnings import warn
 
 def _is_conformed_event(event, om):
     m = (event.case_type, event.activity_type, event.time_type)
@@ -104,11 +105,10 @@ def rc_measure(rl, om):
     n_cand_E = len(cand_E) # "|cand(E)|"
 
     if n_cand_E == 0:
-        print('[Warning] No candidate resource.')
+        warn('No candidate resource.', RuntimeWarning)
         return float('nan')
     elif n_cand_E == 1:
-        print('[Warning] The overall number of candidate resources is 
-            1.')
+        warn('Overall number of candidate is 1.', RuntimeWarning)
         return 1.0
     else:
         rc_sum = sum([(n_cand_E - n_cand_e) / (n_cand_E - 1) 
@@ -195,7 +195,7 @@ def precision(rl, om):
     n_cand_E = len(cand_E)
 
     if n_cand_E == 0:
-        print('[Warning] No candidate resource.')
+        warn('No candidate resource.', RuntimeWarning)
         return float('nan')
     else:
         n_allowed_events = 0

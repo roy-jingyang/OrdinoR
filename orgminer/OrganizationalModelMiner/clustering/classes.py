@@ -7,6 +7,8 @@ See Also
 --------
 OrganizationalModelMiner.overlap
 """
+from warnings import warn
+
 class MOC:
     """This class implements the method of Model-based Overlapping 
     Clustering (MOC) [1]_.
@@ -138,8 +140,8 @@ class MOC:
             while not converged:
                 iteration += 1
                 if iteration >= self._max_iter:
-                    raise RuntimeWarning('Convergence did not reach'
-                        + 'within {} iterations'.format(self._max_iter))
+                    warn('Convergence not reached within {} iterations'.format(
+                        self._max_iter), RuntimeWarning)
                     return M
 
                 #print('\n\tIteration {}:'.format(iteration), end=' ')

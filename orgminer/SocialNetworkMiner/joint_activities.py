@@ -14,6 +14,8 @@ References
 Discovering social networks from event logs. Computer Supported 
 Cooperative Work (CSCW), 14(6), 549-593.
 """
+from warnings import warn
+
 def performer_activity_matrix(el, use_log_scale):
     """Build a resource profile matrix solely based on how frequently
     resources originated activities, i.e., performer-by-activity matrix.
@@ -96,8 +98,8 @@ def distance(profiles, metric='euclidean', convert=False):
     x = squareform(pdist(profiles, metric=metric)) # preserve index
 
     if convert:
-        raise RuntimeWarning('Distance measure values converted to 
-            similarity measure values')
+        warn('Distance measure values converted to similarity measure values.',
+            RuntimeWarning)
         # NOTE: different strategies may be employed for the conversion
         min_v = x.min()
         max_v = x.max()
