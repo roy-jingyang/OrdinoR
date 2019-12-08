@@ -99,7 +99,7 @@ def powerset_exclude_headtail(s, reverse=False, depth=None):
     s : set or frozenset
         A given set of elements. 
     reverse : bool, optional
-        A flag determining whether the generated power set (as a 
+        A boolean flag determining whether the generated power set (as a 
         generator) delivers sets with lower cardinality first or higher 
         ones.
         Default is True, i.e. the lower ones before the higher.

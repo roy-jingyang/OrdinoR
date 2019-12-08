@@ -14,11 +14,12 @@ class BaseMiner:
     Attributes
     ----------
     is_ctypes_verified : bool
-        Boolean flag indicating whether the case types are verified.
+        A boolean flag indicating whether the case types are verified.
     is_atypes_verified : bool
-        Boolean flag indicating whether the activity types are verified.
+        A boolean flag indicating whether the activity types are
+        verified.
     is_ttypes_verified : bool
-        Boolean flag indicating whether the time types are verified.
+        A boolean flag indicating whether the time types are verified.
 
     Methods
     -------

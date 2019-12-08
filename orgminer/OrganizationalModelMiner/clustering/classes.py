@@ -13,6 +13,11 @@ class MOC:
 
     Methods
     -------
+    fit_predict(X)
+        Fit and then predict labels for the input samples.
+    score(X, M, A)
+        Calculate the likelihood score of a solution from fitting the 
+        samples
 
     Notes
     -----
@@ -29,27 +34,27 @@ class MOC:
     """
 
     def __init__(self, 
-        n_components=1, tol=1e-6, n_init=1, max_iter=1000, M_init=None,
+        n_components, tol=1e-6, n_init=1, max_iter=1000, M_init=None,
         is_disjoint=False):
         """Instantiate an MOC class instance.
 
         Parameters
         ----------
         n_components : int
-            Number of components in the model. Defaults to 1.
-        tol : float
+            Number of components in the model.
+        tol : float, optional
             The convergence threshold. Defaults to 1e-6.
-        n_init : int
+        n_init : int, optional
             Number of initializations to perform. The best results 
-            are kept. This parameter would be override M_init if 
+            are kept. This parameter would be override ``M_init`` if 
             specified. Defaults to 1.
-        max_iter : int
+        max_iter : int, optional
             Number of iterative alternating updates to run. Defaults to 
             1000.
         M_init : array-like, shape (n_samples, n_components), optional 
             User-provided initial membership matrix M (binary-valued). 
             If None, random initialization is used. Defaults to None.
-        is_disjoint : bool
+        is_disjoint : bool, optional
             A boolean flag indicating whether a disjoint result is 
             required. Defaults to False.
         """
@@ -342,55 +347,70 @@ class MOC:
 
 
 class FCM:
-    '''
-    Class variables:
+    """This class implements the method of Fuzzy C-Means clustering [1]_.
 
-    n_components: int, defaults to 1.
-        The number of clusters expected to be found.
+    The implementation is based on `SciKit-Fuzzy`.
 
-    tol: float, defaults to 1e-6.
-        The convergence threshold.
+    Methods
+    -------
+    fit_predict(X) : Fit and then predict labels for the input samples.
 
-    p: float, defaults to 2.0.
-        The exponentiation value for updating equations.
-        When p = 1, fuzzy c-means reduces to traditional K-means algorithm;
-        When p gets larger, the partitions grow fuzzier (approaching global
-        centroid).
-
-    n_init: int, defaults to 1.
-        The number of initializations to perform. The best results are kept.
-        This parameter would be override if means_init is present.
-
-    max_iter: int, defaults to 1000.
-        The number of iterative alternating updates to run.
-
-    means_init: array-like, shape (n_components, n_features), optional
-        The user-provided initial guess of centroids.
-        If None, random initialization is used and assigns random-valued 
-        weights for samples.
-    '''
+    References
+    ----------
+    .. [1] Tan, P. N., Steinbach, M., Karpatne, A., & Kumar, V. (2018). Introduction to Data Mining.
+    """
 
     def __init__(self,
-            n_components=1, tol=1e-6, p=2, n_init=1, max_iter=1000,
-            means_init=None):
-        self._n_components = n_components
-        self._tol = tol
-        self.p = p
-        self._n_init = n_init if means_init is None else 1
-        self._max_iter = max_iter
-        self.means_init = means_init
-
-    def _init_w(self, n_init, shape):
-        '''Initialize a list of random guesses of fuzzy pseudo partition w.
+        n_components, tol=1e-6, p=2, n_init=1, max_iter=1000,
+        means_init=None):
+        """Instantiate an FCM class instance.
 
         Parameters
-        __________
+        ----------
+        n_components : int
+            Number of clusters expected.
+        tol : float, optional
+            The convergence threshold. Defaults to 1e-6.
+        p : float, optional
+            The exponentiation value. When p = 1, fuzzy c-means reduces
+            to K-means algorithm; when p is set to larger values, the 
+            partitioning becomes fuzzier (approaching global centroid).
+            Defaults to 2.
+        n_init : int, optional
+            Number of initializations to perform. The best results 
+            are kept. This parameter would be override ``means_init`` if 
+            specified. Defaults to 1.
+        max_iter : int, optional
+            Number of iterative alternating updates to run. Defaults to 
+            1000.
+        means_init : array-like, shape (n_components, n_features), 
+        optional
+            User-provided initial guess of centroids. If None, random
+            initialization is used and assigns random-valued weights for
+            samples.
+        """
+        self._n_components = n_components
+        self._tol = tol
+        self._p = p
+        self._n_init = n_init if means_init is None else 1
+        self._max_iter = max_iter
+        self._means_init = means_init
+
+
+    def _init_w(self, n_init, shape):
+        """Initialize a list of random guesses of fuzzy pseudo partition 
+        w.
+
+        Parameters
+        ----------
         n_init : int
+            Number of iterations to be used.
 
         Returns
         -------
         l_rand_w : list
-        '''
+            The result of random initialization.
+        """
         from numpy import array
         from numpy.random import randint, choice
 
@@ -407,29 +427,29 @@ class FCM:
 
 
     def fit_predict(self, X):
-        '''Fit and then predict labels for samples.
+        """Fit and then predict labels for the input samples.
 
         Parameters
-        __________
+        ----------
         X : array-like, shape (n_samples, n_features)
+            The input samples.
 
         Returns
         -------
-        w : array-like, shape (n_samples, n_components), weights
-        '''
-
+        best_w : array-like, shape (n_samples, n_components)
+            The weight values.
+        """
         from numpy import array, infty, zeros, sum, power, dot, amax
         from scipy.spatial.distance import euclidean as dist
         from skfuzzy.cluster import cmeans
 
-        best_sse = None
         best_w = None
-        if self.means_init is not None:
+        if self._means_init is not None:
             # if seed centroids given, compute initial fuzzy pseudo partition
             w = zeros((len(X), self._n_components))
-            exp = 1 / (self.p - 1)
+            exp = 1 / (self._p - 1)
             for i in range(len(X)):
-                l_sqd_xi_c = [power(dist(X[i,:], self.means_init[q,:]), 2)
+                l_sqd_xi_c = [power(dist(X[i,:], self._means_init[q,:]), 2)
                         for q in range(self._n_components)]
                 if 0.0 in l_sqd_xi_c:
                     # special case: current point is one of the centroids
@@ -437,11 +457,11 @@ class FCM:
                     w[i,cntr_cluster_ix] = 1.0 # leave others 0
                 else:
                     for j in range(self._n_components):
-                        sqd_xi_cj = power(dist(X[i,:], self.means_init[j,:]), 2)
+                        sqd_xi_cj = power(dist(X[i,:], self._means_init[j,:]), 2)
                         w[i,j] = (
                                 power((1 / sqd_xi_cj), exp)
                                 / sum([power(
-                                    (1 / power(dist(X[i,:], self.means_init[q,:]), 2)), 
+                                    (1 / power(dist(X[i,:], self._means_init[q,:]), 2)), 
                                     exp) for q in range(self._n_components)]))
             l_w = [w.copy()]
         else:
@@ -449,7 +469,7 @@ class FCM:
 
         def _e_m(w):
             _, w, w0, _, sse, _, _ = cmeans(data=X.T,
-                    c=self._n_components, m=self.p, error=self._tol, 
+                    c=self._n_components, m=self._p, error=self._tol, 
                     maxiter=self._max_iter, init=w.T)
              
             # check if the solution is valid

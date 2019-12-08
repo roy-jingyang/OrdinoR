@@ -58,7 +58,7 @@ def read_disco_csv(f, mapping=None, header=True):
         A python dictionary denoting the mapping from CSV column index
         to event log attributes.
     header : bool, optional
-        Boolean flag indicating whether the input event log file
+        A boolean flag indicating whether the input event log file
         contains a header line.
 
     Returns
