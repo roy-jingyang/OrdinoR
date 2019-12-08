@@ -6,7 +6,9 @@
 *.un~
 *.swp
 
+# Ignore VS Code settings
+.vscode
+
 # Ignore input and output files
 input/
 output/
-
