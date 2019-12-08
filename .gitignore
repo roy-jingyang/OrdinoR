@@ -7,7 +7,7 @@
 *.swp
 
 # Ignore VS Code settings
-.vscode
+.vscode/
 
 # Ignore input and output files
 input/
