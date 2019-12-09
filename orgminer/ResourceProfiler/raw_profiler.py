@@ -16,7 +16,7 @@ def count_execution_frequency(rl, scale=None):
         A resource log.
     scale : {None, 'normalize', log'}, optional
         Options for deciding how to scale the values of frequency
-        counting. Could be one of the followings:
+        counting. Could be one of the following:
             
             - None, no scaling will be performed. Default.
             - 'normalize', scale the frequency values by the total

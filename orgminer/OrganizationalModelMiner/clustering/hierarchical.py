@@ -6,7 +6,8 @@ are "profile-based", meaning that resource profiles should be used as
 input.
 """
 def _ahc(profiles, n_groups, method='single', metric='euclidean'):
-    """The basic Agglomerative Hierarchical Clustering algorithm [1]_.
+    """Apply the classic Agglomerative Hierarchical Clustering (AHC) 
+    [1]_ for hierarchical clustering.
 
     Parameters
     ----------
@@ -98,12 +99,15 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
 
     Returns
     -------
+    best_k : int
+        The suggested selection of number of groups (if ``search_only`` 
+        is True).
     best_ogs : list of frozensets
-        Discovered organizational groups.
+        Discovered organizational groups (if ``search_only`` is False).
     best_og_hcy : DataFrame
         The hierarchical structure (dendrogram) as a pandas DataFrame,
         with resource ids as indices, levels of the hierarchy as columns,
-        and group ids as the values. 
+        and group ids as the values (if ``search_only`` is False).
         E.g. for 20 resources placed in a 5-level hierarchical structure
         with 8 groups at the lowest level, there should be 20 rows and 5
         columns in the DataFrame, and the values should be in range of 0
@@ -118,7 +122,8 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
     else:
         best_k = -1
         best_score = float('-inf')
-        from orgminer.OrganizationalModelMiner.utilities import cross_validation_score
+        from orgminer.OrganizationalModelMiner.utilities import \
+            cross_validation_score
         from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
         from numpy import mean, amax
         for k in n_groups:

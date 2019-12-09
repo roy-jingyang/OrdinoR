@@ -359,7 +359,8 @@ class FCM:
 
     References
     ----------
-    .. [1] Tan, P. N., Steinbach, M., Karpatne, A., & Kumar, V. (2018). Introduction to Data Mining.
+    .. [1] Tan, P. N., Steinbach, M., Karpatne, A., & Kumar, V. (2018).
+    Introduction to Data Mining.
     """
 
     def __init__(self,
