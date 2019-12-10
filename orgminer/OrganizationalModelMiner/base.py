@@ -74,8 +74,8 @@ class OrganizationalModel:
         self._cap = dict()
 
         from collections import defaultdict
-        self._rmem = defaultdict(set)
-        self._rcap = defaultdict(set)
+        self._rmem = defaultdict(lambda: set())
+        self._rcap = defaultdict(lambda: set())
         
 
     def add_group(self, og, exec_modes):

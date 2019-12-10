@@ -40,12 +40,12 @@ def handover(el,
     multiple_transfers : bool
         A boolean flag indicating whether to consider multiple transfers 
         within one case or not.
-    depth : int, optional
+    depth : int, optional, default ``1``
         The degree of causality to be considered. Only use when 
         ``direct_succession`` is False, i.e., indirect succession 
-        considered. Defaults to 1.
-    beta : float, optional
-        The causality fall factor. Defaults to 1.
+        considered.
+    beta : float, optional, default ``1``
+        The causality fall factor.
 
     Returns
     -------

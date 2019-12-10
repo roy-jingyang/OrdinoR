@@ -14,7 +14,7 @@ def append_case_duration(el, datetime_format='%Y/%m/%d %H:%M:%S.%f'):
     ----------
     el : DataFrame
         An event log.
-    datetime_format : str, optional
+    datetime_format : str, optional, default ``'%Y/%m/%d %H:%M:%S.%f'``
         The format string for parsing the timestamps in the given event
         log. Defaults to '%Y/%m/%d %H:%M:%S.%f', e.g. 2019/12/6 
         10:48:51.0. See `Python strftime() and strptime() Behavior` for 

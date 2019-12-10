@@ -183,10 +183,10 @@ def overall_score(group, rl, p, w1=0.5, w2=0.5):
         A resource log.
     p : float
         A given threshold value in range [0, 1.0].
-    w1 : float, optional
-        The weight value assigned to participation rate, default 0.5.
-    w2 : float, optional
-        The weight value assigned to coverage, default 0.5.
+    w1 : float, optional, default ``0.5``
+        The weight value assigned to participation rate.
+    w2 : float, optional, default ``0.5``
+        The weight value assigned to coverage.
 
     Returns
     -------

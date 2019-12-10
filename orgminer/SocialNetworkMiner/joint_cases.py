@@ -23,11 +23,11 @@ def working_together(el, normalize=None):
     ----------
     el : DataFrame
         An event log.
-    normalize : {None, 'resource', 'total'}, optional
+    normalize : {None, 'resource', 'total'}, optional, default ``None``
         Options for setting the normalization strategy on the edge
         weight values. Could be one of the following:
 
-            - None, no normalization will be used. Default.
+            - None, no normalization will be used.
             - 'resource', normalized by the amount of cases each 
               resource was involved in. Note that this could lead to a 
               directed graph being derived since the normalization 

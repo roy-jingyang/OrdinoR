@@ -16,11 +16,10 @@ def _mja(profiles, n_groups, metric='euclidean'):
         Constructed resource profiles.
     n_groups : int
         Expected number of resource groups.
-    metric : str, optional
+    metric : str, optional, default ``'euclidean'``
         Choice of metrics for measuring the distance while calculating 
-        distance.
-        Defaults to ``euclidean``, meaning that euclidean distance is 
-        used for measuring distance.
+        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance is used for measuring distance.
 
     Returns
     -------
@@ -76,17 +75,15 @@ def mja(profiles, n_groups, metric='euclidean', search_only=False):
         Constructed resource profiles.
     n_groups : list of ints
         Expected number(s) of resource groups to be determined.
-    metric : str, optional
+    metric : str, optional, default ``'euclidean'``
         Choice of metrics for measuring the distance while calculating 
-        distance.
-        Defaults to ``euclidean``, meaning that euclidean distance is 
-        used for measuring distance.
-    search_only: bool, optional
+        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance is used for measuring distance.
+    search_only: bool, optional, default ``False``
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. 
-        Defaults to False, i.e., to perform group discovery after 
-        searching.
+        result. Defaults to False, i.e., to perform group discovery after
+         searching.
 
     Returns
     -------
@@ -134,12 +131,13 @@ def _mjc(el, n_groups, method='threshold'):
         An event log.
     n_groups : int
         Expected number of resource groups.
-    method : {'threshold', 'centrality'}, optional
+    method : {'threshold', 'centrality'}, optional, default 
+    ``'threshold'``
         Options for the method to be used for finding graph components. 
         Could be one of the following:
 
             - 'threshold': using edge thresholding on edges to remove
-              links. Default.
+              links.
             - 'centrality': disconnect nodes with high betweenness 
               centrality, i.e., shortest-path centrality.
 
@@ -260,12 +258,11 @@ def mjc(el, n_groups, search_only=False):
         An event log.
     n_groups : list of ints
         Expected number(s) of resource groups to be determined.
-    search_only: bool, optional
+    search_only: bool, optional, default ``False``
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. 
-        Defaults to False, i.e., to perform group discovery after 
-        searching.
+        result. Defaults to False, i.e., to perform group discovery after
+         searching.
 
     Returns
     -------

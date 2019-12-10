@@ -14,11 +14,11 @@ def count_execution_frequency(rl, scale=None):
     ----------
     rl : DataFrame
         A resource log.
-    scale : {None, 'normalize', log'}, optional
+    scale : {None, 'normalize', log'}, optional, default ``None``
         Options for deciding how to scale the values of frequency
         counting. Could be one of the following:
             
-            - None, no scaling will be performed. Default.
+            - None, no scaling will be performed.
             - 'normalize', scale the frequency values by the total
               count of executions by each resource.
             - 'log', scale the frequency values by logarithm.

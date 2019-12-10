@@ -13,14 +13,12 @@ def _ahc(profiles, n_groups, method='single', metric='euclidean'):
         Constructed resource profiles.
     n_groups : int
         Expected number of resource groups.
-    method : str, optional
+    method : str, optional, default ``single``
         Choice of methods for merging clusters at each iteration.
-        Defaults to 'single'.
-    metric : str, optional
+    metric : str, optional, default ``euclidean``
         Choice of metrics for measuring the distance while calculating 
-        distance.
-        Defaults to ``euclidean``, meaning that euclidean distance is 
-        used for measuring distance.
+        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance is used for measuring distance.
 
     Returns
     -------
@@ -79,20 +77,17 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
         Constructed resource profiles.
     n_groups : list of ints
         Expected number(s) of resource groups to be determined.
-    method : str, optional
+    method : str, optional, default ``'single'``
         Choice of methods for merging clusters at each iteration.
-        Defaults to 'single'.
-    metric : str, optional
+    metric : str, optional, default ``'euclidean'``
         Choice of metrics for measuring the distance while calculating 
-        distance.
-        Defaults to ``euclidean``, meaning that euclidean distance is 
-        used for measuring distance.
-    search_only: bool, optional
+        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance is used for measuring distance.
+    search_only: bool, optional, default ``False``
         A boolean flag indicating whether to search for the number of
         groups only or to perform cluster analysis based on the search
-        result. 
-        Defaults to False, i.e., to perform cluster analysis after 
-        searching.
+        result. Defaults to False, i.e., to perform cluster analysis
+        after searching.
 
     Returns
     -------

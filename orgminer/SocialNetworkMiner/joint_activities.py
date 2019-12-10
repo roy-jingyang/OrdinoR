@@ -63,12 +63,11 @@ def distance(profiles, metric='euclidean', convert=False):
     ----------
     profiles : DataFrame
         A resource profile matrix.
-    metric : str, optional
+    metric : str, optional, default ``'euclidean'``
         Choice of metrics for measuring the distance while calculating 
-        distance.
-        Defaults to ``euclidean``, meaning that euclidean distance is 
-        used for measuring distance.
-    convert : bool, optional
+        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance is used for measuring distance.
+    convert : bool, optional, default ``False``
         A boolean flag indicating whether to convert the edge weight 
         values of the discovered network should be converted to 
         similarity measure values. Defaults to False, i.e., keep as 

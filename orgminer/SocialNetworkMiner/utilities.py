@@ -28,7 +28,7 @@ def select_edges_by_weight(sn, weight='weight',
     ----------
     sn : NetworkX (Di)Graph
         A social network.
-    weight : str, optional
+    weight : str, optional, default ``'weight'``
         Name of the weight attribute in the network. Defaults to 
         'weight', which is the default weight attribute name used by 
         NetworkX.

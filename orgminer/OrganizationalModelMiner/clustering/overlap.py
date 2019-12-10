@@ -16,7 +16,8 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
     threshold : float
         A given threshold value in range [0, 1.0] for producing
         determined clustering from the fuzzy clustering results from GMM.
-    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional
+    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
+     ``'random'``
         Options for deciding the strategy for initialization. Could be 
         one of the following:
 
@@ -32,9 +33,9 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
 
         Note that if an option other than 'random' is specified, then the
         initialization is performed once only.
-    n_init : int, optional
+    n_init : int, optional, default ``100``
         Number of times of random initialization (if specified) performs
-        before training the clustering model. Defaults to 100.
+        before training the clustering model.
 
     Returns
     -------
@@ -156,7 +157,8 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
     threshold : float
         A given threshold value in range [0, 1.0] for producing
         determined clustering from the fuzzy clustering results from GMM.
-    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional
+    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
+     ``'random'``
         The strategy for initialization. Defaults to 'random', meaning
         that random initialization will be used. Other options include:
 
@@ -171,15 +173,14 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
 
         Note that if an option other than 'random' is specified, then the
         initialization is performed once only.
-    n_init : int, optional
+    n_init : int, optional, default ``100``
         Number of times of random initialization (if specified) performs
-        before training the clustering model. Defaults to 100.
-    search_only: bool, optional
+        before training the clustering model.
+    search_only: bool, optional, default ``False``
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. 
-        Defaults to False, i.e., to perform group discovery after search
-        searching.
+        result. Defaults to False, i.e., to perform group discovery after
+        search searching.
 
     Returns
     -------
@@ -233,7 +234,8 @@ def _moc(profiles, n_groups, init='random', n_init=100):
         Constructed resource profiles.
     n_groups : int
         Expected number of resource groups.
-    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional
+    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
+     ``'random'``
         Options for deciding the strategy for initialization. Could be 
         one of the following:
 
@@ -249,9 +251,9 @@ def _moc(profiles, n_groups, init='random', n_init=100):
 
         Note that if an option other than 'random' is specified, then the
         initialization is performed once only.
-    n_init : int, optional
+    n_init : int, optional, default ``100``
         Number of times of random initialization (if specified) performs
-        before training the clustering model. Defaults to 100.
+        before training the clustering model.
 
     Returns
     -------
@@ -343,7 +345,8 @@ def moc(profiles, n_groups, init='random', n_init=100,
         Constructed resource profiles.
     n_groups : list of ints
         Expected number(s) of resource groups to be determined.
-    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional
+    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
+     ``'random'``
         Options for deciding the strategy for initialization. Could be 
         one of the following:
 
@@ -359,14 +362,13 @@ def moc(profiles, n_groups, init='random', n_init=100,
 
         Note that if an option other than 'random' is specified, then the
         initialization is performed once only.
-    n_init : int, optional
+    n_init : int, optional, default ``100``
         Number of times of random initialization (if specified) performs
-        before training the clustering model. Defaults to 100.
-    search_only: bool, optional
+        before training the clustering model.
+    search_only: bool, optional, default ``False``
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. 
-        Defaults to False, i.e., to perform group discovery after 
+        result. Defaults to False, i.e., to perform group discovery after
         searching.
 
     Returns
@@ -422,7 +424,8 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
     threshold : float
         A given threshold value in range [0, 1.0] for producing
         determined clustering from the fuzzy clustering results from FCM.
-    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional
+    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
+     ``'random'``
         Options for deciding the strategy for initialization. Could be 
         one of the following:
 
@@ -438,9 +441,9 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
 
         Note that if an option other than 'random' is specified, then the
         initialization is performed once only.
-    n_init : int, optional
+    n_init : int, optional, default ``100``
         Number of times of random initialization (if specified) performs
-        before training the clustering model. Defaults to 100.
+        before training the clustering model.
 
     Returns
     -------
@@ -540,7 +543,8 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
     threshold : float
         A given threshold value in range [0, 1.0] for producing
         determined clustering from the fuzzy clustering results from FCM.
-    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional
+    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
+     ``'random'``
         Options for deciding the strategy for initialization. Could be 
         one of the following:
 
@@ -556,14 +560,13 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
 
         Note that if an option other than 'random' is specified, then the
         initialization is performed once only.
-    n_init : int, optional
+    n_init : int, optional, default ``100``
         Number of times of random initialization (if specified) performs
-        before training the clustering model. Defaults to 100.
-    search_only: bool, optional
+        before training the clustering model.
+    search_only: bool, optional, default ``False``
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. 
-        Defaults to False, i.e., to perform group discovery after 
+        result. Defaults to False, i.e., to perform group discovery after 
         searching.
 
     Returns

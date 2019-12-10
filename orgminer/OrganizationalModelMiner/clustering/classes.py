@@ -44,21 +44,21 @@ class MOC:
         ----------
         n_components : int
             Number of components in the model.
-        tol : float, optional
-            The convergence threshold. Defaults to 1e-6.
-        n_init : int, optional
+        tol : float, optional, default ``1e-6``
+            The convergence threshold.
+        n_init : int, optional, default ``1``
             Number of initializations to perform. The best results 
             are kept. This parameter would be override ``M_init`` if 
-            specified. Defaults to 1.
-        max_iter : int, optional
-            Number of iterative alternating updates to run. Defaults to 
-            1000.
-        M_init : array-like, shape (n_samples, n_components), optional 
+            specified.
+        max_iter : int, optional, default ``1000``
+            Number of iterative alternating updates to run.
+        M_init : array-like, shape (n_samples, n_components), optional, 
+        default ``None``
             User-provided initial membership matrix M (binary-valued). 
-            If None, random initialization is used. Defaults to None.
-        is_disjoint : bool, optional
+            If None, random initialization is used.
+        is_disjoint : bool, optional, default ``False``
             A boolean flag indicating whether a disjoint result is 
-            required. Defaults to False.
+            required.
         """
         self._n_components = n_components
         self._tol = tol
@@ -372,22 +372,20 @@ class FCM:
         ----------
         n_components : int
             Number of clusters expected.
-        tol : float, optional
-            The convergence threshold. Defaults to 1e-6.
-        p : float, optional
+        tol : float, optional, default ``1e-6``
+            The convergence threshold.
+        p : float, optional, default ``2``
             The exponentiation value. When p = 1, fuzzy c-means reduces
             to K-means algorithm; when p is set to larger values, the 
             partitioning becomes fuzzier (approaching global centroid).
-            Defaults to 2.
-        n_init : int, optional
+        n_init : int, optional, default ``1``
             Number of initializations to perform. The best results 
             are kept. This parameter would be override ``means_init`` if 
-            specified. Defaults to 1.
-        max_iter : int, optional
-            Number of iterative alternating updates to run. Defaults to 
-            1000.
+            specified.
+        max_iter : int, optional, default ``1000``
+            Number of iterative alternating updates to run.
         means_init : array-like, shape (n_components, n_features), 
-        optional
+        optional, default ``None``
             User-provided initial guess of centroids. If None, random
             initialization is used and assigns random-valued weights for
             samples.

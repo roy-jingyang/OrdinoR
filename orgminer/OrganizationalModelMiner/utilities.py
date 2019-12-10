@@ -21,19 +21,17 @@ def cross_validation_score(
         An organizational model miner.
     miner_params : dict
         Other keyword parameters for the specified miner.
-    proximity_metric : str, optional
+    proximity_metric : str, optional, default ``'euclidean'``
         Metric for measuring the distance while calculating proximity. 
         This should remain consistent with that employed by the specific 
-        mining method. 
-        Defaults to ``euclidean``, meaning that euclidean distance is 
-        used for measuring proximity.
-    cv_fold : int, or float in range (0, 1.0)
+        mining method. Defaults to ``euclidean``, meaning that euclidean distance is used for measuring proximity.
+    cv_fold : int, or float in range (0, 1.0), default ``0.2``
         The number of folds to be used for cross validation. 
         If an integer is given, then it is used as the fold number; 
         if a float is given, then a corresponding percentage of data 
-        will be used as the test fold.
-        Default is ``0.2``, meaning that 20% of data will be used for 
-        testing while the other 80% used for training.
+        will be used as the test fold. Defaults to ``0.2``, meaning that
+        20% of data will be used for testing while the other 80% used for
+        training.
 
     Returns
     -------
@@ -98,15 +96,14 @@ def powerset_exclude_headtail(s, reverse=False, depth=None):
     ----------
     s : set or frozenset
         A given set of elements. 
-    reverse : bool, optional
+    reverse : bool, optional, default ``True``
         A boolean flag determining whether the generated power set (as a 
         generator) delivers sets with lower cardinality first or higher 
-        ones.
-        Default is True, i.e. the lower ones before the higher.
-    depth : int, optional
+        ones. Defaults to True, i.e. the lower ones before the higher.
+    depth : int, optional, default ``None``
         The upper bound (or lower bound) of cardinality that filters the 
-        sets to be generated.
-        Default is None, i.e. the whole power set will be returned.
+        sets to be generated. Defaults to None, i.e. the whole power set
+        will be returned.
 
     Returns
     -------
