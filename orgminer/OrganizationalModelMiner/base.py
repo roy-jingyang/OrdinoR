@@ -356,7 +356,7 @@ def default_mining(rl):
     Returns
     -------
     ogs : list of frozensets
-        A list of organizational groups.
+        A list of resource groups.
 
     Notes
     -----

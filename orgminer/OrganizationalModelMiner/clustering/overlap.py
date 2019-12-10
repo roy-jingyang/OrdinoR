@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """This module contains the implementation of overlapping organizational 
-mining methods, based on the use of clustering techniques. These methods 
-are "profile-based", meaning that resource profiles should be used as 
-input.
+mining methods, based on the use of clustering techniques.
 """
 def _gmm(profiles, n_groups, threshold, init='random', n_init=100): 
-    """Apply the classic Gaussian Mixture Model (GMM) for overlapping 
-     clustering [1]_.
+    """Apply the classic Gaussian Mixture Model (GMM) to discover 
+    resource groups [1]_.
 
     Parameters
     ----------
@@ -41,7 +39,7 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
     Returns
     -------
     list of frozensets
-        Discovered organizational groups.
+        Discovered resource groups.
     
     See Also
     --------
@@ -57,8 +55,7 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
      Models with Overlaps. In International Conference on Business
      Process Management (pp. 339-355). Springer, Cham.
     """
-    print('Applying overlapping organizational model mining using ' +
-        'clustering-based GMM:')
+    print('Applying overlapping clustering -based GMM:')
     # step 0. Perform specific initialization method (if given)
     if init in ['mja', 'ahc', 'kmeans', 'plain']:
         warm_start = True
@@ -138,7 +135,6 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
         for j in nonzero(membership)[0]:
             groups[j].add(profiles.index[i])
 
-    #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]
 
 
@@ -155,8 +151,8 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    n_groups : int
-        Expected number of resource groups.
+    n_groups : list of ints
+        Expected number(s) of resource groups to be determined.
     threshold : float
         A given threshold value in range [0, 1.0] for producing
         determined clustering from the fuzzy clustering results from GMM.
@@ -180,9 +176,9 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
         before training the clustering model. Defaults to 100.
     search_only: bool, optional
         A boolean flag indicating whether to search for the number of
-        groups only or to perform cluster analysis based on the search
+        groups only or to perform group discovery based on the search
         result. 
-        Defaults to False, i.e., to perform cluster analysis after 
+        Defaults to False, i.e., to perform group discovery after search
         searching.
 
     Returns
@@ -191,7 +187,7 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
         The suggested selection of number of groups (if ``search_only`` 
         is True).
     list of frozensets
-        Discovered organizational groups (if ``search_only`` is False).
+        Discovered resource groups (if ``search_only`` is False).
     """
     if len(n_groups) == 1:
         return _gmm(profiles, n_groups[0], threshold, init, n_init)
@@ -228,8 +224,8 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
 
 
 def _moc(profiles, n_groups, init='random', n_init=100):
-    """Apply the Model-based Overlapping Clustering (MOC) for overlapping 
-     clustering [1]_.
+    """Apply the Model-based Overlapping Clustering (MOC) to discover 
+    resource groups [1]_.
 
     Parameters
     ----------
@@ -260,7 +256,7 @@ def _moc(profiles, n_groups, init='random', n_init=100):
     Returns
     -------
     list of frozensets
-        Discovered organizational groups.
+        Discovered resource groups.
 
     See Also
     --------
@@ -276,8 +272,7 @@ def _moc(profiles, n_groups, init='random', n_init=100):
      Models with Overlaps. In International Conference on Business
      Process Management (pp. 339-355). Springer, Cham.
     """
-    print('Applying overlapping organizational model mining using ' + 
-        'clustering-based MOC:')
+    print('Applying overlapping clustering -based MOC:')
     # step 0. Perform specific initialization method (if given)
     if init in ['mja', 'ahc', 'kmeans', 'plain']:
         warm_start = True
@@ -335,7 +330,6 @@ def _moc(profiles, n_groups, init='random', n_init=100):
             print(mat_membership)
             raise RuntimeError('MOC failed to produce valid results.')
 
-    #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]
 
 
@@ -347,8 +341,8 @@ def moc(profiles, n_groups, init='random', n_init=100,
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    n_groups : int
-        Expected number of resource groups.
+    n_groups : list of ints
+        Expected number(s) of resource groups to be determined.
     init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional
         Options for deciding the strategy for initialization. Could be 
         one of the following:
@@ -370,9 +364,9 @@ def moc(profiles, n_groups, init='random', n_init=100,
         before training the clustering model. Defaults to 100.
     search_only: bool, optional
         A boolean flag indicating whether to search for the number of
-        groups only or to perform cluster analysis based on the search
+        groups only or to perform group discovery based on the search
         result. 
-        Defaults to False, i.e., to perform cluster analysis after 
+        Defaults to False, i.e., to perform group discovery after 
         searching.
 
     Returns
@@ -381,7 +375,7 @@ def moc(profiles, n_groups, init='random', n_init=100,
         The suggested selection of number of groups (if ``search_only`` 
         is True).
     list of frozensets
-        Discovered organizational groups (if ``search_only`` is False).
+        Discovered resource groups (if ``search_only`` is False).
     """
     if len(n_groups) == 1:
         return _moc(profiles, n_groups[0], init, n_init)
@@ -417,7 +411,7 @@ def moc(profiles, n_groups, init='random', n_init=100,
 
 
 def _fcm(profiles, n_groups, threshold, init='random', n_init=100): 
-    """Apply the Fuzzy C-Means (FCM) [1]_ for overlaping clustering.
+    """Apply the Fuzzy C-Means (FCM) [1]_ to discover resource groups.
 
     Parameters
     ----------
@@ -451,7 +445,7 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
     Returns
     -------
     list of frozensets
-        Discovered organizational groups.
+        Discovered resource groups.
 
     See Also
     --------
@@ -465,8 +459,7 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
     .. [1] Tan, P. N., Steinbach, M., Karpatne, A., & Kumar, V. (2018).
     Introduction to Data Mining.
     """
-    print('Applying overlapping organizational model mining using ' +
-        'clustering-based FCM:')
+    print('Applying overlapping clustering -based FCM:')
     # step 0. Perform specific initialization method (if given)
     if init in ['mja', 'ahc', 'kmeans', 'plain']:
         warm_start = True
@@ -531,7 +524,6 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
         else: # invalid, have to choose the maximum one or missing the resource
             groups[argmax(belonging_factor)].add(profiles.index[i])
 
-    #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]
 
 
@@ -543,8 +535,8 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    n_groups : int
-        Expected number of resource groups.
+    n_groups : list of ints
+        Expected number(s) of resource groups to be determined.
     threshold : float
         A given threshold value in range [0, 1.0] for producing
         determined clustering from the fuzzy clustering results from FCM.
@@ -569,9 +561,9 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
         before training the clustering model. Defaults to 100.
     search_only: bool, optional
         A boolean flag indicating whether to search for the number of
-        groups only or to perform cluster analysis based on the search
+        groups only or to perform group discovery based on the search
         result. 
-        Defaults to False, i.e., to perform cluster analysis after 
+        Defaults to False, i.e., to perform group discovery after 
         searching.
 
     Returns
@@ -580,7 +572,7 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
         The suggested selection of number of groups (if ``search_only`` 
         is True).
     list of frozensets
-        Discovered organizational groups (if ``search_only`` is False).
+        Discovered resource groups (if ``search_only`` is False).
     """
     if len(n_groups) == 1:
         return _fcm(profiles, n_groups[0], threshold, init, n_init)

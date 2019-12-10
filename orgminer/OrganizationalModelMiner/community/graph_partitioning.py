@@ -1,43 +1,50 @@
 # -*- coding: utf-8 -*-
 
-'''
-This module contains the implementation of methods of mining disjoint organiza-
-tional models, based on the use of graph partitioning by egde removal. A graph
-(NetworkX graph, weighted) is expected to be used as input. Methods include:
-    1. Thresholding edges in a graph built by MJA (Song & van der Aalst)
-    2. Thresholding edges in a graph built by MJC (Song & van der Aalst)
-'''
+"""This module contains the implementation of graph/network -based 
+organizational mining methods, based on the use of graph partitioning 
+methods.
+"""
+from warnings import warn
 
-def _mja(
-        profiles, n_groups,
-        metric='euclidean'):
-    '''
-    This method implements the algorithm of discovering an organizational model
-    using edge thresholding in a network built by metrics based on joint
-    activities (MJA).
+def _mja(profiles, n_groups, metric='euclidean'):
+    """Apply Metrics based on Joint Activities to discover organizational 
+    groups [1]_.
 
-    Params:
-        profiles: DataFrame
-            With resource ids as indices and activity names as columns, this
-            DataFrame contains profiles of the specific resources.
-        n_groups: int
-            The number of groups to be discovered.
-        metric: str, optional
-            Choice of metrics for measuring the distance while calculating the
-            proximity. Refer to scipy.spatial.distance.pdist for more detailed
-            explanation.
-    Returns:
-        ogs: list of frozensets
-            A list of organizational groups.
-    '''
-    print('Applying MJA:')
+    Parameters
+    ----------
+    profiles : DataFrame
+        Constructed resource profiles.
+    n_groups : int
+        Expected number of resource groups.
+    metric : str, optional
+        Choice of metrics for measuring the distance while calculating 
+        distance.
+        Defaults to ``euclidean``, meaning that euclidean distance is 
+        used for measuring distance.
+
+    Returns
+    -------
+    list of frozensets
+        Discovered resource groups.
+
+    See Also
+    --------
+    OrganizationalModelMiner.SocialNetworkMiner.joint_activities
+
+    References
+    ----------
+    .. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005).
+    Discovering social networks from event logs. Computer Supported
+    Cooperative Work (CSCW), 14(6), 549-593.
+    """
+    print('Applying graph/network -based MJA:')
     from orgminer.SocialNetworkMiner.joint_activities import distance
     sn = distance(profiles, metric=metric, convert=True)
 
     from operator import itemgetter
     edges_sorted = sorted(sn.edges.data('weight'), key=itemgetter(2))
-    from networkx import (
-        restricted_view, connected_components, number_connected_components)
+    from networkx import restricted_view
+    from networkx import connected_components, number_connected_components
     # search the cut edge using bisection (i.e. binary search)
     lo = 0
     hi = len(edges_sorted)
@@ -56,41 +63,44 @@ def _mja(
         for comp in connected_components(sub_sn):
             ogs.append(frozenset(comp))
     else:
-        pass
-    #print('{} organizational groups discovered.'.format(len(ogs)))
+        raise RuntimeError('Could not find specified number of groups.')
     return ogs
 
-def mja(
-        profiles, n_groups,
-        metric='euclidean',
-        search_only=False):
-    '''
-    This method is just a wrapper function of the one above, which allows a
-    range of expected number of organizational groups to be specified rather
-    than an exact number.
 
-    Params:
-        profiles: DataFrame
-            With resource ids as indices and activity names as columns, this
-            DataFrame contains profiles of the specific resources.
-        n_groups: iterable
-            The (range of) number of groups to be discovered.
-        metric: str, optional
-            Choice of metrics for measuring the distance while calculating the
-            proximity. Refer to scipy.spatial.distance.pdist for more detailed
-            explanation.
-        search_only: boolean, optional
-            Determine whether to search for the number of groups only or to
-            perform cluster analysis based on the search result. The default is
-            to perform cluster analysis after searching.
-    Returns:
-        best_ogs: list of frozensets
-            A list of organizational groups.
-    '''
+def mja(profiles, n_groups, metric='euclidean', search_only=False):
+    """A wrapped method for ``_mja``.
+
+    Parameters
+    ----------
+    profiles : DataFrame
+        Constructed resource profiles.
+    n_groups : list of ints
+        Expected number(s) of resource groups to be determined.
+    metric : str, optional
+        Choice of metrics for measuring the distance while calculating 
+        distance.
+        Defaults to ``euclidean``, meaning that euclidean distance is 
+        used for measuring distance.
+    search_only: bool, optional
+        A boolean flag indicating whether to search for the number of
+        groups only or to perform group discovery based on the search
+        result. 
+        Defaults to False, i.e., to perform group discovery after 
+        searching.
+
+    Returns
+    -------
+    best_k : int
+        The suggested selection of number of groups (if ``search_only`` 
+        is True).
+    list of frozensets
+        Discovered resource groups (if ``search_only`` is False).
+    """
     if len(n_groups) == 1:
         return _mja(profiles, n_groups[0], metric)
     else:
-        from orgminer.OrganizationalModelMiner.utilities import cross_validation_score
+        from orgminer.OrganizationalModelMiner.utilities import \
+            cross_validation_score
         best_k = -1
         best_score = float('-inf')
         for k in n_groups:
@@ -113,46 +123,52 @@ def mja(
         else:
             return _mja(profiles, best_k, metric)
 
-def _mjc(
-        el, n_groups, method='threshold'):
-    '''
-    This method implements the algorithm of discovering an organizational model
-    using a network built by metrics based on joint cases (MJC).
 
-    Params:
-        el: DataFrame
-            The imported event log.
-        n_groups: int
-            The number of groups to be discovered.
-        method: str
-            The option designating the method to be used for finding
-            sub-networks, can be either of:
-                - 'threshold': using edge thresholding on edges to remove
-                  links. Default.
-                - 'centrality': disconnect nodes with high betweenness 
-                  centrality, i.e. shortest-path centrality.
-    Returns:
-        ogs: list of frozensets
-            A list of organizational groups.
-        sn: NetworkX (Di)Graph
-            A resource social network used for discovering groups.
-    '''
-    print('Applying MJC:')
+def _mjc(el, n_groups, method='threshold'):
+    """Apply Metrics based on Joint Cases to discover organizational 
+    groups [1]_.
+
+    Parameters
+    ----------
+    el : DataFrame
+        An event log.
+    n_groups : int
+        Expected number of resource groups.
+    method : {'threshold', 'centrality'}, optional
+        Options for the method to be used for finding graph components. 
+        Could be one of the following:
+
+            - 'threshold': using edge thresholding on edges to remove
+              links. Default.
+            - 'centrality': disconnect nodes with high betweenness 
+              centrality, i.e., shortest-path centrality.
+
+    Returns
+    -------
+    list of frozensets
+        Discovered resource groups.
+
+    See Also
+    --------
+    OrganizationalModelMiner.SocialNetworkMiner.joint_cases
+
+    References
+    ----------
+    .. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005).
+    Discovering social networks from event logs. Computer Supported
+    Cooperative Work (CSCW), 14(6), 549-593.
+    """
+    print('Applying graph/network -based MJC:')
     from orgminer.SocialNetworkMiner.joint_cases import working_together
+    # directed graph
     sn = working_together(el, normalize='resource')
 
     from networkx import restricted_view
-    if sn.is_directed:
-        from networkx import strongly_connected_components as cc
-        from networkx import number_strongly_connected_components as num_cc
-    else:
-        from networkx import connected_components as cc
-        from networkx import number_connected_components as num_cc
+    from networkx import strongly_connected_components as cc
+    from networkx import number_strongly_connected_components as num_cc
 
     if method == 'threshold':
         # Eliminate less-important edges and maintain the stronger ones
-
-        '''
         # Casting from DiGraph to Graph needs to be configured manually
         # otherwise NetworkX would approach this in an arbitrary fashion
         from itertools import combinations
@@ -173,8 +189,7 @@ def _mjc(
         sn = Graph()
         sn.add_edges_from(undirected_edge_list)
         del undirected_edge_list[:]
-        print('[Warning] DiGraph casted to Graph.')
-        '''
+        warn('DiGraph casted to Graph.')
 
         from operator import itemgetter
         edges_sorted = sorted(sn.edges.data('weight'), key=itemgetter(2))
@@ -193,7 +208,6 @@ def _mjc(
             sn, nodes=[], edges=[(u, v) for u, v, w in edges_sorted[:lo]])
     elif method == 'centrality':
         # Disconnect particular nodes
-        
         from networkx import betweenness_centrality
         # betweenness centrality can be calculated on directed graphs
         node_centrality = betweenness_centrality(sn, weight='weight')
@@ -226,7 +240,7 @@ def _mjc(
             sn, nodes=[], edges=edges_to_disconnect)
 
     else:
-        exit('[Error] Unrecognized option for methods')
+        raise ValueError('Unrecognized method option.')
 
     ogs = list()
     if num_cc(sub_sn) == n_groups:
@@ -234,28 +248,36 @@ def _mjc(
             ogs.append(frozenset(comp))
     else:
         pass
-    #print('{} organizational groups discovered.'.format(len(ogs)))
     return ogs, working_together(el, normalize='resource')
 
-# TODO: How to evaluate a result from applying MJC?
-def mjc(
-        el, n_groups):
-    '''
-    This method is just a wrapper function of the one above, which allows a
-    range of expected number of organizational groups to be specified rather
-    than an exact number.
 
-    Params:
-        el: DataFrame
-            The imported event log.
-        n_groups: iterable
-            The (range of) number of groups to be discovered.
-    Returns:
-        best_ogs: list of frozensets
-            A list of organizational groups.
-    '''
-    if type(n_groups) is int:
-        return _mjc(el, n_groups)
+def mjc(el, n_groups, search_only=False):
+    """A wrapped method for ``_mjc``.
+
+    Parameters
+    ----------
+    el : DataFrame
+        An event log.
+    n_groups : list of ints
+        Expected number(s) of resource groups to be determined.
+    search_only: bool, optional
+        A boolean flag indicating whether to search for the number of
+        groups only or to perform group discovery based on the search
+        result. 
+        Defaults to False, i.e., to perform group discovery after 
+        searching.
+
+    Returns
+    -------
+    best_k : int
+        The suggested selection of number of groups (if ``search_only`` 
+        is True).
+    list of frozensets
+        Discovered resource groups (if ``search_only`` is False).
+    """
+    if len(n_groups) == 1:
+        return _mjc(el, n_groups[0])
     else:
-        pass
+        # TODO: How to evaluate a result from applying MJC?
+        raise NotImplementedError
 

@@ -25,7 +25,7 @@ def working_together(el, normalize=None):
         An event log.
     normalize : {None, 'resource', 'total'}, optional
         Options for setting the normalization strategy on the edge
-        weight values. Could be one of the followings:
+        weight values. Could be one of the following:
 
             - None, no normalization will be used. Default.
             - 'resource', normalized by the amount of cases each 

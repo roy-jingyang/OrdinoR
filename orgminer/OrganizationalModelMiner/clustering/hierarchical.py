@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """This module contains the implementation of hierarchical organizational 
-mining methods, based on the use of clustering techniques. These methods
-are "profile-based", meaning that resource profiles should be used as
-input.
+mining methods, based on the use of clustering techniques.
 """
 def _ahc(profiles, n_groups, method='single', metric='euclidean'):
     """Apply the classic Agglomerative Hierarchical Clustering (AHC) 
-    [1]_ for hierarchical clustering.
+    [1]_ to discover resource groups.
 
     Parameters
     ----------
@@ -27,7 +25,7 @@ def _ahc(profiles, n_groups, method='single', metric='euclidean'):
     Returns
     -------
     list of frozensets
-        Discovered organizational groups.
+        Discovered resource groups.
     og_hcy : DataFrame
         The hierarchical structure (dendrogram) as a pandas DataFrame,
         with resource ids as indices, levels of the hierarchy as columns,
@@ -47,7 +45,7 @@ def _ahc(profiles, n_groups, method='single', metric='euclidean'):
     comprehensive support for organizational mining. Decision Support
     Systems, 46(1), 300-317.
     """
-    print('Applying hierarchical organizational mining using AHC:')
+    print('Applying hierarchical clustering -based AHC:')
     from scipy.cluster import hierarchy
     Z = hierarchy.linkage(profiles, method=method, metric=metric)
     # the hierachical tree as a matrix where each column corresponds to a
@@ -63,7 +61,6 @@ def _ahc(profiles, n_groups, method='single', metric='euclidean'):
     for i in range(len(og_hcy.index)):
         groups[og_hcy.iloc[i,-1]].add(og_hcy.index[i])
 
-    #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()], og_hcy
 
 
@@ -80,8 +77,8 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    n_groups : int
-        Expected number of resource groups.
+    n_groups : list of ints
+        Expected number(s) of resource groups to be determined.
     method : str, optional
         Choice of methods for merging clusters at each iteration.
         Defaults to 'single'.
@@ -103,7 +100,7 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
         The suggested selection of number of groups (if ``search_only`` 
         is True).
     best_ogs : list of frozensets
-        Discovered organizational groups (if ``search_only`` is False).
+        Discovered resource groups (if ``search_only`` is False).
     best_og_hcy : DataFrame
         The hierarchical structure (dendrogram) as a pandas DataFrame,
         with resource ids as indices, levels of the hierarchy as columns,
