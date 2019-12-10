@@ -270,7 +270,10 @@ class OrganizationalModel:
         list of 3-tuples
             Execution modes.
         """
-        return list(self._cap.values())
+        all_modes = list()
+        for modes in self._cap.values():
+            all_modes.extend(modes)
+        return all_modes
     
 
     def to_file_csv(self, f):
