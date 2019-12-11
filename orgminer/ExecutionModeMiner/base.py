@@ -254,6 +254,11 @@ class BaseMiner:
 
         Returns
         -------
+
+        Raises
+        ------
+        RuntimeError
+            If the built execution modes cannot be validated.
         """
         if (self.is_ctypes_verified and self.is_atypes_verified and
                 self.is_ttypes_verified):
@@ -277,7 +282,7 @@ class BaseMiner:
                 else 'INVALID'))
             print('T Types:\t{}'.format('VERIFIED' if self.is_ttypes_verified
                 else 'INVALID'))
-            raise ValueError('Failed to verify execution modes.')
+            raise RuntimeError('Unable to verify execution modes.')
 
 
     # TODO:
@@ -313,6 +318,11 @@ class BaseMiner:
         -------
         values : list of str
             The corresponding values.
+
+        Raises
+        ------
+        ValueError
+            If the given type name being queried is invalid.
         """
         if type_name.startswith('CT'):
             return list(k for k, v in self._ctypes.items()
@@ -326,5 +336,6 @@ class BaseMiner:
             return list(k for k, v in self._ttypes.items()
                 if v == type_name)
 
-        raise ValueError('Unrecognized type name.')
+        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+            'type_name', type_name))
     

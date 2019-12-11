@@ -25,6 +25,11 @@ def _mja(profiles, n_groups, metric='euclidean'):
     -------
     ogs : list of frozensets
         Discovered resource groups.
+    
+    Raises
+    ------
+    RuntimeError
+        If the specified number of groups could not be discovered.
 
     See Also
     --------
@@ -62,7 +67,7 @@ def _mja(profiles, n_groups, metric='euclidean'):
         for comp in connected_components(sub_sn):
             ogs.append(frozenset(comp))
     else:
-        raise RuntimeError('Could not find specified number of groups.')
+        raise RuntimeError('Unable to discover specified number of groups.')
     return ogs
 
 
@@ -93,6 +98,11 @@ def mja(profiles, n_groups, metric='euclidean', search_only=False):
         is True).
     list of frozensets
         Discovered resource groups (if ``search_only`` is False).
+    
+    Raises
+    ------
+    TypeError
+        If the parameter type for ``n_groups`` is unexpected.
     """
     if type(n_groups) is int:
         return _mja(profiles, n_groups, metric)
@@ -121,7 +131,8 @@ def mja(profiles, n_groups, metric='euclidean', search_only=False):
         else:
             return _mja(profiles, best_k, metric)
     else:
-        raise TypeError('Unexpected type for parameter {}.'.format('n_groups'))
+        raise TypeError('Invalid type for parameter ``{}``: {}'.format(
+            'n_groups', type(n_groups)))
 
 
 def _mjc(el, n_groups, method='threshold'):
@@ -148,6 +159,11 @@ def _mjc(el, n_groups, method='threshold'):
     -------
     ogs : list of frozensets
         Discovered resource groups.
+    
+    Raises
+    ------
+    ValueError
+        If the specified method for finding graph components is invalid.
 
     See Also
     --------
@@ -241,7 +257,8 @@ def _mjc(el, n_groups, method='threshold'):
             sn, nodes=[], edges=edges_to_disconnect)
 
     else:
-        raise ValueError('Unrecognized method option.')
+        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+            'method', method))
 
     ogs = list()
     if num_cc(sub_sn) == n_groups:
@@ -275,6 +292,11 @@ def mjc(el, n_groups, search_only=False):
         is True).
     list of frozensets
         Discovered resource groups (if ``search_only`` is False).
+
+    Raises
+    ------
+    TypeError
+        If the parameter type for ``n_groups`` is unexpected.
     """
     if type(n_groups) is int:
         return _mjc(el, n_groups[0])
@@ -282,5 +304,6 @@ def mjc(el, n_groups, search_only=False):
         # TODO: How to evaluate a result from applying MJC?
         raise NotImplementedError
     else:
-        raise TypeError('Unexpected type for parameter {}.'.format('n_groups'))
+        raise TypeError('Invalid type for parameter ``{}``: {}'.format(
+            'n_groups', type(n_groups)))
 

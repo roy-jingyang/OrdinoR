@@ -106,6 +106,11 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
         columns in the DataFrame, and the values should be in range of 0
         to 7.
 
+    Raises
+    ------
+    TypeError
+        If the parameter type for ``n_groups`` is unexpected.
+
     See Also
     --------
     _ahc
@@ -142,5 +147,6 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
         else:
             return _ahc(profiles, best_k, method, metric)
     else:
-        raise TypeError('Unexpected type for parameter {}.'.format('n_groups'))
+        raise TypeError('Invalid type for parameter ``{}``: {}'.format(
+            'n_groups', type(n_groups)))
 

@@ -81,7 +81,7 @@ def select_edges_by_weight(sn, weight='weight',
             if not test_condition(wt):
                 edges_to_be_removed.append((u, v))
     else:
-        raise ValueError('No filtering criterion is specified.')
+        raise RuntimeError('No filtering criterion specified.')
 
     psn.remove_edges_from(edges_to_be_removed)
     print('\t{}/{} edges ({:.2%}) have been removed.'.format(

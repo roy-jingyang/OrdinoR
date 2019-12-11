@@ -90,6 +90,11 @@ class OrganizationalModel:
 
         Returns
         -------
+
+        Raises
+        ------
+        TypeError
+            If the parameter type for ``exec_modes`` is unexpected.
         """
         if type(exec_modes) is list:
             # no refinement applied
@@ -123,7 +128,8 @@ class OrganizationalModel:
                         self._cap[self._rg_id].append(m)
                         self._rcap[m].add(self._rg_id)
         else:
-            raise TypeError('Invalid parameter types for execution modes.')
+            raise TypeError('Invalid type for parameter ``{}``: {}'.format(
+                'exec_modes', type(exec_modes)))
             
 
     @property

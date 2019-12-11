@@ -32,6 +32,15 @@ class ATonlyMiner(BaseMiner):
 class CTonlyMiner(BaseMiner):
     """Each value of a selected case-level attribute is taken as a case
     type.
+
+    Raises
+    ------
+    ValueError
+        If the specified case-level attribute does not qualify, i.e., 
+        events from the same case record more than one values for this 
+        attribute. Case id of the first problematic case will be 
+        reported.
+
     """
     
     def __init__(self, el, case_attr_name):
@@ -46,8 +55,8 @@ class CTonlyMiner(BaseMiner):
         for v, events in el.groupby(case_attr_name): # sorted by default
             for case_id in set(events['case_id']):
                 if case_id in self._ctypes:
-                    raise ValueError('Events from case "{}"'.format(case_id) +
-                        ' have more than 1 values for the selected attribute.')
+                    raise ValueError('Inappropriate selection for ' +
+                        '``case_attr_name``: check case id {}.'.format(case_id))
                 else:
                     self._ctypes[case_id] = 'CT.{}'.format(v)
 

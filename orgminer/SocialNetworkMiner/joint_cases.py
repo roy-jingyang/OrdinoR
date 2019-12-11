@@ -39,6 +39,11 @@ def working_together(el, normalize=None):
     -------
     sn : NetworkX Graph or DiGraph
         The discovered social network.
+    
+    Raises
+    ------
+    ValueError
+        If the specified option for normalization is invalid.
     """
     from collections import defaultdict
     mat = defaultdict(lambda: defaultdict(lambda: {'weight': 0.0}))
@@ -67,7 +72,8 @@ def working_together(el, normalize=None):
             for o in counts.keys():
                 counts[o]['weight'] /= total_num_cases
     else:
-        raise ValueError('Unrecognized normalization option.')
+        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+            'normalize', normalize))
 
     if is_directed_sn:
         from networkx import DiGraph

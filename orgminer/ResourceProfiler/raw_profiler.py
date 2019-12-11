@@ -27,6 +27,11 @@ def count_execution_frequency(rl, scale=None):
     -------
     DataFrame
         The constructed resource profiles.
+    
+    Raises
+    ------
+    ValueError
+        If the specified option for scaling is invalid.
     """
     from collections import defaultdict
     mat = defaultdict(lambda: defaultdict(lambda: 0))
@@ -46,5 +51,6 @@ def count_execution_frequency(rl, scale=None):
         from numpy import log 
         return df.apply(lambda x: log(x + 1))
     else:
-        raise ValueError('Unrecognized scaling option.')
+        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+            'scale', scale))
 

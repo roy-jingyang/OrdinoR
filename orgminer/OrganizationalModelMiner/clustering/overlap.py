@@ -42,6 +42,11 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
     list of frozensets
         Discovered resource groups.
     
+    Raises
+    ------
+    ValueError
+        If the specified option for initialization is invalid.
+    
     See Also
     --------
     sklearn.mixture.GaussianMixture
@@ -82,7 +87,8 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
     elif init == 'random':
         warm_start = False
     else:
-        raise ValueError('Unrecognized initialization option.')
+        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+            'init', init))
 
     # step 1. Train the model
     from sklearn.mixture import GaussianMixture
@@ -190,6 +196,11 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
         is True).
     list of frozensets
         Discovered resource groups (if ``search_only`` is False).
+
+    Raises
+    ------
+    TypeError
+        If the parameter type for ``n_groups`` is unexpected.
     """
     if type(n_groups) is int:
         return _gmm(profiles, n_groups, threshold, init, n_init)
@@ -224,7 +235,8 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
         else:
             return _gmm(profiles, best_k, threshold, init, n_init)
     else:
-        raise TypeError('Unexpected type for parameter {}.'.format('n_groups'))
+        raise TypeError('Invalid type for parameter ``{}``: {}'.format(
+            'n_groups', type(n_groups)))
 
 
 def _moc(profiles, n_groups, init='random', n_init=100):
@@ -262,6 +274,13 @@ def _moc(profiles, n_groups, init='random', n_init=100):
     -------
     list of frozensets
         Discovered resource groups.
+
+    Raises
+    ------
+    ValueError
+        If the specified option for initialization is invalid.
+    RuntimeError
+        If no valid result could be produced.
 
     See Also
     --------
@@ -310,7 +329,8 @@ def _moc(profiles, n_groups, init='random', n_init=100):
     elif init == 'random':
         warm_start = False
     else:
-        raise ValueError('Unrecognized initialization option.')
+        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+            'init', init))
 
     # step 1. Train the model
     from .classes import MOC
@@ -333,7 +353,7 @@ def _moc(profiles, n_groups, init='random', n_init=100):
                 groups[j].add(profiles.index[i])
         else: # invalid (unexpected exit)
             print(mat_membership)
-            raise RuntimeError('MOC failed to produce valid results.')
+            raise RuntimeError('No valid result could be produced.')
 
     return [frozenset(g) for g in groups.values()]
 
@@ -382,6 +402,11 @@ def moc(profiles, n_groups, init='random', n_init=100,
         is True).
     list of frozensets
         Discovered resource groups (if ``search_only`` is False).
+
+    Raises
+    ------
+    TypeError
+        If the parameter type for ``n_groups`` is unexpected.
     """
     if type(n_groups) is int:
         return _moc(profiles, n_groups, init, n_init)
@@ -415,7 +440,8 @@ def moc(profiles, n_groups, init='random', n_init=100,
         else:
             return _moc(profiles, best_k, init, n_init)
     else:
-        raise TypeError('Unexpected type for parameter {}.'.format('n_groups'))
+        raise TypeError('Invalid type for parameter ``{}``: {}'.format(
+            'n_groups', type(n_groups)))
 
 
 def _fcm(profiles, n_groups, threshold, init='random', n_init=100): 
@@ -456,6 +482,11 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
     list of frozensets
         Discovered resource groups.
 
+    Raises
+    ------
+    ValueError
+        If the specified option for initialization is invalid.
+
     See Also
     --------
     sklearn.mixture.GaussianMixture
@@ -494,7 +525,8 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
     elif init == 'random':
         warm_start = False
     else:
-        raise ValueError('Unrecognized initialization option.')
+        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+            'init', init))
 
     # step 1. Train the model
     from .classes import FCM
@@ -583,6 +615,11 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
         is True).
     list of frozensets
         Discovered resource groups (if ``search_only`` is False).
+
+    Raises
+    ------
+    TypeError
+        If the parameter type for ``n_groups`` is unexpected.
     """
     if type(n_groups) is int:
         return _fcm(profiles, n_groups[0], threshold, init, n_init)
@@ -613,5 +650,6 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
         else:
             return _fcm(profiles, best_k, threshold, init, n_init)
     else:
-        raise TypeError('Unexpected type for parameter {}.'.format('n_groups'))
+        raise TypeError('Invalid type for parameter ``{}``: {}'.format(
+            'n_groups', type(n_groups)))
 
