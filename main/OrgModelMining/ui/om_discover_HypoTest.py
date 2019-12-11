@@ -24,12 +24,16 @@ if __name__ == '__main__':
     print('\t104. "rc-measure friendly model" (BEST rc-measure)')
     print('\t105. "Swap-1 model" (from enumerating model)')
     print('\t106. "Pick-1 model" (from enumerating model)')
+    print('\t107. "Enumerating model (Res. Events) (BEST fitness, ' +
+        'BEST possible precision under a fixed set of exec. modes)')
+    print('\t108. "Pick-many model (from enumerating model, RE) ' +
+            '(Sacrificing the least fitness to get BEST possible' +
+            'precision under a fixed set of exec. modes)')
     print('Option: ', end='')
     mining_option = int(input())
 
     if mining_option in []:
-        print('Warning: These options are closed for now. Activate them when necessary.')
-        exit(1)
+        raise RuntimeError('Options unavailable.')
 
     elif mining_option == 101:
         # the "flower model"
@@ -82,9 +86,9 @@ if __name__ == '__main__':
         from orgminer.OrganizationalModelMiner.base import OrganizationalModel
         om = OrganizationalModel()
         for r, events in rl.groupby('resource'):
-            om.add_group(frozenset([r]), 
-                frozenset((e.case_type, e.activity_type, e.time_type)
-                    for e in events.itertuples()))
+            om.add_group({r}, list(events[
+                ['case_type', 'activity_type', 'time_type']].itertuples(
+                    index=False)))
 
     elif mining_option == 103:
         #from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner
@@ -214,19 +218,25 @@ if __name__ == '__main__':
         om.add_group(frozenset([e.resource]),
             frozenset({(e.case_type, e.activity_type, e.time_type)}))
 
+    elif mining_option == 107:
+        # the "enumerating model" but w.r.t. a fixed set of exec. modes
+        from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner
+        from orgminer.ExecutionModeMiner.direct_groupby import FullMiner
+        mode_miner = ATonlyMiner(el)
+
+        rl = mode_miner.derive_resource_log(el)
+
+        from orgminer.OrganizationalModelMiner.base import OrganizationalModel
+        om = OrganizationalModel()
+        for mode, events in rl.groupby([
+            'case_type', 'activity_type', 'time_type']):
+            om.add_group(set(events['resource']), [mode])
+
     else:
-        raise Exception('Failed to recognize input option!')
-        exit(1)
+        raise ValueError
 
     print('-' * 80)
     measure_values = list()
-    '''
-    from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
-    silhouette_score = mean(list(silhouette_score(ogs, profiles).values()))
-    print('Silhouette\t= {:.6f}'.format(silhouette_score))
-    print('-' * 80)
-    '''
-    print()
     
     from orgminer.Evaluation.l2m import conformance
     fitness_score = conformance.fitness(rl, om)
@@ -234,38 +244,10 @@ if __name__ == '__main__':
     measure_values.append(fitness_score)
     print()
 
-    rc_measure_score = conformance.rc_measure(rl, om)
-    print('rc-measure\t= {:.6f}'.format(rc_measure_score))
-    measure_values.append(rc_measure_score)
-    print()
-
     precision_score = conformance.precision(rl, om)
     print('Precision\t= {:.6f}'.format(precision_score))
     measure_values.append(precision_score)
     print()
-
-    # Overlapping Density & Overlapping Diversity (avg.)
-    resources = om.resources
-    n_ov_res = 0
-    n_ov_res_membership = 0
-    for r in resources:
-        n_res_membership = len(om.find_groups(r))
-        if n_res_membership == 1:
-            pass
-        else:
-            n_ov_res += 1
-            n_ov_res_membership += n_res_membership
-
-    ov_density = n_ov_res / len(resources)
-    avg_ov_diversity = (n_ov_res_membership / n_ov_res 
-            if n_ov_res > 0 else float('nan'))
-    print('Ov. density\t= {:.6f}'.format(ov_density))
-    print('Ov. diversity\t= {:.6f}'.format(avg_ov_diversity))
-    measure_values.append(ov_density)
-    measure_values.append(avg_ov_diversity)
-    print('-' * 80)
-    print(','.join(str(x) for x in measure_values))
-
 
     # save the mined organizational model to a file
     with open(fnout_org_model, 'w', encoding='utf-8') as fout:

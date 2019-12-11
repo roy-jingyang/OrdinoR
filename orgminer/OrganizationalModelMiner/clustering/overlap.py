@@ -152,8 +152,9 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    n_groups : list of ints
-        Expected number(s) of resource groups to be determined.
+    n_groups : int, or list of ints
+        Expected number of resource groups, or a list of candidate
+        numbers to be determined.
     threshold : float
         A given threshold value in range [0, 1.0] for producing
         determined clustering from the fuzzy clustering results from GMM.
@@ -190,9 +191,9 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
     list of frozensets
         Discovered resource groups (if ``search_only`` is False).
     """
-    if len(n_groups) == 1:
-        return _gmm(profiles, n_groups[0], threshold, init, n_init)
-    else:
+    if type(n_groups) is int:
+        return _gmm(profiles, n_groups, threshold, init, n_init)
+    elif type(n_groups) is list:
         best_k = -1
         best_score = float('-inf')
         from orgminer.OrganizationalModelMiner.utilities import \
@@ -222,6 +223,8 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
             return best_k
         else:
             return _gmm(profiles, best_k, threshold, init, n_init)
+    else:
+        raise TypeError('Unexpected type for parameter {}.'.format('n_groups'))
 
 
 def _moc(profiles, n_groups, init='random', n_init=100):
@@ -343,8 +346,9 @@ def moc(profiles, n_groups, init='random', n_init=100,
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    n_groups : list of ints
-        Expected number(s) of resource groups to be determined.
+    n_groups : int, or list of ints
+        Expected number of resource groups, or a list of candidate
+        numbers to be determined.
     init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
      ``'random'``
         Options for deciding the strategy for initialization. Could be 
@@ -379,9 +383,9 @@ def moc(profiles, n_groups, init='random', n_init=100,
     list of frozensets
         Discovered resource groups (if ``search_only`` is False).
     """
-    if len(n_groups) == 1:
-        return _moc(profiles, n_groups[0], init, n_init)
-    else:
+    if type(n_groups) is int:
+        return _moc(profiles, n_groups, init, n_init)
+    elif type(n_groups) is list:
         best_k = -1
         best_score = float('-inf')
         from orgminer.OrganizationalModelMiner.utilities import \
@@ -410,6 +414,8 @@ def moc(profiles, n_groups, init='random', n_init=100,
             return best_k
         else:
             return _moc(profiles, best_k, init, n_init)
+    else:
+        raise TypeError('Unexpected type for parameter {}.'.format('n_groups'))
 
 
 def _fcm(profiles, n_groups, threshold, init='random', n_init=100): 
@@ -538,8 +544,9 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    n_groups : list of ints
-        Expected number(s) of resource groups to be determined.
+    n_groups : int, or list of ints
+        Expected number of resource groups, or a list of candidate
+        numbers to be determined.
     threshold : float
         A given threshold value in range [0, 1.0] for producing
         determined clustering from the fuzzy clustering results from FCM.
@@ -577,9 +584,9 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
     list of frozensets
         Discovered resource groups (if ``search_only`` is False).
     """
-    if len(n_groups) == 1:
+    if type(n_groups) is int:
         return _fcm(profiles, n_groups[0], threshold, init, n_init)
-    else:
+    elif type(n_groups) is list:
         from orgminer.OrganizationalModelMiner.utilities import \
             cross_validation_score
         best_k = -1
@@ -605,4 +612,6 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
             return best_k
         else:
             return _fcm(profiles, best_k, threshold, init, n_init)
+    else:
+        raise TypeError('Unexpected type for parameter {}.'.format('n_groups'))
 

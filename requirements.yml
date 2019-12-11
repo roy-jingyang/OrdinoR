@@ -81,6 +81,7 @@ dependencies:
     - cython
     - greenlet
     - leidenalg
+    - louvain
     - python-igraph
     - pyzmq
     - deap

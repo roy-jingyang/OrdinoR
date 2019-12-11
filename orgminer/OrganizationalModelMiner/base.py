@@ -91,7 +91,7 @@ class OrganizationalModel:
         Returns
         -------
         """
-        if type(exec_modes) == list:
+        if type(exec_modes) is list:
             # no refinement applied
             self._rg_id += 1
             self._rg[self._rg_id] = ''
@@ -105,7 +105,7 @@ class OrganizationalModel:
             for m in exec_modes:
                 self._cap[self._rg_id].append(m)
                 self._rcap[m].add(self._rg_id)
-        elif type(exec_modes) == list:
+        elif type(exec_modes) is dict:
             # refinement applied
             # TODO: consider deprecating
             for subog, subm in exec_modes.items():

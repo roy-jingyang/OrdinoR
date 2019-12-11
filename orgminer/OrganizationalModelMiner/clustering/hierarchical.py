@@ -75,8 +75,9 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    n_groups : list of ints
-        Expected number(s) of resource groups to be determined.
+    n_groups : int, or list of ints
+        Expected number of resource groups, or a list of candidate
+        numbers to be determined.
     method : str, optional, default ``'single'``
         Choice of methods for merging clusters at each iteration.
     metric : str, optional, default ``'euclidean'``
@@ -109,9 +110,9 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
     --------
     _ahc
     """
-    if len(n_groups) == 1:
-        return _ahc(profiles, n_groups[0], method, metric)
-    else:
+    if type(n_groups) is int:
+        return _ahc(profiles, n_groups, method, metric)
+    elif type(n_groups) is list:
         best_k = -1
         best_score = float('-inf')
         from orgminer.OrganizationalModelMiner.utilities import \
@@ -140,4 +141,6 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
             return best_k
         else:
             return _ahc(profiles, best_k, method, metric)
+    else:
+        raise TypeError('Unexpected type for parameter {}.'.format('n_groups'))
 

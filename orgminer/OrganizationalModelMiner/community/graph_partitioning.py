@@ -2,7 +2,7 @@
 
 """This module contains the implementation of graph/network -based 
 organizational mining methods, based on the use of graph partitioning 
-methods.
+techniques.
 """
 from warnings import warn
 
@@ -23,7 +23,7 @@ def _mja(profiles, n_groups, metric='euclidean'):
 
     Returns
     -------
-    list of frozensets
+    ogs : list of frozensets
         Discovered resource groups.
 
     See Also
@@ -73,8 +73,9 @@ def mja(profiles, n_groups, metric='euclidean', search_only=False):
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    n_groups : list of ints
-        Expected number(s) of resource groups to be determined.
+    n_groups : int, or list of ints
+        Expected number of resource groups, or a list of candidate
+        numbers to be determined.
     metric : str, optional, default ``'euclidean'``
         Choice of metrics for measuring the distance while calculating 
         distance. Defaults to ``euclidean``, meaning that euclidean
@@ -93,9 +94,9 @@ def mja(profiles, n_groups, metric='euclidean', search_only=False):
     list of frozensets
         Discovered resource groups (if ``search_only`` is False).
     """
-    if len(n_groups) == 1:
-        return _mja(profiles, n_groups[0], metric)
-    else:
+    if type(n_groups) is int:
+        return _mja(profiles, n_groups, metric)
+    elif type(n_groups) is list:
         from orgminer.OrganizationalModelMiner.utilities import \
             cross_validation_score
         best_k = -1
@@ -119,6 +120,8 @@ def mja(profiles, n_groups, metric='euclidean', search_only=False):
             return best_k 
         else:
             return _mja(profiles, best_k, metric)
+    else:
+        raise TypeError('Unexpected type for parameter {}.'.format('n_groups'))
 
 
 def _mjc(el, n_groups, method='threshold'):
@@ -143,7 +146,7 @@ def _mjc(el, n_groups, method='threshold'):
 
     Returns
     -------
-    list of frozensets
+    ogs : list of frozensets
         Discovered resource groups.
 
     See Also
@@ -187,7 +190,7 @@ def _mjc(el, n_groups, method='threshold'):
         sn = Graph()
         sn.add_edges_from(undirected_edge_list)
         del undirected_edge_list[:]
-        warn('DiGraph casted to Graph.')
+        warn('DiGraph casted to Graph.', RuntimeWarning)
 
         from operator import itemgetter
         edges_sorted = sorted(sn.edges.data('weight'), key=itemgetter(2))
@@ -246,7 +249,7 @@ def _mjc(el, n_groups, method='threshold'):
             ogs.append(frozenset(comp))
     else:
         pass
-    return ogs, working_together(el, normalize='resource')
+    return ogs
 
 
 def mjc(el, n_groups, search_only=False):
@@ -256,8 +259,9 @@ def mjc(el, n_groups, search_only=False):
     ----------
     el : DataFrame
         An event log.
-    n_groups : list of ints
-        Expected number(s) of resource groups to be determined.
+    n_groups : int, or list of ints
+        Expected number of resource groups, or a list of candidate
+        numbers to be determined.
     search_only: bool, optional, default ``False``
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
@@ -272,9 +276,11 @@ def mjc(el, n_groups, search_only=False):
     list of frozensets
         Discovered resource groups (if ``search_only`` is False).
     """
-    if len(n_groups) == 1:
+    if type(n_groups) is int:
         return _mjc(el, n_groups[0])
-    else:
+    elif type(n_groups) is list:
         # TODO: How to evaluate a result from applying MJC?
         raise NotImplementedError
+    else:
+        raise TypeError('Unexpected type for parameter {}.'.format('n_groups'))
 

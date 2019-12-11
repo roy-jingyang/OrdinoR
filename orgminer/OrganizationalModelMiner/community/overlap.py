@@ -1,63 +1,75 @@
 # -*- coding: utf-8 -*-
 
-'''
-This module contains the implementation of methods of mining overlapping orga-
-nizational models, based on the use of community detection techniques. These
-methods are SNA-based, meaning that a social network should be used as input.
+"""This module contains the implementation of overlapping graph/network 
+-based organizational mining methods, based on the use of community 
+detection techniques.
 
-Methods include:
-    1. Clique Percolation Method (CFinder by Pallas et al.) 
-    2. Line Graph and Link Partitioning (Appice, based on Evans and Lambiotte)
-    3. Local Expansion and Optimization (OSLOM by Lancichinetti et al.)
-    4. Fuzzy Detection (MOSES by McDaid and Hurley)
-    5. Agent-based and Dynamical Algorithms
-        5.1 COPRA (by Gregory)
-        5.2 SLPA(w) (aka GANXiS by Xie et al.)
-'''
+References
+----------
+.. [1] Xie, J., Kelley, S., & Szymanski, B. K. (2013). Overlapping
+community detection in networks. ACM Computing Surveys, 45(4), 1–35.
+"""
+from warnings import warn
 
 def _relabel_nodes_integers(g):
-    '''
-    This method is a utility function that relabels the nodes in a network as
-    consequtive integers starting from 0, following the alphabetical order of
-    the original node labels.
+    """A helper function that relabels nodes in a graph/network using 
+    consecutive integer ids starting from 0. The relabeled ids are 
+    ordered following the original alphabetical order as the original 
+    node labels.
 
-    Params:
-        g: NetworkX (Di)Graph
-            A Network (Di)Graph object, the original network. 
+    Parameters
+    ----------
+    g : NetworkX Graph or DiGraph
+        The original network of which the nodes are to be relabeled.
 
-    Returns:
-        NetworkX (Di)Graph
-            A Network (Di)Graph object, the relabeled network. 
-        
-        inv_mapping: dict
-            The inverse label mapping used for later recovering the label of
-            nodes.
-    '''
+    Returns
+    -------
+    NetworkX Graph or DiGraph
+        A new network with nodes relabeled.
+    rev_mapping : dict
+        A mapping from the new node ids (integers) to the original node 
+        labels.
+
+    See Also
+    --------
+    networkx.relabel.relabel_nodes
+    """
     mapping = dict()
-    inv_mapping = dict()
+    rev_mapping = dict()
     for i, node in enumerate(sorted(g.nodes())):
         mapping[node] = i
-        inv_mapping[i] = node
+        rev_mapping[i] = node
     from networkx import relabel_nodes
-    return relabel_nodes(g, mapping), inv_mapping
+    return relabel_nodes(g, mapping), rev_mapping
+
 
 def _extended_modularity(g, cover):
-    '''
-    This method is a utility function that calculates the extended modularity
-    (proposed by Shen et al. (2009) "Detect overlapping and hierarchical
-    community structure in networks", Physica, with a network and the
-    discovered cover (i.e. communities) given.
+    """A helper function that calculates the extended modularity [1]_ 
+    given a graph/network and a cover (i.e., a set of communities).
 
-    Params:
-        g: NetworkX (Di)Graph
-            A Network (Di)Graph object, the original network. 
-        cover: list of sets
-            The discovered communities of nodes.
+    Parameters
+    ----------
+    g : NetworkX Graph
+        A graph/network.
+    cover : list of sets
+        A cover (a set of communities of nodes).
+    
+    Returns
+    -------
+    float
+        The result extended modularity value.
 
-    Returns:
-        float
-            The calculated extended modularity by definition.
-    '''
+    Notes
+    -----
+    The data attribute name of edge weight defaults to ``'weight'``, as
+    in NetworkX.
+
+    References
+    ----------
+    .. [1] Shen, H., Cheng, X., Cai, K., & Hu, M. B. (2009). Detect
+    overlapping and hierarchical community structure in networks. Physica
+    A: Statistical Mechanics and its Applications, 388(8), 1706-1712.
+    """
     from collections import defaultdict
     node_membership = defaultdict(lambda: set())
     # identify membership
@@ -65,8 +77,8 @@ def _extended_modularity(g, cover):
         for node in community:
             node_membership[node].add(i)
 
-    # calculate extended modularity by iterating over every pair of distint
-    # nodes within a community
+    # calculate extended modularity by iterating over every pair of
+    # distint nodes within a community
     eq = 0.0
     m = sum([wt for (v, w, wt) in g.edges.data('weight')])
     from itertools import combinations
@@ -77,49 +89,59 @@ def _extended_modularity(g, cover):
             Avw = g.edges[v, w]['weight'] if g.has_edge(v, w) else 0
             kv = g.degree(v, 'weight')
             kw = g.degree(w, 'weight')
-
             eq += (1.0 / (Ov * Ow) * (Avw - kv * kw / (2 * m)))
     return eq
 
-# 1. Clique Percolation Method (CFinder by Pallas et al.) 
-def clique_percolation(
-        profiles,
-        metric='euclidean'):
-    '''
-    This method implements the algorithm for discovering overlapping
-    organizational models using a community detection technique named clique
-    percolation method.
-    
-    The implementation is done using the external software CFinder. The number
-    of communities to be discovered is determined automatically.
 
-    Params:
-        profiles: DataFrame
-            With resource ids as indices and activity names as columns, this
-            DataFrame contains profiles of the specific resources.
-        metric: str, optional
-            Choice of metrics for measuring the distance while calculating the
-            linkage. Refer to scipy.spatial.distance.pdist for more detailed
-            explanation.
-    Returns:
-        list of frozensets
-            A list of organizational groups.
-    '''
-    print('Applying overlapping organizational model mining using '
-          'community detection (CFinder from Clique Percolation methods):')
+def clique_percolation(profiles, metric='euclidean'):
+    """Apply a clique percolation technique [1]_ for detecting 
+    communities and thus to discover organizational groups.
+
+    Parameters
+    ----------
+    profiles : DataFrame
+        Constructed resource profiles.
+    metric : str, optional, default ``'euclidean'``
+        Choice of metrics for measuring the distance while calculating 
+        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance is used for measuring distance.
+
+    Returns
+    -------
+    ogs : list of frozensets
+        Discovered resource groups.
+    
+    Notes
+    -----
+    Using this function relies on an external tool, CFinder [1]_. This 
+    function provides merely the interface between OrgMiner and the 
+    external tool.
+    
+    See Also
+    --------
+    OrganizationalModelMiner.community.graph_partitioning.mja
+
+    References
+    ----------
+    .. [1] Palla, G., Derenyi, I., Farkas, I., & Vicsek, T. (2005).
+    Uncovering the overlapping community structure of complex networks in
+    nature and society. Nature, 435(7043), 814–818.
+    """
+    print('Applying graph/network -based Clique Percolation Method ' + 
+        '(overlapping community detection using CFinder):')
     # build network from profiles
     from orgminer.SocialNetworkMiner.joint_activities import distance
     sn = distance(profiles, metric=metric, convert=True)
 
     # step 0. Relabel nodes
-    sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
+    sn, rev_node_relabel_mapping = _relabel_nodes_integers(sn)
 
     # step 1. Distinguish the isolated nodes
     from networkx import isolates
     original_isolates = list(isolates(sn))
     if len(original_isolates) > 0:
-        print('[Warning] There exist {} ISOLATED NODES in the network.'.format(
-            len(original_isolates)))
+        warn('There exist {} isolated nodes in the network.'.format(
+            len(original_isolates)), RuntimeWarning)
 
     # step 2. Export network as edgelist
     from networkx import write_weighted_edgelist
@@ -166,42 +188,51 @@ def clique_percolation(
         best_fn, fn_cnt))
     print('{} organizational groups discovered.'.format(len(solution)))
     # restore labels
-    og = list()
+    ogs = list()
     for cover in solution.values():
-        og.append(frozenset({inv_node_relabel_mapping[x] for x in cover}))
+        ogs.append(frozenset({rev_node_relabel_mapping[x] for x in cover}))
+    return ogs
 
-    return og
 
-# 2. Line Graph and Link Partitioning (Appice, based on Evans and Lambiotte)
-def link_partitioning(
-        profiles, n_groups,
-        metric='euclidean'):
-    '''
-    This method implements the three-phased algorithm for discovering over-
-    lapping organizational models proposed by A.Appice, which involves trans-
-    forming from an original social networks to a linear network, and the app-
-    lication of the Louvain community detection algorithm.
+def link_partitioning(profiles, n_groups, metric='euclidean'):
+    """Apply a link partitioning technique [1]_ for detecting communities 
+    and thus to discover organizational groups [2]_.
 
-    The implementation is done using NetworkX built-in methods and the
-    python-louvain module.
+    Parameters
+    ----------
+    profiles : DataFrame
+        Constructed resource profiles.
+    n_groups : int
+        Expected number of resource groups.
+    metric : str, optional, default ``'euclidean'``
+        Choice of metrics for measuring the distance while calculating 
+        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance is used for measuring distance.
 
-    Params:
-        profiles: DataFrame
-            With resource ids as indices and activity names as columns, this
-            DataFrame contains profiles of the specific resources.
-        n_groups: int
-            The number of groups to be discovered.
-        metric: str, optional
-            Choice of metrics for measuring the distance while calculating the
-            linkage. Refer to scipy.spatial.distance.pdist for more detailed
-            explanation.
-    Returns:
-        list of frozensets
-            A list of organizational groups.
-    '''
+    Returns
+    -------
+    list of frozensets
+        Discovered resource groups.
 
-    print('Applying overlapping organizational model mining using '
-          'community detection (Appice\'s method from Link partitioning):')
+    Notes
+    -----
+    This function is an implementation of the method proposed in [2]_.
+
+    See Also
+    --------
+    OrganizationalModelMiner.community.graph_partitioning.mja
+
+    References
+    ----------
+    .. [1] Evans, T. S., & Lambiotte, R. (2010). Line graphs of weighted
+    networks for overlapping communities. The European Physical Journal
+    B, 77(2), 265–272.
+    .. [2] Appice, A. (2017). Towards mining the organizational structure
+    of a dynamic event scenario. Journal of Intelligent Information
+    Systems, 1–29.
+    """
+    print('Applying graph/network -based link partitioning method ' + 
+        '(overlapping community detection):')
     # build network from profiles
     from orgminer.SocialNetworkMiner.joint_activities import distance
     sn = distance(profiles, metric=metric, convert=True)
@@ -215,14 +246,13 @@ def link_partitioning(
     from networkx import isolates
     original_isolates = list(isolates(sn))
     if len(original_isolates) > 0:
-        print('[Warning] There exist {} ISOLATED NODES in the original network.'
-                .format(len(original_isolates)), end=' ')
-        print('This indicates that when using any external tools to discover '
-              'communities from the linear network, you should specify the '
-              'target number of communities as:\n\tN\' = N - {},'.format(
-                  len(original_isolates)), end=' ')
-        print('where N is the actual target number to be obtained in the '
-              'final result.')
+        warn('There exist {} isolated nodes in the network.'.format(
+            len(original_isolates)), RuntimeWarning)
+        print('When using an external tool to discover '
+            'communities from the linear network, you should specify the'
+            ' target number of communities as:\n\tN\' = N - {},'.format(
+                len(original_isolates)), end=' ')
+        print('where N is the actual target number to be obtained.')
 
     tmp_file_path = '.linear_graph.tmp'
     edges = sorted(list(sn.edges.data('weight')))
@@ -252,9 +282,11 @@ def link_partitioning(
 
             if joint is not None:
                 # i -> j
-                w_ij = ei[2] / (sn.degree(nbunch=joint, weight='weight') - ej[2])
+                w_ij = (ei[2] 
+                    / (sn.degree(nbunch=joint, weight='weight') - ej[2]))
                 # i <- j
-                w_ji = ej[2] / (sn.degree(nbunch=joint, weight='weight') - ei[2])
+                w_ji = (ej[2] 
+                    / (sn.degree(nbunch=joint, weight='weight') - ei[2]))
 
                 # precision set to 1e-9
                 f_pajek_net.write('{} {} {:.9f}\n'.format(i + 1, j + 1, w_ij))
@@ -301,49 +333,58 @@ def link_partitioning(
             groups[i].add(ln_v['id'].split('><')[1])
     for i, iso_node in enumerate(original_isolates):
         groups['ISOLATE #{}'.format(i)].add(iso_node)
-
-    #print('{} organizational groups discovered.'.format(len(groups.values())))
     return [frozenset(g) for g in groups.values()]
 
-# 3. Local Expansion and Optimization (OSLOM by Lancichinetti et al.)
-def local_expansion(
-        profiles,
-        metric='euclidean'):
-    '''
-    This method implements the algorithm for discovering overlapping
-    organizational models using community detection technique named OSLOM,
-    which is a local expansion and optimization method.
 
-    This implementation is done using the external software OSLOM. The number
-    of communities to be discovered is determined automatically.
+def local_expansion(profiles, metric='euclidean'):
+    """Apply a local expansion technique [1]_ for detecting communities 
+    and thus to discover organizational groups.
 
-    Params:
-        profiles: DataFrame
-            With resource ids as indices and activity names as columns, this
-            DataFrame contains profiles of the specific resources.
-        metric: str, optional
-            Choice of metrics for measuring the distance while calculating the
-            linkage. Refer to scipy.spatial.distance.pdist for more detailed
-            explanation.
-    Returns:
-        list of frozensets
-            A list of organizational groups.
-    '''
-    print('Applying overlapping organizational model mining using '
-          'community detection (OSLOM from Local expansion methods):')
+    Parameters
+    ----------
+    profiles : DataFrame
+        Constructed resource profiles.
+    metric : str, optional, default ``'euclidean'``
+        Choice of metrics for measuring the distance while calculating 
+        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance is used for measuring distance.
+
+    Returns
+    -------
+    list of frozensets
+        Discovered resource groups.
+    
+    Notes
+    -----
+    Using this function relies on an external tool, OSLOM [1]_. This 
+    function provides merely the interface between OrgMiner and the 
+    external tool.
+
+    See Also
+    --------
+    OrganizationalModelMiner.community.graph_partitioning.mja
+
+    References
+    ----------
+    .. [1] Lancichinetti, A., Radicchi, F., Ramasco, J. J., & Fortunato,
+    S. (2011). Finding statistically significant communities in networks.
+    PloS one, 6(4), e18961.
+    """
+    print('Applying graph/network -based local expansion method ' + 
+        '(overlapping community detection using OSLOM):')
     # build network from profiles
     from orgminer.SocialNetworkMiner.joint_activities import distance
     sn = distance(profiles, metric=metric, convert=True)
 
     # step 0. Relabel nodes
-    sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
+    sn, rev_node_relabel_mapping = _relabel_nodes_integers(sn)
 
     # step 1. Distinguish the isolated nodes
     from networkx import isolates
     original_isolates = list(isolates(sn))
     if len(original_isolates) > 0:
-        print('[Warning] There exist {} ISOLATED NODES in the network.'.format(
-            len(original_isolates)))
+        warn('There exist {} isolated nodes in the network.'.format(
+            len(original_isolates)), RuntimeWarning)
 
     # step 2. Export network as edgelist
     from networkx import write_weighted_edgelist
@@ -366,53 +407,64 @@ def local_expansion(
                 cnt += 1
                 for label in line.split():
                     # restore labels 
-                    groups[cnt].add(inv_node_relabel_mapping[int(label)])
+                    groups[cnt].add(rev_node_relabel_mapping[int(label)])
     print('Detected communities imported from "{}":'.format(fn_communities))
 
     for i, iso_node in enumerate(original_isolates):
-        groups['ISOLATE #{}'.format(i)].add(inv_node_relabel_mapping[iso_node])
-
+        groups['ISOLATE #{}'.format(i)].add(rev_node_relabel_mapping[iso_node])
     return [frozenset(g) for g in groups.values()]
 
-# 5.1 Agent-based (COPRA by Gregory)
-def agent_copra(
-        profiles,
-        metric='euclidean'):
-    '''
-    This method implements the algorithm for discovering overlapping
-    organizational models using community detection technique named COPRA,
-    which is a agent-based dynamical method.
 
-    This implementation is done using the external software COPRA. The number
-    of communities to be discovered is determined automatically.
+def agent_copra(profiles, metric='euclidean'):
+    """Apply an agent-based technique [1]_ for detecting communities 
+    and thus to discover organizational groups.
 
-    Params:
-        profiles: DataFrame
-            With resource ids as indices and activity names as columns, this
-            DataFrame contains profiles of the specific resources.
-        metric: str, optional
-            Choice of metrics for measuring the distance while calculating the
-            linkage. Refer to scipy.spatial.distance.pdist for more detailed
-            explanation.
-    Returns:
-        list of frozensets
-            A list of organizational groups.
-    '''
-    print('Applying overlapping organizational model mining using '
-          'community detection (COPRA from Agent-based methods):')
+    Parameters
+    ----------
+    profiles : DataFrame
+        Constructed resource profiles.
+    metric : str, optional, default ``'euclidean'``
+        Choice of metrics for measuring the distance while calculating 
+        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance is used for measuring distance.
+
+    Returns
+    -------
+    list of frozensets
+        Discovered resource groups.
+    
+    Notes
+    -----
+    Using this function relies on an external tool, COPRA [1]_. This 
+    function provides merely the interface between OrgMiner and the 
+    external tool.
+    
+    See Also
+    --------
+    OrganizationalModelMiner.community.graph_partitioning.mja
+    agent_slpa
+
+    References
+    ----------
+    .. [1] Gregory, S. (2010). Finding overlapping communities in
+    networks by label propagation. New Journal of Physics, 12(10),
+    103018.
+    """
+    print('Applying graph/network -based agent-based method ' + 
+        '(overlapping community detection using COPRA):')
     # build network from profiles
     from orgminer.SocialNetworkMiner.joint_activities import distance
     sn = distance(profiles, metric=metric, convert=True)
 
     # step 0. Relabel nodes
-    sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
+    sn, rev_node_relabel_mapping = _relabel_nodes_integers(sn)
 
     # step 1. Distinguish the isolated nodes
     from networkx import isolates
     original_isolates = list(isolates(sn))
     if len(original_isolates) > 0:
-        print('[Warning] There exist {} ISOLATED NODES in the network.'.format(
-            len(original_isolates)))
+        warn('There exist {} isolated nodes in the network.'.format(
+            len(original_isolates)), RuntimeWarning)
 
     # step 2. Export network as edgelist
     from networkx import write_weighted_edgelist
@@ -434,53 +486,66 @@ def agent_copra(
             cnt += 1
             for label in line.split():
                 # restore labels 
-                groups[cnt].add(inv_node_relabel_mapping[int(label)])
+                groups[cnt].add(rev_node_relabel_mapping[int(label)])
     print('Detected communities imported from "{}":'.format(fn_communities))
 
     for i, iso_node in enumerate(original_isolates):
-        groups['ISOLATE #{}'.format(i)].add(inv_node_relabel_mapping[iso_node])
-
+        groups['ISOLATE #{}'.format(i)].add(rev_node_relabel_mapping[iso_node])
     return [frozenset(g) for g in groups.values()]
 
-# 5.2 Agent-based (SLPA by Xie et al.)
-def agent_slpa(
-        profiles,
-        metric='euclidean'):
-    '''
-    This method implements the algorithm for discovering overlapping
-    organizational models using community detection technique named SLPA,
-    which is a agent-based dynamical method.
 
-    This implementation is done using the external software GANXiSw. The number
-    of communities to be discovered is determined automatically.
+def agent_slpa(profiles, metric='euclidean'):
+    """Apply an agent-based technique [1]_ for detecting communities 
+    and thus to discover organizational groups.
 
-    Params:
-        profiles: DataFrame
-            With resource ids as indices and activity names as columns, this
-            DataFrame contains profiles of the specific resources.
-        metric: str, optional
-            Choice of metrics for measuring the distance while calculating the
-            linkage. Refer to scipy.spatial.distance.pdist for more detailed
-            explanation.
-    Returns:
-        list of frozensets
-            A list of organizational groups.
-    '''
-    print('Applying overlapping organizational model mining using '
-          'community detection (SLPA from Agent-based methods):')
+    Parameters
+    ----------
+    profiles : DataFrame
+        Constructed resource profiles.
+    metric : str, optional, default ``'euclidean'``
+        Choice of metrics for measuring the distance while calculating 
+        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance is used for measuring distance.
+
+    Returns
+    -------
+    ogs : list of frozensets
+        Discovered resource groups.
+    
+    Notes
+    -----
+    Using this function relies on an external tool, GANXiSw [1]_. This 
+    function provides merely the interface between OrgMiner and the 
+    external tool.
+
+    See Also
+    --------
+    OrganizationalModelMiner.community.graph_partitioning.mja
+    agent_copra
+
+    References
+    ----------
+    .. [1] Xie, J., Szymanski, B. K., & Liu, X. (2011, December). Slpa:
+    Uncovering overlapping communities in social networks via a
+    speaker-listener interaction dynamic process. In 2011 ieee 11th
+    international conference on data mining workshops (pp. 344-349).
+    IEEE.
+    """
+    print('Applying graph/network -based agent-based method ' + 
+        '(overlapping community detection using SLPA):')
     # build network from profiles
     from orgminer.SocialNetworkMiner.joint_activities import distance
     sn = distance(profiles, metric=metric, convert=True)
 
     # step 0. Relabel nodes
-    sn, inv_node_relabel_mapping = _relabel_nodes_integers(sn)
+    sn, rev_node_relabel_mapping = _relabel_nodes_integers(sn)
 
     # step 1. Distinguish the isolated nodes
     from networkx import isolates
     original_isolates = list(isolates(sn))
     if len(original_isolates) > 0:
-        print('[Warning] There exist {} ISOLATED NODES in the network.'.format(
-            len(original_isolates)))
+        warn('There exist {} isolated nodes in the network.'.format(
+            len(original_isolates)), RuntimeWarning)
 
     # step 2. Export network as edgelist
     from networkx import write_weighted_edgelist
@@ -526,9 +591,8 @@ def agent_slpa(
         best_fn, fn_cnt))
     print('{} organizational groups discovered.'.format(len(solution)))
     # restore labels
-    og = list()
+    ogs = list()
     for cover in solution.values():
-        og.append(frozenset({inv_node_relabel_mapping[x] for x in cover}))
-
-    return og
+        og.append(frozenset({rev_node_relabel_mapping[x] for x in cover}))
+    return ogs
 
