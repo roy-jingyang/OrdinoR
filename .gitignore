@@ -12,3 +12,6 @@
 # Ignore input and output files
 input/
 output/
+
+# Ignore documentation files
+doc/
