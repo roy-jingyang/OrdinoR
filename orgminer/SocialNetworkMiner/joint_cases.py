@@ -5,14 +5,15 @@ networks from an event log, using metrics based on joint cases [1]_.
 
 See Also
 --------
-SocialNetworkMiner.causality
-SocialNetworkMiner.joint_activities
+orgminer.SocialNetworkMiner.causality
+orgminer.SocialNetworkMiner.joint_activities
 
 References
 ----------
-.. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005). 
-Discovering social networks from event logs. Computer Supported 
-Cooperative Work (CSCW), 14(6), 549-593.
+.. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005).
+   Discovering social networks from event logs. *Computer Supported
+   Cooperative Work (CSCW)*, 14(6), 549-593.
+   `<https://doi.org/10.1007/s10606-005-9005-9>`_
 """
 def working_together(el, normalize=None):
     """Discover a social network from an event log based on working 
@@ -23,17 +24,17 @@ def working_together(el, normalize=None):
     ----------
     el : DataFrame
         An event log.
-    normalize : {None, 'resource', 'total'}, optional, default ``None``
+    normalize : {None, 'resource', 'total'}, optional, default None
         Options for setting the normalization strategy on the edge
         weight values. Could be one of the following:
 
-            - None, no normalization will be used.
-            - 'resource', normalized by the amount of cases each 
+            - ``None``, no normalization will be used.
+            - ``'resource'``, normalized by the amount of cases each 
               resource was involved in. Note that this could lead to a 
               directed graph being derived since the normalization 
               is subject to each individual resource.
-            - 'total', normalized by the total amount of cases recorded 
-              in the event log.
+            - ``'total'``, normalized by the total amount of cases 
+              recorded in the event log.
 
     Returns
     -------
@@ -72,7 +73,7 @@ def working_together(el, normalize=None):
             for o in counts.keys():
                 counts[o]['weight'] /= total_num_cases
     else:
-        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+        raise ValueError('Invalid value for parameter `{}`: {}'.format(
             'normalize', normalize))
 
     if is_directed_sn:

@@ -152,7 +152,8 @@ class BaseMiner:
         are built, or you may consider all activity labels belonging to 
         the same dummy type marked by an empty python string, ``''``.
 
-        Parameters
+        Parameters:w
+
         ----------
         el : DataFrame
             An event log from which the execution modes are learned.
@@ -336,6 +337,6 @@ class BaseMiner:
             return list(k for k, v in self._ttypes.items()
                 if v == type_name)
 
-        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+        raise ValueError('Invalid value for parameter `{}`: {}'.format(
             'type_name', type_name))
     

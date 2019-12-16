@@ -2,12 +2,13 @@
 
 """This module contains the implementation of overlapping graph/network 
 -based organizational mining methods, based on the use of community 
-detection techniques.
+detection techniques [1]_.
 
 References
 ----------
 .. [1] Xie, J., Kelley, S., & Szymanski, B. K. (2013). Overlapping
-community detection in networks. ACM Computing Surveys, 45(4), 1–35.
+   community detection in networks. *ACM Computing Surveys*, 45(4), 1–35.
+   `<https://doi.org/10.1145/2501654.2501657>`_
 """
 from warnings import warn
 
@@ -67,8 +68,9 @@ def _extended_modularity(g, cover):
     References
     ----------
     .. [1] Shen, H., Cheng, X., Cai, K., & Hu, M. B. (2009). Detect
-    overlapping and hierarchical community structure in networks. Physica
-    A: Statistical Mechanics and its Applications, 388(8), 1706-1712.
+       overlapping and hierarchical community structure in networks.
+       *Physica A: Statistical Mechanics and its Applications*, 388(8),
+       1706-1712. `<https://doi.org/10.1016/j.physa.2008.12.021>`_
     """
     from collections import defaultdict
     node_membership = defaultdict(lambda: set())
@@ -101,9 +103,9 @@ def clique_percolation(profiles, metric='euclidean'):
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    metric : str, optional, default ``'euclidean'``
+    metric : str, optional, default 'euclidean'
         Choice of metrics for measuring the distance while calculating 
-        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance. Defaults to ``'euclidean'``, meaning that euclidean
         distance is used for measuring distance.
 
     Returns
@@ -119,13 +121,15 @@ def clique_percolation(profiles, metric='euclidean'):
     
     See Also
     --------
-    OrganizationalModelMiner.community.graph_partitioning.mja
+    orgminer.SocialNetworkMiner.joint_activities
+    scipy.spatial.distance
 
     References
     ----------
     .. [1] Palla, G., Derenyi, I., Farkas, I., & Vicsek, T. (2005).
-    Uncovering the overlapping community structure of complex networks in
-    nature and society. Nature, 435(7043), 814–818.
+       Uncovering the overlapping community structure of complex networks
+       in nature and society. *Nature*, 435(7043), 814–818.
+       `<https://doi.org/10.1038/nature03607>`_
     """
     print('Applying graph/network -based Clique Percolation Method ' + 
         '(overlapping community detection using CFinder):')
@@ -204,9 +208,9 @@ def link_partitioning(profiles, n_groups, metric='euclidean'):
         Constructed resource profiles.
     n_groups : int
         Expected number of resource groups.
-    metric : str, optional, default ``'euclidean'``
+    metric : str, optional, default 'euclidean'
         Choice of metrics for measuring the distance while calculating 
-        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance. Defaults to ``'euclidean'``, meaning that euclidean
         distance is used for measuring distance.
 
     Returns
@@ -220,16 +224,19 @@ def link_partitioning(profiles, n_groups, metric='euclidean'):
 
     See Also
     --------
-    OrganizationalModelMiner.community.graph_partitioning.mja
+    orgminer.SocialNetworkMiner.joint_activities
+    scipy.spatial.distance
 
     References
     ----------
     .. [1] Evans, T. S., & Lambiotte, R. (2010). Line graphs of weighted
-    networks for overlapping communities. The European Physical Journal
-    B, 77(2), 265–272.
-    .. [2] Appice, A. (2017). Towards mining the organizational structure
-    of a dynamic event scenario. Journal of Intelligent Information
-    Systems, 1–29.
+       networks for overlapping communities. *The European Physical
+       Journal B*, 77(2), 265–272.
+       `<https://doi.org/10.1140/epjb/e2010-00261-8>`_
+    .. [2] Appice, A. (2017). Towards mining the organizational
+       structure of a dynamic event scenario. *Journal of Intelligent
+       Information Systems*, 1–29.
+       `<https://doi.org/10.1007/s10844-017-0451-x>`_
     """
     print('Applying graph/network -based link partitioning method ' + 
         '(overlapping community detection):')
@@ -344,9 +351,9 @@ def local_expansion(profiles, metric='euclidean'):
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    metric : str, optional, default ``'euclidean'``
+    metric : str, optional, default 'euclidean'
         Choice of metrics for measuring the distance while calculating 
-        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance. Defaults to ``'euclidean'``, meaning that euclidean
         distance is used for measuring distance.
 
     Returns
@@ -362,13 +369,15 @@ def local_expansion(profiles, metric='euclidean'):
 
     See Also
     --------
-    OrganizationalModelMiner.community.graph_partitioning.mja
+    orgminer.SocialNetworkMiner.joint_activities
+    scipy.spatial.distance
 
     References
     ----------
     .. [1] Lancichinetti, A., Radicchi, F., Ramasco, J. J., & Fortunato,
-    S. (2011). Finding statistically significant communities in networks.
-    PloS one, 6(4), e18961.
+       S. (2011). Finding statistically significant communities in
+       networks. *PloS one*, 6(4), e18961.
+       `<https://doi.org/10.1371/journal.pone.0018961>`_
     """
     print('Applying graph/network -based local expansion method ' + 
         '(overlapping community detection using OSLOM):')
@@ -423,7 +432,7 @@ def agent_copra(profiles, metric='euclidean'):
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    metric : str, optional, default ``'euclidean'``
+    metric : str, optional, default 'euclidean'
         Choice of metrics for measuring the distance while calculating 
         distance. Defaults to ``euclidean``, meaning that euclidean
         distance is used for measuring distance.
@@ -441,14 +450,15 @@ def agent_copra(profiles, metric='euclidean'):
     
     See Also
     --------
-    OrganizationalModelMiner.community.graph_partitioning.mja
+    orgminer.SocialNetworkMiner.joint_activities
+    scipy.spatial.distance
     agent_slpa
 
     References
     ----------
     .. [1] Gregory, S. (2010). Finding overlapping communities in
-    networks by label propagation. New Journal of Physics, 12(10),
-    103018.
+       networks by label propagation. *New Journal of Physics*, 12(10),
+       103018. `<https://doi.org/10.1088/1367-2630/12/10/103018>`_
     """
     print('Applying graph/network -based agent-based method ' + 
         '(overlapping community detection using COPRA):')
@@ -502,9 +512,9 @@ def agent_slpa(profiles, metric='euclidean'):
     ----------
     profiles : DataFrame
         Constructed resource profiles.
-    metric : str, optional, default ``'euclidean'``
+    metric : str, optional, default 'euclidean'
         Choice of metrics for measuring the distance while calculating 
-        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance. Defaults to ``'euclidean'``, meaning that euclidean
         distance is used for measuring distance.
 
     Returns
@@ -520,16 +530,17 @@ def agent_slpa(profiles, metric='euclidean'):
 
     See Also
     --------
-    OrganizationalModelMiner.community.graph_partitioning.mja
+    orgminer.SocialNetworkMiner.joint_activities
+    scipy.spatial.distance
     agent_copra
 
     References
     ----------
-    .. [1] Xie, J., Szymanski, B. K., & Liu, X. (2011, December). Slpa:
-    Uncovering overlapping communities in social networks via a
-    speaker-listener interaction dynamic process. In 2011 ieee 11th
-    international conference on data mining workshops (pp. 344-349).
-    IEEE.
+    .. [1] Xie, J., Szymanski, B. K., & Liu, X. (2011). Slpa: Uncovering
+       overlapping communities in social networks via a speaker-listener
+       interaction dynamic process. In *Proceedings of the 2011 IEEE 11th
+       International Conference on data mining workshops*, pp. 344-349.
+       IEEE. `<https://doi.org/10.1109/ICDMW.2011.154>`_
     """
     print('Applying graph/network -based agent-based method ' + 
         '(overlapping community detection using SLPA):')
@@ -593,6 +604,6 @@ def agent_slpa(profiles, metric='euclidean'):
     # restore labels
     ogs = list()
     for cover in solution.values():
-        og.append(frozenset({rev_node_relabel_mapping[x] for x in cover}))
+        ogs.append(frozenset({rev_node_relabel_mapping[x] for x in cover}))
     return ogs
 

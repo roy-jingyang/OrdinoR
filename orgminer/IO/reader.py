@@ -19,6 +19,10 @@ the activity ids. It is expected that the resource ids and timestamps
 are presented as well (not mandatory though).
 Other event data attributes can be appended according to different 
 purposes of working projects and event data available.
+
+See Also
+--------
+pandas.DataFrame : The primary pandas data structure.
 """
 def _describe_event_log(el):
     """Output prompting information for a successfully imported event

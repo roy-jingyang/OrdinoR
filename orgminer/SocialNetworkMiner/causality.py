@@ -5,8 +5,8 @@ networks from an event log, using metrics based on causality [1]_.
 
 See Also
 --------
-SocialNetworkMiner.joint_activities
-SocialNetworkMiner.joint_cases
+orgminer.SocialNetworkMiner.joint_activities
+orgminer.SocialNetworkMiner.joint_cases
 
 Notes
 -----
@@ -15,9 +15,10 @@ process model related to the given event log.
 
 References
 ----------
-.. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005). 
-Discovering social networks from event logs. Computer Supported 
-Cooperative Work (CSCW), 14(6), 549-593.
+.. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005).
+   Discovering social networks from event logs. *Computer Supported
+   Cooperative Work (CSCW)*, 14(6), 549-593.
+   `<https://doi.org/10.1007/s10606-005-9005-9>`_
 """
 def handover(el,
     real_causality, direct_succession, multiple_transfers,
@@ -40,11 +41,11 @@ def handover(el,
     multiple_transfers : bool
         A boolean flag indicating whether to consider multiple transfers 
         within one case or not.
-    depth : int, optional, default ``1``
+    depth : int, optional, default 1
         The degree of causality to be considered. Only use when 
-        ``direct_succession`` is False, i.e., indirect succession 
+        `direct_succession` is False, i.e., indirect succession 
         considered.
-    beta : float, optional, default ``1``
+    beta : float, optional, default 1
         The causality fall factor.
 
     Returns

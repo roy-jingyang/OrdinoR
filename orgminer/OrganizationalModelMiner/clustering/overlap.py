@@ -16,24 +16,24 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
     threshold : float
         A given threshold value in range [0, 1.0] for producing
         determined clustering from the fuzzy clustering results from GMM.
-    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
-     ``'random'``
+    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, \
+        default 'random'
         Options for deciding the strategy for initialization. Could be 
         one of the following:
 
-            - 'random', use random initialization.
-            - 'mja', use the mining method Metric based on Joint 
+            - ``'random'``, use random initialization.
+            - ``'mja'``, use the mining method Metric based on Joint 
               Activities as initialization method.
-            - 'ahc', use the hierarchical method of Agglomerative
+            - ``'ahc'``, use the hierarchical method of Agglomerative
               Hierarchical Clustering as initialization method.
-            - 'kmeans', Use the classic clustering algorithm kMeans as
-              initialization method.
-            - 'plain', simply put resources into groups by in the order 
-              of their ids.
+            - ``'kmeans'``, use the classic clustering algorithm kMeans 
+              as initialization method.
+            - ``'plain'``, simply put resources into groups by in the 
+              order of their ids.
 
-        Note that if an option other than 'random' is specified, then the
-        initialization is performed once only.
-    n_init : int, optional, default ``100``
+        Note that if an option other than ``'random'`` is specified, then
+        the initialization is performed once only.
+    n_init : int, optional, default 100
         Number of times of random initialization (if specified) performs
         before training the clustering model.
 
@@ -50,16 +50,17 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
     See Also
     --------
     sklearn.mixture.GaussianMixture
-    OrganizationalModelMiner.community.graph_partitioning.mja
-    OrganizationalModelMiner.clustering.hierarchical.ahc
+    orgminer.OrganizationalModelMiner.community.graph_partitioning.mja
+    orgminer.OrganizationalModelMiner.clustering.hierarchical.ahc
     sklearn.cluster.KMeans
 
     References
     ----------
-     .. [1] Yang, J., Ouyang, C., Pan, M., Yu, Y., & ter Hofstede, A. H.
-     (2018, September). Finding the “Liberos”: Discover Organizational
-     Models with Overlaps. In International Conference on Business
-     Process Management (pp. 339-355). Springer, Cham.
+    .. [1] Yang, J., Ouyang, C., Pan, M., Yu, Y., & ter Hofstede, A.
+       (2018). Finding the Liberos: Discover Organizational Models with
+       Overlaps. In *Proceedings of the 16th International Conference on
+       Business Process Management*, pp. 339-355. Springer, Cham.
+       `<https://doi.org/10.1007/978-3-319-98648-7_20>`_
     """
     print('Applying overlapping clustering -based GMM:')
     # step 0. Perform specific initialization method (if given)
@@ -87,7 +88,7 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
     elif init == 'random':
         warm_start = False
     else:
-        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+        raise ValueError('Invalid value for parameter `{}`: {}'.format(
             'init', init))
 
     # step 1. Train the model
@@ -147,7 +148,8 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
 
 def gmm(profiles, n_groups, threshold, init='random', n_init=100,
     search_only=False): 
-    """A wrapped method for ``_gmm``.
+    """Apply the classic Gaussian Mixture Model (GMM) to discover 
+    resource groups [1]_.
 
     This method allows a range of expected number of organizational
     groups to be specified rather than an exact number. It may also act 
@@ -164,43 +166,59 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
     threshold : float
         A given threshold value in range [0, 1.0] for producing
         determined clustering from the fuzzy clustering results from GMM.
-    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
-     ``'random'``
-        The strategy for initialization. Defaults to 'random', meaning
-        that random initialization will be used. Other options include:
+    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, \
+        default 'random'
+        Options for deciding the strategy for initialization. Could be 
+        one of the following:
 
-            - 'mja', use the mining method of 'Metric based on Joint 
-              Activities' as initialization method.
-            - 'ahc', use the hierarchical method of 'Agglomerative
-              Hierarchical Clustering' as initialization method.
-            - 'kmeans', Use the classic clustering algorithm kMeans as
-              initialization method.
-            - 'plain', simply put resources into groups by in the order 
-              of their ids.
+            - ``'random'``, use random initialization.
+            - ``'mja'``, use the mining method Metric based on Joint 
+              Activities as initialization method.
+            - ``'ahc'``, use the hierarchical method of Agglomerative
+              Hierarchical Clustering as initialization method.
+            - ``'kmeans'``, use the classic clustering algorithm kMeans 
+              as initialization method.
+            - ``'plain'``, simply put resources into groups by in the 
+              order of their ids.
 
-        Note that if an option other than 'random' is specified, then the
-        initialization is performed once only.
-    n_init : int, optional, default ``100``
+        Note that if an option other than ``'random'`` is specified, then
+        the initialization is performed once only.
+    n_init : int, optional, default 100
         Number of times of random initialization (if specified) performs
         before training the clustering model.
-    search_only: bool, optional, default ``False``
+    search_only : bool, optional, default False
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. Defaults to False, i.e., to perform group discovery after
-        search searching.
+        result. Defaults to False, i.e., to perform group discovery
+        after search searching.
 
     Returns
     -------
     best_k : int
-        The suggested selection of number of groups (if ``search_only`` 
-        is True).
+        The suggested selection of number of groups (if `search_only` is
+        True).
     list of frozensets
-        Discovered resource groups (if ``search_only`` is False).
+        Discovered resource groups (if `search_only` is False).
 
     Raises
     ------
     TypeError
-        If the parameter type for ``n_groups`` is unexpected.
+        If the parameter type for `n_groups` is unexpected.
+
+    See Also
+    --------
+    sklearn.mixture.GaussianMixture
+    orgminer.OrganizationalModelMiner.community.graph_partitioning.mja
+    orgminer.OrganizationalModelMiner.clustering.hierarchical.ahc
+    sklearn.cluster.KMeans
+
+    References
+    ----------
+    .. [1] Yang, J., Ouyang, C., Pan, M., Yu, Y., & ter Hofstede, A.
+       (2018). Finding the Liberos: Discover Organizational Models with
+       Overlaps. In *Proceedings of the 16th International Conference on
+       Business Process Management*, pp. 339-355. Springer, Cham.
+       `<https://doi.org/10.1007/978-3-319-98648-7_20>`_
     """
     if type(n_groups) is int:
         return _gmm(profiles, n_groups, threshold, init, n_init)
@@ -249,24 +267,24 @@ def _moc(profiles, n_groups, init='random', n_init=100):
         Constructed resource profiles.
     n_groups : int
         Expected number of resource groups.
-    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
-     ``'random'``
+    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, \
+        default 'random'
         Options for deciding the strategy for initialization. Could be 
         one of the following:
 
-            - 'random', use random initialization.
-            - 'mja', use the mining method Metric based on Joint 
+            - ``'random'``, use random initialization.
+            - ``'mja'``, use the mining method Metric based on Joint 
               Activities as initialization method.
-            - 'ahc', use the hierarchical method of Agglomerative
+            - ``'ahc'``, use the hierarchical method of Agglomerative
               Hierarchical Clustering as initialization method.
-            - 'kmeans', Use the classic clustering algorithm kMeans as
-              initialization method.
-            - 'plain', simply put resources into groups by in the order 
-              of their ids.
+            - ``'kmeans'``, use the classic clustering algorithm kMeans 
+              as initialization method.
+            - ``'plain'``, simply put resources into groups by in the 
+              order of their ids.
 
-        Note that if an option other than 'random' is specified, then the
-        initialization is performed once only.
-    n_init : int, optional, default ``100``
+        Note that if an option other than ``'random'`` is specified, then
+        the initialization is performed once only.
+    n_init : int, optional, default 100
         Number of times of random initialization (if specified) performs
         before training the clustering model.
 
@@ -284,17 +302,17 @@ def _moc(profiles, n_groups, init='random', n_init=100):
 
     See Also
     --------
-    sklearn.mixture.GaussianMixture
-    OrganizationalModelMiner.community.graph_partitioning.mja
-    OrganizationalModelMiner.clustering.hierarchical.ahc
+    orgminer.OrganizationalModelMiner.community.graph_partitioning.mja
+    orgminer.OrganizationalModelMiner.clustering.hierarchical.ahc
     sklearn.cluster.KMeans
 
     References
     ----------
-     .. [1] Yang, J., Ouyang, C., Pan, M., Yu, Y., & ter Hofstede, A. H.
-     (2018, September). Finding the “Liberos”: Discover Organizational
-     Models with Overlaps. In International Conference on Business
-     Process Management (pp. 339-355). Springer, Cham.
+    .. [1] Yang, J., Ouyang, C., Pan, M., Yu, Y., & ter Hofstede, A.
+       (2018). Finding the Liberos: Discover Organizational Models with
+       Overlaps. In *Proceedings of the 16th International Conference on
+       Business Process Management*, pp. 339-355. Springer, Cham.
+       `<https://doi.org/10.1007/978-3-319-98648-7_20>`_
     """
     print('Applying overlapping clustering -based MOC:')
     # step 0. Perform specific initialization method (if given)
@@ -329,7 +347,7 @@ def _moc(profiles, n_groups, init='random', n_init=100):
     elif init == 'random':
         warm_start = False
     else:
-        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+        raise ValueError('Invalid value for parameter `{}`: {}'.format(
             'init', init))
 
     # step 1. Train the model
@@ -360,7 +378,13 @@ def _moc(profiles, n_groups, init='random', n_init=100):
 
 def moc(profiles, n_groups, init='random', n_init=100,
     search_only=False):
-    """A wrapped method for ``_moc``.
+    """Apply the Model-based Overlapping Clustering (MOC) to discover 
+    resource groups [1]_.
+
+    This method allows a range of expected number of organizational
+    groups to be specified rather than an exact number. It may also act 
+    as a helper function for determining a proper selection of number of 
+    groups.
 
     Parameters
     ----------
@@ -369,44 +393,58 @@ def moc(profiles, n_groups, init='random', n_init=100,
     n_groups : int, or list of ints
         Expected number of resource groups, or a list of candidate
         numbers to be determined.
-    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
-     ``'random'``
+    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, \
+        default 'random'
         Options for deciding the strategy for initialization. Could be 
         one of the following:
 
-            - 'random', use random initialization.
-            - 'mja', use the mining method Metric based on Joint 
+            - ``'random'``, use random initialization.
+            - ``'mja'``, use the mining method Metric based on Joint 
               Activities as initialization method.
-            - 'ahc', use the hierarchical method of Agglomerative
+            - ``'ahc'``, use the hierarchical method of Agglomerative
               Hierarchical Clustering as initialization method.
-            - 'kmeans', Use the classic clustering algorithm kMeans as
-              initialization method.
-            - 'plain', simply put resources into groups by in the order 
-              of their ids.
+            - ``'kmeans'``, use the classic clustering algorithm kMeans 
+              as initialization method.
+            - ``'plain'``, simply put resources into groups by in the 
+              order of their ids.
 
-        Note that if an option other than 'random' is specified, then the
-        initialization is performed once only.
-    n_init : int, optional, default ``100``
+        Note that if an option other than ``'random'`` is specified, then
+        the initialization is performed once only.
+    n_init : int, optional, default 100
         Number of times of random initialization (if specified) performs
         before training the clustering model.
-    search_only: bool, optional, default ``False``
+    search_only : bool, optional, default False
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. Defaults to False, i.e., to perform group discovery after
-        searching.
+        result. Defaults to False, i.e., to perform group discovery
+        after searching.
 
     Returns
     -------
     best_k : int
-        The suggested selection of number of groups (if ``search_only`` 
-        is True).
+        The suggested selection of number of groups (if `search_only` is
+        True).
     list of frozensets
-        Discovered resource groups (if ``search_only`` is False).
+        Discovered resource groups (if `search_only` is False).
 
     Raises
     ------
     TypeError
-        If the parameter type for ``n_groups`` is unexpected.
+        If the parameter type for `n_groups` is unexpected.
+
+    See Also
+    --------
+    orgminer.OrganizationalModelMiner.community.graph_partitioning.mja
+    orgminer.OrganizationalModelMiner.clustering.hierarchical.ahc
+    sklearn.cluster.KMeans
+
+    References
+    ----------
+    .. [1] Yang, J., Ouyang, C., Pan, M., Yu, Y., & ter Hofstede, A.
+       (2018). Finding the Liberos: Discover Organizational Models with
+       Overlaps. In *Proceedings of the 16th International Conference on
+       Business Process Management*, pp. 339-355. Springer, Cham.
+       `<https://doi.org/10.1007/978-3-319-98648-7_20>`_
     """
     if type(n_groups) is int:
         return _moc(profiles, n_groups, init, n_init)
@@ -440,7 +478,7 @@ def moc(profiles, n_groups, init='random', n_init=100,
         else:
             return _moc(profiles, best_k, init, n_init)
     else:
-        raise TypeError('Invalid type for parameter ``{}``: {}'.format(
+        raise TypeError('Invalid type for parameter `{}`: {}'.format(
             'n_groups', type(n_groups)))
 
 
@@ -456,24 +494,24 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
     threshold : float
         A given threshold value in range [0, 1.0] for producing
         determined clustering from the fuzzy clustering results from FCM.
-    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
-     ``'random'``
+    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, \
+        default 'random'
         Options for deciding the strategy for initialization. Could be 
         one of the following:
 
-            - 'random', use random initialization.
-            - 'mja', use the mining method Metric based on Joint 
+            - ``'random'``, use random initialization.
+            - ``'mja'``, use the mining method Metric based on Joint 
               Activities as initialization method.
-            - 'ahc', use the hierarchical method of Agglomerative
+            - ``'ahc'``, use the hierarchical method of Agglomerative
               Hierarchical Clustering as initialization method.
-            - 'kmeans', Use the classic clustering algorithm kMeans as
-              initialization method.
-            - 'plain', simply put resources into groups by in the order 
-              of their ids.
+            - ``'kmeans'``, use the classic clustering algorithm kMeans 
+              as initialization method.
+            - ``'plain'``, simply put resources into groups by in the 
+              order of their ids.
 
-        Note that if an option other than 'random' is specified, then the
-        initialization is performed once only.
-    n_init : int, optional, default ``100``
+        Note that if an option other than ``'random'`` is specified, then
+        the initialization is performed once only.
+    n_init : int, optional, default 100
         Number of times of random initialization (if specified) performs
         before training the clustering model.
 
@@ -489,15 +527,14 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
 
     See Also
     --------
-    sklearn.mixture.GaussianMixture
-    OrganizationalModelMiner.community.graph_partitioning.mja
-    OrganizationalModelMiner.clustering.hierarchical.ahc
+    orgminer.OrganizationalModelMiner.community.graph_partitioning.mja
+    orgminer.OrganizationalModelMiner.clustering.hierarchical.ahc
     sklearn.cluster.KMeans
 
     References
     ----------
     .. [1] Tan, P. N., Steinbach, M., Karpatne, A., & Kumar, V. (2018).
-    Introduction to Data Mining.
+       *Introduction to Data Mining*.
     """
     print('Applying overlapping clustering -based FCM:')
     # step 0. Perform specific initialization method (if given)
@@ -525,7 +562,7 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
     elif init == 'random':
         warm_start = False
     else:
-        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+        raise ValueError('Invalid value for parameter `{}`: {}'.format(
             'init', init))
 
     # step 1. Train the model
@@ -570,7 +607,12 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
 
 def fcm(profiles, n_groups, threshold, init='random', n_init=100,
     search_only=False): 
-    """A wrapped method for ``_fcm``.
+    """Apply the Fuzzy C-Means (FCM) [1]_ to discover resource groups.
+
+    This method allows a range of expected number of organizational
+    groups to be specified rather than an exact number. It may also act 
+    as a helper function for determining a proper selection of number of 
+    groups.
 
     Parameters
     ----------
@@ -582,44 +624,55 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
     threshold : float
         A given threshold value in range [0, 1.0] for producing
         determined clustering from the fuzzy clustering results from FCM.
-    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, default
-     ``'random'``
+    init : {'random', 'mja', 'ahc', 'kmeans', 'plain'}, optional, \
+        default 'random'
         Options for deciding the strategy for initialization. Could be 
         one of the following:
 
-            - 'random', use random initialization.
-            - 'mja', use the mining method Metric based on Joint 
+            - ``'random'``, use random initialization.
+            - ``'mja'``, use the mining method Metric based on Joint 
               Activities as initialization method.
-            - 'ahc', use the hierarchical method of Agglomerative
+            - ``'ahc'``, use the hierarchical method of Agglomerative
               Hierarchical Clustering as initialization method.
-            - 'kmeans', Use the classic clustering algorithm kMeans as
-              initialization method.
-            - 'plain', simply put resources into groups by in the order 
-              of their ids.
+            - ``'kmeans'``, use the classic clustering algorithm kMeans 
+              as initialization method.
+            - ``'plain'``, simply put resources into groups by in the 
+              order of their ids.
 
-        Note that if an option other than 'random' is specified, then the
-        initialization is performed once only.
-    n_init : int, optional, default ``100``
+        Note that if an option other than ``'random'`` is specified, then
+        the initialization is performed once only.
+    n_init : int, optional, default 100
         Number of times of random initialization (if specified) performs
         before training the clustering model.
-    search_only: bool, optional, default ``False``
+    search_only : bool, optional, default False
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. Defaults to False, i.e., to perform group discovery after 
-        searching.
+        result. Defaults to False, i.e., to perform group discovery
+        after searching.
 
     Returns
     -------
     best_k : int
-        The suggested selection of number of groups (if ``search_only`` 
-        is True).
+        The suggested selection of number of groups (if `search_only` is
+        True).
     list of frozensets
-        Discovered resource groups (if ``search_only`` is False).
+        Discovered resource groups (if `search_only` is False).
 
     Raises
     ------
     TypeError
-        If the parameter type for ``n_groups`` is unexpected.
+        If the parameter type for `n_groups` is unexpected.
+
+    See Also
+    --------
+    orgminer.OrganizationalModelMiner.community.graph_partitioning.mja
+    orgminer.OrganizationalModelMiner.clustering.hierarchical.ahc
+    sklearn.cluster.KMeans
+
+    References
+    ----------
+    .. [1] Tan, P. N., Steinbach, M., Karpatne, A., & Kumar, V. (2018).
+       *Introduction to Data Mining*.
     """
     if type(n_groups) is int:
         return _fcm(profiles, n_groups[0], threshold, init, n_init)
@@ -650,6 +703,6 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
         else:
             return _fcm(profiles, best_k, threshold, init, n_init)
     else:
-        raise TypeError('Invalid type for parameter ``{}``: {}'.format(
+        raise TypeError('Invalid type for parameter `{}`: {}'.format(
             'n_groups', type(n_groups)))
 

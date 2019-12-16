@@ -15,7 +15,7 @@ class TraceClusteringCTMiner(CTonlyMiner):
 
     See Also
     --------
-    direct_groupby.CTonlyMiner
+    orgminer.ExecutionModeMiner.direct_groupby.CTonlyMiner
     """
 
     def __init__(self, el, fn_partition):
@@ -44,8 +44,8 @@ class TraceClusteringFullMiner(TraceClusteringCTMiner, ATTTMiner):
 
     See Also
     --------
-    direct_groupby.FullMiner
-    TraceClusteringCTMiner
+    orgminer.ExecutionModeMiner.direct_groupby.FullMiner
+    orgminer.ExecutionModeMiner.informed_groupby.TraceClusteringCTMiner
     """
 
     def __init__(self, el, 

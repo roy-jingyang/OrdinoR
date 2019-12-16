@@ -21,11 +21,12 @@ def cross_validation_score(
         An organizational model miner.
     miner_params : dict
         Other keyword parameters for the specified miner.
-    proximity_metric : str, optional, default ``'euclidean'``
+    proximity_metric : str, optional, default 'euclidean'
         Metric for measuring the distance while calculating proximity. 
         This should remain consistent with that employed by the specific 
-        mining method. Defaults to ``euclidean``, meaning that euclidean distance is used for measuring proximity.
-    cv_fold : int, or float in range (0, 1.0), default ``0.2``
+        mining method. Defaults to ``'euclidean'``, meaning that
+        euclidean distance is used for measuring proximity.
+    cv_fold : int, or float in range (0, 1.0), default 0.2
         The number of folds to be used for cross validation. 
         If an integer is given, then it is used as the fold number; 
         if a float is given, then a corresponding percentage of data 
@@ -87,7 +88,7 @@ def cross_validation_score(
 
 
 @deprecated(reason='This method is neither being nor intended to be used.')
-def powerset_exclude_headtail(s, reverse=False, depth=None):
+def __powerset_exclude_headtail(s, reverse=False, depth=None):
     """Python recipe: this function returns a power set of a given set
     of elements, but excluding the empty set and the given set itself,
     as a generator.
@@ -96,14 +97,15 @@ def powerset_exclude_headtail(s, reverse=False, depth=None):
     ----------
     s : set or frozenset
         A given set of elements. 
-    reverse : bool, optional, default ``True``
+    reverse : bool, optional, default True
         A boolean flag determining whether the generated power set (as a 
         generator) delivers sets with lower cardinality first or higher 
-        ones. Defaults to True, i.e. the lower ones before the higher.
-    depth : int, optional, default ``None``
+        ones. Defaults to True, i.e. the lower ones before the 
+        higher.
+    depth : int, optional, default None
         The upper bound (or lower bound) of cardinality that filters the 
-        sets to be generated. Defaults to None, i.e. the whole power set
-        will be returned.
+        sets to be generated. Defaults to ``None``, i.e. the whole power
+        set will be returned.
 
     Returns
     -------
@@ -123,7 +125,7 @@ def powerset_exclude_headtail(s, reverse=False, depth=None):
 
 
 @deprecated(reason='This method is neither being nor intended to be used.')
-def find_best_subset_GA(universe, evaluate, seed,
+def __find_best_subset_GA(universe, evaluate, seed,
     max_iter, size_population, p_crossover, p_mutate):
     from random import randint, sample, random
     from deap import base, creator, tools

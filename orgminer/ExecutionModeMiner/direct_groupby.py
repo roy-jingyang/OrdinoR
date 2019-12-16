@@ -56,7 +56,7 @@ class CTonlyMiner(BaseMiner):
             for case_id in set(events['case_id']):
                 if case_id in self._ctypes:
                     raise ValueError('Inappropriate selection for ' +
-                        '``case_attr_name``: check case id {}.'.format(case_id))
+                        '`case_attr_name`: check case id {}.'.format(case_id))
                 else:
                     self._ctypes[case_id] = 'CT.{}'.format(v)
 

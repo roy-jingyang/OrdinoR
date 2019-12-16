@@ -39,10 +39,9 @@ def silhouette_score(clu, X, metric='euclidean'):
 
     Notes
     -----
-    This is merely a wrap-up of the function:
-        `sklearn.metrics.silhouette_samples
-        <https://scikit-learn.org/stable/modules/generated/
-        sklearn.metrics.silhouette_samples.html>`_.
+    This is merely a wrap-up of function
+    `sklearn.metrics.silhouette_samples
+    <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_samples.html>`_.
     """
     from sklearn.metrics import silhouette_samples
     resources = list(X.index)
@@ -77,13 +76,9 @@ def variance_explained_score(clu, X):
 
     Notes
     -----
-    This is merely a wrap-up of the function:
-        `sklearn.metrics.calinski_harabasz_score
-        <https://scikit-learn.org/stable/modules/generated/
-        sklearn.metrics.calinski_harabasz_score.html>`_.
-
-    Equivalent to:
-        ``_variance_between_cluster / _variance_within_cluster``
+    This is merely a wrap-up of function
+    `sklearn.metrics.calinski_harabasz_score
+    <https://scikit-learn.org/stable/modules/generated/sklearn.metrics.calinski_harabasz_score.html>`_.
     """
     from sklearn.metrics import calinski_harabasz_score 
     resources = list(X.index)
@@ -189,9 +184,9 @@ def modularity(clu, G, weight=None):
 
     References
     ----------
-    .. [1] "Graph Clustering Methods",
-        Equation (11.39), Sect. 11.3.3, Data Mining: Concepts and 
-        Techniques, J. Han, J. Pei, M. Kamber.
+    .. [1] "Graph Clustering Methods", Equation (11.39), Sect.
+       11.3.3 in book, J. Han, J. Pei, M. Kamber. (2011). *Data Mining:
+       Concepts and Techniques*.
     """
     from networkx import is_directed, restricted_view
     q = 0.0

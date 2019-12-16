@@ -29,7 +29,7 @@ def test_measure(rl, om):
 # NOTE: # (*, rg, q) / (*, rg, *)
 def group_relative_focus(group, mode, rl):
     """Measure the relative focus of a group with respect to an execution
-     mode.
+    mode.
 
     Parameters
     ----------
@@ -58,7 +58,7 @@ def group_relative_focus(group, mode, rl):
 # NOTE: # (*, rg, q) / (*, *, q)
 def group_relative_stake(group, mode, rl):
     """Measure the relative focus of a group with respect to an execution
-     mode.
+    mode.
 
     Parameters
     ----------

@@ -14,14 +14,14 @@ def count_execution_frequency(rl, scale=None):
     ----------
     rl : DataFrame
         A resource log.
-    scale : {None, 'normalize', log'}, optional, default ``None``
+    scale : {None, 'normalize', log'}, optional, default None
         Options for deciding how to scale the values of frequency
         counting. Could be one of the following:
             
-            - None, no scaling will be performed.
-            - 'normalize', scale the frequency values by the total
+            - ``None``, no scaling will be performed.
+            - ``'normalize'``, scale the frequency values by the total
               count of executions by each resource.
-            - 'log', scale the frequency values by logarithm.
+            - ``'log'``, scale the frequency values by logarithm.
 
     Returns
     -------
@@ -51,6 +51,6 @@ def count_execution_frequency(rl, scale=None):
         from numpy import log 
         return df.apply(lambda x: log(x + 1))
     else:
-        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+        raise ValueError('Invalid value for parameter `{}`: {}'.format(
             'scale', scale))
 

@@ -9,8 +9,8 @@ organizational model discovery from event logs.
 References
 ----------
 .. [1] Song, M., & van der Aalst, W. M. P. (2008). Towards comprehensive 
-support for organizational mining. Decision Support Systems, 46(1), 
-300-317.
+   support for organizational mining. *Decision Support Systems*, 46(1), 
+   300-317. `<https://doi.org/10.1016/j.dss.2008.07.002>`_
 """
 class OrganizationalModel:
     """This class defines an organizational model.
@@ -18,13 +18,13 @@ class OrganizationalModel:
     An organizational model includes the following data structures as
     fundamentals:
 
-        - Resource Group ID (``_rg_id``), resource group ids
-        - Resource Group (``_rg``), a mapping from resource group ids to
+        - Resource Group ID (`_rg_id`), resource group ids,
+        - Resource Group (`_rg`), a mapping from resource group ids to
           group descriptions,
-        - Membership (``_mem``), a mapping from resource group ids to
-          member resource ids
-        - Capability (``_cap``), a mapping from resource group ids to
-          capable execution modes
+        - Membership (`_mem`), a mapping from resource group ids to
+          member resource ids,
+        - Capability (`_cap`), a mapping from resource group ids to
+          capable execution modes.
 
     Attributes
     ----------
@@ -55,10 +55,10 @@ class OrganizationalModel:
         its id.
     find_all_execution_modes()
         Return all execution modes involved in the model.
-    to_file_csv(f):
+    to_file_csv(f)
         Export the organizational model to an external CSV file (with no 
         header line).
-    from_file_csv(f):
+    from_file_csv(f)
         Import an organizational model from an external CSV file.
 
     Notes
@@ -94,7 +94,7 @@ class OrganizationalModel:
         Raises
         ------
         TypeError
-            If the parameter type for ``exec_modes`` is unexpected.
+            If the parameter type for `exec_modes` is unexpected.
         """
         if type(exec_modes) is list:
             # no refinement applied
@@ -128,7 +128,7 @@ class OrganizationalModel:
                         self._cap[self._rg_id].append(m)
                         self._rcap[m].add(self._rg_id)
         else:
-            raise TypeError('Invalid type for parameter ``{}``: {}'.format(
+            raise TypeError('Invalid type for parameter `{}`: {}'.format(
                 'exec_modes', type(exec_modes)))
             
 
@@ -299,8 +299,7 @@ class OrganizationalModel:
 
         See Also
         --------
-        from_file_csv : Import an organizational model from an external 
-        CSV file.
+        OrganizationalModel.from_file_csv
         """
         from csv import writer
         writer = writer(f)
@@ -326,7 +325,7 @@ class OrganizationalModel:
         """Import an organizational model from an external CSV file.
 
         Data exchange format in the CSV file (by each line):
-        Resource Group id, [Resource x; ...], [CTx|ATx|TTx; ...]
+        Resource Group id, [Resource id x; ...], [CTx|ATx|TTx; ...]
 
         Parameters
         ----------
@@ -340,8 +339,7 @@ class OrganizationalModel:
 
         See Also
         --------
-        to_file_csv : Export the organizational model to an external CSV 
-        file (with no header line).
+        OrganizationalModel.to_file_csv
         """
         from csv import reader
         om_obj = cls()

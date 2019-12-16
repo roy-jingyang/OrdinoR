@@ -12,34 +12,32 @@ def _mja(profiles, n_groups, metric='euclidean'):
 
     Parameters
     ----------
-    profiles : DataFrame
-        Constructed resource profiles.
-    n_groups : int
-        Expected number of resource groups.
-    metric : str, optional, default ``'euclidean'``
-        Choice of metrics for measuring the distance while calculating 
-        distance. Defaults to ``euclidean``, meaning that euclidean
+    profiles : DataFrame Constructed resource profiles. n_groups : int
+        Expected number of resource groups. 
+    metric : str, optional, default 'euclidean' 
+        Choice of metrics for measuring the distance while calculating
+        distance. Defaults to ``'euclidean'``, meaning that euclidean
         distance is used for measuring distance.
 
     Returns
     -------
-    ogs : list of frozensets
-        Discovered resource groups.
-    
+    ogs : list of frozensets Discovered resource groups.
+
     Raises
     ------
-    RuntimeError
-        If the specified number of groups could not be discovered.
+    RuntimeError If the specified number of groups could not be
+        discovered.
 
     See Also
     --------
-    OrganizationalModelMiner.SocialNetworkMiner.joint_activities
+    orgminer.SocialNetworkMiner.joint_activities
 
     References
     ----------
     .. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005).
-    Discovering social networks from event logs. Computer Supported
-    Cooperative Work (CSCW), 14(6), 549-593.
+       Discovering social networks from event logs. *Computer Supported
+       Cooperative Work (CSCW)*, 14(6), 549-593.
+       `<https://doi.org/10.1007/s10606-005-9005-9>`_
     """
     print('Applying graph/network -based MJA:')
     from orgminer.SocialNetworkMiner.joint_activities import distance
@@ -72,7 +70,8 @@ def _mja(profiles, n_groups, metric='euclidean'):
 
 
 def mja(profiles, n_groups, metric='euclidean', search_only=False):
-    """A wrapped method for ``_mja``.
+    """Apply Metrics based on Joint Activities to discover organizational 
+    groups [1]_.
 
     Parameters
     ----------
@@ -81,28 +80,39 @@ def mja(profiles, n_groups, metric='euclidean', search_only=False):
     n_groups : int, or list of ints
         Expected number of resource groups, or a list of candidate
         numbers to be determined.
-    metric : str, optional, default ``'euclidean'``
+    metric : str, optional, default 'euclidean'
         Choice of metrics for measuring the distance while calculating 
-        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance. Defaults to ``'euclidean'``, meaning that euclidean
         distance is used for measuring distance.
-    search_only: bool, optional, default ``False``
+    search_only : bool, optional, default False
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. Defaults to False, i.e., to perform group discovery after
-         searching.
+        result. Defaults to False, i.e., to perform group discovery
+        after searching.
 
     Returns
     -------
     best_k : int
-        The suggested selection of number of groups (if ``search_only`` 
-        is True).
+        The suggested selection of number of groups (if `search_only` is
+        True).
     list of frozensets
-        Discovered resource groups (if ``search_only`` is False).
-    
+        Discovered resource groups (if `search_only` is False).
+
     Raises
     ------
     TypeError
-        If the parameter type for ``n_groups`` is unexpected.
+        If the parameter type for `n_groups` is unexpected.
+
+    See Also
+    --------
+    orgminer.SocialNetworkMiner.joint_activities
+
+    References
+    ----------
+    .. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005).
+       Discovering social networks from event logs. *Computer Supported
+       Cooperative Work (CSCW)*, 14(6), 549-593.
+       `<https://doi.org/10.1007/s10606-005-9005-9>`_
     """
     if type(n_groups) is int:
         return _mja(profiles, n_groups, metric)
@@ -131,7 +141,7 @@ def mja(profiles, n_groups, metric='euclidean', search_only=False):
         else:
             return _mja(profiles, best_k, metric)
     else:
-        raise TypeError('Invalid type for parameter ``{}``: {}'.format(
+        raise TypeError('Invalid type for parameter `{}`: {}'.format(
             'n_groups', type(n_groups)))
 
 
@@ -167,13 +177,14 @@ def _mjc(el, n_groups, method='threshold'):
 
     See Also
     --------
-    OrganizationalModelMiner.SocialNetworkMiner.joint_cases
+    orgminer.SocialNetworkMiner.joint_cases
 
     References
     ----------
     .. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005).
-    Discovering social networks from event logs. Computer Supported
-    Cooperative Work (CSCW), 14(6), 549-593.
+       Discovering social networks from event logs. *Computer Supported
+       Cooperative Work (CSCW)*, 14(6), 549-593.
+       `<https://doi.org/10.1007/s10606-005-9005-9>`_
     """
     print('Applying graph/network -based MJC:')
     from orgminer.SocialNetworkMiner.joint_cases import working_together
@@ -257,7 +268,7 @@ def _mjc(el, n_groups, method='threshold'):
             sn, nodes=[], edges=edges_to_disconnect)
 
     else:
-        raise ValueError('Invalid value for parameter ``{}``: {}'.format(
+        raise ValueError('Invalid value for parameter `{}`: {}'.format(
             'method', method))
 
     ogs = list()
@@ -270,7 +281,8 @@ def _mjc(el, n_groups, method='threshold'):
 
 
 def mjc(el, n_groups, search_only=False):
-    """A wrapped method for ``_mjc``.
+    """Apply Metrics based on Joint Cases to discover organizational 
+    groups [1]_.
 
     Parameters
     ----------
@@ -279,24 +291,35 @@ def mjc(el, n_groups, search_only=False):
     n_groups : int, or list of ints
         Expected number of resource groups, or a list of candidate
         numbers to be determined.
-    search_only: bool, optional, default ``False``
+    search_only : bool, optional, default False
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. Defaults to False, i.e., to perform group discovery after
-         searching.
+        result. Defaults to False, i.e., to perform group discovery
+        after searching.
 
     Returns
     -------
     best_k : int
-        The suggested selection of number of groups (if ``search_only`` 
-        is True).
+        The suggested selection of number of groups (if `search_only` is
+        True).
     list of frozensets
-        Discovered resource groups (if ``search_only`` is False).
+        Discovered resource groups (if `search_only` is False).
 
     Raises
     ------
     TypeError
-        If the parameter type for ``n_groups`` is unexpected.
+        If the parameter type for `n_groups` is unexpected.
+
+    See Also
+    --------
+    orgminer.SocialNetworkMiner.joint_cases
+
+    References
+    ----------
+    .. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005).
+       Discovering social networks from event logs. *Computer Supported
+       Cooperative Work (CSCW)*, 14(6), 549-593.
+       `<https://doi.org/10.1007/s10606-005-9005-9>`_
     """
     if type(n_groups) is int:
         return _mjc(el, n_groups[0])
@@ -304,6 +327,6 @@ def mjc(el, n_groups, search_only=False):
         # TODO: How to evaluate a result from applying MJC?
         raise NotImplementedError
     else:
-        raise TypeError('Invalid type for parameter ``{}``: {}'.format(
+        raise TypeError('Invalid type for parameter `{}`: {}'.format(
             'n_groups', type(n_groups)))
 

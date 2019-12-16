@@ -5,14 +5,15 @@ networks from an event log, using metrics based on joint activities [1]_.
 
 See Also
 --------
-SocialNetworkMiner.causality
-SocialNetworkMiner.joint_cases
+orgminer.SocialNetworkMiner.causality
+orgminer.SocialNetworkMiner.joint_cases
 
 References
 ----------
-.. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005). 
-Discovering social networks from event logs. Computer Supported 
-Cooperative Work (CSCW), 14(6), 549-593.
+.. [1] Van der Aalst, W. M. P., Reijers, H. A., & Song, M. (2005).
+   Discovering social networks from event logs. *Computer Supported
+   Cooperative Work (CSCW)*, 14(6), 549-593.
+   `<https://doi.org/10.1007/s10606-005-9005-9>`_
 """
 from warnings import warn
 
@@ -63,11 +64,11 @@ def distance(profiles, metric='euclidean', convert=False):
     ----------
     profiles : DataFrame
         A resource profile matrix.
-    metric : str, optional, default ``'euclidean'``
+    metric : str, optional, default 'euclidean'
         Choice of metrics for measuring the distance while calculating 
-        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance. Defaults to 'euclidean', meaning that euclidean
         distance is used for measuring distance.
-    convert : bool, optional, default ``False``
+    convert : bool, optional, default False
         A boolean flag indicating whether to convert the edge weight 
         values of the discovered network should be converted to 
         similarity measure values. Defaults to False, i.e., keep as 

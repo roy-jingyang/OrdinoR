@@ -13,7 +13,7 @@ def select_edges_by_weight(sn, weight='weight',
     -----
     The filtering process can be done in either of the two ways:
         
-        1. Define an interval ``[low, high)`` and keep only edges 
+        1. Define an interval [`low`, `high`) and keep only edges 
         with weight values falling within the interval. If either one of 
         the two sides of bound is not defined, infinity is used instead.
         
@@ -28,9 +28,9 @@ def select_edges_by_weight(sn, weight='weight',
     ----------
     sn : NetworkX (Di)Graph
         A social network.
-    weight : str, optional, default ``'weight'``
+    weight : str, optional, default 'weight'
         Name of the weight attribute in the network. Defaults to 
-        'weight', which is the default weight attribute name used by 
+        ``'weight'``, which is the default weight attribute name used by 
         NetworkX.
     low : float, optional
         The lower bound value, used for the first way of filtering.

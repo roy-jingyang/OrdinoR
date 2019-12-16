@@ -5,7 +5,7 @@ the clustering-based methods for organizational model discovery.
 
 See Also
 --------
-OrganizationalModelMiner.overlap
+orgminer.OrganizationalModelMiner.clustering.overlap
 """
 from warnings import warn
 
@@ -30,9 +30,10 @@ class MOC:
     References
     ----------
     .. [1] Banerjee, A., Krumpelman, C., Ghosh, J., Basu, S., & Mooney,
-    R. J. (2005, August). Model-based overlapping clustering. In
-    Proceedings of the eleventh ACM SIGKDD international conference on
-    Knowledge discovery in data mining (pp. 532-537). ACM.
+       R. J. (2005). Model-based overlapping clustering. In
+       *Proceedings of the eleventh ACM SIGKDD International Conference 
+       on Knowledge Discovery in Data mining*, pp. 532-537. ACM.
+       `<https://doi.org/10.1145/1081870.1081932>`_
     """
 
     def __init__(self, 
@@ -44,19 +45,19 @@ class MOC:
         ----------
         n_components : int
             Number of components in the model.
-        tol : float, optional, default ``1e-6``
+        tol : float, optional, default 1e-6
             The convergence threshold.
-        n_init : int, optional, default ``1``
+        n_init : int, optional, default 1
             Number of initializations to perform. The best results 
-            are kept. This parameter would be override ``M_init`` if 
+            are kept. This parameter would be override `M_init` if 
             specified.
-        max_iter : int, optional, default ``1000``
+        max_iter : int, optional, default 1000
             Number of iterative alternating updates to run.
         M_init : array-like, shape (n_samples, n_components), optional, 
-        default ``None``
+        default None
             User-provided initial membership matrix M (binary-valued). 
-            If None, random initialization is used.
-        is_disjoint : bool, optional, default ``False``
+            If ``None``, random initialization is used.
+        is_disjoint : bool, optional, default False
             A boolean flag indicating whether a disjoint result is 
             required.
         """
@@ -215,7 +216,7 @@ class MOC:
 
         See Also
         --------
-        MOC.fit_and_predict
+        fit_predict
         """
         from numpy import dot, log, power
         #print('Calculating the score: ', end='')
@@ -272,7 +273,7 @@ class MOC:
 
         See Also
         --------
-        MOC.fit_predict
+        fit_and_predict
         """
         from threading import Thread, local
         from numpy import array, dot, infty, where
@@ -349,9 +350,10 @@ class MOC:
 
 
 class FCM:
-    """This class implements the method of Fuzzy C-Means clustering [1]_.
+    """This class implements the method of Fuzzy C-Means clustering [2]_.
 
-    The implementation is based on `SciKit-Fuzzy`.
+    The implementation is based on `SciKit-Fuzzy 
+    <http://pythonhosted.org/scikit-fuzzy/>`_.
 
     Methods
     -------
@@ -359,8 +361,8 @@ class FCM:
 
     References
     ----------
-    .. [1] Tan, P. N., Steinbach, M., Karpatne, A., & Kumar, V. (2018).
-    Introduction to Data Mining.
+    .. [2] Tan, P. N., Steinbach, M., Karpatne, A., & Kumar, V. (2018).
+       *Introduction to Data Mining*.
     """
 
     def __init__(self,
@@ -372,21 +374,21 @@ class FCM:
         ----------
         n_components : int
             Number of clusters expected.
-        tol : float, optional, default ``1e-6``
+        tol : float, optional, default 1e-6
             The convergence threshold.
-        p : float, optional, default ``2``
+        p : float, optional, default 2
             The exponentiation value. When p = 1, fuzzy c-means reduces
             to K-means algorithm; when p is set to larger values, the 
             partitioning becomes fuzzier (approaching global centroid).
-        n_init : int, optional, default ``1``
+        n_init : int, optional, default 1
             Number of initializations to perform. The best results 
-            are kept. This parameter would be override ``means_init`` if 
+            are kept. This parameter would be override `means_init if 
             specified.
-        max_iter : int, optional, default ``1000``
+        max_iter : int, optional, default 1000
             Number of iterative alternating updates to run.
         means_init : array-like, shape (n_components, n_features), 
-        optional, default ``None``
-            User-provided initial guess of centroids. If None, random
+        optional, default None
+            User-provided initial guess of centroids. If ``None``, random
             initialization is used and assigns random-valued weights for
             samples.
         """
