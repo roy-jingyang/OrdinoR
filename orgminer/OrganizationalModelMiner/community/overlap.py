@@ -434,7 +434,7 @@ def agent_copra(profiles, metric='euclidean'):
         Constructed resource profiles.
     metric : str, optional, default 'euclidean'
         Choice of metrics for measuring the distance while calculating 
-        distance. Defaults to ``euclidean``, meaning that euclidean
+        distance. Defaults to ``'euclidean'``, meaning that euclidean
         distance is used for measuring distance.
 
     Returns

@@ -13,5 +13,5 @@
 input/
 output/
 
-# Ignore documentation files
-doc/
+# Ignore documentation files built (keep only sources)
+doc/build/

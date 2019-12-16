@@ -18,7 +18,7 @@ def select_edges_by_weight(sn, weight='weight',
         the two sides of bound is not defined, infinity is used instead.
         
         2. Specify a percentage value and keep only edges with weight
-        values within the range, e.g., with '+0.75' specified, only 
+        values within the range, e.g., with ``'+0.75'`` specified, only 
         edges with the highest 75% weight values are kept.
 
     Note that one of the two ways must be specified, and the first would 
@@ -39,7 +39,7 @@ def select_edges_by_weight(sn, weight='weight',
     percentage : str, optional
         The specified percentage value, used for the second way of 
         filtering. Should be formatted as a plus/minus sign concatenated 
-        with a float number in range [0, 1), e.g., +0.75.
+        with a float number in range [0, 1), e.g., ``+0.75``.
 
     Returns
     -------
