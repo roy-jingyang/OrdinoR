@@ -117,8 +117,8 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
 
     # step 2. Derive the clusters as the end result
     posterior_pr = gmm_model.predict_proba(profiles.values)
-    '''
     from numpy import nonzero, median, unique, count_nonzero, amin, percentile
+    '''
     threshold_ub = 0
     for pr in sorted(unique(posterior_pr), reverse=True):
         mbr_mat = posterior_pr >= pr
@@ -222,7 +222,9 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
     """
     if type(n_groups) is int:
         return _gmm(profiles, n_groups, threshold, init, n_init)
-    elif type(n_groups) is list:
+    elif type(n_groups) is list and len(n_groups) == 1:
+        return _gmm(profiles, n_groups[0], threshold, init, n_init)
+    elif type(n_groups) is list and len(n_groups) > 1:
         best_k = -1
         best_score = float('-inf')
         from orgminer.OrganizationalModelMiner.utilities import \
@@ -448,7 +450,9 @@ def moc(profiles, n_groups, init='random', n_init=100,
     """
     if type(n_groups) is int:
         return _moc(profiles, n_groups, init, n_init)
-    elif type(n_groups) is list:
+    elif type(n_groups) is list and len(n_groups) == 1:
+        return _moc(profiles, n_groups[0], init, n_init)
+    elif type(n_groups) is list and len(n_groups) > 1:
         best_k = -1
         best_score = float('-inf')
         from orgminer.OrganizationalModelMiner.utilities import \
@@ -675,8 +679,10 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
        *Introduction to Data Mining*.
     """
     if type(n_groups) is int:
+        return _fcm(profiles, n_groups, threshold, init, n_init)
+    elif type(n_groups) is list and len(n_groups) == 1:
         return _fcm(profiles, n_groups[0], threshold, init, n_init)
-    elif type(n_groups) is list:
+    elif type(n_groups) is list and len(n_groups) > 1:
         from orgminer.OrganizationalModelMiner.utilities import \
             cross_validation_score
         best_k = -1

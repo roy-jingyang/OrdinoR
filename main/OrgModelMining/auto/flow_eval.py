@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
+"""
 This program delivers a batch evaluation script for experiments. It allows user
 to configure the components to be included as the setup and then save the
 setup. The program can then load the setup from the save file, and starts to
@@ -18,13 +18,13 @@ graph, where:
         - 'step'
         - 'invoke'
         - 'params'
-        - (TBD, other attributes for nice visualization)
+        - (TBD, other attributes for nice visualization in Gephi)
     * each directed edge represents a possible combination of specific methods
     in the predecessor step and the successor step in the approach.
 
 The setup (graph) is stored in GraphML format, which is XML-based and allows
 node attributes as well as convenient visualization features.
-'''
+"""
 
 import sys
 sys.path.append('./')
@@ -109,7 +109,6 @@ def execute(setup, seq_ix, exp_dirpath):
             modes = assigner(og, rl, **params)
         om.add_group(og, modes)
     
-    # TODO: automate Phase 3 (Evaluation)
 
     # TODO: Hard-coded evalution measure (TBD)
     # 1. Intrinsic evaluation of clustering (by Silhouette score)
@@ -124,14 +123,13 @@ def execute(setup, seq_ix, exp_dirpath):
 
     # TODO: Hard-coded evalution measure (TBD) cont.
     # 2. (New) Fitness & Precision values
-    from orgminer.Evaluation.l2m.conformance import (
-        fitness, rc_measure, precision)
+    from orgminer.Evaluation.l2m.conformance import fitness, precision
     fitness = fitness(rl, om)
-    rc_measure = rc_measure(rl, om)
     precision = precision(rl, om)
 
-    # 3. Overlapping Density & Overlapping Diversity (avg.)
     k = om.group_number
+    '''
+    # 3. Overlapping Density & Overlapping Diversity (avg.)
     resources = om.resources
     n_ov_res = 0
     n_ov_res_membership = 0
@@ -146,6 +144,7 @@ def execute(setup, seq_ix, exp_dirpath):
     ov_density = n_ov_res / len(resources)
     avg_ov_diversity = (n_ov_res_membership / n_ov_res 
             if n_ov_res > 0 else float('nan'))
+    '''
     
     # export organizational models
     fnout = '{}-{}-{}.om'.format(
@@ -154,12 +153,9 @@ def execute(setup, seq_ix, exp_dirpath):
         om.to_file_csv(fout)
 
     return ('{}-{}-{}'.format(
-            exec_mode_miner_name, discoverer_name, assigner_name), 
+        exec_mode_miner_name, discoverer_name, assigner_name), 
         silhouette, 
-        k, fitness, rc_measure,
-        precision,
-        ov_density,
-        avg_ov_diversity)
+        k, fitness, precision)
 
 if __name__ == '__main__':
     fn_setup = sys.argv[1]
@@ -188,7 +184,8 @@ if __name__ == '__main__':
     with open(join(dirout, '{}_report.csv'.format(name)), 'w+') as fout:
         writer = writer(fout)
         for i in range(n_tests):
-            writer.writerow([name] + 
+            writer.writerow(
+                [name] + 
                 l_test_results[i] + 
                 [execute_time[i]])
     

@@ -130,7 +130,9 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
     """
     if type(n_groups) is int:
         return _ahc(profiles, n_groups, method, metric)
-    elif type(n_groups) is list:
+    elif type(n_groups) is list and len(n_groups) == 1:
+        return _ahc(profiles, n_groups[0], method, metric)
+    elif type(n_groups) is list and len(n_groups) > 1:
         best_k = -1
         best_score = float('-inf')
         from orgminer.OrganizationalModelMiner.utilities import \

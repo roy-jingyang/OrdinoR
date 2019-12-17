@@ -47,12 +47,13 @@ def group_relative_focus(group, mode, rl):
     """
     # filtering irrelevant events
     rl = rl.loc[rl['resource'].isin(group)]
-
-    total_count = len(rl)
-    count = len(rl.groupby([
-        'case_type', 'activity_type', 'time_type'
-    ]).get_group(mode))
-    return count / total_count
+    grouped_by_modes = rl.groupby([
+        'case_type', 'activity_type', 'time_type'])
+    
+    if mode in grouped_by_modes.groups:
+        return len(grouped_by_modes.get_group(mode)) / len(rl)
+    else:
+        return 0.0
 
 
 # NOTE: # (*, rg, q) / (*, *, q)
@@ -75,15 +76,16 @@ def group_relative_stake(group, mode, rl):
         The measured relative focus.
     """
     total_count = len(rl.groupby([
-        'case_type', 'activity_type', 'time_type'
-    ]).get_group(mode))
+        'case_type', 'activity_type', 'time_type']).get_group(mode))
 
     # filtering irrelevant events
     rl = rl.loc[rl['resource'].isin(group)]
-    count = len(rl.groupby([
-        'case_type', 'activity_type', 'time_type'
-    ]).get_group(mode))
-    return count / total_count
+    grouped_by_modes = rl.groupby([
+        'case_type', 'activity_type', 'time_type'])
+    if mode in grouped_by_modes.groups:
+        return len(grouped_by_modes.get_group(mode)) / total_count
+    else:
+        return 0.0
 
 
 # NOTE: R (r, rg, q) / (r, rg)

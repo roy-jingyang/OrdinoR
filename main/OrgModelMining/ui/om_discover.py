@@ -14,7 +14,8 @@ if __name__ == '__main__':
         #el = read_disco_csv(f)
         el = read_disco_csv(f, mapping={'(case) LoanGoal': 7})
 
-    # learn execution modes and convert to resource log
+    # 1. Learn execution modes and convert to resource log
+    from orgminer.ExecutionModeMiner import direct_groupby, informed_groupby
     print('Input a number to choose a solution:')
     print('\t0. ATonly')
     print('\t1. CTonly (requires pre-specified case attribute)')
@@ -22,61 +23,40 @@ if __name__ == '__main__':
     print('\t3. AT+TT')
     print('\t4. TraceClustering CTonly')
     print('\t5. TraceClustering CT+AT+TT')
-
     mode_learning_option = int(input())
 
     if mode_learning_option in []:
-        print('Warning: These options are closed for now. Activate them when necessary.')
-        exit(1)
-
+        raise NotImplementedError
     elif mode_learning_option == 0:
-        from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner
-        exec_mode_miner = ATonlyMiner(el)
-
+        exec_mode_miner = direct_groupby.ATonlyMiner(el)
     elif mode_learning_option == 1:
-        from orgminer.ExecutionModeMiner.direct_groupby import CTonlyMiner
-        exec_mode_miner = CTonlyMiner(el, case_attr_name='')
-
+        exec_mode_miner = direct_groupby.CTonlyMiner(el, case_attr_name='')
     elif mode_learning_option == 2:
-        from orgminer.ExecutionModeMiner.direct_groupby import ATCTMiner
-        exec_mode_miner = ATCTMiner(el, case_attr_name='(case) LoanGoal')
-
+        exec_mode_miner = direct_groupby.ATCTMiner(el, case_attr_name='')
     elif mode_learning_option == 3:
-        from orgminer.ExecutionModeMiner.direct_groupby import ATTTMiner
         print('Input the desired datetime resolution:', end=' ')
         resolution = input()
-        exec_mode_miner = ATTTMiner(el, resolution=resolution)
-
+        exec_mode_miner = direct_groupby.ATTTMiner(el, resolution=resolution)
     elif mode_learning_option == 4:
-        from orgminer.ExecutionModeMiner.informed_groupby import TraceClusteringCTMiner
         print('Input the path of the partitioning file:', end=' ')
         fn_partition = input()
-        exec_mode_miner = TraceClusteringCTMiner(
+        exec_mode_miner = informed_groupby.TraceClusteringCTMiner(
             el, fn_partition=fn_partition)
-
     elif mode_learning_option == 5:
-        from orgminer.ExecutionModeMiner.informed_groupby import TraceClusteringFullMiner
         print('Input the path of the partitioning file:', end=' ')
         fn_partition = input()
         print('Input the desired datetime resolution:', end=' ')
         resolution = input()
-        exec_mode_miner = TraceClusteringFullMiner(el,
+        exec_mode_miner = informed_groupby.TraceClusteringFullMiner(el,
             fn_partition=fn_partition,
             resolution=resolution)
-
     else:
-        raise Exception('Failed to recognize input option!')
-        exit(1)
+        raise ValueError
 
     rl = exec_mode_miner.derive_resource_log(el)
 
-    # TODO: Timer related
-    '''
-    from time import time
-    print('Timer active.')
-    '''
 
-    # discover organizational groups
+    # 2. Discover organizational groups
     print('Input a number to choose a solution:')
     print('\t0. Default Mining (Song)')
     print('\t1. Metric based on Joint Activities/Cases (Song)')
@@ -85,22 +65,19 @@ if __name__ == '__main__':
     print('\t4. Gaussian Mixture Model')
     print('\t5. Model based Overlapping Clustering')
     print('\t6. Fuzzy c-means')
-
     mining_option = int(input())
 
     if mining_option in []:
-        print('Warning: These options are closed for now. Activate them when necessary.')
         exit(1)
-
     elif mining_option == 0:
         from orgminer.OrganizationalModelMiner.base import default_mining
         ogs = default_mining(rl)
-
     elif mining_option == 1:
-        print('Input the desired range (e.g. [low, high)) of number of groups to be discovered:', end=' ')
+        print('Input desired range (e.g. [low, high)) of number of groups:',
+            end=' ')
         num_groups = input()
         num_groups = num_groups[1:-1].split(',')
-        num_groups = range(int(num_groups[0]), int(num_groups[1]))
+        num_groups = list(range(int(num_groups[0]), int(num_groups[1])))
 
         # select method (MJA/MJC)
         print('Input a number to choose a method:')
@@ -110,31 +87,30 @@ if __name__ == '__main__':
         method_option = int(input())
         if method_option == 0:
             # build profiles
-            from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
+            from orgminer.ResourceProfiler.raw_profiler import \
+                count_execution_frequency
             profiles = count_execution_frequency(rl, scale='log')
-            from orgminer.OrganizationalModelMiner.community.graph_partitioning import mja
-            # MJA -> select metric (Euclidean distance/PCC)
+            from orgminer.OrganizationalModelMiner.community.graph_partitioning\
+                import mja
             print('Input a number to choose a metric:')
+            metrics = ['euclidean', 'correlation']
             print('\t0. Distance (Euclidean)')
             print('\t1. PCC')
             print('Option: ', end='')
             metric_option = int(input())
-            metrics = ['euclidean', 'correlation']
-            ogs = mja(
-                    profiles, num_groups, 
-                    metric=metrics[metric_option])
+            ogs = mja(profiles, num_groups, metric=metrics[metric_option])
         elif method_option == 1:
-            from orgminer.OrganizationalModelMiner.clustering.graph_partitioning import mjc
+            from orgminer.OrganizationalModelMiner.community.graph_partitioning\
+                import mjc
             ogs = mjc(el, num_groups)
         else:
-            raise Exception('Failed to recognize input option!')
-            exit(1)
-
+            raise ValueError
     elif mining_option == 2:
-        print('Input the desired range (e.g. [low, high)) of number of groups to be discovered:', end=' ')
+        print('Input desired range (e.g. [low, high)) of number of groups:',
+            end=' ')
         num_groups = input()
         num_groups = num_groups[1:-1].split(',')
-        num_groups = range(int(num_groups[0]), int(num_groups[1]))
+        num_groups = list(range(int(num_groups[0]), int(num_groups[1])))
 
         print('Input a number to choose a method:')
         print('\t0. Mining using cluster analysis')
@@ -145,15 +121,12 @@ if __name__ == '__main__':
             # build profiles
             from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
             profiles = count_execution_frequency(rl, scale='log')
-            from orgminer.OrganizationalModelMiner.clustering.hierarchical import ahc
-            ogs, og_hcy = ahc(
-                    profiles, num_groups, method='ward')
+            from orgminer.OrganizationalModelMiner.clustering.hierarchical \
+                import ahc
+            ogs, og_hcy = ahc(profiles, num_groups, method='ward')
         else:
-            raise Exception('Failed to recognize input option!')
-            exit(1)
-                
+            raise ValueError
         og_hcy.to_csv(fnout_org_model + '_hierarchy')
-
     elif mining_option == 3:
         # build profiles
         from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
@@ -170,87 +143,65 @@ if __name__ == '__main__':
         method_option = int(input())
         if method_option == 0:
             ogs = overlap.clique_percolation(
-                    profiles, metric='correlation')
+                profiles, metric='correlation')
         elif method_option == 1:
-            print('Input the desired number of groups to be discovered:', end=' ')
+            print('Input the desired number of groups:', end=' ')
             num_groups = int(input())
-
             ogs = overlap.link_partitioning(
-                    profiles, num_groups, metric='correlation')
+                profiles, num_groups, metric='correlation')
         elif method_option == 2:
             ogs = overlap.local_expansion(
-                    profiles, metric='correlation')
+                profiles, metric='correlation')
         elif method_option == 3:
             ogs = overlap.agent_copra(
-                    profiles, metric='correlation')
+                profiles, metric='correlation')
         elif method_option == 4:
             ogs = overlap.agent_slpa(
-                    profiles, metric='correlation')
+                profiles, metric='correlation')
         else:
-            raise Exception('Failed to recognize input option!')
-            exit(1)
+            raise ValueError
 
     elif mining_option == 4:
-        print('Input the desired range (e.g. [low, high)) of number of groups to be discovered:', end=' ')
+        print('Input desired range (e.g. [low, high)) of number of groups:',
+            end=' ')
         num_groups = input()
         num_groups = num_groups[1:-1].split(',')
-        num_groups = range(int(num_groups[0]), int(num_groups[1]))
+        num_groups = list(range(int(num_groups[0]), int(num_groups[1])))
 
         # build profiles
         from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
         profiles = count_execution_frequency(rl, scale='log')
 
         print('Input a threshold value [0, 1), in order to determine the ' +
-                'resource membership (Enter to use a "null" threshold):',
-                end=' ')
+            'resource membership:', end=' ')
         user_selected_threshold = input()
         user_selected_threshold = (float(user_selected_threshold)
-                if user_selected_threshold != '' else None)
+            if user_selected_threshold != '' else None)
 
         from orgminer.OrganizationalModelMiner.clustering.overlap import gmm
-        ogs = gmm(
-                profiles, num_groups, threshold=user_selected_threshold,
-                init='kmeans')
-
-        # TODO: Timer related
-        '''
-        tm_start = time()
-        # execute
-        print('-' * 10
-                + ' Execution time {:.3f} s. '.format(time() - tm_start)
-                + '-' * 10)
-        '''
-
+        ogs = gmm(profiles, num_groups, 
+            threshold=user_selected_threshold,
+            init='kmeans')
     elif mining_option == 5:
-        print('Input the desired range (e.g. [low, high)) of number of groups to be discovered:', end=' ')
+        print('Input desired range (e.g. [low, high)) of number of groups:',
+            end=' ')
         num_groups = input()
         num_groups = num_groups[1:-1].split(',')
-        num_groups = range(int(num_groups[0]), int(num_groups[1]))
+        num_groups = list(range(int(num_groups[0]), int(num_groups[1])))
 
         # build profiles
         from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
         profiles = count_execution_frequency(rl, scale='log')
 
         from orgminer.OrganizationalModelMiner.clustering.overlap import moc
-        ogs = moc(
-                profiles, num_groups,
-                init='kmeans')
-
-        # TODO: Timer related
-        '''
-        tm_start = time()
-        og = moc(profiles, num_groups, 
-                warm_start_input_fn=ws_fn)
-        print('-' * 10
-                + ' Execution time {:.3f} s. '.format(time() - tm_start)
-                + '-' * 10)
-        '''
-
+        ogs = moc(profiles, num_groups,
+            init='kmeans')
     elif mining_option == 6:
-        print('Input the desired range (e.g. [low, high)) of number of groups to be discovered:', end=' ')
+        print('Input desired range (e.g. [low, high)) of number of groups:',
+            end=' ')
         num_groups = input()
         num_groups = num_groups[1:-1].split(',')
-        num_groups = range(int(num_groups[0]), int(num_groups[1]))
+        num_groups = list(range(int(num_groups[0]), int(num_groups[1])))
 
         # build profiles
         from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
@@ -268,16 +219,6 @@ if __name__ == '__main__':
                 profiles, num_groups, threshold=user_selected_threshold,
                 init='kmeans')
 
-        # TODO: Timer related
-        '''
-        tm_start = time()
-        og = fcm(profiles, num_groups,
-                threshold=user_selected_threshold,
-                warm_start_input_fn=ws_fn)
-        print('-' * 10
-                + ' Execution time {:.3f} s. '.format(time() - tm_start)
-                + '-' * 10)
-        '''
     else:
         raise Exception('Failed to recognize input option!')
         exit(1)
@@ -286,18 +227,23 @@ if __name__ == '__main__':
     from orgminer.OrganizationalModelMiner.base import OrganizationalModel
     om = OrganizationalModel()
 
-    # assign execution modes to groups
-    from orgminer.OrganizationalModelMiner.mode_assignment import full_recall
-    from orgminer.OrganizationalModelMiner.mode_assignment import participation_first
-    from orgminer.OrganizationalModelMiner.mode_assignment import coverage_first
-    from orgminer.OrganizationalModelMiner.mode_assignment import overall_score
-    for og in ogs:
-        #modes = full_recall(og, rl)
-        #modes = participation_first(og, rl, p=0.1)
-        #modes = coverage_first(og, rl, p=5)
-        modes = overall_score(og, rl, p=0.5)
 
-        om.add_group(og, modes)
+    # 3. assign execution modes to groups
+    from orgminer.OrganizationalModelMiner.mode_assignment import \
+        full_recall, overall_score
+    print('Input a number to choose a solution:')
+    print('\t0. FullRecall')
+    print('\t1. OverallScore')
+    assignment_option = int(input())
+    if assignment_option in []:
+        raise NotImplementedError
+    elif assignment_option == 0:
+        for og in ogs:
+            om.add_group(og, full_recall(og, rl))
+    elif assignment_option == 1:
+        for og in ogs:
+            om.add_group(og, overall_score(og, rl, p=0.5))
+
 
     print('-' * 80)
     measure_values = list()
@@ -309,30 +255,17 @@ if __name__ == '__main__':
     print()
     
     from orgminer.Evaluation.l2m import conformance
+
     fitness_score = conformance.fitness(rl, om)
-    print('Fitness\t\t= {:.6f}'.format(fitness_score))
+    print('Fitness\t\t= {:.3f}'.format(fitness_score))
     measure_values.append(fitness_score)
     print()
-
-    rc_measure_score = conformance.rc_measure(rl, om)
-    print('rc-measure\t= {:.6f}'.format(rc_measure_score))
-    measure_values.append(rc_measure_score)
+    precision_score = conformance.precision(rl, om)
+    print('Precision\t= {:.3f}'.format(precision_score))
+    measure_values.append(precision_score)
     print()
 
-    #print('Fitness1\t= {:.6f}'.format(conformance.fitness1(rl, om)))
-    precision2_score = conformance.precision2(rl, om)
-    print('Prec. (freq)\t= {:.6f}'.format(precision2_score))
-    measure_values.append(precision2_score)
-
-    precision1_score = conformance.precision1(rl, om)
-    print('Prec. (no freq)\t= {:.6f}'.format(precision1_score))
-    measure_values.append(precision1_score)
-
-    precision4_score = conformance.precision4(rl, om)
-    print('Prec. (new)\t= {:.6f}'.format(precision4_score))
-    measure_values.append(precision4_score)
-    print()
-
+    '''
     # Overlapping Density & Overlapping Diversity (avg.)
     k = om.group_number
     resources = om.resources
@@ -353,9 +286,10 @@ if __name__ == '__main__':
     print('Ov. diversity\t= {:.6f}'.format(avg_ov_diversity))
     measure_values.append(ov_density)
     measure_values.append(avg_ov_diversity)
+    '''
+
     print('-' * 80)
     print(','.join(str(x) for x in measure_values))
-
 
     # save the mined organizational model to a file
     with open(fnout_org_model, 'w', encoding='utf-8') as fout:

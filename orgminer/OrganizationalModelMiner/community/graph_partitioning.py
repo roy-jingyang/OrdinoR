@@ -116,7 +116,9 @@ def mja(profiles, n_groups, metric='euclidean', search_only=False):
     """
     if type(n_groups) is int:
         return _mja(profiles, n_groups, metric)
-    elif type(n_groups) is list:
+    elif type(n_groups) is list and len(n_groups) == 1:
+        return _mja(profiles, n_groups[0], metric)
+    elif type(n_groups) is list and len(n_groups) > 1:
         from orgminer.OrganizationalModelMiner.utilities import \
             cross_validation_score
         best_k = -1
@@ -322,8 +324,10 @@ def mjc(el, n_groups, search_only=False):
        `<https://doi.org/10.1007/s10606-005-9005-9>`_
     """
     if type(n_groups) is int:
+        return _mjc(el, n_groups)
+    elif type(n_groups) is list and len(n_groups) == 1:
         return _mjc(el, n_groups[0])
-    elif type(n_groups) is list:
+    elif type(n_groups) is list and len(n_groups) > 1:
         # TODO: How to evaluate a result from applying MJC?
         raise NotImplementedError
     else:
