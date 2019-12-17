@@ -169,15 +169,9 @@ if __name__ == '__main__':
     name = ''
 
     l_test_results = list()
-    execute_time = list()
 
-    from time import time
     for i in range(n_tests):
-        start_time = time()
         result = list(execute(setup, path, dirout))
-        end_time = time()
-        execute_time.append(end_time - start_time)
-
         name = result[0]
         l_test_results.append(result[1:])
 
@@ -186,6 +180,5 @@ if __name__ == '__main__':
         for i in range(n_tests):
             writer.writerow(
                 [name] + 
-                l_test_results[i] + 
-                [execute_time[i]])
+                l_test_results[i])
     

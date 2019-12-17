@@ -9,11 +9,13 @@ fnout = sys.argv[2]
 
 def search_k(profiles, num_groups, method):
     if method == 'mja':
-        from orgminer.OrganizationalModelMiner.community.graph_partitioning import mja
+        from orgminer.OrganizationalModelMiner.community.graph_partitioning \
+            import mja
         return mja(profiles, num_groups, metric='correlation',
             search_only=True)
     elif method == 'ahc':
-        from orgminer.OrganizationalModelMiner.clustering.hierarchical import ahc
+        from orgminer.OrganizationalModelMiner.clustering.hierarchical \
+            import ahc
         return ahc(profiles, num_groups, method='ward', metric='euclidean',
             search_only=True)
     elif method == 'gmm':
@@ -36,13 +38,13 @@ if __name__ == '__main__':
     from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         #el = read_disco_csv(f)
-        #el = read_disco_csv(f, mapping={'(case) channel': 6})
-        #el = read_disco_csv(f, mapping={'(case) channel': 6})
+        el = read_disco_csv(f, mapping={'(case) LoanGoal': 8})
 
     # learn execution modes and convert to resource log
     from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner
     from orgminer.ExecutionModeMiner.direct_groupby import FullMiner
-    from orgminer.ExecutionModeMiner.informed_groupby import TraceClusteringFullMiner
+    from orgminer.ExecutionModeMiner.informed_groupby import \
+        TraceClusteringFullMiner
 
     mode_miner = ATonlyMiner(el)
     #mode_miner = FullMiner(el, 
@@ -56,7 +58,7 @@ if __name__ == '__main__':
     print('Input the desired range [low, high): ', end=' ')
     num_groups = input()
     num_groups = num_groups[1:-1].split(',')
-    num_groups = range(int(num_groups[0]), int(num_groups[1]))
+    num_groups = list(range(int(num_groups[0]), int(num_groups[1])))
 
     # build profiles
     from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
@@ -65,8 +67,7 @@ if __name__ == '__main__':
     methods = ['ahc', 'moc']
     from multiprocessing import Pool
     from functools import partial
-    partial_search_k = partial(search_k,
-            profiles, num_groups)
+    partial_search_k = partial(search_k, profiles, num_groups)
     best_ks = list(map(partial_search_k, methods))
 
     with open(fnout, 'w') as f:

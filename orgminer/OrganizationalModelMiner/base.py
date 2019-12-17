@@ -286,9 +286,6 @@ class OrganizationalModel:
         """Export the organizational model to an external CSV file (with
         no header line).
 
-        Data exchange format in the CSV file (by each line):
-        Resource Group id, [Resource x; ...], [CTx|ATx|TTx; ...]
-
         Parameters
         ----------
         f : File object
@@ -296,6 +293,25 @@ class OrganizationalModel:
 
         Returns
         -------
+
+        Notes
+        -----
+        Data exchange format in the CSV file (by each line):
+
+        * No header line; 
+        * 3 columns: Group ID, Member resource IDs, Execution modes
+        * Values of member resource IDs and execution modes are separated
+          by semicolons ``;`` within the columns;
+        * A vertical bar ``|`` is used as the separator for values of the
+          three types within an execution mode.
+        
+        An example is given as following:
+
+        ======== =========================== ========================
+        GroupID1 Resource ID 1;Resource ID 2 CT1|AT2|TT1;CT.0|AT2|TT3
+        -------- --------------------------- ------------------------
+        GroupID2 Resource ID 3;Resource ID 4 CT1|AT3|TT1;CT.0|AT2|TT4
+        ======== =========================== ========================
 
         See Also
         --------
@@ -324,9 +340,6 @@ class OrganizationalModel:
     def from_file_csv(cls, f):
         """Import an organizational model from an external CSV file.
 
-        Data exchange format in the CSV file (by each line):
-        Resource Group id, [Resource id x; ...], [CTx|ATx|TTx; ...]
-
         Parameters
         ----------
         f: File object
@@ -336,6 +349,25 @@ class OrganizationalModel:
         -------
         OrganizationalModel
             The imported organizational model.
+
+        Notes
+        -----
+        Data exchange format in the CSV file (by each line):
+
+        * No header line; 
+        * 3 columns: Group ID, Member resource IDs, Execution modes
+        * Values of member resource IDs and execution modes are separated
+          by semicolons ``;`` within the columns;
+        * A vertical bar ``|`` is used as the separator for values of the
+          three types within an execution mode.
+        
+        An example is given as follows:
+
+        ======== =========================== ========================
+        GroupID1 Resource ID 1;Resource ID 2 CT1|AT2|TT1;CT.0|AT2|TT3
+        -------- --------------------------- ------------------------
+        GroupID2 Resource ID 3;Resource ID 4 CT1|AT3|TT1;CT.0|AT2|TT4
+        ======== =========================== ========================
 
         See Also
         --------

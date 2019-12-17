@@ -49,7 +49,7 @@
 <node id="5">
 <data key="label">Phase 2.2: MOC</data>
 <data key="invoke">orgminer.OrganizationalModelMiner.clustering.overlap.moc</data>
-<data key="params">{'n_groups': range(9, 11), 'init': 'kmeans'}</data>
+<data key="params">{'n_groups': list(range(9, 11)), 'init': 'kmeans'}</data>
 <data key="phase">2.2</data>
 <data key="size">25.0</data>
 <data key="r">192</data>
@@ -68,19 +68,7 @@
 <data key="g">192</data>
 <data key="b">192</data>
 <data key="x">1202.4336</data>
-<data key="y">314.26178</data>
-</node>
-<node id="9">
-<data key="label">Phase 2.3: ParticipationFirst</data>
-<data key="invoke">orgminer.OrganizationalModelMiner.mode_assignment.participation_first</data>
-<data key="params">{'p': 0.05}</data>
-<data key="phase">2.3</data>
-<data key="size">25.0</data>
-<data key="r">192</data>
-<data key="g">192</data>
-<data key="b">192</data>
-<data key="x">1208.3037</data>
-<data key="y">-74.9946</data>
+<data key="y">-69.22571</data>
 </node>
 <node id="13">
 <data key="label">(END)</data>
@@ -95,7 +83,7 @@
 <node id="21">
 <data key="label">Phase 2.2: AHC</data>
 <data key="invoke">orgminer.OrganizationalModelMiner.clustering.hierarchical.ahc</data>
-<data key="params">{'n_groups': range(9, 11), 'method': 'ward', 'metric': 'euclidean'}</data>
+<data key="params">{'n_groups': list(range(9, 11)), 'method': 'ward', 'metric': 'euclidean'}</data>
 <data key="phase">2.2</data>
 <data key="size">25.0</data>
 <data key="r">192</data>
@@ -105,7 +93,7 @@
 <data key="y">4.5245056</data>
 </node>
 <node id="20">
-<data key="label">input log: WABO_rp</data>
+<data key="label">input log: WABO</data>
 <data key="invoke">orgminer.IO.reader.read_disco_csv</data>
 <data key="params">{'filepath': './input/wabo.csv', 'mapping': {"(case) channel": 6}}</data>
 <data key="phase">0</data>
@@ -128,29 +116,17 @@
 <data key="x">-1642.0961</data>
 <data key="y">-300.4847</data>
 </node>
-<node id="24">
-<data key="label">Phase 2.3: CoverageFirst</data>
-<data key="invoke">orgminer.OrganizationalModelMiner.mode_assignment.coverage_first</data>
-<data key="params">{'p': 0.25}</data>
-<data key="phase">2.3</data>
-<data key="size">25.0</data>
-<data key="r">192</data>
-<data key="g">192</data>
-<data key="b">192</data>
-<data key="x">1213.944</data>
-<data key="y">-462.3337</data>
-</node>
 <node id="26">
 <data key="label">Phase 2.3: OverallScore</data>
 <data key="invoke">orgminer.OrganizationalModelMiner.mode_assignment.overall_score</data>
-<data key="params">{'p': 0.25}</data>
+<data key="params">{'p': 0.5}</data>
 <data key="phase">2.3</data>
 <data key="size">25.0</data>
 <data key="r">192</data>
 <data key="g">192</data>
 <data key="b">192</data>
-<data key="x">1178.1104</data>
-<data key="y">-827.17285</data>
+<data key="x">1218.4775</data>
+<data key="y">-514.32776</data>
 </node>
 <node id="30">
 <data key="label">Phase 1: CT + AT + TT (trace clustering)</data>
@@ -185,28 +161,10 @@
 <edge id="147" source="8" target="13">
 <data key="weight">1.0</data>
 </edge>
-<edge id="148" source="21" target="9">
-<data key="weight">1.0</data>
-</edge>
-<edge id="150" source="5" target="9">
-<data key="weight">1.0</data>
-</edge>
-<edge id="153" source="9" target="13">
-<data key="weight">1.0</data>
-</edge>
-<edge id="154" source="21" target="24">
-<data key="weight">1.0</data>
-</edge>
-<edge id="156" source="5" target="24">
-<data key="weight">1.0</data>
-</edge>
 <edge id="159" source="21" target="26">
 <data key="weight">1.0</data>
 </edge>
 <edge id="161" source="5" target="26">
-<data key="weight">1.0</data>
-</edge>
-<edge id="164" source="24" target="13">
 <data key="weight">1.0</data>
 </edge>
 <edge id="165" source="26" target="13">

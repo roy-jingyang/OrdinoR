@@ -68,7 +68,7 @@ def overall_score(group, rl, p, w1=0.5, w2=0.5):
         score = (
             w1 * group_relative_stake(group, m, rl) + 
             w2 * member_coverage(group, m, rl))
-        if score >= p:
+        if score > p:
             tmp_modes.append((m, score))
 
     from operator import itemgetter

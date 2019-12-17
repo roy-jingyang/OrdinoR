@@ -12,11 +12,12 @@ if __name__ == '__main__':
     from multiprocessing import Pool
     setup = freeze(read_graphml(fn_setup))
     test_instances = list(path
-            for path in all_simple_paths(setup, source='0', target='13'))
+        for path in all_simple_paths(setup, source='0', target='13'))
+    
 
     def run_process(path):
         subprocess.check_call(['python', 'main/OrgModelMining/auto/flow_eval.py', 
             fn_setup, dirout, ','.join(path[1:-1])])
 
-        list(map(run_process, test_instances))
+    list(map(run_process, test_instances))
 

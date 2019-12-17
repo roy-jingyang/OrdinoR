@@ -222,7 +222,15 @@ class BaseMiner:
                 })
 
         from pandas import DataFrame
-        return DataFrame(rl)
+        rl = DataFrame(rl)
+        print('Resource Log derived: ', end='')
+        print('{} events mapped onto {} execution modes.\n'.format(
+            len(el), 
+            len(rl.drop_duplicates(
+                subset=['case_type', 'activity_type', 'time_type'],
+                inplace=False))
+        ))
+        return rl
 
 
     def _verify_partition(self, whole_set, partitioning):
