@@ -3,18 +3,56 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to OrgMiner's documentation!
-====================================
+.. _contents:
+
+********************
+Overview of OrgMiner
+********************
+
+Overview
+========
+OrgMiner: tookit for Process Mining on the organizational perspective
+
+Audience
+--------
+
+Process Mining
+--------------
+
+Python
+------
+
+Licensing information
+---------------------
+
+Documentation
+-------------
+
+.. only:: html
+
+    :Release: |version|
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
 
-
+   install
+   tutorial
+   reference/index
+   auto_examples/index
+   license
+   credits
+   citing
+   bibliography
 
 Indices and tables
-==================
-
-* :ref:`genindex`
+------------------
 * :ref:`modindex`
-* :ref:`search`
+
+Related Softwares
+-----------------
+* pm4py
+* ProM
+* Disco
+* pandas
+* NetworkX
+

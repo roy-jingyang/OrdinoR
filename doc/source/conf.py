@@ -13,7 +13,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
-sys.path.append('.././')
+sys.path.append('.././') # TODO: dev-use, to be removed
 
 
 # -- Project information -----------------------------------------------------
@@ -23,7 +23,7 @@ copyright = '2019, Jing Yang'
 author = 'Jing Yang (Roy)'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '0.0.1alpha'
 
 
 # -- General configuration ---------------------------------------------------

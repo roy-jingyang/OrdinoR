@@ -2,6 +2,6 @@ orgminer
 ========
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
 
    orgminer
