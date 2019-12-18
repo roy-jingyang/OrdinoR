@@ -46,12 +46,12 @@ if __name__ == '__main__':
     from orgminer.ExecutionModeMiner.informed_groupby import \
         TraceClusteringFullMiner
 
-    mode_miner = ATonlyMiner(el)
-    #mode_miner = FullMiner(el, 
-    #    case_attr_name='(case) channel', resolution='weekday')
+    #mode_miner = ATonlyMiner(el)
+    mode_miner = FullMiner(el, 
+        case_attr_name='(case) LoanGoal', resolution='weekday')
     #mode_miner = TraceClusteringFullMiner(el,
-        #fn_partition='input/extra_knowledge/wabo.bosek5.tcreport', resolution='weekday')
-    #    fn_partition='input/extra_knowledge/bpic12.bosek5.tcreport', resolution='weekday')
+    #    fn_partition='input/extra_knowledge/bpic12.bosek5.tcreport',
+    #    resolution='weekday')
 
     rl = mode_miner.derive_resource_log(el)
 
