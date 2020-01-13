@@ -211,8 +211,10 @@ class OrganizationalModel:
         list of 3-tuples
             Allowed execution modes specific to the queried resource.
         """
-        return list(set.union(*[self._cap[rg_id] 
-            for rg_id in self._rmem[r]]))
+        resource_cap = set()
+        for rg_id in self._rmem[r]:
+            resource_cap.update(set(self._cap[rg_id]))
+        return list(resource_cap)
     
 
     def find_candidate_groups(self, exec_mode):
@@ -325,9 +327,8 @@ class OrganizationalModel:
             str_rg_id = str(rg_id)
             str_members = ';'.join(sorted(str(r) for r in self._mem[rg_id]))
             if len(self._cap) > 0:
-                str_exec_modes = ';'.join(sorted(
-                        '|'.join(str(t) for t in mode)
-                        for mode in self._cap[rg_id]))
+                str_exec_modes = ';'.join(sorted('|'.join(str(t) for t in mode)
+                    for mode in self._cap[rg_id]))
             else:
                 str_exec_modes = ''
 
