@@ -13,16 +13,12 @@ filename_input = sys.argv[1]
 if __name__ == '__main__':
     with open(filename_input, 'r') as f:
         #el = read_disco_csv(f)
-        el = read_disco_csv(f, mapping={
-            'action_code': 18,
-            '(case) last_phase': 14}) # bpic15-*
+        el = read_disco_csv(f, header=False)
     print(el)
     print(type(el))
     print(len(el))
     print(el.index)
     print(el.columns)
-
-    print(len(set(el['action_code'])))
 
     '''
     # iterate by each case and then by each event within the current case (as

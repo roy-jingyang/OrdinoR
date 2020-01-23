@@ -43,27 +43,27 @@ def _describe_event_log(el):
     print('-' * 80)
 
 
-def read_disco_csv(f, mapping=None, header=True):
+def read_disco_csv(f, header=True):
     """Import an event log from a file in CSV (Column-Separated Values)
     format, exported from Disco.
 
-    There are four expected default event attributes, including:
+    There are four expected "default" event attributes, including:
 
-        - case_id
-        - activity
-        - resource
-        - timestamp
+        - case_id,
+        - activity,
+        - resource,
+        - timestamp,
+
+    that start as the first four columns.
 
     Parameters
     ----------
     f : File object
         File object of the event log being imported.
-    mapping : dict, optional
-        A python dictionary denoting the mapping from CSV column index
-        to event log attributes.
-    header : bool, optional
+    header : bool, optional, default True
         A boolean flag indicating whether the input event log file
-        contains a header line.
+        contains a header line. Defaults to True, i.e., the provided CSV 
+        file is expected to be having a header line.
 
     Returns
     -------
@@ -72,28 +72,50 @@ def read_disco_csv(f, mapping=None, header=True):
     """
     from csv import reader
 
+    is_header_line = header
+
     ld = list()
-    is_header_line = True
     line_count = 0
 
+    # default attributes consistent with Disco export function
+    attributes = {
+        'case_id': 0,
+        'activity': 1,
+        'resource': 2,
+        'timestamp': 3
+    }
+    num_default_attributes = len(attributes)
+    has_additional_attributes = False
+    attributes_registered = False
+
     for row in reader(f):
-        line_count += 1
+        if not attributes_registered:
+            has_additional_attributes = len(row) > num_default_attributes
+            if has_additional_attributes:
+                # register them
+                if is_header_line:
+                    for i, name in enumerate(row[num_default_attributes:]):
+                        col_index = i + num_default_attributes
+                        attributes[name] = col_index
+                else:
+                    # no header line scanned but additional attributes exist
+                    for i in range(len(row[num_default_attributes:])):
+                        col_index = i + num_default_attributes
+                        name = 'unknown_attr_col{}'.format(col_index + 1)
+                        attributes[name] = col_index
+            else:
+                pass
+            attributes_registered = True
+
         if is_header_line:
             is_header_line = False
-            pass
         else:
-            # the default mapping consistent with Disco
-            e = {
-                'case_id': row[0],
-                'activity': row[1],
-                'resource': row[2],
-                'timestamp': row[3]
-            }
-            # append additional attributes
-            if mapping is not None:
-                for attr, col_num in mapping.items():
-                    e[attr] = row[col_num]
+            e = dict()
+            for attr, col_index in attributes.items():
+                e[attr] = row[col_index]
             ld.append(e)
+
+        line_count += 1
 
     from pandas import DataFrame
     el = DataFrame(ld)

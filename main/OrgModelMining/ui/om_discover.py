@@ -11,8 +11,7 @@ if __name__ == '__main__':
     # read event log as input
     from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        #el = read_disco_csv(f)
-        el = read_disco_csv(f, mapping={'(case) LoanGoal': 7})
+        el = read_disco_csv(f)
 
     # 1. Learn execution modes and convert to resource log
     from orgminer.ExecutionModeMiner import direct_groupby, informed_groupby

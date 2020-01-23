@@ -12,30 +12,6 @@ if __name__ == '__main__':
     from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
         el = read_disco_csv(f)
-        '''
-        el = read_disco_csv(f, mapping={
-            '(case) IDofConceptCase': 6,
-            '(case) Includes_subCases': 7,
-            '(case) Responsible_actor': 8,
-            '(case) SUMleges': 9,
-            '(case) caseProcedure': 10,
-            '(case) caseStatus': 11,
-            '(case) case_type': 12,
-            '(case) landRegisterID': 13,
-            '(case) last_phase': 14,
-            '(case) parts': 15,
-            '(case) requestComplete': 16,
-            '(case) termName': 17,
-            'action_code': 18,
-            'activityNameNL': 19,
-            'dateFinished': 21,
-            'dateStop': 22,
-            'dueDate': 23,
-            'monitoringResource': 25,
-            'planned': 26,
-            'question': 27
-            })
-        '''
 
     # analysis on the input log
     from numpy import mean, std, median

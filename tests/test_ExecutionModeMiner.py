@@ -20,9 +20,7 @@ filename_input = sys.argv[1]
 if __name__ == '__main__':
     # generate from a log
     with open(filename_input, 'r') as f:
-        #el = read_disco_csv(f)
-        #el = read_disco_csv(f, mapping={'(case) channel': 6})
-        el = read_disco_csv(f, mapping={'(case) last_phase': 14}) # bpic15-*
+        el = read_disco_csv(f)
 
     num_total_cases = len(set(el['case_id']))
     num_total_resources = len(set(el['resource']))

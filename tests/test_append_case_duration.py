@@ -13,10 +13,7 @@ filename_input = sys.argv[1]
 if __name__ == '__main__':
     from orgminer.IO.reader import read_disco_csv
     with open(filename_input, 'r') as f:
-        #el = read_disco_csv(f)
-        el = read_disco_csv(f, mapping={
-            'action_code': 18,
-            '(case) last_phase': 14}) # bpic15-*
+        el = read_disco_csv(f)
 
     print(el)
     el = append_case_duration(el)

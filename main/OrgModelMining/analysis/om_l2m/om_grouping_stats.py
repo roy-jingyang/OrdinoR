@@ -34,12 +34,15 @@ if __name__ == '__main__':
             group_id, len(om._mem[group_id]), len(om._cap[group_id])))
     print()
     '''
+
+    '''
     n_modes = 0
     for r in resources:
         print('Resource "{}":\t{} modes linked'.format(
             r, len(om.find_execution_modes(r))))
         n_modes += len(om.find_execution_modes(r))
     print()
+    '''
 
     '''
     # contents of groups

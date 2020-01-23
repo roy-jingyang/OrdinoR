@@ -178,8 +178,7 @@ if __name__ == '__main__':
     # read event log as input
     from orgminer.IO.reader import read_disco_csv
     with open(fn_event_log, 'r', encoding='utf-8') as f:
-        #el = read_disco_csv(f)
-        el = read_disco_csv(f, mapping={'(case) channel': 6})
+        el = read_disco_csv(f)
 
     # learn execution modes and convert to resource log
     from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner
