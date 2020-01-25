@@ -3,32 +3,37 @@
 """This module contains methods for determining execution modes 
 associated with resource groups.
 """
-def full_recall(group, rl):
+from orgminer.OrganizationalModelMiner.base import OrganizationalModel
+
+def full_recall(groups, rl):
     """Assign an execution mode to a group, as long as there exists a 
     member resource who has executed the mode.
 
     Parameters
     ----------
-    group : iterator
-        Id of resources as a resource group.
+    groups : list of sets
+        Resource groups containing resource ids.
     rl : DataFrame
         A resource log.
 
     Returns
     -------
-    modes : list of 3-tuples
-        Execution modes associated to the resource group.
+    om : OrganizationalModel
+        An organizational model resulted from assigning execution modes 
+        to resource groups.
     """
     print('Applying FullRecall for mode assignment:')
-    modes = list()
     grouped_by_resource = rl.groupby('resource')
+    om = OrganizationalModel()
 
-    for r in group:
-        for event in grouped_by_resource.get_group(r).itertuples():
-            m = (event.case_type, event.activity_type, event.time_type)
-            if m not in modes:
-                modes.append(m)
-    return modes
+    for group in groups:
+        modes = set()
+        for r in group:
+            # TODO: optimize the update
+            modes.update((e.case_type, e.activity_type, e.time_type)
+                for e in grouped_by_resource.get_group(r).itertuples())
+        om.add_group(group, sorted(list(modes)))
+    return om
 
 
 #TODO: Implementation #1 - OverallScore-WA
@@ -39,8 +44,8 @@ def _overall_score(group, rl, p, w1=0.5, w2=0.5):
 
     Parameters
     ----------
-    group : iterator
-        Id of resources as a resource group.
+    groups : list of sets
+        Resource groups containing resource ids.
     rl : DataFrame
         A resource log.
     p : float
@@ -52,9 +57,9 @@ def _overall_score(group, rl, p, w1=0.5, w2=0.5):
 
     Returns
     -------
-    modes : list of 3-tuples
-        Execution modes associated to the resource group, sorted by 
-        their relevance in terms of overall score from high to low.
+    om : OrganizationalModel
+        An organizational model resulted from assigning execution modes 
+        to resource groups.
     """
     print('Applying OverallScore with weights ({}, {}) '.format(w1, w2) +
         'and threshold {} '.format(p) + 'for mode assignment:')
