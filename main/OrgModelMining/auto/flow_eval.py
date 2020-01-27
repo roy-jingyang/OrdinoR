@@ -51,9 +51,9 @@ def execute(setup, seq_ix, exp_dirpath):
     else:
         params = eval(params)
     with open(params['filepath'], 'r') as f:
-        el = reader(f, mapping=params.get('mapping', None))
+        el = reader(f)
 
-    # Step 1: define execution modes
+    # define execution modes
     step += 1
     cls_exec_mode_miner = _import_block(sequence[step]['invoke'])
     exec_mode_miner_name = sequence[step]['label'].replace(' ', '')
@@ -65,7 +65,7 @@ def execute(setup, seq_ix, exp_dirpath):
         exec_mode_miner = cls_exec_mode_miner(el, **params)
     rl = exec_mode_miner.derive_resource_log(el)
 
-    # Step 2: characterizing resources
+    # characterize resources
     step += 1
     profiler = _import_block(sequence[step]['invoke'])
     params = sequence[step].get('params', None)
@@ -75,7 +75,7 @@ def execute(setup, seq_ix, exp_dirpath):
         params = eval(params)
         profiles = profiler(rl, **params)
 
-    # Step 3: discover resource grouping
+    # discover resource grouping
     step += 1
     discoverer = _import_block(sequence[step]['invoke'])
     discoverer_name = sequence[step]['label'].replace(' ', '')
@@ -93,22 +93,15 @@ def execute(setup, seq_ix, exp_dirpath):
         ogs = ogs[0]
 
     # assign execution modes
-    from orgminer.OrganizationalModelMiner.base import OrganizationalModel
-    om = OrganizationalModel()
     step += 1
     assigner = _import_block(sequence[step]['invoke'])
     assigner_name = sequence[step]['label'].replace(' ', '')
-    for og in ogs:
+    if params is None:
+        om = assigner(ogs, rl)
+    else:
         params = sequence[step].get('params', None)
-        if params is None:
-            modes = assigner(og, rl)
-        else:
-            params = eval(params)
-            if 'profiles' in params and prox_metric is not None:
-                params['metric'] = prox_metric
-            modes = assigner(og, rl, **params)
-        om.add_group(og, modes)
-    
+        params = eval(params)
+        om = assigner(ogs, rl, **params)
 
     # TODO: Hard-coded evalution measure (TBD)
     # 1. Intrinsic evaluation of clustering (by Silhouette score)

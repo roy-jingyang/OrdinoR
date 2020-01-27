@@ -70,10 +70,10 @@ def _overall_score(groups, rl, p, w1=0.5, w2=0.5):
         group_relative_stake, member_coverage
     from collections import defaultdict
 
-    scores_group_rel_stake = defaultdict(lambda: dict)
+    scores_group_rel_stake = defaultdict(lambda: defaultdict(dict))
     min_score_group_rel_stake = 1.0
     max_score_group_rel_stake = 0.0
-    scores_group_cov = defaultdict(lambda: dict)
+    scores_group_cov = defaultdict(lambda: defaultdict(dict))
     min_score_group_cov = 1.0
     max_score_group_cov = 0.0
 
@@ -107,18 +107,9 @@ def _overall_score(groups, rl, p, w1=0.5, w2=0.5):
     for i, group in enumerate(groups):
         tmp_modes = list()
         for m in all_execution_modes:
-            scaled_rel_stake = min_max_scale(
-                scores_group_rel_stake[i][m],
-                min_score_group_rel_stake,
-                max_score_group_rel_stake)
-            scaled_cov = min_max_scale(
-                scores_group_cov[i][m],
-                min_score_group_cov,
-                max_score_group_cov)
-
             relatedness_score = (
-                w1 * scaled_rel_stake + 
-                w2 * scaled_cov
+                w1 * scores_group_rel_stake[i][m] +
+                w2 * scores_group_cov[i][m]
             )
             if relatedness_score > p:
                 tmp_modes.append((m, relatedness_score))
@@ -130,7 +121,7 @@ def _overall_score(groups, rl, p, w1=0.5, w2=0.5):
 
 
 #TODO: Implementation #2 - OverallScore-HM
-def overall_score(group, rl, p):
+def overall_score(groups, rl, p):
     """Assign an execution mode to a group, as long as the overall score
     (as a harmonic mean) of its group relative stake and member
     coverage, is higher than a given threshold.
@@ -150,8 +141,8 @@ def overall_score(group, rl, p):
         An organizational model resulted from assigning execution modes 
         to resource groups.
     """
-    print('Applying OverallScore with weights ({}, {}) '.format(w1, w2) +
-        'and threshold {} '.format(p) + 'for mode assignment:')
+    print('Applying OverallScore with ' +
+        'threshold {} '.format(p) + 'for mode assignment:')
     all_execution_modes = set(rl[['case_type', 'activity_type', 'time_type']]
         .drop_duplicates().itertuples(index=False, name=None))
 
@@ -159,10 +150,10 @@ def overall_score(group, rl, p):
         group_relative_stake, member_coverage
     from collections import defaultdict
 
-    scores_group_rel_stake = defaultdict(lambda: dict)
+    scores_group_rel_stake = defaultdict(lambda: defaultdict(dict))
     min_score_group_rel_stake = 1.0
     max_score_group_rel_stake = 0.0
-    scores_group_cov = defaultdict(lambda: dict)
+    scores_group_cov = defaultdict(lambda: defaultdict(dict))
     min_score_group_cov = 1.0
     max_score_group_cov = 0.0
 
@@ -205,12 +196,15 @@ def overall_score(group, rl, p):
                 min_score_group_cov,
                 max_score_group_cov)
 
-            relatedness_score = (
-                2 * (scaled_rel_stake * scaled_cov) /
-                (scaled_rel_stake + scaled_cov)
-            )
-            if relatedness_score > p:
-                tmp_modes.append((m, relatedness_score))
+            if scaled_rel_stake + scaled_cov > 0:
+                relatedness_score = (
+                    2 * (scaled_rel_stake * scaled_cov) /
+                    (scaled_rel_stake + scaled_cov)
+                )
+                if relatedness_score > p:
+                    tmp_modes.append((m, relatedness_score))
+            else:
+                pass
         modes = list(item[0] 
             for item in sorted(tmp_modes, key=itemgetter(1), reverse=True))
         om.add_group(group, modes)
