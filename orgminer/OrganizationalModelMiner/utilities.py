@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """This module provides the necessary helper functions for 
-organizational model mining methods (more specifically, grouping 
-discovery methods).
+organizational model mining methods.
 """
 from deprecated import deprecated
 
@@ -24,7 +23,7 @@ def cross_validation_score(
     proximity_metric : str, optional, default 'euclidean'
         Metric for measuring the distance while calculating proximity. 
         This should remain consistent with that employed by the specific 
-        mining method. Defaults to ``'euclidean'``, meaning that
+        mining method. Defaults to 'euclidean'``, meaning that
         euclidean distance is used for measuring proximity.
     cv_fold : int, or float in range (0, 1.0), default 0.2
         The number of folds to be used for cross validation. 
@@ -85,6 +84,68 @@ def cross_validation_score(
         scores.append((-1) * sum_closest_proximity)
 
     return mean(scores)
+
+
+def grid_search(func_core, params_config, func_eval_score):
+    """This method provides a wrapper with grid search functionality. 
+    
+    For any core function and its parameter field along with range of 
+    values under test, a grid search will be performed to select the
+    parameter configuration that leads to the best (highest-scored)
+    solution, evaluated by a user-provided function. 
+
+    Parameters
+    ----------
+    func_core : function
+        Core function under grid search. The provided function must
+        return a value (or values) that can be accepted as input
+        parameters for `func_eval_score`.
+
+    params_config : dict of iterators
+        A Python dictionary that specifies the range of grid search. Each
+        of the key(s) correspond to a parameter from `func_core`, for
+        which the value defines a range of candidate values to by used
+        for search.
+
+    func_eval_score : function
+        User-provided function for evaluating an instance during the
+        search process. The provided function must take as input the
+        return from `func_core` and calculates a score, for which a
+        higher value indicates a better solution, and vice versa.
+
+    Returns
+    -------
+    solution : (return type depending on `func_core`)
+        The best (highest-scored) solution returned from `func_core`.
+
+    params_best : dict
+        The parameter settings associated with the best (highest-scored)
+        solution, encoded in a Python dictionary.
+    """
+    from itertools import product
+    l_tuples_all_configs = list()
+    for param_field, param_value_range in params_config.items():
+        l_tuples_configs = list()
+        for value in param_value_range:
+            l_tuples_configs.append((param_field, value)) 
+        l_tuples_all_configs.append(l_tuples_configs)
+
+    solution = None
+    params_best = None
+    best_score = float('-inf')
+    for param_config in product(*l_tuples_all_configs):
+        params = dict()
+        for (field, value) in param_config:
+            params[field] = value
+        func_core_ret = func_core(**params)
+        score = func_eval_score(func_core_ret)
+        if score > best_score:
+            best_score = score
+            solution = func_core_ret
+            params_best = params
+        else:
+            pass
+    return solution, params_best
 
 
 @deprecated(reason='This method is neither being nor intended to be used.')

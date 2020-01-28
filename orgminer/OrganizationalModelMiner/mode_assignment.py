@@ -37,7 +37,7 @@ def full_recall(groups, rl):
 
 
 #TODO: Implementation #1 - OverallScore-WA
-def _overall_score(groups, rl, p, w1=0.5, w2=0.5):
+def overall_score(groups, rl, p, w1=0.5, w2=None, auto_search=False):
     """Assign an execution mode to a group, as long as the overall score
     (as a weighted average) of its group relative stake and member
     coverage, is higher than a given threshold.
@@ -52,17 +52,53 @@ def _overall_score(groups, rl, p, w1=0.5, w2=0.5):
         A given threshold value in range [0, 1.0].
     w1 : float, optional, default 0.5
         The weight value assigned to participation rate.
-    w2 : float, optional, default 0.5
-        The weight value assigned to coverage.
+    w2 : float, optional, default None
+        The weight value assigned to coverage. Note that this parameter
+        is in fact redundant as its value must conform with the value set
+        for parameter `w1`. See notes below.
+    auto_search : bool, optional, default False
+        A Boolean flag indicating whether to perform auto grid search to
+        determine the threshold and the weightings. When auto grid search
+        is required, values in range[0, 1.0] will be tested at a step of 
+        0.1, and values given to parameter `p`, `w1`, and `w2` will be
+        overrided. Defaults to False, i.e., auto grid search is not to be
+        performed.
 
     Returns
     -------
     om : OrganizationalModel
         An organizational model resulted from assigning execution modes 
         to resource groups.
+
+    Notes
+    -----
+        The weighting values are expected to sum up to 1.
     """
-    print('Applying OverallScore with weights ({}, {}) '.format(w1, w2) +
-        'and threshold {} '.format(p) + 'for mode assignment:')
+    if auto_search is True:
+        print('Applying OverallScore with auto search:')
+        from orgminer.OrganizationalModelMiner.utilities import grid_search
+        from functools import partial
+        from orgminer.Evaluation.l2m.conformance import fitness, precision
+        def f1_score(org_model):
+            f = fitness(rl, org_model)
+            p = precision(rl, org_model)
+            return 2 * f * p / (f + p)
+        solution, params = grid_search(
+            partial(overall_score, groups=groups, rl=rl), 
+            params_config={
+            'p': list(x / 10 for x in range(1, 11)),
+            'w1': list(x / 10 for x in range(11))},
+            func_eval_score=f1_score
+        )
+        print('\tBest solution obtained with parameters:')
+        print('\t', end='')
+        print(params)
+        return solution
+    else:
+        w2 = 1.0 - w1
+        print('Applying OverallScore with weights ({}, {}) '.format(w1, w2) +
+            'and threshold {} '.format(p) + 'for mode assignment:')
+
     all_execution_modes = set(rl[['case_type', 'activity_type', 'time_type']]
         .drop_duplicates().itertuples(index=False, name=None))
 
@@ -117,11 +153,14 @@ def _overall_score(groups, rl, p, w1=0.5, w2=0.5):
             for item in sorted(tmp_modes, key=itemgetter(1), reverse=True))
         om.add_group(group, modes)
 
+    if type(om) is tuple:
+        print('In mode assignment')
+        print(groups)
     return om
 
 
 #TODO: Implementation #2 - OverallScore-HM
-def overall_score(groups, rl, p):
+def _overall_score(groups, rl, p):
     """Assign an execution mode to a group, as long as the overall score
     (as a harmonic mean) of its group relative stake and member
     coverage, is higher than a given threshold.

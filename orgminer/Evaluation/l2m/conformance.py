@@ -43,6 +43,8 @@ def fitness(rl, om):
     is valid since a resource log is (implicitly) one-to-one 
     corresponded with an event log.
     """
+    if type(om) is tuple:
+        print(om)
     conformed_events = rl[rl.apply(
         lambda e: _is_conformed_event(e, om), axis=1)]
     n_conformed_events = len(conformed_events) # "|E_conf|"
