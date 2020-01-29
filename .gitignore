@@ -13,5 +13,8 @@
 input/
 output/
 
+# Ignore external softwares
+external/
+
 # Ignore documentation files built (keep only sources)
 doc/
