@@ -5,7 +5,7 @@ import sys
 sys.path.append('./')
 
 # import methods to be tested below
-from orgminer.IO.reader import read_disco_csv
+from orgminer.IO.reader import read_disco_csv, read_xes
 from orgminer.ExecutionModeMiner.direct_groupby import ATonlyMiner
 from orgminer.ExecutionModeMiner.direct_groupby import CTonlyMiner
 from orgminer.ExecutionModeMiner.direct_groupby import ATCTMiner
@@ -20,7 +20,8 @@ filename_input = sys.argv[1]
 if __name__ == '__main__':
     # generate from a log
     with open(filename_input, 'r') as f:
-        el = read_disco_csv(f)
+        #el = read_disco_csv(f)
+        el = read_xes(f)
 
     num_total_cases = len(set(el['case_id']))
     num_total_resources = len(set(el['resource']))
@@ -34,6 +35,7 @@ if __name__ == '__main__':
             teamwork_cases.add(case_id)
     el = el.loc[el['case_id'].isin(teamwork_cases)]
     '''
+    '''
     # NOTE: filter resources with low event frequencies (< 1%)
     num_total_events = len(el)
     active_resources = set()
@@ -41,6 +43,7 @@ if __name__ == '__main__':
         if (len(events) / num_total_events) >= 0.01 and resource != '':
             active_resources.add(resource)
     el = el.loc[el['resource'].isin(active_resources)] 
+    '''
 
     '''
     # NOTE: 1. select only cases with particular case values
@@ -49,14 +52,16 @@ if __name__ == '__main__':
     # TODO: NOTE: 2. select only events related to particular subprocess phases
     '''
 
+    '''
     print('{}/{} resources found active in {}/{} cases.\n'.format(
         len(active_resources), num_total_resources,
         len(set(el['case_id'])), num_total_cases))
+    '''
 
     #mode_miner = ATonlyMiner(el)
-    mode_miner = CTonlyMiner(el, case_attr_name='(case) last_phase')
+    #mode_miner = CTonlyMiner(el, case_attr_name='(case) last_phase')
     #mode_miner = ATCTMiner(el, case_attr_name='(case) channel')
-    #mode_miner = ATTTMiner(el, resolution='weekday')
+    mode_miner = ATTTMiner(el, resolution='weekday')
     #mode_miner = FullMiner(el, 
     #    case_attr_name='(case) channel', resolution='weekday')
     #mode_miner = TraceClusteringCTMiner(el,
@@ -70,6 +75,8 @@ if __name__ == '__main__':
     print(rl[['case_type', 'activity_type', 'time_type']].drop_duplicates())
     print('Num. = {}'.format(len(
         rl[['case_type', 'activity_type', 'time_type']].drop_duplicates())))
+        
+    exit()
 
 
     from collections import Counter

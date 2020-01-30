@@ -130,12 +130,15 @@ def read_xes(f):
     """Import an event log from a file in IEEE XES (eXtensible Event 
     Stream) format.
 
+    This is a wrapper method around the XES import feature provided in
+    the PM4Py library. See: `<http://pm4py.org/>`_
+
     There are four expected default event attributes, including:
 
-        - case_id
-        - activity
-        - resource
-        - timestamp
+        - case_id (mapped from `case:concept:name`),
+        - activity (mapped from `concept:name`),
+        - resource (mapped from `org:resource`),
+        - timestamp (mapped from `time:timestamp`).
 
     Parameters
     ----------
@@ -147,5 +150,18 @@ def read_xes(f):
     el : DataFrame
         An event log.
     """
-    raise NotImplementedError
+    from pm4py.objects.log.importer.xes import factory
+    pm4py_log = factory.import_log_from_string(f.read(), 
+        parameters={'index_trace_indexes': True})
+    from pm4py.objects.conversion.log.versions import to_dataframe
+    df = to_dataframe.apply(pm4py_log).rename(columns={
+        'case:concept:name': 'case_id',
+        'concept:name': 'activity',
+        'org:resource': 'resource',
+        'time:timestamp': 'timestamp'
+    })
+    import re
+    df['timestamp'] = df['timestamp'].apply(
+        lambda x: x.strftime('%Y/%m/%d %H:%M:%S.%f'))
+    return df
 

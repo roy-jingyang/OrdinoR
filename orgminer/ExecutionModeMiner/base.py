@@ -233,6 +233,76 @@ class BaseMiner:
         return rl
 
 
+    def to_file(self, f):
+        """Export the constructed execution mode miner to an external 
+        file using Python pickle.
+        
+        Parameters
+        ----------
+        f : File object
+            A destination file to be written.
+
+        Returns
+        -------
+
+        Raises
+        ------
+        RuntimeError
+            If the constructed execution mode miner is not verified.
+        """
+        if (self.is_ctypes_verified and self.is_atypes_verified and
+            self.is_ttypes_verified):
+            obj = {
+                '_ctypes': self._ctypes,
+                'is_ctypes_verified': self.is_ctypes_verified,
+                '_atypes': self._atypes,
+                'is_atypes_verified': self.is_atypes_verified,
+                '_ttypes': self._ttypes,
+                'is_ttypes_verified': self.is_ttypes_verified
+            }
+            from json import dump
+            dump(obj, f)
+        else:
+            raise RuntimeError('Unable to verify execution modes.')
+
+
+    @classmethod
+    def from_file(cls, f):
+        """Import a constructed execution mode miner to an external file 
+        using Python pickle.
+
+        Parameters
+        ----------
+        f: File object
+            A sourced file to be read from.
+
+        Returns
+        -------
+        (Corresponding miner class object)
+            The imported constructed execution mode miner.
+
+        Raises
+        ------
+        RuntimeError
+            If the imported execution mode miner is not verified.
+        """
+        from json import load
+        obj = load(f)
+        if (obj['is_ctypes_verified'] and obj['is_atypes_verified'] and
+            obj['is_ttypes_verified']):
+            ret = cls(el=None)
+            ret.is_ctypes_verified = ret.is_atypes_verified = \
+                ret.is_ttypes_verified = True
+            ret._ctypes = obj['_ctypes']
+            ret._atypes = obj['_atypes']
+            ret._ttypes = obj['_ttypes']
+
+            ret._verify()
+            return ret
+        else:
+            raise RuntimeError('Unable to verify execution modes.')
+
+
     def _verify_partition(self, whole_set, partitioning):
         """A helper function that is used for verifying if the keys in a 
         given partitioning (as a dict) is indeed a partitioning of 

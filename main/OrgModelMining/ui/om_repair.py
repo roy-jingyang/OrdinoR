@@ -6,7 +6,9 @@ sys.path.append('./')
 
 fn_event_log = sys.argv[1]
 fn_model = sys.argv[2]
-fnout_diagnostics_report = sys.argv[3]
+fnout_diagnostic_report = sys.argv[3]
+opt_repair = sys.argv[4] # {'repair', 'reveal'}
+threshold_repair = float(sys.argv[5]) if opt_repair == 'repair' else None
 
 def jaccard_index(set_a, set_b):
     return len(set.intersection(set_a, set_b)) / len(set.union(set_a, set_b))
@@ -55,23 +57,35 @@ if __name__ == '__main__':
     print()
 
     # Local diagnostics (targeting low precision)
+    from collections import defaultdict
     mode_occurrence = rl.groupby([
         'case_type', 'activity_type', 'time_type']).size().to_dict()
-    from orgminer.Evaluation.l2m.diagnostics import member_coverage
-    from collections import defaultdict
-    mode_coverage = defaultdict(lambda: dict())
     group_size = dict()
+
+    from orgminer.Evaluation.l2m.diagnostics import \
+        group_relative_focus, group_relative_stake, member_coverage
+    from scipy.stats import hmean
+    scores_rel_focus = defaultdict(lambda: dict())
+    scores_rel_stake = defaultdict(lambda: dict())
+    scores_coverage = defaultdict(lambda: dict())
+
     for og_id, og in om.find_all_groups():
         group_size[og_id] = len(og)
         for cap in om.find_group_execution_modes(og_id):
-            mode_coverage[cap][og_id] = member_coverage(og, cap, rl)
+            scores_rel_focus[cap][og_id] = group_relative_focus(og, cap, rl)
+            scores_rel_stake[cap][og_id] = group_relative_stake(og, cap, rl)
+            scores_coverage[cap][og_id] = member_coverage(og, cap, rl)
     
     print()
     diag_results = list()
-    for mode, val in mode_coverage.items():
+    for mode, val in scores_coverage.items():
         for og_id, coverage in val.items():
+            rel_focus = scores_rel_focus[mode][og_id]
+            rel_stake = scores_rel_stake[mode][og_id]
+
             mf_scaled = mode_occurrence[mode] / max(mode_occurrence.values())
             gs_scaled = group_size[og_id] / max(group_size.values())
+
             impact_index = mf_scaled * gs_scaled / coverage
             diag_results.append([
                 mode, og_id,
@@ -79,27 +93,56 @@ if __name__ == '__main__':
                 mf_scaled, 
                 group_size[og_id], 
                 gs_scaled,
-                coverage, impact_index
+                coverage,
+                rel_focus,
+                rel_stake,
+                impact_index
             ])
 
     diag_results.sort(key=lambda row: row[-1], reverse=True)
 
     # Calculate and export model repairing results
-    with open(fnout_diagnostics_report, 'w+') as fout:
-        fout.write(
-            'mode;group;mode-freq;m-f scaled;group-size;g-s scaled;' +
-            'coverage;impact-index;fitness;precision' + '\n')
+    with open(fnout_diagnostic_report, 'w+') as fout:
+        if opt_repair == 'repair':
+            fout.write(
+                'mode;group;mode-freq;m-f scaled;group-size;g-s scaled;' +
+                'coverage;rel_focus;rel_stake;impact_index;' +
+                'fitness;precision' + '\n')
+        elif opt_repair == 'reveal':
+            fout.write(
+                'mode;group;mode-freq;m-f scaled;group-size;g-s scaled;' +
+                'coverage;rel_focus;rel_stake;impact_index' + '\n')
+
+        else:
+            exit('Error')
+
+        count = 0
         for row in diag_results:
+            count += 1
+
             mode = row[0]
             og_id = row[1]
-            # NOTE: directly operating private members of a model instance
-            om._cap[og_id].remove(mode)
-            om._rcap[mode].remove(og_id)
 
-            fitness_score_new = conformance.fitness(rl, om)
-            precision_score_new = conformance.precision(rl, om)
-            fout.write(
-                ';'.join(list(str(v) for v in row)) + ';'
-                '{:.3f};{:.3f}'.format(fitness_score_new, precision_score_new) 
-                + '\n')
+            if opt_repair == 'repair':
+                if count > len(diag_results) * threshold_repair:
+                    break
+
+                # NOTE: directly operating private members of a model instance
+                om._cap[og_id].remove(mode)
+                om._rcap[mode].remove(og_id)
+
+                fitness_score_new = conformance.fitness(rl, om)
+                precision_score_new = conformance.precision(rl, om)
+
+                fout.write(
+                    ';'.join(list(str(v) for v in row)) + ';'
+                    '{:.3f};{:.3f}'.format(
+                        fitness_score_new, precision_score_new) 
+                    + '\n')
+            elif opt_repair == 'reveal':
+                fout.write(
+                    ';'.join(list(str(v) for v in row))
+                    + '\n')
+            else:
+                exit('Error')
 
