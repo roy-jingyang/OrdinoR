@@ -24,9 +24,12 @@ if __name__ == '__main__':
     from orgminer.ExecutionModeMiner.direct_groupby import FullMiner
     from orgminer.ExecutionModeMiner.informed_groupby import \
         TraceClusteringFullMiner
-    mode_miner = ATonlyMiner(el)
-    #mode_miner = FullMiner(
-    #    el, case_attr_name='(case) channel', resolution='weekday')
+    #mode_miner = ATonlyMiner(el)
+    mode_miner = FullMiner(
+        el, case_attr_name='(case) channel', resolution='weekday')
+    #mode_miner = TraceClusteringFullMiner(
+    #    el, fn_partition='./input/extra_knowledge/wabo.bosek5.tcreport',
+    #    resolution='weekday')
 
     rl = mode_miner.derive_resource_log(el)
 
@@ -70,12 +73,31 @@ if __name__ == '__main__':
     scores_coverage = defaultdict(lambda: dict())
 
     for og_id, og in om.find_all_groups():
+        if og_id == 3:
+            # do something
+            from orgminer.Evaluation.l2m.diagnostics import \
+                member_mode_contribution
+            dist = member_mode_contribution(
+                og, 
+                ('CT.Internet', 
+                'AT.T04 Determine confirmation of receipt-complete', 
+                'TT.6'),
+                rl
+            )
+            print(dist)
+        else:
+            continue
+
+        '''
         group_size[og_id] = len(og)
         for cap in om.find_group_execution_modes(og_id):
             scores_rel_focus[cap][og_id] = group_relative_focus(og, cap, rl)
             scores_rel_stake[cap][og_id] = group_relative_stake(og, cap, rl)
             scores_coverage[cap][og_id] = member_coverage(og, cap, rl)
+        '''
     
+    exit()
+
     print()
     diag_results = list()
     for mode, val in scores_coverage.items():

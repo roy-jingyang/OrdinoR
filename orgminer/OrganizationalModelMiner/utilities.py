@@ -101,7 +101,7 @@ def grid_search(func_core, params_config, func_eval_score):
         return a value (or values) that can be accepted as input
         parameters for `func_eval_score`.
 
-    params_config : dict of iterators
+    params_config : dict of lists
         A Python dictionary that specifies the range of grid search. Each
         of the key(s) correspond to a parameter from `func_core`, for
         which the value defines a range of candidate values to by used
@@ -130,26 +130,39 @@ def grid_search(func_core, params_config, func_eval_score):
             l_tuples_configs.append((param_field, value)) 
         l_tuples_all_configs.append(l_tuples_configs)
 
-    solution = None
-    params_best = None
-    best_score = float('-inf')
+    l_dicts_all_configs = list()
     for param_config in product(*l_tuples_all_configs):
         params = dict()
         for (field, value) in param_config:
             params[field] = value
-        func_core_ret = func_core(**params)
-        score = func_eval_score(func_core_ret)
-        if score > best_score:
-            best_score = score
-            solution = func_core_ret
-            params_best = params
-        else:
-            pass
+        l_dicts_all_configs.append(params)
+    
+    from functools import partial
+    from multiprocessing import Pool
+    from os import sched_getaffinity
+    from operator import itemgetter
+    avail_cpus = len(sched_getaffinity(0))
+
+    with Pool(avail_cpus) as p:
+        params_best = max(
+            p.map(partial(_grid_search_wrapper, 
+                    func_core,
+                    func_eval_score), 
+                l_dicts_all_configs),
+            key=itemgetter(1))[0]
+
+    solution = func_core(**params_best)
     return solution, params_best
 
 
+def _grid_search_wrapper(func_core, func_eval_score, params):
+    func_core_ret = func_core(**params)
+    score = func_eval_score(func_core_ret)
+    return params, score
+
+
 @deprecated(reason='This method is neither being nor intended to be used.')
-def __powerset_exclude_headtail(s, reverse=False, depth=None):
+def _powerset_exclude_headtail(s, reverse=False, depth=None):
     """Python recipe: this function returns a power set of a given set
     of elements, but excluding the empty set and the given set itself,
     as a generator.
@@ -186,7 +199,7 @@ def __powerset_exclude_headtail(s, reverse=False, depth=None):
 
 
 @deprecated(reason='This method is neither being nor intended to be used.')
-def __find_best_subset_GA(universe, evaluate, seed,
+def _find_best_subset_GA(universe, evaluate, seed,
     max_iter, size_population, p_crossover, p_mutate):
     from random import randint, sample, random
     from deap import base, creator, tools

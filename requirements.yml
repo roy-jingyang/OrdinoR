@@ -17,6 +17,7 @@ dependencies:
   - fontconfig
   - freetype
   - glib
+  - deprecated
   - gst-plugins-base
   - gstreamer
   - icu

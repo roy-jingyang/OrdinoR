@@ -121,3 +121,20 @@ def member_coverage(group, mode, rl):
             pass
     return num_participants / len(group)
 
+
+# NOTE: # (r, rg, q) / (*, rg, q)
+def member_mode_contribution(group, mode, rl):
+    # filtering irrelevant events
+    rl = rl.loc[rl['resource'].isin(group)].groupby([
+        'case_type', 'activity_type', 'time_type']).get_group(mode)
+    group_total_count = len(rl)
+    print(rl)
+
+    from collections import defaultdict
+    group_load_distribution = defaultdict(lambda: dict())
+    for r in group:
+        group_load_distribution[r] = (
+            len(rl.loc[rl['resource'] == r]) / group_total_count)
+
+    return group_load_distribution
+
