@@ -222,3 +222,10 @@ def precision(rl, om):
         precision *= 1 / n_allowed_events
         return precision
 
+
+def f1_score(rl, om):
+    fitness_score = fitness(rl, om)
+    precision_score = precision(rl, om)
+    return ((2 * fitness_score * precision_score) 
+            / (fitness_score + precision_score))
+

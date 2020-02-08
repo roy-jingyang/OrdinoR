@@ -78,11 +78,7 @@ def overall_score(groups, rl, p, w1=0.5, w2=None, auto_search=False):
         print('Applying OverallScore with auto search:')
         from orgminer.OrganizationalModelMiner.utilities import grid_search
         from functools import partial
-        from orgminer.Evaluation.l2m.conformance import fitness, precision
-        def f1_score(org_model):
-            f = fitness(rl, org_model)
-            p = precision(rl, org_model)
-            return 2 * f * p / (f + p)
+        from orgminer.Evaluation.l2m.conformance import f1_score
         solution, params = grid_search(
             partial(overall_score, groups=groups, rl=rl), 
             params_config={
