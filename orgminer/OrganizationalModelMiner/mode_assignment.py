@@ -84,7 +84,7 @@ def overall_score(groups, rl, p, w1=0.5, w2=None, auto_search=False):
             params_config={
             'p': list(x / 10 for x in range(1, 11)),
             'w1': list(x / 10 for x in range(11))},
-            func_eval_score=partial(f1_score, rl=rl)
+            func_eval_score=partial(f1_score, rl)
         )
         print('\tBest solution obtained with parameters:')
         print('\t', end='')
