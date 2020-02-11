@@ -82,8 +82,8 @@ def overall_score(groups, rl, p, w1=0.5, w2=None, auto_search=False):
         solution, params = grid_search(
             partial(overall_score, groups=groups, rl=rl), 
             params_config={
-            'p': list(x / 10 for x in range(1, 11)),
-            'w1': list(x / 10 for x in range(11))},
+            'p': list(x / 10 for x in range(1, 10)),
+            'w1': list(x / 10 for x in range(1, 10))},
             func_eval_score=partial(f1_score, rl)
         )
         print('\tBest solution obtained with parameters:')
