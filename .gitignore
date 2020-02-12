@@ -18,3 +18,8 @@ external/
 
 # Ignore documentation files built (keep only sources)
 doc/
+
+# Ignore packaging intermediate artifacts
+build/
+dist/
+*.egg-info/

@@ -31,7 +31,7 @@ setuptools.setup(
 
     packages=[
         'orgminer',
-    ]
+    ],
 
     # meta data to display on PyPI
     author='Jing Yang (Roy)',
@@ -44,7 +44,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: GNU GPLv3',
         'Operating System :: OS Independent'
-    ]
+    ],
 
     install_requires=[
         'pip',
