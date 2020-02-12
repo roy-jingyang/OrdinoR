@@ -47,6 +47,7 @@ setuptools.setup(
     ]
 
     install_requires=[
+        'pip',
         'numpy',
         'scipy',
         'sklearn',
