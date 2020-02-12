@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./')
 
 # List input parameters from shell
 fn_event_log = sys.argv[1]

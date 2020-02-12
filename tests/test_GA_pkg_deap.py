@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./')
 import random
 
 def _is_odd_number(x):

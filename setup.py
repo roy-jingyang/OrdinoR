@@ -27,7 +27,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='orgminer',
-    version='0.0.1a20200212-1741',
+    version='0.0.1a20200212-1750',
 
     packages=[
         'orgminer',
@@ -55,8 +55,6 @@ setuptools.setup(
         'networkx>=2.4',
         'pm4py>=1.2.4',
         'Deprecated>=1.2.6',
-        #'python-igraph>=0.7.1',    # TODO: temporarily disabled
-        #'louvain>=0.6.1',          # TODO: temporarily disabled
     ],
     python_requires='>=3.6',
 )

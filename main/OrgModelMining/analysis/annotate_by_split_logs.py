@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./')
 import os
 from os import listdir
 from os.path import join

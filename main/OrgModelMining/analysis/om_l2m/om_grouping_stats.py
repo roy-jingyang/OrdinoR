@@ -4,7 +4,6 @@
 # Build resource social network depending on group membership. 
 
 import sys
-sys.path.append('./')
 
 from orgminer.OrganizationalModelMiner.base import OrganizationalModel
 from collections import defaultdict

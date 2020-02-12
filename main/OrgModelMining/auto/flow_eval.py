@@ -27,7 +27,6 @@ node attributes as well as convenient visualization features.
 """
 
 import sys
-sys.path.append('./')
 
 from os.path import join
 from csv import writer

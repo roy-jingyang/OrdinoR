@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./')
 
 if __name__ == '__main__':
     # Derived resource log RL

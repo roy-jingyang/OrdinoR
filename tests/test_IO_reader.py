@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./')
 
 # import methods to be tested below
 from orgminer.IO.reader import read_disco_csv

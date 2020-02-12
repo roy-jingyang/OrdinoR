@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./')
 
 fn_event_log = sys.argv[1]
 fnout_social_network = sys.argv[2]

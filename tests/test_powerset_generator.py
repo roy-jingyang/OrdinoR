@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./')
 
 from orgminer.OrganizationalModelMiner.utilities import powerset_exclude_headtail
 

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('./')
 
 fn_event_log = sys.argv[1]
 fn_org_model_hcy = sys.argv[2]
