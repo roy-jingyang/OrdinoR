@@ -25,6 +25,7 @@ if __name__ == '__main__':
 
     # specify the number of tests to be performed to check consistency
     n_tests = 10
+    '''
     from orgminer.OrganizationalModelMiner.community.overlap import link_partitioning
 
     prev_ogs = None
@@ -51,4 +52,5 @@ if __name__ == '__main__':
         for i, og in enumerate(prev_ogs):
             print(i)
             print(og)
+    '''
 

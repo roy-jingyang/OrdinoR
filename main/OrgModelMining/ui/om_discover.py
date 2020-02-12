@@ -60,7 +60,7 @@ if __name__ == '__main__':
     print('\t0. Default Mining (Song)')
     print('\t1. Metric based on Joint Activities/Cases (Song)')
     print('\t2. Hierarchical Organizational Mining')
-    print('\t3. Overlapping Community Detection')
+    #print('\t3. Overlapping Community Detection') # TODO: disabled temporarily
     print('\t4. Gaussian Mixture Model')
     print('\t5. Model based Overlapping Clustering')
     print('\t6. Fuzzy c-means')

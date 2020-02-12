@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+# TODO: this module is temporarily disabled due to unsolved dependency issue.
+
 """This module contains the implementation of overlapping graph/network 
 -based organizational mining methods, based on the use of community 
 detection techniques [1]_.
