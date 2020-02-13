@@ -55,6 +55,7 @@ setuptools.setup(
         'pandas>=0.25.3',
         'networkx>=2.4',
         'pm4py>=1.2.4',
+        'pygraphviz',
         'Deprecated>=1.2.6', # aka 'deprecated' anaconda cloud
     ],
     python_requires='>=3.6',
