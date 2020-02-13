@@ -15,6 +15,26 @@ My current research aims at gaining a more comprehensive understanding of organi
 
 Furthermore, this library is established such that it allows a user to build their own approaches for organizational model discovery and conformance checking, either by adjusting and extending the existed methods, or by inventing new methods/modules that extend the library.
 
+### How to use
+#### Prerequisite
+OrgMiner is built using Python ([What is Python?](https://www.python.org/)) hence it is a prerequisite to have Python installed on your machine. 
+
+We recommend using [Anaconda Python] (https://www.anaconda.com/distribution/), a distribution of Python with enhanced support of package management which will make life easier especially in resolving dependencies. You may choose to install the minimal core of Anaconda Python only: [Miniconda] (https://docs.conda.io/en/latest/miniconda.html).
+
+#### Install OrgMiner
+OrgMiner can be installed by the Anaconda Python package manager. In Unix systems,
+
+In Windows,
+
+
+#### Replicate experiments in the paper \[5\]
+
+
+#### Make use of OrgMiner
+OrgMiner is developed as a library meaning users are more than welcome to build their own main programs by importing the modules/methods from OrgMiner. Examples can be found as the main files that replicate the experiments, and also the 2 linked repositories related to 2 publications.
+
+See the Documentation section for more information for an instruction on how to use the library for building a program and/or extending the library as a contributor.
+
 ### Documentation (WIP)
 We are working on a structured documentation for OrgMiner library, which will be available through Read the Docs soon.
 
