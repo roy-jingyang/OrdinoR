@@ -19,7 +19,7 @@ Furthermore, this library is established such that it allows a user to build the
 #### Prerequisite
 OrgMiner is built using Python ([What is Python?](https://www.python.org/)) hence it is a prerequisite to have Python installed on your machine. 
 
-We recommend using [Anaconda Python] (https://www.anaconda.com/distribution/), a distribution of Python with enhanced support of package management which will make life easier especially in resolving dependencies. You may choose to install the minimal core of Anaconda Python only: [Miniconda] (https://docs.conda.io/en/latest/miniconda.html).
+We recommend using [Anaconda Python](https://www.anaconda.com/distribution/), a distribution of Python with enhanced support of package management which will make life easier especially in resolving dependencies. You may choose to install the minimal core of Anaconda Python only: [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
 #### Install OrgMiner
 OrgMiner can be installed by the Anaconda Python package manager. In Unix systems,
