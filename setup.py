@@ -27,11 +27,12 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='orgminer',
-    version='0.0.1a20200212-1750',
+    version='0.0.1a20200213-1530',
 
-    packages=[
-        'orgminer',
-    ],
+    namespace_packages=['orgminer'],
+    package_dir={'': '.'},
+    packages=setuptools.find_namespace_packages(
+        where='.', include=['orgminer.*']),
 
     # meta data to display on PyPI
     author='Jing Yang (Roy)',
@@ -54,7 +55,7 @@ setuptools.setup(
         'pandas>=0.25.3',
         'networkx>=2.4',
         'pm4py>=1.2.4',
-        'Deprecated>=1.2.6',
+        'Deprecated>=1.2.6', # aka 'deprecated' anaconda cloud
     ],
     python_requires='>=3.6',
 )
