@@ -78,9 +78,10 @@ def overall_score(groups, rl, p, w1=0.5, w2=None, auto_search=False):
         print('Applying OverallScore with auto search:')
         from orgminer.OrganizationalModelMiner.utilities import grid_search
         from functools import partial
+        from copy import deepcopy
         from orgminer.Evaluation.l2m.conformance import f1_score
         solution, params = grid_search(
-            partial(overall_score, groups=groups, rl=rl), 
+            partial(overall_score, groups=deepcopy(groups), rl=rl), 
             params_config={
             'p': list(x / 10 for x in range(1, 10)),
             'w1': list(x / 10 for x in range(1, 10))},

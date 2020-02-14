@@ -27,7 +27,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='orgminer',
-    version='0.0.1a20200213-1530',
+    version='0.0.1a20200214',
 
     namespace_packages=['orgminer'],
     package_dir={'': '.'},
@@ -55,8 +55,10 @@ setuptools.setup(
         'pandas>=0.25.3',
         'networkx>=2.4',
         'pm4py>=1.2.4',
-        'pygraphviz',
         'Deprecated>=1.2.6', # aka 'deprecated' anaconda cloud
+        # for program Arya
+        'flask',
+        'pygraphviz',
     ],
     python_requires='>=3.6',
 )
