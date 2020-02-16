@@ -20,5 +20,3 @@ In Windows,
 #### References:
 ###### 1. Yang, J., Ouyang, C., Pan, M., Yu, Y., & ter Hofstede, A. H. M. (2018). Finding the “Liberos”: Discover Organizational Models with Overlaps. In M. Weske, M. Montali, I. Weber, & J. vom Brocke (Eds.), Business Process Management (pp. 339–355). Cham: Springer International Publishing.
 ###### 2. Ouyang, C., Leyer, M., Yang, J., Sindhgatta, R. (2020). Discovering Organizational Resource Grouping Behavior from Event Logs. Manuscript submitted to 32nd International Conference on Advanced Information Systems Engineering (CAiSE 2020), under review.
-###### 5. (Citation to the IS paper to be added.)
-
