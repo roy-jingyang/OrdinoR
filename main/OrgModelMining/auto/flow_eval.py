@@ -95,6 +95,7 @@ def execute(setup, seq_ix, exp_dirpath):
     step += 1
     assigner = _import_block(sequence[step]['invoke'])
     assigner_name = sequence[step]['label'].replace(' ', '')
+    params = sequence[step].get('params', None)
     if params is None:
         om = assigner(ogs, rl)
     else:
