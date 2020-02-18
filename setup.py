@@ -21,13 +21,9 @@ if sys.version_info[:2] < (3, 6): # python version >= 3.6
     sys.stderr.write(error + '\n')
     sys.exit(1)
 
-# load GitHub repository README.md as long description
-with open('README.md', 'r') as fh:
-    long_description = fh.read()
-
 setuptools.setup(
     name='orgminer',
-    version='0.0.1a20200214-2309',
+    version='0.0.1a20200216',
 
     namespace_packages=['orgminer'],
     package_dir={'': '.'},
@@ -57,8 +53,8 @@ setuptools.setup(
         'pm4py>=1.2.4',
         'Deprecated>=1.2.6', # aka 'deprecated' anaconda cloud
         # for program Arya
-        #'flask',
-        #'pygraphviz',
+        'flask',
+        'pygraphviz',
     ],
     python_requires='>=3.6',
 )
