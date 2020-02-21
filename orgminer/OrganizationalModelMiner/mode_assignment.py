@@ -36,7 +36,7 @@ def full_recall(groups, rl):
     return om
 
 
-#TODO: Implementation #1 - OverallScore-WA
+#NOTE:: Implementation #1 - OverallScore-WA
 def overall_score(groups, rl, p, w1=0.5, w2=None, auto_search=False):
     """Assign an execution mode to a group, as long as the overall score
     (as a weighted average) of its group relative stake and member
@@ -104,35 +104,15 @@ def overall_score(groups, rl, p, w1=0.5, w2=None, auto_search=False):
     from collections import defaultdict
 
     scores_group_rel_stake = defaultdict(lambda: defaultdict(dict))
-    min_score_group_rel_stake = 1.0
-    max_score_group_rel_stake = 0.0
     scores_group_cov = defaultdict(lambda: defaultdict(dict))
-    min_score_group_cov = 1.0
-    max_score_group_cov = 0.0
 
     # obtain scores
     for i, group in enumerate(groups):
         for m in all_execution_modes:
             rel_stake = group_relative_stake(group, m, rl)
             scores_group_rel_stake[i][m] = rel_stake
-            min_score_group_rel_stake = rel_stake \
-                if rel_stake < min_score_group_rel_stake \
-                else min_score_group_rel_stake
-            max_score_group_rel_stake = rel_stake \
-                if rel_stake > max_score_group_rel_stake \
-                else max_score_group_rel_stake
-
             cov = member_coverage(group, m, rl)
             scores_group_cov[i][m] = cov
-            min_score_group_cov = cov \
-                if cov < min_score_group_cov \
-                else min_score_group_cov
-            max_score_group_cov = cov \
-                if cov > max_score_group_cov \
-                else max_score_group_cov
-
-    def min_max_scale(value, min_value, max_value):
-        return (value - min_value) / (max_value - min_value)
     
     # assign based on threshold filtering
     from operator import itemgetter
@@ -150,13 +130,10 @@ def overall_score(groups, rl, p, w1=0.5, w2=None, auto_search=False):
             for item in sorted(tmp_modes, key=itemgetter(1), reverse=True))
         om.add_group(group, modes)
 
-    if type(om) is tuple:
-        print('In mode assignment')
-        print(groups)
     return om
 
 
-#TODO: Implementation #2 - OverallScore-HM
+#NOTE: Implementation #2 - OverallScore-HM
 def _overall_score(groups, rl, p):
     """Assign an execution mode to a group, as long as the overall score
     (as a harmonic mean) of its group relative stake and member

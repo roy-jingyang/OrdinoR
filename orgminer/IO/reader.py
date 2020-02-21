@@ -163,5 +163,7 @@ def read_xes(f):
     import re
     df['timestamp'] = df['timestamp'].apply(
         lambda x: x.strftime('%Y/%m/%d %H:%M:%S.%f'))
+    
+    _describe_event_log(df)
     return df
 
