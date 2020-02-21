@@ -293,9 +293,12 @@ class BaseMiner:
             ret = cls(el=None)
             ret.is_ctypes_verified = ret.is_atypes_verified = \
                 ret.is_ttypes_verified = True
-            ret._ctypes = obj['_ctypes']
-            ret._atypes = obj['_atypes']
-            ret._ttypes = obj['_ttypes']
+            ret._ctypes = obj['_ctypes'] if len(obj['_ctypes'] > 0) else\
+                defaultdict(lambda: '')
+            ret._atypes = obj['_atypes'] if len(obj['_atypes'] > 0) else\
+                defaultdict(lambda: '')
+            ret._ttypes = obj['_ttypes'] if len(obj['_ttypes'] > 0) else\
+                defaultdict(lambda: '')
 
             ret._verify()
             return ret
