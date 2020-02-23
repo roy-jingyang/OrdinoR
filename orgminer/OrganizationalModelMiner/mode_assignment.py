@@ -37,7 +37,7 @@ def full_recall(groups, rl):
 
 
 #NOTE:: Implementation #1 - OverallScore-WA
-def overall_score(groups, rl, p, w1=0.5, w2=None, auto_search=False):
+def overall_score(groups, rl, p=0.5, w1=0.5, w2=None, auto_search=False):
     """Assign an execution mode to a group, as long as the overall score
     (as a weighted average) of its group relative stake and member
     coverage, is higher than a given threshold.
@@ -48,7 +48,7 @@ def overall_score(groups, rl, p, w1=0.5, w2=None, auto_search=False):
         Resource groups containing resource ids.
     rl : DataFrame
         A resource log.
-    p : float
+    p : float, optional, default 0.5
         A given threshold value in range [0, 1.0].
     w1 : float, optional, default 0.5
         The weight value assigned to participation rate.
