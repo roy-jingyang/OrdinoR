@@ -156,6 +156,7 @@ class MOC:
                 # update M: for each row, apply appropriate search algorithms
                 new_M = list()
                 for i in range(X.shape[0]):
+                    #m_best = self._enumerate(X[i,:], M[i,:], A)
                     m_best = self._dynamicm(X[i,:], M[i,:], A)
                     new_M.append(m_best)
                 prev_M = M.copy()
@@ -243,8 +244,63 @@ class MOC:
         score = score_alpha - score_divergence
         #print('{:.4f}'.format(score))
         return score
+    
+
+    '''
+    # search over all possible settings in the naive way
+    def _enumerate(self, x, m0, A):
+        from numpy import array, dot
+        from scipy.spatial.distance import sqeuclidean
+        from itertools import combinations
+
+        L0 = sqeuclidean(x, dot(m0, A))
+        Lmin = L0
+        k = len(m0)
+        m_best = m0
+
+        # Exhaustively enumerate all possible settings sum_{i = 1 to k} C^i_k
+        # start from 1 ensures that at least one scalar with value True
+        for i in range(1, k + 1):
+            for index in combinations(range(k), i):
+                m = array([0] * k)
+                m[[index]] = 1
+                L = sqeuclidean(x, dot(m, A))
+                if L < Lmin:
+                    Lmin = L
+                    m_best = m
+        return m_best
+    '''
 
 
+    def _search_thread(self, x, A, m):
+        from numpy import array, dot, infty, where
+        from scipy.spatial.distance import sqeuclidean
+        # generate the combinations as candidate positions
+        L_min = sqeuclidean(x, dot(m, A))
+
+        is_active = True
+        while is_active: # search each "level"
+            best_candidate = None
+            # choose a best candidate to "turn on" from the rest
+            for i in where(m == 0)[0]:
+                candidate_m = m.copy()
+                candidate_m[i] = 1 # try turning on 1 cluster
+                candidate_L = sqeuclidean(
+                    x, dot(candidate_m, A))
+                if candidate_L < L_min:
+                    # update if better than the current one
+                    best_candidate = i
+                    L_min = candidate_L
+            if best_candidate is not None:
+                is_active = True
+                m[best_candidate] = 1
+            else:
+                # if no better frontier could be found, set inactive
+                is_active = False # break
+        return m, sqeuclidean(x, dot(m, A))
+
+
+    '''
     # search on each separate threads with different initial setting
     # greedily proceed on the fly (idea similar to DP)
     def _dynamicm(self, x, m0, A):
@@ -262,7 +318,7 @@ class MOC:
         
         Returns
         -------
-        m_best : array-lie, shape (n_components, )
+        m_best : array-like, shape (n_components, )
             A "best" solution with respect to the given values.
 
         Notes
@@ -346,6 +402,73 @@ class MOC:
                     L0 = thread_result_L
                     m_best = separate_search_threads[h].m
 
+        return m_best
+    '''
+    # search on each separate threads with different initial setting
+    # greedily proceed on the fly (idea similar to DP)
+    def _dynamicm(self, x, m0, A):
+        """A dynamic algorithm (using parallel threads) to search for a 
+        "best" solution.
+
+        Parameters
+        ----------
+        x : array-like, shape (n_features, )
+            A row of the input samples.
+        m0 : array-like, shape (n_components, )
+            A row of the membership component in the model.
+        A : array-like, shape (n_components, n_features)
+            The parameter component in the model.
+        
+        Returns
+        -------
+        m_best : array-like, shape (n_components, )
+            A "best" solution with respect to the given values.
+
+        Notes
+        -----
+        The idea is similar to Dynamic Programming. The returned result 
+        is prone to be sub-optimal. Refer to the paper for more 
+        information.
+
+        See Also
+        --------
+        fit_and_predict
+        """
+        from numpy import array, dot, infty, where
+        from scipy.spatial.distance import sqeuclidean
+
+        n_components = len(m0)
+        L0 = sqeuclidean(x, dot(m0, A))
+        m_best = m0
+
+        if self._is_disjoint:
+            for h in range(n_components):
+                m = array([0] * n_components)
+                m[h] = 1
+                L = sqeuclidean(x, dot(m, A))
+                if L < L0:
+                    L0 = L
+                    m_best = m
+        else:
+            from functools import partial
+            from multiprocessing import Pool
+            from os import sched_getaffinity
+            from operator import itemgetter
+            avail_cpus = len(sched_getaffinity(0))
+
+            separate_search_threads = list()
+            for h in range(n_components): # init each search thread
+                m = array([0] * n_components)
+                m[h] = 1
+                separate_search_threads.append(m)
+
+            with Pool(avail_cpus) as p:
+                m_best = min(
+                    p.map(
+                        partial(self._search_thread, x, A),
+                        separate_search_threads
+                    ), 
+                    key=itemgetter(1))[0]
         return m_best
 
 
