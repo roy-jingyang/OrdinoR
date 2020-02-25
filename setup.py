@@ -23,7 +23,7 @@ if sys.version_info[:2] < (3, 6): # python version >= 3.6
 
 setuptools.setup(
     name='orgminer',
-    version='0.0.1a3',
+    version='0.0.1a4',
 
     namespace_packages=['orgminer'],
     package_dir={'': '.'},

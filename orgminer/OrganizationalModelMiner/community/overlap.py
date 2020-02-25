@@ -10,6 +10,7 @@ References
    community detection in networks. *ACM Computing Surveys*, 45(4), 1–35.
    `<https://doi.org/10.1145/2501654.2501657>`_
 """
+from deprecated import deprecated
 from warnings import warn
 
 def _relabel_nodes_integers(g):
