@@ -23,7 +23,7 @@ if sys.version_info[:2] < (3, 6): # python version >= 3.6
 
 setuptools.setup(
     name='orgminer',
-    version='0.0.1a1',
+    version='0.0.1rc1',
 
     namespace_packages=['orgminer'],
     package_dir={'': '.'},
@@ -35,8 +35,13 @@ setuptools.setup(
     author_email='roy.j.yang@qut.edu.au',
     description='Python tookit for Process Mining on the organizational perspective',
     url='https://github.com/roy-jingyang/OrgMiner',
+    project_url={
+        'Documentation': 'https://orgminer.readthedocs.io',
+        'Source': 'https://github.com/roy-jingyang/OrgMiner',
+        'Tracker': 'https://github.com/roy-jingyang/OrgMiner/issues'
+    },
     classifier=[
-        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
         'License :: OSI Approved :: GNU GPLv3',
         'Operating System :: OS Independent'
     ],
