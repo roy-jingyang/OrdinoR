@@ -24,7 +24,7 @@ See Also
 pandas.DataFrame : The primary pandas data structure.
 """
 def _describe_event_log(el):
-    """Output prompting information for a successfully imported event
+    """Output descriptive information for a successfully imported event
     log.
 
     Parameters

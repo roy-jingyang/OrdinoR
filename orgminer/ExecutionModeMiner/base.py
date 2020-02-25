@@ -152,8 +152,7 @@ class BaseMiner:
         are built, or you may consider all activity labels belonging to 
         the same dummy type marked by an empty python string, ``''``.
 
-        Parameters:w
-
+        Parameters
         ----------
         el : DataFrame
             An event log from which the execution modes are learned.
