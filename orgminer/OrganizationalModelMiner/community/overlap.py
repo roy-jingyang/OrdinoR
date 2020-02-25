@@ -198,6 +198,7 @@ def clique_percolation(profiles, metric='euclidean'):
     return ogs
 
 
+@deprecated(reason='This method requires a dependency unabled to be resolved.')
 def link_partitioning(profiles, n_groups, metric='euclidean'):
     """Apply a link partitioning technique [1]_ for detecting communities 
     and thus to discover organizational groups [2]_.
@@ -240,6 +241,7 @@ def link_partitioning(profiles, n_groups, metric='euclidean'):
     """
     print('Applying graph/network -based link partitioning method ' + 
         '(overlapping community detection):')
+    raise NotImplementedError # TODO: dependency on louvain unresolved
     # build network from profiles
     from orgminer.SocialNetworkMiner.joint_activities import distance
     sn = distance(profiles, metric=metric, convert=True)

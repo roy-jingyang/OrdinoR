@@ -23,7 +23,7 @@ if sys.version_info[:2] < (3, 6): # python version >= 3.6
 
 setuptools.setup(
     name='orgminer',
-    version='0.0.1rc1',
+    version='0.0.1a2',
 
     namespace_packages=['orgminer'],
     package_dir={'': '.'},
@@ -57,7 +57,6 @@ setuptools.setup(
         'networkx>=2.4',
         'pm4py>=1.2.4',
         'Deprecated>=1.2.6',
-        'louvain'
     ],
     extras_require={
         'arya': [
