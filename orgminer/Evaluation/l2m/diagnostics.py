@@ -3,29 +3,6 @@
 """This module contains the implementation of the local diagnostics 
 measures.
 """
-# TODO: documentation: contribution of members to all group work
-# NOTE: # (r, rg, *) / (*, rg, *)
-# NOTE: this measure calculates the distribution of work happened by team
-# members
-def test_measure(rl, om):
-    ogs = om.find_all_groups()
-    from collections import defaultdict
-    group_load_distribution = defaultdict(lambda: dict())
-
-    grouped_by_resources = rl.groupby('resource')
-    for og_id, og in ogs:
-        for r in og:
-            num_events = len(grouped_by_resources.get_group(r))
-            group_load_distribution[og_id][r] = num_events
-
-    for og_id, resource_counts in group_load_distribution.items():
-        total_counts = sum(count for r, count in resource_counts.items())
-        for r in resource_counts.keys():
-            resource_counts[r] /= total_counts
-
-    return group_load_distribution
-
-
 # NOTE: # (*, rg, q) / (*, rg, *)
 def group_relative_focus(group, mode, rl):
     """Measure the relative focus of a group with respect to an execution

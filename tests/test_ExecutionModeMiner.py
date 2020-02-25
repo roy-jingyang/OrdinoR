@@ -48,7 +48,7 @@ if __name__ == '__main__':
     # NOTE: 1. select only cases with particular case values
     el = el.loc[el['(case) last_phase'] == 'Zaak afgehandeld']
 
-    # TODO: NOTE: 2. select only events related to particular subprocess phases
+    # NOTE: 2. select only events related to particular subprocess phases
     '''
 
     '''

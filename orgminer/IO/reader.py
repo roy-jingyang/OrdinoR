@@ -6,8 +6,7 @@ in specific formats.
 Event log formats currently supported:
 
     - Disco-exported CSV format (https://fluxicon.com/disco/)
-    - (TODO) eXtensible Event Stream (XES) (http://xes-standard.org/)
-    - (TODO) MXML (ProM 5)
+    - eXtensible Event Stream (XES) (http://xes-standard.org/)
 
 All methods in this module should return the successfully imported event 
 log as a pandas DataFrame.
@@ -39,7 +38,7 @@ def _describe_event_log(el):
     print('-' * 80)
     print('Number of events:\t\t{}'.format(len(el)))
     print('Number of cases:\t\t{}'.format(len(el.groupby('case_id'))))
-    #print('Event log attributes:\n\t') # TODO
+    #print('Event log attributes:\n\t')
     print('-' * 80)
 
 
