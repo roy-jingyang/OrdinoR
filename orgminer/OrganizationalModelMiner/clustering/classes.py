@@ -348,9 +348,10 @@ class MOC:
         else:
             from functools import partial
             from multiprocessing import Pool
-            from os import sched_getaffinity
+            from multiprocessing import Pool, cpu_count
             from operator import itemgetter
-            avail_cpus = len(sched_getaffinity(0))
+            avail_cpus = cpu_count()
+
 
             separate_search_threads = list()
             for h in range(n_components): # init each search thread

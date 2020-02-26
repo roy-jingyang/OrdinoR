@@ -138,10 +138,9 @@ def grid_search(func_core, params_config, func_eval_score):
         l_dicts_all_configs.append(params)
     
     from functools import partial
-    from multiprocessing import Pool
-    from os import sched_getaffinity
+    from multiprocessing import Pool, cpu_count
     from operator import itemgetter
-    avail_cpus = len(sched_getaffinity(0))
+    avail_cpus = cpu_count()
 
     with Pool(avail_cpus) as p:
         params_best = max(
