@@ -348,10 +348,7 @@ class MOC:
         else:
             from functools import partial
             from multiprocessing import Pool
-            from multiprocessing import Pool, cpu_count
             from operator import itemgetter
-            avail_cpus = cpu_count()
-
 
             separate_search_threads = list()
             for h in range(n_components): # init each search thread
@@ -359,7 +356,7 @@ class MOC:
                 m[h] = 1
                 separate_search_threads.append(m)
 
-            with Pool(avail_cpus) as p:
+            with Pool() as p:
                 m_best = min(
                     p.map(
                         partial(self._search_thread, x, A),

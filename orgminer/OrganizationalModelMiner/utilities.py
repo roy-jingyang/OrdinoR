@@ -138,11 +138,10 @@ def grid_search(func_core, params_config, func_eval_score):
         l_dicts_all_configs.append(params)
     
     from functools import partial
-    from multiprocessing import Pool, cpu_count
+    from multiprocessing import Pool
     from operator import itemgetter
-    avail_cpus = cpu_count()
 
-    with Pool(avail_cpus) as p:
+    with Pool() as p:
         params_best = max(
             p.map(partial(_grid_search_wrapper, 
                     func_core,
