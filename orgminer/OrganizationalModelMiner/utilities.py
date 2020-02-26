@@ -23,7 +23,7 @@ def cross_validation_score(
     proximity_metric : str, optional, default 'euclidean'
         Metric for measuring the distance while calculating proximity. 
         This should remain consistent with that employed by the specific 
-        mining method. Defaults to 'euclidean'``, meaning that
+        mining method. Defaults to ``'euclidean'``, meaning that
         euclidean distance is used for measuring proximity.
     cv_fold : int, or float in range (0, 1.0), default 0.2
         The number of folds to be used for cross validation. 
@@ -174,7 +174,7 @@ def _powerset_exclude_headtail(s, reverse=False, depth=None):
     reverse : bool, optional, default True
         A boolean flag determining whether the generated power set (as a 
         generator) delivers sets with lower cardinality first or higher 
-        ones. Defaults to True, i.e. the lower ones before the 
+        ones. Defaults to ``True``, i.e. the lower ones before the 
         higher.
     depth : int, optional, default None
         The upper bound (or lower bound) of cardinality that filters the 

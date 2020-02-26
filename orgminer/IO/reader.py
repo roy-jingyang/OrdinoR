@@ -61,8 +61,8 @@ def read_disco_csv(f, header=True):
         File object of the event log being imported.
     header : bool, optional, default True
         A boolean flag indicating whether the input event log file
-        contains a header line. Defaults to True, i.e., the provided CSV 
-        file is expected to be having a header line.
+        contains a header line. Defaults to ``True``, i.e., the provided 
+        CSV file is expected to be having a header line.
 
     Returns
     -------

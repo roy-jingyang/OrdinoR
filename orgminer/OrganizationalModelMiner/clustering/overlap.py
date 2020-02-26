@@ -189,7 +189,7 @@ def gmm(profiles, n_groups, threshold, init='random', n_init=100,
     search_only : bool, optional, default False
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. Defaults to False, i.e., to perform group discovery
+        result. Defaults to ``False``, i.e., to perform group discovery
         after search searching.
 
     Returns
@@ -418,7 +418,7 @@ def moc(profiles, n_groups, init='random', n_init=100,
     search_only : bool, optional, default False
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. Defaults to False, i.e., to perform group discovery
+        result. Defaults to ``False``, i.e., to perform group discovery
         after searching.
 
     Returns
@@ -651,7 +651,7 @@ def fcm(profiles, n_groups, threshold, init='random', n_init=100,
     search_only : bool, optional, default False
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. Defaults to False, i.e., to perform group discovery
+        result. Defaults to ``False``, i.e., to perform group discovery
         after searching.
 
     Returns

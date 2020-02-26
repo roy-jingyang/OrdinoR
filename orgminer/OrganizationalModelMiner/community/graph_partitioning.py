@@ -87,7 +87,7 @@ def mja(profiles, n_groups, metric='euclidean', search_only=False):
     search_only : bool, optional, default False
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. Defaults to False, i.e., to perform group discovery
+        result. Defaults to ``False``, i.e., to perform group discovery
         after searching.
 
     Returns
@@ -157,8 +157,7 @@ def _mjc(el, n_groups, method='threshold'):
         An event log.
     n_groups : int
         Expected number of resource groups.
-    method : {'threshold', 'centrality'}, optional, default 
-    ``'threshold'``
+    method : {'threshold', 'centrality'}, optional, default 'threshold'
         Options for the method to be used for finding graph components. 
         Could be one of the following:
 
@@ -296,7 +295,7 @@ def mjc(el, n_groups, search_only=False):
     search_only : bool, optional, default False
         A boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
-        result. Defaults to False, i.e., to perform group discovery
+        result. Defaults to ``False``, i.e., to perform group discovery
         after searching.
 
     Returns

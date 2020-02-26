@@ -59,10 +59,10 @@ def overall_score(groups, rl, p=0.5, w1=0.5, w2=None, auto_search=False):
     auto_search : bool, optional, default False
         A Boolean flag indicating whether to perform auto grid search to
         determine the threshold and the weightings. When auto grid search
-        is required, values in range[0, 1.0] will be tested at a step of 
+        is required, values in range [0, 1.0] will be tested at a step of 
         0.1, and values given to parameter `p`, `w1`, and `w2` will be
-        overridden. Defaults to False, i.e., auto grid search is not to 
-        be performed.
+        overridden. Defaults to ``False``, i.e., auto grid search is not 
+        to be performed.
 
     Returns
     -------

@@ -71,7 +71,7 @@ def distance(profiles, metric='euclidean', convert=False):
     convert : bool, optional, default False
         A boolean flag indicating whether to convert the edge weight 
         values of the discovered network should be converted to 
-        similarity measure values. Defaults to False, i.e., keep as 
+        similarity measure values. Defaults to ``False``, i.e., keep as 
         distance measure.
 
     Returns

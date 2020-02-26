@@ -17,7 +17,7 @@ def _ahc(profiles, n_groups, method='single', metric='euclidean'):
         Choice of methods for merging clusters at each iteration.
     metric : str, optional, default 'euclidean'
         Choice of metrics for measuring the distance while calculating 
-        distance. Defaults to 'euclidean', meaning that euclidean
+        distance. Defaults to ``'euclidean'``, meaning that euclidean
         distance is used for measuring distance.
 
     Returns
@@ -91,7 +91,7 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
     search_only : bool, optional, default False
         A boolean flag indicating whether to search for the number of
         groups only or to perform cluster analysis based on the search
-        result. Defaults to False, i.e., to perform cluster analysis
+        result. Defaults to ``False``, i.e., to perform cluster analysis
         after searching.
 
     Returns
