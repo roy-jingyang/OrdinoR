@@ -88,6 +88,9 @@ def read_disco_csv(f, header=True):
     attributes_registered = False
 
     for row in reader(f):
+        if not row:
+            continue
+
         if not attributes_registered:
             has_additional_attributes = len(row) > num_default_attributes
             if has_additional_attributes:

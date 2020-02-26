@@ -377,6 +377,9 @@ class OrganizationalModel:
         from csv import reader
         om_obj = cls()
         for row in reader(f):
+            if not row:
+                continue
+
             group = row[1].split(';')
             exec_modes = list()
             for str_mode in row[2].split(';'):
