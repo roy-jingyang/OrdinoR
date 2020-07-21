@@ -50,6 +50,8 @@ class OrganizationalModel:
         execution mode according to the model) given an execution mode.
     find_all_groups()
         Return all resource groups involved in the model.
+    find_group_members(rg_id)
+        Query the group members given a group identified by its id.
     find_group_execution_modes(rg_id)
         Query the capable execution modes given a group identified by 
         its id.
@@ -248,6 +250,23 @@ class OrganizationalModel:
         """
         return [(rg_id, frozenset(self._mem[rg_id])) 
             for rg_id in self._rg.keys()]
+
+
+    def find_group_members(self, rg_id):
+        """Query the capable execution modes given a group identified by 
+        its id.
+
+        Parameters
+        ----------
+        rg_id : int
+            The given group id.
+
+        Returns
+        -------
+        frozenset
+            Set of member resources.
+        """
+        return frozenset(self._mem[rg_id])
 
 
     def find_group_execution_modes(self, rg_id):
