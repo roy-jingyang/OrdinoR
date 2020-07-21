@@ -100,7 +100,7 @@ def overall_score(groups, rl, p=0.5, w1=0.5, w2=None, auto_search=False):
         .drop_duplicates().itertuples(index=False, name=None))
 
     from orgminer.Evaluation.l2m.diagnostics import \
-        group_relative_stake, member_coverage
+        group_relative_stake, group_coverage
     from collections import defaultdict
 
     scores_group_rel_stake = defaultdict(lambda: defaultdict(dict))
@@ -111,7 +111,7 @@ def overall_score(groups, rl, p=0.5, w1=0.5, w2=None, auto_search=False):
         for m in all_execution_modes:
             rel_stake = group_relative_stake(group, m, rl)
             scores_group_rel_stake[i][m] = rel_stake
-            cov = member_coverage(group, m, rl)
+            cov = group_coverage(group, m, rl)
             scores_group_cov[i][m] = cov
     
     # assign based on threshold filtering
@@ -160,7 +160,7 @@ def _overall_score(groups, rl, p):
         .drop_duplicates().itertuples(index=False, name=None))
 
     from orgminer.Evaluation.l2m.diagnostics import \
-        group_relative_stake, member_coverage
+        group_relative_stake, group_coverage
     from collections import defaultdict
 
     scores_group_rel_stake = defaultdict(lambda: defaultdict(dict))
@@ -182,7 +182,7 @@ def _overall_score(groups, rl, p):
                 if rel_stake > max_score_group_rel_stake \
                 else max_score_group_rel_stake
 
-            cov = member_coverage(group, m, rl)
+            cov = group_coverage(group, m, rl)
             scores_group_cov[i][m] = cov
             min_score_group_cov = cov \
                 if cov < min_score_group_cov \

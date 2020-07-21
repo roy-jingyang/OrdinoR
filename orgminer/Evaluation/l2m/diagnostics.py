@@ -66,7 +66,7 @@ def group_relative_stake(group, mode, rl):
 
 
 # NOTE: R (r, rg, q) / (r, rg)
-def member_coverage(group, mode, rl):
+def group_coverage(group, mode, rl):
     """Measure the coverage of a group with respect to an execution mode.
 
     Parameters
@@ -100,15 +100,14 @@ def member_coverage(group, mode, rl):
 
 
 # NOTE: # (r, rg, q) / (*, rg, q)
-def member_mode_contribution(group, mode, rl):
+def group_member_contribution(group, mode, rl):
     # filtering irrelevant events
     rl = rl.loc[rl['resource'].isin(group)].groupby([
         'case_type', 'activity_type', 'time_type']).get_group(mode)
     group_total_count = len(rl)
     print(rl)
 
-    from collections import defaultdict
-    group_load_distribution = defaultdict(lambda: dict())
+    group_load_distribution = dict()
     for r in group:
         group_load_distribution[r] = (
             len(rl.loc[rl['resource'] == r]) / group_total_count)

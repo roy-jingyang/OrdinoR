@@ -74,7 +74,7 @@ def _extended_modularity(g, cover):
        1706-1712. `<https://doi.org/10.1016/j.physa.2008.12.021>`_
     """
     from collections import defaultdict
-    node_membership = defaultdict(lambda: set())
+    node_membership = defaultdict(set)
     # identify membership
     for i, community in enumerate(cover):
         for node in community:
@@ -172,7 +172,7 @@ def clique_percolation(profiles, metric='euclidean'):
             fn_cnt += 1
             fn_communities = path.join(dirn_output, n, 'communities')
             cnt = -1
-            groups = defaultdict(lambda: set())
+            groups = defaultdict(set)
             with open(fn_communities, 'r') as f:
                 for line in f:
                     if not (line == '' or line.startswith('#')):
@@ -411,7 +411,7 @@ def local_expansion(profiles, metric='euclidean'):
 
     # step 4. Derive organizational groups from the detection results
     from collections import defaultdict
-    groups = defaultdict(lambda: set())
+    groups = defaultdict(set)
     cnt = -1
     with open(fn_communities, 'r') as f:
         for line in f:
@@ -492,7 +492,7 @@ def agent_copra(profiles, metric='euclidean'):
 
     # step 4. Derive organizational groups from the detection results
     from collections import defaultdict
-    groups = defaultdict(lambda: set())
+    groups = defaultdict(set)
     cnt = -1
     with open(fn_communities, 'r') as f:
         for line in f:
@@ -585,7 +585,7 @@ def agent_slpa(profiles, metric='euclidean'):
             fn_cnt += 1
             fn_communities = path.join(dirn_communities, fn)
             cnt = -1
-            groups = defaultdict(lambda: set())
+            groups = defaultdict(set)
             with open(fn_communities, 'r') as f:
                 for line in f:
                     cnt += 1

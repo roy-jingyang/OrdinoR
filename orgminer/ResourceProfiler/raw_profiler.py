@@ -20,7 +20,7 @@ def count_execution_frequency(rl, scale=None):
             
             - ``None``, no scaling will be performed.
             - ``'normalize'``, scale the frequency values by the total
-              count of executions by each resource.
+              count of executions by each resource (scale by row).
             - ``'log'``, scale the frequency values by logarithm.
 
     Returns

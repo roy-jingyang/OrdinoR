@@ -23,7 +23,7 @@ if sys.version_info[:2] < (3, 6): # python version >= 3.6
 
 setuptools.setup(
     name='orgminer',
-    version='0.0.1a8',
+    version='0.0.1b2',
 
     namespace_packages=['orgminer'],
     package_dir={'': '.'},
@@ -61,7 +61,10 @@ setuptools.setup(
     extras_require={
         'arya': [
             'Flask', 
-            'flask-cors'
+            'flask-cors',
+            'flask-bootstrap',
+            'flask-wtf',
+            'flask-session'
         ]
     }
 )

@@ -57,7 +57,7 @@ def _ahc(profiles, n_groups, method='single', metric='euclidean'):
     og_hcy = DataFrame(mx_tree, index=profiles.index)
 
     from collections import defaultdict
-    groups = defaultdict(lambda: set())
+    groups = defaultdict(set)
     # add by each resource
     for i in range(len(og_hcy.index)):
         groups[og_hcy.iloc[i,-1]].add(og_hcy.index[i])

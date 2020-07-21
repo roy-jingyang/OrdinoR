@@ -59,10 +59,10 @@ if __name__ == '__main__':
 
     #mode_miner = ATonlyMiner(el)
     #mode_miner = CTonlyMiner(el, case_attr_name='(case) last_phase')
-    #mode_miner = ATCTMiner(el, case_attr_name='(case) channel')
-    mode_miner = ATTTMiner(el, resolution='weekday')
-    #mode_miner = FullMiner(el, 
-    #    case_attr_name='(case) channel', resolution='weekday')
+    #mode_miner = ATCTMiner(el, case_attr_name='(case)_channel')
+    #mode_miner = ATTTMiner(el, resolution='weekday')
+    mode_miner = FullMiner(el, 
+        case_attr_name='(case)_channel', resolution='weekday')
     #mode_miner = TraceClusteringCTMiner(el,
     #    fn_partition='input/extra_knowledge/wabo.bosek5.tcreport')
     #mode_miner = TraceClusteringFullMiner(el, 

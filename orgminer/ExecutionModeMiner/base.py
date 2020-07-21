@@ -138,7 +138,7 @@ class BaseMiner:
         Returns
         -------
         """
-        self._ctypes = defaultdict(lambda: '')
+        self._ctypes = defaultdict(str) # defaults to ''
         self.is_ctypes_verified = True
 
 
@@ -160,7 +160,7 @@ class BaseMiner:
         Returns
         -------
         """
-        self._atypes = defaultdict(lambda: '')
+        self._atypes = defaultdict(str) # defaults to ''
         self.is_atypes_verified = True
 
 
@@ -182,7 +182,7 @@ class BaseMiner:
         Returns
         -------
         """
-        self._ttypes = defaultdict(lambda: '')
+        self._ttypes = defaultdict(str) # defaults to ''
         self.is_ttypes_verified = True
 
 
@@ -293,11 +293,11 @@ class BaseMiner:
             ret.is_ctypes_verified = ret.is_atypes_verified = \
                 ret.is_ttypes_verified = True
             ret._ctypes = obj['_ctypes'] if len(obj['_ctypes']) > 0 else\
-                defaultdict(lambda: '')
+                defaultdict(str)
             ret._atypes = obj['_atypes'] if len(obj['_atypes']) > 0 else\
-                defaultdict(lambda: '')
+                defaultdict(str)
             ret._ttypes = obj['_ttypes'] if len(obj['_ttypes']) > 0 else\
-                defaultdict(lambda: '')
+                defaultdict(str)
 
             ret._verify()
             return ret
