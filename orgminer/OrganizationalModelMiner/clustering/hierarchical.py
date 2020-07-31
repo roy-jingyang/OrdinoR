@@ -46,7 +46,7 @@ def _ahc(profiles, n_groups, method='single', metric='euclidean'):
        Systems*, 46(1), 300-317.
        `<https://doi.org/10.1016/j.dss.2008.07.002>`_
     """
-    print('Applying hierarchical clustering -based AHC:')
+    print('Applying hierarchical clustering-based AHC:')
     from scipy.cluster import hierarchy
     Z = hierarchy.linkage(profiles, method=method, metric=metric)
     # the hierachical tree as a matrix where each column corresponds to a

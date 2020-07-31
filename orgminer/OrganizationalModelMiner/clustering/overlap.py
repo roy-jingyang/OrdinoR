@@ -62,7 +62,7 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
        Business Process Management*, pp. 339-355. Springer, Cham.
        `<https://doi.org/10.1007/978-3-319-98648-7_20>`_
     """
-    print('Applying overlapping clustering -based GMM:')
+    print('Applying overlapping clustering-based GMM:')
     # step 0. Perform specific initialization method (if given)
     if init in ['mja', 'ahc', 'kmeans', 'plain']:
         warm_start = True
@@ -316,7 +316,7 @@ def _moc(profiles, n_groups, init='random', n_init=100):
        Business Process Management*, pp. 339-355. Springer, Cham.
        `<https://doi.org/10.1007/978-3-319-98648-7_20>`_
     """
-    print('Applying overlapping clustering -based MOC:')
+    print('Applying overlapping clustering-based MOC:')
     # step 0. Perform specific initialization method (if given)
     if init in ['mja', 'ahc', 'kmeans', 'plain']:
         warm_start = True
@@ -540,7 +540,7 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
     .. [1] Tan, P. N., Steinbach, M., Karpatne, A., & Kumar, V. (2018).
        *Introduction to Data Mining*.
     """
-    print('Applying overlapping clustering -based FCM:')
+    print('Applying overlapping clustering-based FCM:')
     # step 0. Perform specific initialization method (if given)
     if init in ['mja', 'ahc', 'kmeans', 'plain']:
         warm_start = True

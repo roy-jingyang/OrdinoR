@@ -132,7 +132,7 @@ def clique_percolation(profiles, metric='euclidean'):
        in nature and society. *Nature*, 435(7043), 814–818.
        `<https://doi.org/10.1038/nature03607>`_
     """
-    print('Applying graph/network -based Clique Percolation Method ' + 
+    print('Applying graph/network-based Clique Percolation Method ' + 
         '(overlapping community detection using CFinder):')
     # build network from profiles
     from orgminer.SocialNetworkMiner.joint_activities import distance
@@ -240,7 +240,7 @@ def link_partitioning(profiles, n_groups, metric='euclidean'):
        Information Systems*, 1–29.
        `<https://doi.org/10.1007/s10844-017-0451-x>`_
     """
-    print('Applying graph/network -based link partitioning method ' + 
+    print('Applying graph/network-based link partitioning method ' + 
         '(overlapping community detection):')
     raise NotImplementedError # TODO: dependency on louvain unresolved
     # build network from profiles
@@ -382,7 +382,7 @@ def local_expansion(profiles, metric='euclidean'):
        networks. *PloS one*, 6(4), e18961.
        `<https://doi.org/10.1371/journal.pone.0018961>`_
     """
-    print('Applying graph/network -based local expansion method ' + 
+    print('Applying graph/network-based local expansion method ' + 
         '(overlapping community detection using OSLOM):')
     # build network from profiles
     from orgminer.SocialNetworkMiner.joint_activities import distance
@@ -463,7 +463,7 @@ def agent_copra(profiles, metric='euclidean'):
        networks by label propagation. *New Journal of Physics*, 12(10),
        103018. `<https://doi.org/10.1088/1367-2630/12/10/103018>`_
     """
-    print('Applying graph/network -based agent-based method ' + 
+    print('Applying graph/network-based agent-based method ' + 
         '(overlapping community detection using COPRA):')
     # build network from profiles
     from orgminer.SocialNetworkMiner.joint_activities import distance
@@ -545,7 +545,7 @@ def agent_slpa(profiles, metric='euclidean'):
        International Conference on data mining workshops*, pp. 344-349.
        IEEE. `<https://doi.org/10.1109/ICDMW.2011.154>`_
     """
-    print('Applying graph/network -based agent-based method ' + 
+    print('Applying graph/network-based agent-based method ' + 
         '(overlapping community detection using SLPA):')
     # build network from profiles
     from orgminer.SocialNetworkMiner.joint_activities import distance

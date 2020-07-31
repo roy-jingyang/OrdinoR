@@ -105,7 +105,6 @@ def group_member_contribution(group, mode, rl):
     rl = rl.loc[rl['resource'].isin(group)].groupby([
         'case_type', 'activity_type', 'time_type']).get_group(mode)
     group_total_count = len(rl)
-    print(rl)
 
     group_load_distribution = dict()
     for r in group:

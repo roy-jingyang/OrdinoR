@@ -39,7 +39,7 @@ def _mja(profiles, n_groups, metric='euclidean'):
        Cooperative Work (CSCW)*, 14(6), 549-593.
        `<https://doi.org/10.1007/s10606-005-9005-9>`_
     """
-    print('Applying graph/network -based MJA:')
+    print('Applying graph/network-based MJA:')
     from orgminer.SocialNetworkMiner.joint_activities import distance
     sn = distance(profiles, metric=metric, convert=True)
 
@@ -187,7 +187,7 @@ def _mjc(el, n_groups, method='threshold'):
        Cooperative Work (CSCW)*, 14(6), 549-593.
        `<https://doi.org/10.1007/s10606-005-9005-9>`_
     """
-    print('Applying graph/network -based MJC:')
+    print('Applying graph/network-based MJC:')
     from orgminer.SocialNetworkMiner.joint_cases import working_together
     # directed graph
     sn = working_together(el, normalize='resource')
