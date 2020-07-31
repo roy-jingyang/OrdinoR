@@ -1,6 +1,6 @@
-##############################################
-# This is the .gitignore for the master branch
-##############################################
+################################################
+# This is the .gitignore for the [master] branch
+################################################
 
 # Ignore pyc
 *.pyc
@@ -13,12 +13,15 @@
 # Ignore VS Code settings
 .vscode/
 
-# [master] Ignore input and output files
+# Ignore input and output files
 input/
 output/
 
 # Ignore external software
 external/
+
+# [master] Ignore the test programs
+
 
 # Ignore packaging intermediate artifacts
 build/
