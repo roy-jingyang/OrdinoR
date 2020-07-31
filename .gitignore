@@ -1,3 +1,7 @@
+##############################################
+# This is the .gitignore for the master branch
+##############################################
+
 # Ignore pyc
 *.pyc
 **/__pycache__
@@ -9,14 +13,15 @@
 # Ignore VS Code settings
 .vscode/
 
-# Ignore input and output files
+# [master] Ignore input and output files
 input/
 output/
 
-# Ignore external softwares
+# Ignore external software
 external/
 
 # Ignore packaging intermediate artifacts
 build/
 dist/
 *.egg-info/
+
