@@ -21,7 +21,7 @@ output/
 external/
 
 # [master] Ignore the test programs
-
+tests/
 
 # Ignore packaging intermediate artifacts
 build/
