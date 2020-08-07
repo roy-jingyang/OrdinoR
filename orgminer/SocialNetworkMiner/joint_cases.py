@@ -15,7 +15,7 @@ References
    Cooperative Work (CSCW)*, 14(6), 549-593.
    `<https://doi.org/10.1007/s10606-005-9005-9>`_
 """
-def working_together(el, normalize=None):
+def working_together(el, scale=None):
     """Discover a social network from an event log based on working 
     together metric, considering how often two resources were involved 
     in the same case.
@@ -24,16 +24,15 @@ def working_together(el, normalize=None):
     ----------
     el : DataFrame
         An event log.
-    normalize : {None, 'resource', 'total'}, optional, default None
-        Options for setting the normalization strategy on the edge
-        weight values. Could be one of the following:
+    scale : {None, 'resource', 'total'}, optional, default None
+        Options for setting the scaling strategy on the edge weight values. Could be one of the following:
 
-            - ``None``, no normalization will be used.
-            - ``'resource'``, normalized by the amount of cases each 
+            - ``None``, no scaling will be used.
+            - ``'resource'``, scale by the amount of cases each 
               resource was involved in. Note that this could lead to a 
-              directed graph being derived since the normalization 
+              directed graph being derived since the scaling 
               is subject to each individual resource.
-            - ``'total'``, normalized by the total amount of cases 
+            - ``'total'``, scale by the total amount of cases 
               recorded in the event log.
 
     Returns
@@ -44,7 +43,7 @@ def working_together(el, normalize=None):
     Raises
     ------
     ValueError
-        If the specified option for normalization is invalid.
+        If the specified option for scaling is invalid.
     """
     from collections import defaultdict
     mat = defaultdict(lambda: defaultdict(lambda: {'weight': 0.0}))
@@ -55,9 +54,9 @@ def working_together(el, normalize=None):
         for pair in permutations(participants, r=2):
             mat[pair[0]][pair[1]]['weight'] += 1
 
-    if normalize is None:
+    if scale is None:
         is_directed_sn = False
-    elif normalize == 'resource':
+    elif scale == 'resource':
         is_directed_sn = True
         # count for number of cases a resource participated
         res_case_count = defaultdict(lambda: 0)
@@ -66,7 +65,7 @@ def working_together(el, normalize=None):
         for r, counts in mat.items():
             for o in counts.keys():
                 counts[o]['weight'] /= res_case_count[r]
-    elif normalize == 'total':
+    elif scale == 'total':
         is_directed_sn = False
         total_num_cases = len(set(el['case_id']))
         for r, counts in mat.items():
@@ -74,7 +73,7 @@ def working_together(el, normalize=None):
                 counts[o]['weight'] /= total_num_cases
     else:
         raise ValueError('Invalid value for parameter `{}`: {}'.format(
-            'normalize', normalize))
+            'scale', scale))
 
     if is_directed_sn:
         from networkx import DiGraph

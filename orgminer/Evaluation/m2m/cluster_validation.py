@@ -50,7 +50,7 @@ def silhouette_score(clu, X, metric='euclidean'):
         for r in g:
             labels[resources.index(r)] = ig
 
-    scores_samples = silhouette_samples(X.values, labels, metric=metric)
+    scores_samples = silhouette_samples(X.to_numpy(), labels, metric=metric)
     scores = dict()
     for ir, r in enumerate(resources):
         scores[r] = scores_samples[ir]
@@ -86,7 +86,7 @@ def variance_explained_score(clu, X):
     for ig, g in enumerate(clu):
         for r in g:
             labels[resources.index(r)] = ig
-    return calinski_harabasz_score(X.values, labels)
+    return calinski_harabasz_score(X.to_numpy(), labels)
 
 
 def variance_explained_percentage(clu, X):
@@ -131,8 +131,8 @@ def _variance_within_cluster(clu, X):
     var_within = 0
 
     for ig, g in enumerate(clu):
-        g_mean = mean(X.loc[g].values, axis=0)
-        var_within += sum((X.loc[g].values - g_mean) ** 2) # W_k
+        g_mean = mean(X.loc[g].to_numpy(), axis=0)
+        var_within += sum((X.loc[g].to_numpy() - g_mean) ** 2) # W_k
     var_within /= (len(X) - len(clu)) # N - k
     return var_within
 
@@ -155,10 +155,10 @@ def _variance_between_cluster(clu, X):
     """
     from numpy import mean, sum
     var_between = 0
-    samples_mean = mean(X.values, axis=0)
+    samples_mean = mean(X.to_numpy(), axis=0)
 
     for ig, g in enumerate(clu):
-        g_mean = mean(X.loc[g].values, axis=0)
+        g_mean = mean(X.loc[g].to_numpy(), axis=0)
         var_between += len(g) * sum((g_mean - samples_mean) ** 2) # B_k
     var_between /= (len(clu) - 1) # k - 1
     return var_between

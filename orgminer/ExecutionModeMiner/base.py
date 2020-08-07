@@ -348,13 +348,13 @@ class BaseMiner:
                 self.__class__.__name__))
             print('Number of C Types:\t\t{}'.format(
                 len(set(self._ctypes.values())) 
-                if self._ctypes is not None else 'n/a (1)'))
+                if len(self._ctypes) > 0 else 'n/a (1)'))
             print('Number of A Types:\t\t{}'.format(
                 len(set(self._atypes.values()))
-                if self._atypes is not None else 'n/a (1)'))
+                if len(self._atypes) > 0 else 'n/a (1)'))
             print('Number of T Types:\t\t{}'.format(
                 len(set(self._ttypes.values()))
-                if self._ttypes is not None else 'n/a (1)'))
+                if len(self._ttypes) > 0 else 'n/a (1)'))
             print('-' * 80)
         else:
             print('C Types:\t{}'.format('VERIFIED' if self.is_ctypes_verified

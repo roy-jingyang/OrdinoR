@@ -1,3 +1,7 @@
+#############################################
+# This is the .gitignore for the [dev] branch
+#############################################
+
 # Ignore pyc
 *.pyc
 **/__pycache__
@@ -13,10 +17,11 @@
 input/
 output/
 
-# Ignore external softwares
+# Ignore external software
 external/
 
 # Ignore packaging intermediate artifacts
 build/
 dist/
 *.egg-info/
+

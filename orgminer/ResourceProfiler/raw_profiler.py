@@ -14,14 +14,16 @@ def count_execution_frequency(rl, scale=None):
     ----------
     rl : DataFrame
         A resource log.
-    scale : {None, 'normalize', log'}, optional, default None
+        scale : {None, 'workload', 'logarithm', 'standardize'}, optional,
+        default None
         Options for deciding how to scale the values of frequency
         counting. Could be one of the following:
             
             - ``None``, no scaling will be performed.
-            - ``'normalize'``, scale the frequency values by the total
+            - ``'workload'``, scale the frequency values by the total
               count of executions by each resource (scale by row).
-            - ``'log'``, scale the frequency values by logarithm.
+            - ``'logarithm'``, scale the frequency values by logarithm.
+            - ``'standardize'``, scale the values by removing the mean and scaling to unit variance.
 
     Returns
     -------
@@ -32,6 +34,10 @@ def count_execution_frequency(rl, scale=None):
     ------
     ValueError
         If the specified option for scaling is invalid.
+
+    See Also
+    --------
+    sklearn.preprocessing.scale
     """
     from collections import defaultdict
     mat = defaultdict(lambda: defaultdict(lambda: 0))
@@ -44,12 +50,17 @@ def count_execution_frequency(rl, scale=None):
     df = DataFrame.from_dict(mat, orient='index').fillna(0)
     if scale is None:
         return df
-    elif scale == 'normalize':
+    elif scale == 'workload':
+        # scale by row (resource)
         return df.div(df.sum(axis=1), axis=0)
-    elif scale == 'log':
-        # NOTE: log_e(x + 1)
+    elif scale == 'logarithm':
+        # f(x) = log_e(x + 1)
         from numpy import log 
-        return df.apply(lambda x: log(x + 1))
+        return df.applymap(lambda x: log(x + 1))
+    elif scale == 'standardize':
+        # standardization: z = (x - u) / s
+        from sklearn.preprocessing import scale
+        return df.apply(scale, raw=True)
     else:
         raise ValueError('Invalid value for parameter `{}`: {}'.format(
             'scale', scale))

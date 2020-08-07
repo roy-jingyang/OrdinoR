@@ -190,7 +190,7 @@ def _mjc(el, n_groups, method='threshold'):
     print('Applying graph/network-based MJC:')
     from orgminer.SocialNetworkMiner.joint_cases import working_together
     # directed graph
-    sn = working_together(el, normalize='resource')
+    sn = working_together(el, scale='resource')
 
     from networkx import restricted_view
     from networkx import strongly_connected_components as cc

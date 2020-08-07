@@ -19,10 +19,10 @@ def full_recall(groups, rl):
     Returns
     -------
     om : OrganizationalModel
-        An organizational model resulted from assigning execution modes 
-        to resource groups.
+        An organizational model resulted profiling resource groups with 
+        execution modes.
     """
-    print('Applying FullRecall for mode assignment:')
+    print('Applying FullRecall for group profiling:')
     grouped_by_resource = rl.groupby('resource')
     om = OrganizationalModel()
 
@@ -67,8 +67,8 @@ def overall_score(groups, rl, p=0.5, w1=0.5, w2=None, auto_search=False):
     Returns
     -------
     om : OrganizationalModel
-        An organizational model resulted from assigning execution modes 
-        to resource groups.
+        An organizational model resulted profiling resource groups with 
+        execution modes.
 
     Notes
     -----
@@ -94,7 +94,7 @@ def overall_score(groups, rl, p=0.5, w1=0.5, w2=None, auto_search=False):
     else:
         w2 = 1.0 - w1
         print('Applying OverallScore with weights ({}, {}) '.format(w1, w2) +
-            'and threshold {} '.format(p) + 'for mode assignment:')
+            'and threshold {} '.format(p) + 'for group profiling:')
 
     all_execution_modes = set(rl[['case_type', 'activity_type', 'time_type']]
         .drop_duplicates().itertuples(index=False, name=None))
@@ -151,11 +151,11 @@ def _overall_score(groups, rl, p):
     Returns
     -------
     om : OrganizationalModel
-        An organizational model resulted from assigning execution modes 
-        to resource groups.
+        An organizational model resulted profiling resource groups with 
+        execution modes.
     """
     print('Applying OverallScore with ' +
-        'threshold {} '.format(p) + 'for mode assignment:')
+        'threshold {} '.format(p) + 'for group profiling:')
     all_execution_modes = set(rl[['case_type', 'activity_type', 'time_type']]
         .drop_duplicates().itertuples(index=False, name=None))
 
@@ -224,3 +224,170 @@ def _overall_score(groups, rl, p):
 
     return om
 
+
+# TODO: params {p, threshold_wtKulc, threshold_coverage}
+def association_rules(groups, rl, p=None):
+    """Profile resources groups using association rule mining.
+
+    Parameters
+    ----------
+    groups : list of sets
+        Resource groups containing resource ids.
+    rl : DataFrame
+        A resource log.
+    p : float, optional, default None
+        A given threshold value in range [0, 1.0] for performing frequent
+        itemsets discovery, i.e., ``min_support``. If not provided, it
+        will be set to a low value such that all execution modes with
+        occurrence in the log will be considered for group profiling.
+
+    Returns
+    -------
+    om : OrganizationalModel
+        An organizational model resulted from assigning execution modes 
+        to resource groups.
+    """
+    print('Applying AssociationRule for group profiling:')
+
+    # initialize p with a lowest possible value if not specified
+    p = 1 / len(rl) if p is None else p
+
+    # step 1. build membership mapping
+    membership = dict()
+    for i, group in enumerate(groups):
+        for r in group:
+            if r in membership:
+                # TODO: determine solution for the overlapping case
+                raise NotImplementedError
+            membership[r] = 'RG.{}'.format(i)
+    
+    # step 2. build transactions list from resource log
+    ld = list()
+    # also store the coverage information
+    from collections import defaultdict
+    group_cov_count = defaultdict(lambda: defaultdict(set))
+    group_cov = defaultdict(dict)
+
+    for event in rl.itertuples():
+        group_label = membership[event.resource]
+        ct = event.case_type if event.case_type != '' else 'CT.'
+        at = event.activity_type if event.activity_type != '' else 'AT.'
+        tt = event.time_type if event.time_type != '' else 'TT.'
+
+        ld.append([group_label, ct, at, tt])
+        group_cov_count[group_label][(ct, at, tt)].add(event.resource)
+    
+    for group_label, v in group_cov_count.items():
+        group_index = int(group_label[3:])
+        for mode in v.keys():
+            group_cov[group_label][mode] = (
+                len(group_cov_count[group_label][mode]) /
+                len(groups[group_index])
+            )
+    
+    # step 3. discover frequent itemsets
+    from pandas import DataFrame
+    from mlxtend.preprocessing import TransactionEncoder
+    te = TransactionEncoder()
+    ld = te.fit(ld).transform(ld)
+    ld = DataFrame(ld, columns=te.columns_)
+
+    from mlxtend.frequent_patterns import fpgrowth
+    freq_itemsets = fpgrowth(ld, min_support=p, use_colnames=True)
+
+    # step 4. discover association rules
+    from mlxtend.frequent_patterns import association_rules
+    rules = association_rules(
+        freq_itemsets, 
+        metric='support',
+        min_threshold=p
+    )
+
+    # compute additional measures
+    rules['rev_rule_confidence'] = (
+        rules['support'] / rules['consequent support']
+    )
+    rules['max_confidence'] = rules[
+        ['confidence', 'rev_rule_confidence']
+    ].max(axis=1)
+    rules['Kulc'] = 0.5 * (rules['confidence'] + rules['rev_rule_confidence'])
+    rules['IR'] = (
+        abs(rules['antecedent support'] - rules['consequent support']) /
+        (rules['antecedent support'] + rules['consequent support'] -
+         rules['support'])
+    )
+    # IW: imbalance weighting, derived from Imbalance Ratio value
+    rules['IW'] = (1 +
+        (rules['antecedent support'] - rules['consequent support']) /
+        (rules['antecedent support'] + rules['consequent support'] -
+         rules['support'])
+    )
+    # wtKulc: weighted Kulc measure, combined with calculation of IR
+    rules['wtKulc'] = (0.5 * (
+        (2 - rules['IW']) * rules['confidence'] +
+        rules['IW'] * rules['rev_rule_confidence']
+    ))
+
+    rules["antecedents_len"] = rules["antecedents"].apply(len)
+    rules["consequents_len"] = rules["consequents"].apply(len)
+
+    # filter derived rules
+    results = list()
+    # Criteria:
+    # C1. rules must be in the form of "Group (len==1) => Mode (len==3)"
+    # C2. at least one rule must be retained for each of the groups
+    # C3. rules must have decent relative focus and relative stake
+    # C4. rare but interesting rules (patterns):
+    #   having decent coverage
+    rules = rules[
+        (rules['antecedents_len'] == 1) &
+        (rules['antecedents'].map(lambda x: list(x)[0].startswith('RG.'))) &
+        (rules['consequents_len'] == 3)
+    ]
+    threshold_wtKulc = 0.1
+    threshold_coverage = 0.5
+    for v_group, cand_rules in rules.groupby('antecedents'):
+        mask_wtKulc = cand_rules['wtKulc'] >= threshold_wtKulc
+        filtered_cand_rules = cand_rules[mask_wtKulc]
+        if len(filtered_cand_rules) == 0:
+            filtered_cand_rules = cand_rules.nlargest(1, 'wtKulc')
+
+        for row in filtered_cand_rules.itertuples():
+            rule = sorted(
+                frozenset.union(row.antecedents, row.consequents), 
+                key=lambda x: ['RG', 'CT', 'AT', 'TT'].index(x[:2])
+            )
+            if rule not in results:
+                results.append(tuple(rule))
+        
+        # "recycle" rules by checking group coverage
+        for row in cand_rules[~mask_wtKulc].itertuples():
+            rule = sorted(
+                frozenset.union(row.antecedents, row.consequents), 
+                key=lambda x: ['RG', 'CT', 'AT', 'TT'].index(x[:2])
+            )
+            if rule not in results:
+                if group_cov[rule[0]][(rule[1], rule[2], rule[3])] \
+                    > threshold_coverage:
+                    results.append(tuple(rule))
+
+    #print(rules)
+    #print(rules.columns)
+
+    # step 5. use association rules for group profiling
+    om = OrganizationalModel()
+    from collections import defaultdict
+    group_caps = defaultdict(list)
+    for rule in results:
+        group_index = int(rule[0][3:])
+        mode = tuple((
+            rule[1] if rule[1].split('.')[1] != '' else '',
+            rule[2] if rule[2].split('.')[1] != '' else '',
+            rule[3] if rule[3].split('.')[1] != '' else ''
+        ))
+        group_caps[group_index].append(mode)
+    
+    for i, group in enumerate(groups):
+        om.add_group(group, group_caps[i])
+
+    return om

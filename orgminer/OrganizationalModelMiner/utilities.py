@@ -78,7 +78,7 @@ def cross_validation_score(
         # evaluate using the test set
         sum_closest_proximity = 0.0
         for ix in test_set_index:
-            x = X.loc[ix].values.reshape((1, len(X.loc[ix])))
+            x = X.loc[ix].to_numpy().reshape((1, len(X.loc[ix])))
             sum_closest_proximity += amin(
                     cdist(x, cluster_centroids, metric=proximity_metric))
         scores.append((-1) * sum_closest_proximity)

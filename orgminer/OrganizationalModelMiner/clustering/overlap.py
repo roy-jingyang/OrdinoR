@@ -97,7 +97,7 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
         from numpy import mean
         init_means = list()
         for g in init_groups:
-            init_means.append(mean(profiles.loc[list(g)].values, axis=0))
+            init_means.append(mean(profiles.loc[list(g)].to_numpy(), axis=0))
         gmm_model = GaussianMixture(
             n_components=n_groups,
             covariance_type='tied',
@@ -105,7 +105,7 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
             max_iter=1000,
             n_init=1,
             random_state=0,
-            means_init=init_means).fit(profiles.values)
+            means_init=init_means).fit(profiles.to_numpy())
     else:
         gmm_model = GaussianMixture(
             n_components=n_groups,
@@ -113,10 +113,10 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
             tol=1e-9,
             max_iter=1000,
             n_init=n_init,
-            init_params='random').fit(profiles.values)
+            init_params='random').fit(profiles.to_numpy())
 
     # step 2. Derive the clusters as the end result
-    posterior_pr = gmm_model.predict_proba(profiles.values)
+    posterior_pr = gmm_model.predict_proba(profiles.to_numpy())
     from numpy import nonzero, median, unique, count_nonzero, amin, percentile
     '''
     threshold_ub = 0
@@ -355,12 +355,12 @@ def _moc(profiles, n_groups, init='random', n_init=100):
     # step 1. Train the model
     from .classes import MOC
     if warm_start:
-        moc_model = MOC(n_components=n_groups, M_init=m.values, n_init=1)
+        moc_model = MOC(n_components=n_groups, M_init=m.to_numpy(), n_init=1)
     else:
         moc_model = MOC(n_components=n_groups, n_init=n_init)
 
     # step 2. Derive the clusters as the end result
-    mat_membership = moc_model.fit_predict(profiles.values)
+    mat_membership = moc_model.fit_predict(profiles.to_numpy())
 
     from numpy import nonzero
     from collections import defaultdict
@@ -575,7 +575,7 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
         from numpy import array, mean, nonzero, zeros
         init_means = list()
         for g in init_groups:
-            init_means.append(mean(profiles.loc[list(g)].values, axis=0))
+            init_means.append(mean(profiles.loc[list(g)].to_numpy(), axis=0))
         fcm_model = FCM(
             n_components=n_groups,
             n_init=1,
@@ -586,7 +586,7 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
             n_init=n_init)
 
     # step 2. Derive the clusters as the end result
-    fpp = fcm_model.fit_predict(profiles.values)
+    fpp = fcm_model.fit_predict(profiles.to_numpy())
 
     from numpy import array, nonzero, argmax, median
     from numpy.random import choice
