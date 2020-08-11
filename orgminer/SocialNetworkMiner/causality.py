@@ -128,8 +128,3 @@ def handover(el,
     sn.add_nodes_from(el.groupby('resource').groups.keys())
     return sn
 
-
-# TODO: Subcontracting metric
-def subcontracting():
-    raise NotImplementedError
-

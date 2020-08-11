@@ -72,7 +72,7 @@ def _gmm(profiles, n_groups, threshold, init='random', n_init=100):
             init_groups = _mja(profiles, n_groups)  
         elif init == 'ahc':
             from .hierarchical import _ahc
-            init_groups, _ = _ahc(profiles, n_groups)
+            init_groups = _ahc(profiles, n_groups)
         elif init == 'kmeans':
             init_groups = list(set() for i in range(n_groups))
             from sklearn.cluster import KMeans
@@ -328,7 +328,7 @@ def _moc(profiles, n_groups, init='random', n_init=100):
             init_groups = _mja(profiles, n_groups)  
         elif init == 'ahc':
             from .hierarchical import _ahc
-            init_groups, _ = _ahc(profiles, n_groups)
+            init_groups = _ahc(profiles, n_groups)
         elif init == 'kmeans':
             init_groups = list(set() for i in range(n_groups))
             from sklearn.cluster import KMeans
@@ -550,7 +550,7 @@ def _fcm(profiles, n_groups, threshold, init='random', n_init=100):
             init_groups = _mja(profiles, n_groups)  
         elif init == 'ahc':
             from .hierarchical import _ahc
-            init_groups, _ = _ahc(profiles, n_groups)
+            init_groups = _ahc(profiles, n_groups)
         elif init == 'kmeans':
             init_groups = list(set() for i in range(n_groups))
             from sklearn.cluster import KMeans

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-"""This module provides the necessary helper functions for 
-organizational model mining methods.
+"""This module provides some helper functions for organizational model 
+mining methods.
 """
 from deprecated import deprecated
 
@@ -157,6 +157,39 @@ def _grid_search_wrapper(func_core, func_eval_score, params):
     func_core_ret = func_core(**params)
     score = func_eval_score(func_core_ret)
     return params, score
+
+
+def outlier_bound_iqr(arr, far_out=False):
+    """This method implements the Tukey's fences method [1]_ for 
+    determining outliers within a set of values. The boundary values are
+    returned.
+
+    Parameters
+    ----------
+    arr : array-like
+        A set of values to evaluate.
+    far_out : bool, optional, default False
+        A boolean flag indicating whether to reveal data points that are
+        outliers (``k = 1.5``) or "far out" data (``k = 3``). Defaults to
+        False, i.e., to determine outlier points.
+    
+    Returns
+    -------
+    lower_bound : float
+        The lower bound.
+    upper_bound : float
+        The upper bound.
+    
+    References
+    ----------
+    .. [1] `<https://en.wikipedia.org/wiki/Outlier#Tukey%27s_fences>`_
+    """
+    k = 1.5 if not far_out else 3.0
+    data = sorted(arr)
+    from numpy import percentile
+    q1, q3 = percentile(data, [25, 75])
+    iqr = q3 - q1
+    return (q1 - k * iqr), (q3 + k * iqr)
 
 
 @deprecated(reason='This method is neither being nor intended to be used.')

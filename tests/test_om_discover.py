@@ -26,6 +26,11 @@ if __name__ == '__main__':
     # build profiles
     from orgminer.ResourceProfiler.raw_profiler import count_execution_frequency
     profiles = count_execution_frequency(rl, scale=None)
+    '''
+    from orgminer.ResourceProfiler.pattern_profiler import \
+        from_frequent_patterns
+    profiles = from_frequent_patterns(rl)
+    '''
 
     '''
     from sklearn.decomposition import PCA
@@ -34,21 +39,37 @@ if __name__ == '__main__':
         PCA(n_components=None).fit_transform(profiles.to_numpy()),
         index=profiles.index
     )
+    print(profiles)
     '''
 
     num_groups = [10]
     from orgminer.OrganizationalModelMiner.clustering.hierarchical import ahc
     from orgminer.OrganizationalModelMiner.clustering.overlap import moc
-    ogs, _ = ahc(profiles, num_groups, method='ward')
+    ogs = ahc(profiles, num_groups, method='ward')
     #ogs = moc(profiles, num_groups, init='kmeans')
+    #ogs = ahc(profiles, num_groups, method='average', metric='jaccard')
 
     # 3. Assign execution modes to groups
     from orgminer.OrganizationalModelMiner.group_profiling import \
         full_recall, overall_score, association_rules
 
     #om = full_recall(ogs, rl)
-    #om = overall_score(ogs, rl, w1=0.7, p=0.3)
+    #om = overall_score(ogs, rl, w1=0.5, p=0.5)
     om = association_rules(ogs, rl)
+
+    '''
+    from orgminer.OrganizationalModelMiner.base import OrganizationalModel
+    from numpy import nonzero
+    om = OrganizationalModel()
+    for group in ogs:
+        modes = set()
+        for r in group:
+            r_modes = set(profiles.columns[
+                list(nonzero(profiles.loc[r].to_numpy())[0])
+            ])
+            modes.update(r_modes)
+        om.add_group(group, sorted(list(modes)))
+    '''
 
     # Evaluate discovery result
 
@@ -56,7 +77,9 @@ if __name__ == '__main__':
     measure_values = list()
     from orgminer.Evaluation.m2m.cluster_validation import silhouette_score
     from numpy import mean
-    silhouette_score = mean(list(silhouette_score(ogs, profiles).values()))
+    silhouette_score = mean(list(silhouette_score(
+        ogs, profiles, metric='euclidean'
+    ).values()))
     print('Silhouette\t= {:.6f}'.format(silhouette_score))
     print('-' * 80)
     print()

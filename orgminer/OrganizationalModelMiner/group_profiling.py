@@ -57,7 +57,7 @@ def overall_score(groups, rl, p=0.5, w1=0.5, w2=None, auto_search=False):
         is in fact redundant as its value must conform with the value set
         for parameter `w1`. See notes below.
     auto_search : bool, optional, default False
-        A Boolean flag indicating whether to perform auto grid search to
+        A boolean flag indicating whether to perform auto grid search to
         determine the threshold and the weightings. When auto grid search
         is required, values in range [0, 1.0] will be tested at a step of 
         0.1, and values given to parameter `p`, `w1`, and `w2` will be
@@ -103,12 +103,15 @@ def overall_score(groups, rl, p=0.5, w1=0.5, w2=None, auto_search=False):
         group_relative_stake, group_coverage
     from collections import defaultdict
 
+    scores_group_rel_focus = defaultdict(lambda: defaultdict(dict))
     scores_group_rel_stake = defaultdict(lambda: defaultdict(dict))
     scores_group_cov = defaultdict(lambda: defaultdict(dict))
 
     # obtain scores
     for i, group in enumerate(groups):
         for m in all_execution_modes:
+            rel_focus = group_relative_focus(group, m, rl)
+            scores_group_rel_focus[i][m] = rel_focus
             rel_stake = group_relative_stake(group, m, rl)
             scores_group_rel_stake[i][m] = rel_stake
             cov = group_coverage(group, m, rl)
@@ -307,10 +310,16 @@ def association_rules(groups, rl, p=None):
     rules['rev_rule_confidence'] = (
         rules['support'] / rules['consequent support']
     )
+    # max confidence: max. of the confidence values
     rules['max_confidence'] = rules[
         ['confidence', 'rev_rule_confidence']
     ].max(axis=1)
+    # Kulcyznski measure: average of the confidence values
     rules['Kulc'] = 0.5 * (rules['confidence'] + rules['rev_rule_confidence'])
+    # cosine measure: (geo mean of the confidence values)
+    rules['cosine'] = ((rules['confidence'] * rules['rev_rule_confidence']) 
+        ** 0.5)
+    # Imbalance Ratio
     rules['IR'] = (
         abs(rules['antecedent support'] - rules['consequent support']) /
         (rules['antecedent support'] + rules['consequent support'] -
@@ -344,11 +353,9 @@ def association_rules(groups, rl, p=None):
         (rules['antecedents'].map(lambda x: list(x)[0].startswith('RG.'))) &
         (rules['consequents_len'] == 3)
     ]
-    threshold_wtKulc = 0.1
-    threshold_coverage = 0.5
     for v_group, cand_rules in rules.groupby('antecedents'):
-        mask_wtKulc = cand_rules['wtKulc'] >= threshold_wtKulc
-        filtered_cand_rules = cand_rules[mask_wtKulc]
+        filters = cand_rules['wtKulc'] >= 0.1
+        filtered_cand_rules = cand_rules[filters]
         if len(filtered_cand_rules) == 0:
             filtered_cand_rules = cand_rules.nlargest(1, 'wtKulc')
 
@@ -361,18 +368,14 @@ def association_rules(groups, rl, p=None):
                 results.append(tuple(rule))
         
         # "recycle" rules by checking group coverage
-        for row in cand_rules[~mask_wtKulc].itertuples():
+        for row in cand_rules[~filters].itertuples():
             rule = sorted(
                 frozenset.union(row.antecedents, row.consequents), 
                 key=lambda x: ['RG', 'CT', 'AT', 'TT'].index(x[:2])
             )
             if rule not in results:
-                if group_cov[rule[0]][(rule[1], rule[2], rule[3])] \
-                    > threshold_coverage:
+                if group_cov[rule[0]][tuple(rule[1:])] > 0.5:
                     results.append(tuple(rule))
-
-    #print(rules)
-    #print(rules.columns)
 
     # step 5. use association rules for group profiling
     om = OrganizationalModel()
@@ -380,11 +383,11 @@ def association_rules(groups, rl, p=None):
     group_caps = defaultdict(list)
     for rule in results:
         group_index = int(rule[0][3:])
-        mode = tuple((
+        mode = (
             rule[1] if rule[1].split('.')[1] != '' else '',
             rule[2] if rule[2].split('.')[1] != '' else '',
             rule[3] if rule[3].split('.')[1] != '' else ''
-        ))
+        )
         group_caps[group_index].append(mode)
     
     for i, group in enumerate(groups):

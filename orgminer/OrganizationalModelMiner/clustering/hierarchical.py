@@ -24,19 +24,11 @@ def _ahc(profiles, n_groups, method='single', metric='euclidean'):
     -------
     list of frozensets
         Discovered resource groups.
-    og_hcy : DataFrame
-        The hierarchical structure (dendrogram) as a pandas DataFrame,
-        with resource ids as indices, levels of the hierarchy as columns,
-        and group ids as the values. 
-        E.g. for 20 resources placed in a 5-level hierarchical structure
-        with 8 groups at the lowest level, there should be 20 rows and 5
-        columns in the DataFrame, and the values should be in range of 0
-        to 7.
     
     See Also
     --------
-    scipy.cluster.hierarchy
     scipy.spatial.distance
+    sklearn.cluster.AgglomerativeClustering
     pandas.DataFrame
 
     References
@@ -48,14 +40,16 @@ def _ahc(profiles, n_groups, method='single', metric='euclidean'):
     """
     print('Applying hierarchical clustering-based AHC:')
 
+    '''
     from scipy.cluster import hierarchy
     Z = hierarchy.linkage(profiles, method=method, metric=metric)
+
     # the hierachical tree as a matrix where each column corresponds to a
     # specific level
-    mx_tree = hierarchy.cut_tree(Z, n_clusters=range(1, n_groups + 1))
+    mat_tree = hierarchy.cut_tree(Z, n_clusters=range(1, n_groups + 1))
     # wrap as DataFrame og_hcy
     from pandas import DataFrame
-    og_hcy = DataFrame(mx_tree, index=profiles.index)
+    og_hcy = DataFrame(mat_tree, index=profiles.index)
 
     from collections import defaultdict
     groups = defaultdict(set)
@@ -64,6 +58,25 @@ def _ahc(profiles, n_groups, method='single', metric='euclidean'):
         groups[og_hcy.iloc[i,-1]].add(og_hcy.index[i])
 
     return [frozenset(g) for g in groups.values()], og_hcy
+    '''
+    from sklearn.cluster import AgglomerativeClustering
+    if method == 'ward':
+        # Ward's method can only work with Euclidean distance
+        clustering = AgglomerativeClustering(n_groups,
+            affinity='euclidean', linkage=method).fit_predict(profiles)
+    else:
+        from scipy.spatial.distance import pdist, squareform
+        mat_dist = squareform(pdist(profiles, metric=metric))
+        clustering = AgglomerativeClustering(n_groups,
+            affinity='precomputed', linkage=method).fit_predict(mat_dist)
+
+    from collections import defaultdict
+    groups = defaultdict(set)
+    # add by each resource
+    for i, cluster in enumerate(clustering):
+        groups[cluster].add(profiles.index[i])
+
+    return [frozenset(g) for g in groups.values()]
 
 
 def ahc(profiles, n_groups, method='single', metric='euclidean',
@@ -102,14 +115,6 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
         is True).
     best_ogs : list of frozensets
         Discovered resource groups (if `search_only` is False).
-    best_og_hcy : DataFrame
-        The hierarchical structure (dendrogram) as a pandas DataFrame,
-        with resource ids as indices, levels of the hierarchy as columns,
-        and group ids as the values (if `search_only` is False).
-        E.g. for 20 resources placed in a 5-level hierarchical structure
-        with 8 groups at the lowest level, there should be 20 rows and 5
-        columns in the DataFrame, and the values should be in range of 0
-        to 7.
 
     Raises
     ------
@@ -118,8 +123,8 @@ def ahc(profiles, n_groups, method='single', metric='euclidean',
 
     See Also
     --------
-    scipy.cluster.hierarchy
     scipy.spatial.distance
+    sklearn.cluster.AgglomerativeClustering
     pandas.DataFrame
 
     References

@@ -98,41 +98,19 @@ class OrganizationalModel:
         TypeError
             If the parameter type for `exec_modes` is unexpected.
         """
-        if type(exec_modes) is list:
-            # no refinement applied
-            self._rg_id += 1
-            self._rg[self._rg_id] = ''
+        self._rg_id += 1
+        self._rg[self._rg_id] = ''
 
-            self._mem[self._rg_id] = set()
-            for r in og:
-                self._mem[self._rg_id].add(r)
-                self._rmem[r].add(self._rg_id)
+        self._mem[self._rg_id] = set()
+        for r in og:
+            self._mem[self._rg_id].add(r)
+            self._rmem[r].add(self._rg_id)
 
-            self._cap[self._rg_id] = list()
-            for m in exec_modes:
-                self._cap[self._rg_id].append(m)
-                self._rcap[m].add(self._rg_id)
-        elif type(exec_modes) is dict:
-            # refinement applied
-            # TODO: consider deprecating
-            for subog, subm in exec_modes.items():
-                if subog not in self._mem.values():
-                    self._rg_id += 1
-                    self._rg[self._rg_id] = ''
-
-                    self._mem[self._rg_id] = set()
-                    for r in subog:
-                        self._mem[self._rg_id].add(r)
-                        self._rmem[r].add(self._rg_id)
-
-                    self._cap[self._rg_id] = list()
-                    for m in subm:
-                        self._cap[self._rg_id].append(m)
-                        self._rcap[m].add(self._rg_id)
-        else:
-            raise TypeError('Invalid type for parameter `{}`: {}'.format(
-                'exec_modes', type(exec_modes)))
-            
+        self._cap[self._rg_id] = list()
+        for m in exec_modes:
+            self._cap[self._rg_id].append(m)
+            self._rcap[m].add(self._rg_id)
+        
 
     @property
     def group_number(self):
