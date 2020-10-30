@@ -152,11 +152,18 @@ def read_xes(f):
     el : DataFrame
         An event log.
     """
-    from pm4py.objects.log.importer.xes import factory
-    pm4py_log = factory.import_log_from_string(f.read(), 
-        parameters={'index_trace_indexes': True})
-    from pm4py.objects.conversion.log.versions import to_dataframe
-    df = to_dataframe.apply(pm4py_log).rename(columns={
+    from pm4py.objects.log.util import string_to_file
+    tmp_file = string_to_file.import_string_to_temp_file(f.read(), "xes")
+
+    from pm4py.objects.log.importer.xes import importer
+    pm4py_log = importer.apply(
+        tmp_file, 
+        parameters={'index_trace_indexes': True}
+    )
+    from pm4py.objects.conversion.log import converter
+    df = converter.apply(
+        pm4py_log, variant=converter.Variants.TO_DATA_FRAME
+    ).rename(columns={
         'case:concept:name': 'case_id',
         'concept:name': 'activity',
         'org:resource': 'resource',

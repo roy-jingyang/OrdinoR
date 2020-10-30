@@ -43,8 +43,8 @@ def performer_activity_matrix(el, use_log_scale):
     """
     from collections import defaultdict
     pam = defaultdict(lambda: defaultdict(lambda: 0))
-    for res, trace in el.groupby('resource'):
-        for event in trace.itertuples():
+    for res, events in el.groupby('resource'):
+        for event in events.itertuples():
             pam[res][event.activity] += 1
 
     from pandas import DataFrame

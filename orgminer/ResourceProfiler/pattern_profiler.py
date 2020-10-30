@@ -22,6 +22,7 @@ def from_frequent_patterns(rl):
     """
     p = 1 / len(rl)
     all_resources = set(rl['resource'])
+    all_modes = set()
 
     # step 1. build transactions list from resource log
     ld = list()
@@ -31,6 +32,7 @@ def from_frequent_patterns(rl):
         tt = event.time_type if event.time_type != '' else 'TT.'
 
         ld.append([event.resource, ct, at, tt])
+        all_modes.add((ct, at, tt))
 
     # step 2. discover frequent itemsets
     from pandas import DataFrame
@@ -54,17 +56,10 @@ def from_frequent_patterns(rl):
     rules['rev_rule_confidence'] = (
         rules['support'] / rules['consequent support']
     )
-    # IW: imbalance weighting, derived from Imbalance Ratio value
-    rules['IW'] = (1 +
-        (rules['antecedent support'] - rules['consequent support']) /
-        (rules['antecedent support'] + rules['consequent support'] -
-         rules['support'])
-    )
-    # wtKulc: weighted Kulc measure, combined with calculation of IR
-    rules['wtKulc'] = (0.5 * (
-        (2 - rules['IW']) * rules['confidence'] +
-        rules['IW'] * rules['rev_rule_confidence']
-    ))
+    # max confidence: max. of the confidence values
+    rules['max_confidence'] = rules[
+        ['confidence', 'rev_rule_confidence']
+    ].max(axis=1)
 
     rules["antecedents_len"] = rules["antecedents"].apply(len)
     rules["consequents_len"] = rules["consequents"].apply(len)
@@ -81,7 +76,7 @@ def from_frequent_patterns(rl):
         lambda x: list(x).pop()
     )
     for row in rules.itertuples():
-        if row.wtKulc >= 0.05:
+        if row.max_confidence >= 0.1:
             r = row.antecedents
             all_resources.discard(r)
 
@@ -90,6 +85,7 @@ def from_frequent_patterns(rl):
                 list(row.consequents),
                 key=lambda x: ['CT.', 'AT.', 'TT.'].index(x[:3])
             )
+            all_modes.discard(tuple(mode))
             rule.extend(mode)
             if rule not in results:
                 results.append(rule)
@@ -99,7 +95,7 @@ def from_frequent_patterns(rl):
     # append missing resources
     for missing_r in all_resources:
         r_rules = rules.groupby('antecedents').get_group(missing_r)
-        r_rules = r_rules.nlargest(1, 'wtKulc')
+        r_rules = r_rules.nlargest(1, 'max_confidence')
         for row in r_rules.itertuples():
             mode = sorted(
                 list(row.consequents),

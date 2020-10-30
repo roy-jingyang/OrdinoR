@@ -103,15 +103,15 @@ def overall_score(groups, rl, p=0.5, w1=0.5, w2=None, auto_search=False):
         group_relative_stake, group_coverage
     from collections import defaultdict
 
-    scores_group_rel_focus = defaultdict(lambda: defaultdict(dict))
+    #scores_group_rel_focus = defaultdict(lambda: defaultdict(dict))
     scores_group_rel_stake = defaultdict(lambda: defaultdict(dict))
     scores_group_cov = defaultdict(lambda: defaultdict(dict))
 
     # obtain scores
     for i, group in enumerate(groups):
         for m in all_execution_modes:
-            rel_focus = group_relative_focus(group, m, rl)
-            scores_group_rel_focus[i][m] = rel_focus
+            #rel_focus = group_relative_focus(group, m, rl)
+            #scores_group_rel_focus[i][m] = rel_focus
             rel_stake = group_relative_stake(group, m, rl)
             scores_group_rel_stake[i][m] = rel_stake
             cov = group_coverage(group, m, rl)
@@ -354,10 +354,10 @@ def association_rules(groups, rl, p=None):
         (rules['consequents_len'] == 3)
     ]
     for v_group, cand_rules in rules.groupby('antecedents'):
-        filters = cand_rules['wtKulc'] >= 0.1
+        filters = cand_rules['max_confidence'] >= 0.1
         filtered_cand_rules = cand_rules[filters]
         if len(filtered_cand_rules) == 0:
-            filtered_cand_rules = cand_rules.nlargest(1, 'wtKulc')
+            filtered_cand_rules = cand_rules.nlargest(1, 'max_confidence')
 
         for row in filtered_cand_rules.itertuples():
             rule = sorted(
