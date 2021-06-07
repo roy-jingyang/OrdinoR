@@ -1,0 +1,13 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import sys
+
+# import methods to be tested below
+
+
+# List input parameters from shell
+
+
+if __name__ == '__main__':
+
