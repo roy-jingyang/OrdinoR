@@ -1,6 +1,4 @@
 ################################################
-# This is the .gitignore for the [master] branch
-################################################
 
 # Ignore pyc
 *.pyc
@@ -16,12 +14,6 @@
 # Ignore input and output files
 input/
 output/
-
-# Ignore external software
-external/
-
-# [master] Ignore the test programs
-tests/
 
 # Ignore packaging intermediate artifacts
 build/
