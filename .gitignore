@@ -1,6 +1,4 @@
 #############################################
-# This is the .gitignore for the [dev] branch
-#############################################
 
 # Ignore pyc
 *.pyc
@@ -16,9 +14,6 @@
 # Ignore input and output files
 input/
 output/
-
-# Ignore external software
-external/
 
 # Ignore packaging intermediate artifacts
 build/
