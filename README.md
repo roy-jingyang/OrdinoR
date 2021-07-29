@@ -1,5 +1,4 @@
-## Python tookit for Process Mining from the organizational perspective
+## Python tookit for Organizational Model Mining from Event Logs
 
-For more information, please refer to 
-[OrgMining documentation](https://orgmining.readthedocs.io/).
+For more information, please refer to the [documentation]().
 
