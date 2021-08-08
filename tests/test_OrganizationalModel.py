@@ -4,7 +4,7 @@
 import sys
 
 # import methods to be tested below
-from orgminer.OrganizationalModelMiner.base import OrganizationalModel
+from ordinor.org_model_miner import OrganizationalModel
 
 # List input parameters from shell
 fn_om = sys.argv[1]

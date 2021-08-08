@@ -1,52 +1,55 @@
-"""Setup script for orgminer
+"""Setup script for OrdinoR
 
-Install orgminer with
+Install OrdinoR with
 
 python setup.py install
 """
 
-import os
 import sys
 import setuptools
 
 if sys.argv[-1] == "setup.py":
-    print('To start installation, run "python setup.py install"')
-    print()
+    print('To start installation, run \n\tpython setup.py install\n')
 
-if sys.version_info[:2] < (3, 6): # python version >= 3.6
-    error = (
-        'OrgMiner requires Python 3.6 or later ' +
-        '({0[0]}.{0[1]} detected).'.format(sys.version_info[:2])
+py_ver = sys.version_info[:2]
+
+if py_ver < (3, 7) or py_ver > (3, 8):
+    sys.stderr.write(
+        f"""
+        OrdinoR requires Python 3.7, or 3.8.
+        You have Python {py_ver[0]}.{py_ver[1]}.\n
+        """
     )
-    sys.stderr.write(error + '\n')
     sys.exit(1)
 
 setuptools.setup(
-    name='orgminer',
-    version='0.1.0-nightly20200811',  #TODO
+    name='ordinor',
+    version='0.1.0',
+    python_requires='>=3.7, <=3.8',
 
-    namespace_packages=['orgminer'],
+    namespace_packages=['ordinor'],
     package_dir={'': '.'},
     packages=setuptools.find_namespace_packages(
-        where='.', include=['orgminer.*']),
+        where='.', include=['ordinor.*']
+    ),
 
     # meta data to display on PyPI
-    author='Jing Yang (Roy)',
+    author='Jing (Roy) Yang',
     author_email='roy.j.yang@qut.edu.au',
-    description='Python tookit for Process Mining on the organizational perspective',
-    url='https://github.com/roy-jingyang/OrgMiner',
+    description='Python toolkit for organizational model mining',
+    url='https://github.com/roy-jingyang/OrdinoR',
     project_url={
-        'Documentation': 'https://orgminer.readthedocs.io',
-        'Source': 'https://github.com/roy-jingyang/OrgMiner',
-        'Tracker': 'https://github.com/roy-jingyang/OrgMiner/issues'
+        'Documentation': 'https://ordinor.readthedocs.io',
+        'Source': 'https://github.com/roy-jingyang/OrdinoR',
+        'Tracker': 'https://github.com/roy-jingyang/OrdinoR/issues'
     },
     classifier=[
-        'Programming Language :: Python :: 3.6',
+        'Development Status :: 4 - Beta',
+        'Programming Language :: Python',
         'License :: OSI Approved :: GNU GPLv3',
         'Operating System :: OS Independent'
     ],
 
-    python_requires='>=3.6',
     install_requires=[
         'numpy>=1.17.2',
         'scipy>=1.3.1',
@@ -57,8 +60,8 @@ setuptools.setup(
         'networkx>=2.4',
         'pm4py>=1.2.4',
         'Deprecated>=1.2.6',
-        'mlxtend>=0.17.3',
     ],
+
     extras_require={
         'arya': [
             'Flask', 

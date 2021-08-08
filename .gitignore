@@ -4,6 +4,9 @@
 *.pyc
 **/__pycache__
 
+# Ignore .old files
+*.old
+
 # Ignore Vim undo log
 *.un~
 *.swp
@@ -20,3 +23,5 @@ build/
 dist/
 *.egg-info/
 
+# Ignore tests
+tests/
