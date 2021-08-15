@@ -1,5 +1,5 @@
 from collections import defaultdict
-import json
+import pickle
 
 from pandas import DataFrame
 
@@ -119,7 +119,8 @@ class BaseMiner:
         Returns
         -------
         """
-        el = check_convert_input_log(el)
+        if el is not None:
+            el = check_convert_input_log(el)
 
         self._build_ctypes(el)
         self._build_atypes(el)
@@ -268,7 +269,7 @@ class BaseMiner:
                 '_ttypes': self._ttypes,
                 'is_ttypes_verified': self.is_ttypes_verified
             }
-            json.dump(obj, f)
+            pickle.dump(obj, f)
         else:
             raise exc.InvalidModelError(
                 'The specified types do not form the respective partitioning.'
@@ -283,15 +284,15 @@ class BaseMiner:
 
         Parameters
         ----------
-        f: File object
-            A sourced file to be read from.
+        f : File object
+            A destination file to be written.
 
         Returns
         -------
         (Corresponding miner class object)
             The imported constructed execution context miner.
         """
-        obj = json.load(f)
+        obj = pickle.load(f)
         if (obj['is_ctypes_verified'] and obj['is_atypes_verified'] and
             obj['is_ttypes_verified']):
             ret = cls(el=None)

@@ -1,4 +1,4 @@
-def f1_score(rl, om, fitness, precision):
+def f1_score(rl, om, fitness=None, precision=None):
     """
     Calculate the F1-score combining fitness and precision measures. 
 
@@ -8,10 +8,13 @@ def f1_score(rl, om, fitness, precision):
         A resource log.
     om : OrganizationalModel
         An organizational model.
-    fitness : function
-        Function for calculating fitness.
-    precision : function
-        Function for calculating precision.
+    fitness : function, optional
+        Function for calculating fitness. Defaults to
+        `ordinor.conformance.fitness`.
+
+    precision : function, optional
+        Function for calculating precision. Defaults to
+        `ordinor.conformance.precision`.
 
     Returns
     -------
@@ -23,6 +26,13 @@ def f1_score(rl, om, fitness, precision):
     ordinor.conformance.fitness
     ordinor.conformance.precision
     """
+    if fitness is None:
+        from ordinor.conformance import fitness
+        fitness = fitness
+    if precision is None:
+        from ordinor.conformance import precision
+        precision = precision
+
     fitness_score = fitness(rl, om)
     precision_score = precision(rl, om)
     return (
