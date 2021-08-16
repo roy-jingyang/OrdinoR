@@ -56,19 +56,15 @@ setuptools.setup(
         'scikit-learn>=0.21.3',
         'scikit-fuzzy>=0.4.1',
         'pandas>=0.25.3',
-        'python-igraph>=0.8.0',
         'networkx>=2.4',
         'pm4py>=1.2.4',
         'Deprecated>=1.2.6',
-    ],
 
-    extras_require={
-        'arya': [
-            'Flask', 
-            'flask-cors',
-            'flask-bootstrap',
-            'flask-wtf',
-            'flask-session'
-        ]
-    }
+        # webapp requirements
+        'Flask', 
+        'flask-cors',
+        'flask-bootstrap',
+        'flask-wtf',
+        'flask-session',
+    ],
 )
