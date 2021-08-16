@@ -1,1 +1,1 @@
-### *OrdinoR*: a Framework and Toolkit for Organizational Model Mining
+### *OrdinoR*: Python Toolkit for Organizational Model Mining
