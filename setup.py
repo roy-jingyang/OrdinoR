@@ -24,14 +24,11 @@ if py_ver < (3, 7) or py_ver > (3, 8):
 
 setuptools.setup(
     name='ordinor',
-    version='0.1.0',
+    version='0.1.0rc6',
     python_requires='>=3.7, <=3.8',
 
-    namespace_packages=['ordinor'],
-    package_dir={'': '.'},
-    packages=setuptools.find_namespace_packages(
-        where='.', include=['ordinor.*']
-    ),
+    package_dir={'': 'src'},
+    packages=setuptools.find_packages(),
 
     # meta data to display on PyPI
     author='Jing (Roy) Yang',
@@ -51,14 +48,13 @@ setuptools.setup(
     ],
 
     install_requires=[
-        'numpy>=1.17.2',
-        'scipy>=1.3.1',
-        'scikit-learn>=0.21.3',
-        'scikit-fuzzy>=0.4.1',
-        'pandas>=0.25.3',
-        'networkx>=2.4',
+        'numpy',
+        'scipy',
+        'scikit-learn',
+        'scikit-fuzzy',
+        'pandas',
+        'networkx',
         'pm4py>=1.2.4',
-        'Deprecated>=1.2.6',
 
         # webapp requirements
         'Flask', 
