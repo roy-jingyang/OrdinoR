@@ -22,45 +22,64 @@ if py_ver < (3, 7) or py_ver > (3, 8):
     )
     sys.exit(1)
 
-setuptools.setup(
-    name='ordinor',
-    version='0.1.0rc6',
-    python_requires='>=3.7, <=3.8',
+# Meta data to be displayed on PyPI
+author          = 'Jing (Roy) Yang'
+author_email    = 'roy.j.yang@qut.edu.au'
+description     = 'Python toolkit for organizational model mining'
+url             = 'https://github.com/roy-jingyang/OrdinoR'
+project_url     = {
+    'Documentation': 'https://ordinor.readthedocs.io',
+    'Source': 'https://github.com/roy-jingyang/OrdinoR',
+    'Tracker': 'https://github.com/roy-jingyang/OrdinoR/issues'
+}
+classifier      = [
+    'Development Status :: 4 - Beta',
+    'Programming Language :: Python',
+    'License :: OSI Approved :: GNU GPLv3',
+    'Operating System :: OS Independent'
+]
 
-    package_dir={'': 'src'},
-    packages=setuptools.find_packages(),
+# Package information
+name                = 'ordinor'
+version             = '0.1.0rc9'
+python_requires     = '>=3.7, <=3.8'
 
-    # meta data to display on PyPI
-    author='Jing (Roy) Yang',
-    author_email='roy.j.yang@qut.edu.au',
-    description='Python toolkit for organizational model mining',
-    url='https://github.com/roy-jingyang/OrdinoR',
-    project_url={
-        'Documentation': 'https://ordinor.readthedocs.io',
-        'Source': 'https://github.com/roy-jingyang/OrdinoR',
-        'Tracker': 'https://github.com/roy-jingyang/OrdinoR/issues'
-    },
-    classifier=[
-        'Development Status :: 4 - Beta',
-        'Programming Language :: Python',
-        'License :: OSI Approved :: GNU GPLv3',
-        'Operating System :: OS Independent'
-    ],
+packages            = [
+    'ordinor',
+    'ordinor.analysis',
+    'ordinor.conformance',
+    'ordinor.execution_context',
+    'ordinor.io',
+    'ordinor.org_model_miner',
+    'ordinor.social_network_miner',
+    'ordinor.utils',
+]
 
-    install_requires=[
-        'numpy',
-        'scipy',
-        'scikit-learn',
-        'scikit-fuzzy',
-        'pandas',
-        'networkx',
-        'pm4py>=1.2.4',
+def parse_requirements_file(filename):
+    with open(filename) as f:
+        requires = [l.strip() for l in f.readlines() if not l.startswith("#")]
+    return requires
 
-        # webapp requirements
-        'Flask', 
-        'flask-cors',
-        'flask-bootstrap',
-        'flask-wtf',
-        'flask-session',
-    ],
-)
+install_requires    = []
+extras_require      = {
+    "default": parse_requirements_file("requirements.txt")
+}
+
+
+if __name__ == '__main__':
+    setuptools.setup(
+        author=author,
+        author_email=author_email,
+        description=description,
+        url=url,
+        project_url=project_url,
+        classifier=classifier,
+
+        name=name,
+        version=version,
+        python_requires=python_requires,
+        install_requires=install_requires,
+        extras_require=extras_require,
+
+        #TODO
+    )
