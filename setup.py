@@ -41,7 +41,7 @@ classifier      = [
 
 # Package information
 name                = 'ordinor'
-version             = '0.1.0rc9'
+version             = '0.1.0rc10'
 python_requires     = '>=3.7, <=3.8'
 
 packages            = [
@@ -62,7 +62,7 @@ def parse_requirements_file(filename):
 
 install_requires    = []
 extras_require      = {
-    "default": parse_requirements_file("requirements.txt")
+    "default": parse_requirements_file('./requirements.txt')
 }
 
 
