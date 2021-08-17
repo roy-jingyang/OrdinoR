@@ -13,10 +13,10 @@ if sys.argv[-1] == "setup.py":
 
 py_ver = sys.version_info[:2]
 
-if py_ver < (3, 7) or py_ver > (3, 8):
+if py_ver < (3, 7):
     sys.stderr.write(
         f"""
-        OrdinoR requires Python 3.7 or 3.8.
+        OrdinoR requires Python 3.7+.
         You have Python {py_ver[0]}.{py_ver[1]}.\n
         """
     )
@@ -41,8 +41,8 @@ classifier      = [
 
 # Package information
 name                = 'ordinor'
-version             = '0.1.0rc11'
-python_requires     = '>=3.7, <=3.8'
+version             = '0.1.0rc14'
+python_requires     = '>=3.7'
 
 packages            = [
     'ordinor',
@@ -65,25 +65,23 @@ def parse_requirements_file(filename):
         requires = [l.strip() for l in f.readlines() if not l.startswith("#")]
     return requires
 
-install_requires    = []
-extras_require      = {
-    'default': {
-        'numpy>=1.17.2',
-        'scipy>=1.3.1',
-        'scikit-learn>=0.21.3',
-        'scikit-fuzzy>=0.4.1',
-        'pandas>=0.25.3',
-        'networkx>=2.4',
-        'pm4py>=1.2.4',
+install_requires    = [
+    'numpy>=1.17.2',
+    'scipy>=1.3.1',
+    'scikit-learn>=0.21.3',
+    'scikit-fuzzy>=0.4.1',
+    'pandas>=0.25.3',
+    'networkx>=2.4',
+    'pm4py>=1.2.4',
 
-        # webapp requirements
-        'Flask',
-        'flask-cors',
-        'flask-bootstrap',
-        'flask-wtf',
-        'flask-session',
-    }
-}
+    # webapp requirements
+    'Flask',
+    'flask-cors',
+    'flask-bootstrap',
+    'flask-wtf',
+    'flask-session',
+]
+extras_require      = {}
 
 if __name__ == '__main__':
     setuptools.setup(
