@@ -6,6 +6,7 @@ types of generating functions which are different depending on whether an
 attribute is numeric or categorical. 
 
 """
+from random import sample
 
 import numpy as np
 import pandas as pd
@@ -69,10 +70,11 @@ class NumericRuleGenerator:
 
 class CategoricalRuleGenerator:
     @classmethod
-    def RandomTwoWayPartition(cls, attr, attr_dim, el):
+    def RandomTwoSubsetPartition(cls, attr, attr_dim, el, n_sample=1):
         """
-        Generate rules for a given numeric attribute using histogram
-        split on the attribute values in the input event log.
+        Generate rules for a given categorical attribute by performing a
+        two-subset partitioning on all unique attribute values in the
+        input event log.
 
         Parameters
         ----------
@@ -83,26 +85,53 @@ class CategoricalRuleGenerator:
             of the types. Can be one of {'CT', 'AT', 'TT'}.
         el : pandas.DataFrame, or pm4py EventLog
             An event log to which the atomic rule will be applied.
+        
+        n_sample : int, optional
+            Sample size, must be a positive integer smaller or equal to
+            the total possible number of partitions (see notes). Defaults
+            to `1`. If not provided, or the sample number is greater than
+            the population, return all possibilities
 
         Returns
         -------
         generator
-            List of rules generated for the two way partitioning.
+            List of rules generated for the two-subset partitioning.
         
         Notes
         -----
-        * The total possible number two way partitioning on a size-N set
-          (note that empty sets are not included) is `2^(N-1) - 1`, i.e.,
-          `(2^N - 2) / 2` 
+        * The total possible number of two-subset partitions on a size-N
+          set is `2^(N-1) - 1`, i.e., `(2^N - 2) / 2`. This is known as
+          the Stirling number of the second kind, with k=2.
         """
+        el = check_convert_input_log(el)
         unique_attr_vals = set(el[attr])
-        for pars in unique_k_partitions(unique_attr_vals, k=2):
-            ar_left = AtomicRule(
-                attr=attr, attr_type='categorical', 
-                attr_vals=pars[0], attr_dim=attr_dim
-            )
-            ar_right = AtomicRule(
-                attr=attr, attr_type='categorical', 
-                attr_vals=pars[1], attr_dim=attr_dim
-            )
-            yield [Rule(ars=[ar_left]), Rule(ars=[ar_right])]
+
+        # calculate the number of all possibilities
+        N_partitions = 2 ** (len(unique_attr_vals) - 1) - 1
+
+        if n_sample is None or n_sample >= N_partitions:
+            # return all possibilities, if
+            # sample number is not specified or n_sample >= N_partitions
+            indices = list(range(N_partitions))
+        else:
+            # otherwise, sample uniformly
+            indices = sorted(sample(range(N_partitions), n_sample))
+        
+        j = 0
+        for i, par in enumerate(unique_k_partitions(unique_attr_vals, k=2)):
+            if j == len(indices):
+                break
+            
+            if i == indices[j]:
+                j += 1
+                ar_left = AtomicRule(
+                    attr=attr, attr_type='categorical', 
+                    attr_vals=par[0], attr_dim=attr_dim
+                )
+                ar_right = AtomicRule(
+                    attr=attr, attr_type='categorical', 
+                    attr_vals=par[1], attr_dim=attr_dim
+                )
+                yield [Rule(ars=[ar_left]), Rule(ars=[ar_right])]
+            else:
+                pass

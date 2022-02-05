@@ -35,7 +35,7 @@ def powerset_exclude_headtail(s, reverse=False, depth=None):
 
 def unique_k_partitions(s, k):
     """
-    Return all possible partitioning of a given set into k subsets, using
+    Return all possible partitions of a given set into k subsets, using
     the Knuth's algorithm U.
     This implementation is from a gist, copyright to GitHub user
     "olooney".
@@ -57,6 +57,9 @@ def unique_k_partitions(s, k):
     https://gist.github.com/olooney/8607faf1ee609b7c4da26f41f766a977
     """
     l = list(s)
+
+    if len(l) < 2:
+        return []
 
     def visit(n, a):
         ps = [set() for i in range(k)]

@@ -6,8 +6,11 @@ This calculation is designed to be more efficient, so that iterative
 learning procedures guided by dispersal and impurity can be boosted.
 """
 
+from math import comb
+from itertools import combinations
+
 from scipy.stats import entropy
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import hamming
 import pandas as pd
 
 def impurity(m_event_co, m_event_r):
@@ -52,29 +55,37 @@ def impurity(m_event_co, m_event_r):
             total_impurity += wt * entropy(pk, base=2)
         else:
             total_impurity += 0
-    return total_impurity
+    
+    # standardize
+    max_impurity = entropy(
+        df['_r'].value_counts(normalize=True),
+        base=2
+    )
+    return total_impurity / max_impurity
 
-def dispersal(m_event_ct, m_event_at, m_event_tt, m_event_r):
+def dispersal(m_co_t, m_event_co, m_event_r):
     """
+    Calculate dispersal based on event pairwise distance, using
+    "execution context" pairwise distance as proxy for improved
+    computational efficiency.
 
     Parameters
     ----------
-    m_event_ct : pandas.DataFrame
-        An array indexed by event ids, recording labels of the case types
-        of events.
+    m_co_t : pandas.DataFrame
+        An array indexed by execution context ids, recording labels of
+        the case types, activity types, and time types of execution
+        contexts. The column number may vary from 1 to 3, depending on
+        the number of process dimensions considered for execution
+        contexts. 
 
-    m_event_at : pandas.DataFrame
-        An array indexed by event ids, recording labels of the activity
-        types of events.
-
-    m_event_tt : pandas.DataFrame
-        An array indexed by event ids, recording labels of the time types
-        of events.
+    m_event_co : pandas.Series
+        An array indexed by event ids, recording labels of the execution
+        contexts to which the events belong to.
     
     m_event_r : pandas.Series
         An array indexed by event ids, recording ids of the resources who
         originated the events.
-    
+
     Returns
     -------
     total_dispersal : float
@@ -83,38 +94,47 @@ def dispersal(m_event_ct, m_event_at, m_event_tt, m_event_r):
     Notes
     -----
     * All events are expected to be events with resource information.
-    * Any of `m_event_ct`, `m_event_at`, and `m_event_tt` can be None,
-      indicating that specific process dimension is not considered.
-    * The event index is expected to be consistent, i.e., `m_event_ct`,
-      `m_event_at`, `m_event_tt`, and `m_event_r` should share the same
-      index.
+    * The execution context index is expected to be consistent with the
+      labels recorded for events, i.e., the index of `m_co_t` should be
+      the same as the unique values contained in `m_event_co`.
     """
-    dims = []
-    data = {'_ct': m_event_ct, '_at': m_event_at, '_tt': m_event_tt}
-    for t in ['_ct', '_at', '_tt']:
-        if data[t] is not None:
-            if len(data[t]) != len(m_event_r):
-                raise ValueError('Array lengths unmatched')
-            dims.append(t)
-        else:
-            del data[t]
+    if len(m_event_co) != len(m_event_r):
+        raise ValueError('Array lengths unmatched')
     N_events = len(m_event_r)
-    data['_r'] = m_event_r
-
+    N_dims = sum(m_co_t.sum(axis=0) > 0)
+    
+    if N_dims == 0:
+        return 0.0
+    
+    data = {'_co': m_event_co, '_r': m_event_r}
     df = pd.DataFrame(data)
-    total_dispersal = 0
+    total_dispersal = 0.0
     for r, rows in df.groupby('_r'):
         n_rows = len(rows)
+        count_co_events = rows['_co'].value_counts()
         wt =  n_rows / N_events
-        if n_rows > 1:
-            # 2 or more events
-            avg_event_pdist = pdist(
-                df[dims].to_numpy(), metric='hamming'
-            )
-            avg_event_pdist = avg_event_pdist.mean()
-        else:
-            # only 1 event
+        # find all involved execution contexts
+        co_ids = set(m_event_co.loc[rows.index])
+        if len(co_ids) < 2:
             avg_event_pdist = 0
-        
+        else:
+            sum_event_pdist_across = 0
+            # enumerate to calculate sum of pairwise distance (across)
+            for na, nb in combinations(co_ids, r=2):
+                dist_na_nb = hamming(
+                    m_co_t.loc[na].to_numpy(),
+                    m_co_t.loc[nb].to_numpy()
+                ) * (3 / N_dims)
+                N_events_na = count_co_events.loc[na]
+                N_events_nb = count_co_events.loc[nb]
+                sum_event_pdist_across += (
+                    dist_na_nb * N_events_na * N_events_nb
+                )
+            # total event pairwise distance (across + within; within are 0s)
+            sum_event_pdist = sum_event_pdist_across + 0
+            n_total_pairs = comb(n_rows, 2)
+            avg_event_pdist = sum_event_pdist / n_total_pairs
+
         total_dispersal += wt * avg_event_pdist
+
     return total_dispersal
