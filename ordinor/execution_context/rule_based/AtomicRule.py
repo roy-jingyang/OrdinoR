@@ -65,6 +65,8 @@ class AtomicRule(object):
     def __repr__(self) -> str:
         if self.is_null:
             return '⊥ (null)'
+        elif self.attr_type == 'categorical':
+            return f'`{self.attr}` ∈ {set(sorted(self.attr_vals))}'
         else:
             return f'`{self.attr}` ∈ {self.attr_vals}'
 
@@ -92,7 +94,7 @@ class AtomicRule(object):
                 # interval equality
                 return self.attr_vals == other.attr_vals
         else:
-            return NotImplemented
+            return False
     
     # null < (self) weaker rule < (other) stronger rule
     def __lt__(self, other) -> bool:

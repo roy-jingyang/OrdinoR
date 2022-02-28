@@ -70,7 +70,7 @@ class NumericRuleGenerator:
 
 class CategoricalRuleGenerator:
     @classmethod
-    def RandomTwoSubsetPartition(cls, attr, attr_dim, el, n_sample=1):
+    def RandomTwoSubsetPartition(cls, attr, attr_dim, el, n_sample=1, max_n_sample=100):
         """
         Generate rules for a given categorical attribute by performing a
         two-subset partitioning on all unique attribute values in the
@@ -86,11 +86,18 @@ class CategoricalRuleGenerator:
         el : pandas.DataFrame, or pm4py EventLog
             An event log to which the atomic rule will be applied.
         
-        n_sample : int, optional
+        n_sample : int or float, optional
             Sample size, must be a positive integer smaller or equal to
-            the total possible number of partitions (see notes). Defaults
-            to `1`. If not provided, or the sample number is greater than
-            the population, return all possibilities
+            the total possible number of partitions (see notes), or a
+            positive float number smaller than 1.
+            Defaults to integer `1`, i.e., sample will be of size 1.
+            If not provided, this defaults to the value of
+            `max_n_sample`.
+        
+        max_n_sample : int, optional
+            Maximum sample size allowed, must be a positive integer
+            smaller or equal to the total possible number of partitions.
+            Defaults to `100`, i.e., sample size will be at most 100.
 
         Returns
         -------
@@ -102,6 +109,8 @@ class CategoricalRuleGenerator:
         * The total possible number of two-subset partitions on a size-N
           set is `2^(N-1) - 1`, i.e., `(2^N - 2) / 2`. This is known as
           the Stirling number of the second kind, with k=2.
+        * If `n_sample` is given as a valid float number, it is
+          considered a percentage of the population.
         """
         el = check_convert_input_log(el)
         unique_attr_vals = set(el[attr])
@@ -109,9 +118,22 @@ class CategoricalRuleGenerator:
         # calculate the number of all possibilities
         N_partitions = 2 ** (len(unique_attr_vals) - 1) - 1
 
-        if n_sample is None or n_sample >= N_partitions:
-            # return all possibilities, if
-            # sample number is not specified or n_sample >= N_partitions
+        if n_sample is None:
+            n_sample = max_n_sample
+        elif type(n_sample) is int and n_sample > 0:
+            pass
+        elif type(n_sample) is float and 0 < n_sample and n_sample < 1:
+            n_sample = int(N_partitions * n_sample)
+            n_sample = 1 if n_sample < 1 else n_sample
+        else:
+            raise ValueError
+        
+        # cap sample size
+        if n_sample > max_n_sample:
+            n_sample = max_n_sample
+
+        if n_sample >= N_partitions:
+            # use entire population, if allowed
             indices = list(range(N_partitions))
         else:
             # otherwise, sample uniformly

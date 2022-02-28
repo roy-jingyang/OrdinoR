@@ -4,6 +4,9 @@ Definition of rule:
 A conjunction of atomic rules.
 """
 
+from copy import deepcopy
+import numpy as np
+
 from ordinor.utils.validation import check_convert_input_log
 from .AtomicRule import AtomicRule
 
@@ -37,6 +40,32 @@ class Rule(object):
     def __len__(self) -> int:
         return len([ar for ar in self.ars if not ar.is_null])
     
+    def __hash__(self) -> int:
+        tuple_ars = deepcopy(self.ars)
+        tuple_ars = sorted(tuple_ars, key=lambda ar: ar.attr)
+        tuple_ars = tuple(tuple_ars)
+        return tuple_ars.__hash__()
+    
+    def __eq__(self, other) -> bool:
+        if self.is_null and other.is_null:
+            return True
+
+        if len(self) != len(other):
+            return False
+        else:
+            idx_other_ars = list(range(len(other)))
+            has_eq_ar = []
+            for ar in self.ars:
+                has_eq = False
+                for idx in idx_other_ars:
+                    if other.ars[idx] == ar:
+                        has_eq = True
+                        break
+                if has_eq == True:
+                    idx_other_ars.remove(idx)
+                has_eq_ar.append(has_eq)
+            return np.all([has_eq_ar])
+    
     def to_types(self) -> tuple: 
         ars_ct = []
         ars_at = []
@@ -55,30 +84,32 @@ class Rule(object):
         return rule_ct, rule_at, rule_tt
 
     def append(self, new_ar: AtomicRule):
-        ars_same_attr = [
-            ar for ar in self.ars
-            if new_ar.is_same_attr(ar)
-        ]
-        if len(ars_same_attr) == 0:
-            self.ars.append(new_ar)
-        else:
-            idx_stronger_ars = []
-            idx_weaker_ars = []
-            for i, ar in enumerate(self.ars):
-                if ar >= new_ar:
-                    idx_stronger_ars.append(i)
-                if ar < new_ar:
-                    idx_weaker_ars.append(i)
-            if len(idx_stronger_ars) > 0:
-                # ignore if there is any stronger atomic rule
-                pass
-            else:
-                if len(idx_weaker_ars) > 0:
-                    # remove any weaker atomic rule before appending
-                    for i in idx_weaker_ars:
-                        del self.ars[i]
-                # append the new atomic rule
-                self.ars.append(new_ar)
+        idx_same_attr_ars = []
+        for i, ar in enumerate(self.ars):
+            if new_ar.is_same_attr(ar):
+                idx_same_attr_ars.append(i)
+        
+        for idx in idx_same_attr_ars:
+            existing_ar = self.ars[idx]
+            if existing_ar >= new_ar:
+                # if stronger rule exists, do nothing (return)
+                return
+            if existing_ar < new_ar:
+                # remove any weaker atomic rule before appending
+                self.ars.pop(idx)
+        # append the new atomic rule
+        self.ars.append(new_ar)
+    
+    def extend(self, new_r):
+        for ar in new_r.ars:
+            self.append(ar)
+    
+    def subrule(self, attr):
+        l_same_attr_ars = []
+        for i, ar in enumerate(self.ars):
+            if ar.attr == attr:
+                l_same_attr_ars.append(ar)
+        return Rule(l_same_attr_ars)
     
     def apply(self, el, index_only=False):
         """
@@ -98,8 +129,10 @@ class Rule(object):
             A subset of the input event log after applying the rule.
         """
         sublog = check_convert_input_log(el)
+        # iteratively apply to the sublog
         for ar in self.ars:
             sublog = ar.apply(sublog, index_only=False)
+
         if index_only:
             return sublog.index
         else:

@@ -45,23 +45,47 @@ def impurity(m_event_co, m_event_r):
     N_events = len(m_event_r)
 
     df = pd.DataFrame({'_co': m_event_co, '_r': m_event_r})
-    total_impurity = 0
+
+    # entropy-based
+
+    total_entropy = 0
     for co, rows in df.groupby('_co'):
         wt = len(rows) / N_events
         # calculate the discrete distribution
         pk = rows['_r'].value_counts(normalize=True)
         if len(pk) > 1:
             # entropy
-            total_impurity += wt * entropy(pk, base=2)
+            total_entropy += wt * entropy(pk, base=2)
         else:
-            total_impurity += 0
+            total_entropy += 0
     
     # standardize
-    max_impurity = entropy(
+    max_entropy = entropy(
         df['_r'].value_counts(normalize=True),
         base=2
     )
-    return total_impurity / max_impurity
+    return total_entropy / max_entropy
+
+    '''
+    # misclassification-error-based
+
+    total_error = 0
+    for co, rows in df.groupby('_co'):
+        wt = len(rows) / N_events
+        # calculate the discrete distribution
+        pk = rows['_r'].value_counts(normalize=True)
+        if len(pk) > 1:
+            # entropy
+            total_error += wt * (1 - max(pk))
+        else:
+            total_error += 0
+
+    # standardize
+    max_error = 1 - max(df['_r'].value_counts(normalize=True))
+    return total_error / max_error
+
+    return total_error
+    '''
 
 def dispersal(m_co_t, m_event_co, m_event_r):
     """
@@ -74,9 +98,7 @@ def dispersal(m_co_t, m_event_co, m_event_r):
     m_co_t : pandas.DataFrame
         An array indexed by execution context ids, recording labels of
         the case types, activity types, and time types of execution
-        contexts. The column number may vary from 1 to 3, depending on
-        the number of process dimensions considered for execution
-        contexts. 
+        contexts, i.e., the column number is 3.
 
     m_event_co : pandas.Series
         An array indexed by event ids, recording labels of the execution
@@ -120,6 +142,7 @@ def dispersal(m_co_t, m_event_co, m_event_r):
         else:
             sum_event_pdist_across = 0
             # enumerate to calculate sum of pairwise distance (across)
+            # NOTE: scipy's hamming dist. is standardized based on # dims
             for na, nb in combinations(co_ids, r=2):
                 dist_na_nb = hamming(
                     m_co_t.loc[na].to_numpy(),
