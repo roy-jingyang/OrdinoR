@@ -23,7 +23,7 @@ class Node:
 
         # pointer to parent node
         self.parent_label = parent_label
-        # child nodes
+        # TODO: child nodes
         self.children = list()
 
         # rule applied to create the current node from the previous

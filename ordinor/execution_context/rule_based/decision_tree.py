@@ -17,25 +17,26 @@ from .score_funcs import dispersal, impurity
 from .rule_generators import NumericRuleGenerator, CategoricalRuleGenerator
 
 class ODTMiner(BaseMiner):
-    def __init__(self, el, spec, eps, T):
-        self._init_miner(el, spec, eps, T)
+    def __init__(self, el, spec, eps):
+        self._init_miner(el, spec, eps)
         self.fit_decision_tree()
         super().__init__(el)
 
-    def _init_miner(self, el, spec, eps, T):
+    def _init_miner(self, el, spec, eps):
         if el is not None:
             el = check_convert_input_log(el)
         self._log = el
 
         # Parse specification
-        self.cand_attr_pool = spec['cand_attrs']
-        # TODO: model given rules from the specification
+        spec_checked = self._check_spec(spec)
+        if spec_checked:
+            self.cand_attr_pool = spec['cand_attrs']
+            # TODO: model given rules from the specification
+        else:
+            raise ValueError('Invalid spec given')
 
         # Set epsilon
         self.eps = eps
-
-        # set initial temperature T
-        self.T = T
 
         # Init matrices to represent states and to score:
         # Event-Resource (constant)
@@ -58,6 +59,41 @@ class ODTMiner(BaseMiner):
         self.val_dis = None
         self.val_imp = None
         self.val_target = None
+    
+    def _check_spec(self, spec):
+        # check if the required data is presented
+        has_required_data = (
+            'cand_attrs' in spec 
+        )
+        if not has_required_data:
+            return ValueError('missing required data')
+
+        # check the partition constraint of event attributes
+        is_partition_constraint_fulfilled = True
+        for row in spec['cand_attrs']:
+            if row['attr_dim'] == 'CT':
+                corr_attr = const.CASE_ID
+            elif row['attr_dim'] == 'AT':
+                corr_attr = const.ACTIVITY
+            elif row['attr_dim'] == 'TT':
+                corr_attr = const.TIMESTAMP
+            else:
+                raise ValueError(f"`{row}` has invalid corresponding type")
+
+            visited_corr_attr_vals = list()
+            for grouped, _ in self._log.groupby([row['attr'], corr_attr]):
+                u, v = grouped[0], grouped[1]
+                visited_corr_attr_vals.append(v)
+            
+            is_partition_constraint_fulfilled = (
+                len(visited_corr_attr_vals) == len(pd.unique(self._log[corr_attr]))
+            )
+            if not is_partition_constraint_fulfilled:
+                raise ValueError(f"Attribute `{row['attr']}` does not satisfy partition constraint")
+
+        return (
+            is_partition_constraint_fulfilled
+        )
 
     def _build_ctypes(self, el, **kwargs):
         el = check_convert_input_log(el)
@@ -167,6 +203,7 @@ class ODTMiner(BaseMiner):
         print('=' * 30 + ' TREE SUMMARY ' + '=' * 30)
 
         '''
+        # TODO
         l_all_nodes = list(self.traverse_tree())
         print(f"Number of nodes:\t{len(l_all_nodes)}")
         '''
@@ -379,16 +416,8 @@ class ODTMiner(BaseMiner):
         print('Procedure stopped with final scores:')
         self.print_tree()
 
-    def _accept_prob(self, target, old_target):
-        # designed for minimizing target
-        if target < old_target:
-            prob = 1.0
-        else:
-            prob = math.exp(-1 * (target - old_target) / self._temp)
-        return prob
-
-
     def _func_target(self, delta_dis, old_dis, delta_imp, old_imp):
+        '''
         # Arithmetic Mean
         return 0.5 * ((old_dis + delta_dis) + (old_imp + delta_imp))
         '''
@@ -402,7 +431,6 @@ class ODTMiner(BaseMiner):
         v = np.abs(rr_dis) + np.abs(rr_imp)
         return v
         '''
-        '''
         # Directed Reduction Ratio
         if old_dis == 0:
             # division-by-zero
@@ -415,8 +443,7 @@ class ODTMiner(BaseMiner):
         '''
 
     def _decide_stopping(self, val_target):
-        #return val_target < self.eps
-        return False
+        return val_target < self.eps
     
     def _find_attr_split(self):
         l_cand_ret = []
