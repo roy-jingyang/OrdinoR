@@ -4,7 +4,6 @@ from collections import defaultdict
 
 import pandas as pd
 import numpy as np
-import math
 
 import ordinor.exceptions as exc
 from ordinor.utils.validation import check_convert_input_log
@@ -17,12 +16,12 @@ from .score_funcs import dispersal, impurity
 from .rule_generators import NumericRuleGenerator, CategoricalRuleGenerator
 
 class ODTMiner(BaseMiner):
-    def __init__(self, el, spec, eps):
-        self._init_miner(el, spec, eps)
+    def __init__(self, el, spec, eps, trace_history=False):
+        self._init_miner(el, spec, eps, trace_history)
         self.fit_decision_tree()
         super().__init__(el)
 
-    def _init_miner(self, el, spec, eps):
+    def _init_miner(self, el, spec, eps, trace_history):
         if el is not None:
             el = check_convert_input_log(el)
         self._log = el
@@ -37,6 +36,9 @@ class ODTMiner(BaseMiner):
 
         # Set epsilon
         self.eps = eps
+
+        # Set tracing option
+        self.trace_history = trace_history
 
         # Init matrices to represent states and to score:
         # Event-Resource (constant)
@@ -59,6 +61,7 @@ class ODTMiner(BaseMiner):
         self.val_dis = None
         self.val_imp = None
         self.val_target = None
+        self.val_score = None
     
     def _check_spec(self, spec):
         # check if the required data is presented
@@ -69,6 +72,7 @@ class ODTMiner(BaseMiner):
             return ValueError('missing required data')
 
         # check the partition constraint of event attributes
+        # TODO: does it have to be a func. mapping from each attr. to types?
         is_partition_constraint_fulfilled = True
         for row in spec['cand_attrs']:
             if row['attr_dim'] == 'CT':
@@ -188,15 +192,18 @@ class ODTMiner(BaseMiner):
         # also, init scores as per root node status
         self.val_dis = 0.0
         self.val_imp = impurity(self._m_event_node, self._m_event_r)
-        self.val_target = self._func_target(
+        self.val_goal = self._func_target(
             0, self.val_dis, 0, self.val_imp
+        )
+        self.val_score = self._func_score(
+            self.val_dis, self.val_imp
         )
         return
     
     def print_scores(self):
         print('Dis. = {:.6f}'.format(self.val_dis), end=', ')
         print('Imp. = {:.6f}'.format(self.val_imp), end=', ')
-        print('Target = {:.6f}'.format(self.val_target))
+        print('Score = {:.6f}'.format(self.val_score))
     
     def print_tree(self):
         print('*' * 80)
@@ -299,6 +306,9 @@ class ODTMiner(BaseMiner):
         print('Decision tree initialized with an empty root node\n', end='\t')
         self.print_scores()
 
+        # set recorders for tracing
+        l_history = []
+
         # iterative tree induction
         print(f'Start to fit decision tree with epsilon = {self.eps}')
         while True:
@@ -372,7 +382,7 @@ class ODTMiner(BaseMiner):
                                 child_node.tt_label = new_tt_label
                             else:
                                 raise ValueError
-                            # attach to the tree
+                            # TODO: attach to the tree
                             #node.append_child(child_node)
                             # update Event-Node
                             self._m_event_node.loc[par] = child_node_label
@@ -408,6 +418,16 @@ class ODTMiner(BaseMiner):
                 self.val_dis += delta_dis
                 self.val_imp += delta_imp
                 self.val_target = target
+                self.val_score = self._func_score(self.val_dis, self.val_imp)
+
+                # record step result
+                l_history.append({
+                    'dispersal': self.val_dis,
+                    'impurity': self.val_imp,
+                    'target': self.val_target,
+
+                    'solution': deepcopy(self._leaves)
+                })
 
                 print('\t', end='')
                 self.print_scores()
@@ -415,12 +435,37 @@ class ODTMiner(BaseMiner):
         # print tree
         print('Procedure stopped with final scores:')
         self.print_tree()
+        if self.trace_history:
+            ts_now = pd.Timestamp.now()
+            fname_prefix = 'ODTMiner_{}_'.format(
+                ts_now.strftime('%Y%m%d-%H%M%S')
+            )
+            # print history (stats and solutions), indexed by step number
+            fname_stats = fname_prefix + 'stats.out'
+            fname_sol = fname_prefix + 'solutions.out'
+            with open(fname_stats, 'w') as fout_st, open(fname_sol, 'w') as fout_so:
+                fout_st.write('step,dispersal,impurity,target\n')
+                for step, result in enumerate(l_history):
+                    # output stats
+                    fout_st.write(
+                        '{},{:.6f},{:.6f},{:.6f}\n'.format(
+                            step, 
+                            result['dispersal'], result['impurity'],
+                            result['target']
+                        )
+                    )
+                    # output solution
+                    fout_so.write('\n')
+                    fout_so.write('=' * 79)
+                    fout_so.write(f"\nStep\t[{step}]\n")
+                    for node_label, node in result['solution'].items():
+                        fout_so.write('\n')
+                        fout_so.write('-' * 79)
+                        fout_so.write('\n')
+                        fout_so.write(str(node))
+                    fout_so.write('\n')
 
     def _func_target(self, delta_dis, old_dis, delta_imp, old_imp):
-        '''
-        # Arithmetic Mean
-        return 0.5 * ((old_dis + delta_dis) + (old_imp + delta_imp))
-        '''
         # Undirected Reduction Ratio
         if old_dis == 0:
             # division-by-zero
@@ -429,7 +474,6 @@ class ODTMiner(BaseMiner):
             rr_dis = delta_dis / old_dis
         rr_imp = delta_imp / old_imp
         v = np.abs(rr_dis) + np.abs(rr_imp)
-        return v
         '''
         # Directed Reduction Ratio
         if old_dis == 0:
@@ -439,11 +483,19 @@ class ODTMiner(BaseMiner):
             rr_dis = delta_dis / old_dis
         rr_imp = delta_imp / old_imp
         v = -1 * (rr_dis + rr_imp)
-        return v
         '''
+        return v
+    
+    def _func_score(self, dis, imp):
+        # harmonic mean (with conditions on the extremes)
+        if dis == 0 or imp == 0.0:
+            return 1.0
+        return 2 * dis * imp / (dis + imp)
 
     def _decide_stopping(self, val_target):
-        return val_target < self.eps
+        #return val_target < self.eps
+        # run until no more split could be performed
+        return False
     
     def _find_attr_split(self):
         l_cand_ret = []

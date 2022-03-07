@@ -13,7 +13,7 @@ class Node:
 
         self.label = label
 
-        # containing events
+        # contained events
         self.event_ids = event_ids
 
         # type labels
@@ -21,10 +21,11 @@ class Node:
         self.at_label = at_label
         self.tt_label = tt_label
 
+        # TODO: tree structures
         # pointer to parent node
-        self.parent_label = parent_label
+        #self.parent_label = parent_label
         # TODO: child nodes
-        self.children = list()
+        #self.children = list()
 
         # rule applied to create the current node from the previous
         if step_rule is None:
