@@ -61,7 +61,6 @@ class ODTMiner(BaseMiner):
         self.val_dis = None
         self.val_imp = None
         self.val_target = None
-        self.val_score = None
     
     def _check_spec(self, spec):
         # check if the required data is presented
@@ -192,18 +191,14 @@ class ODTMiner(BaseMiner):
         # also, init scores as per root node status
         self.val_dis = 0.0
         self.val_imp = impurity(self._m_event_node, self._m_event_r)
-        self.val_goal = self._func_target(
+        self.val_target = self._func_target(
             0, self.val_dis, 0, self.val_imp
-        )
-        self.val_score = self._func_score(
-            self.val_dis, self.val_imp
         )
         return
     
     def print_scores(self):
         print('Dis. = {:.6f}'.format(self.val_dis), end=', ')
         print('Imp. = {:.6f}'.format(self.val_imp), end=', ')
-        print('Score = {:.6f}'.format(self.val_score))
     
     def print_tree(self):
         print('*' * 80)
@@ -418,7 +413,6 @@ class ODTMiner(BaseMiner):
                 self.val_dis += delta_dis
                 self.val_imp += delta_imp
                 self.val_target = target
-                self.val_score = self._func_score(self.val_dis, self.val_imp)
 
                 # record step result
                 l_history.append({
@@ -466,6 +460,8 @@ class ODTMiner(BaseMiner):
                     fout_so.write('\n')
 
     def _func_target(self, delta_dis, old_dis, delta_imp, old_imp):
+        # target value is expected to be maximized
+        '''
         # Undirected Reduction Ratio
         if old_dis == 0:
             # division-by-zero
@@ -474,6 +470,7 @@ class ODTMiner(BaseMiner):
             rr_dis = delta_dis / old_dis
         rr_imp = delta_imp / old_imp
         v = np.abs(rr_dis) + np.abs(rr_imp)
+        '''
         '''
         # Directed Reduction Ratio
         if old_dis == 0:
@@ -484,6 +481,19 @@ class ODTMiner(BaseMiner):
         rr_imp = delta_imp / old_imp
         v = -1 * (rr_dis + rr_imp)
         '''
+        '''
+        # Dispersal only
+        v = -1 * (delta_dis + old_dis)
+        '''
+        '''
+        # Change of Dispersal
+        v = np.abs(delta_dis)
+        '''
+        # Harmonic Mean
+        dis = delta_dis + old_dis
+        imp = delta_imp + old_imp
+        v = -1 * 2 * dis * imp / (dis + imp)
+
         return v
     
     def _func_score(self, dis, imp):
@@ -540,7 +550,7 @@ class ODTMiner(BaseMiner):
                         l_cand_cat_rules = []
                         cand_rules = CategoricalRuleGenerator.RandomTwoSubsetPartition(
                             attr, attr_dim, self._log.loc[par], 
-                            n_sample=0.5, max_n_sample=100
+                            n_sample=None, max_n_sample=2048
                         )
                         for rules in cand_rules:
                             dis, imp = self._evaluate_split(rules, attr_dim)
