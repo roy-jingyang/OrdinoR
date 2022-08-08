@@ -29,23 +29,6 @@ from ordinor.utils.validation import check_required_attributes
 
 from ._helpers import _describe_event_log
 
-def _drop_duplicate_csv_columns(df):
-    num_columns = len(df.columns)
-    filtered_df = df.drop(
-        columns=[const.CASE_ID,
-                 const.ACTIVITY,
-                 const.TIMESTAMP,
-                 const.TIMESTAMP_ST
-        ],
-        errors='ignore'
-    )
-    if len(filtered_df.columns) < num_columns:
-        exc.warn_import_data_ignored(
-            'Column names conflict with reserved event attribute names.'
-        )
-    return filtered_df
-
-
 def read_disco_csv(filepath):
     """
     Import an event log from a file in CSV (Column-Separated Values)
@@ -128,7 +111,30 @@ def read_csv(filepath,
     """
     print(f'Importing from CSV file {filepath}')
     df = pd.read_csv(filepath, sep=sep, **pdkwargs)
-    df = _drop_duplicate_csv_columns(df)
+    #df = _drop_duplicate_csv_columns(df)
+
+    # check if provided CSV file contains columns with reserved names,
+    # but unused
+    if case_id != const.CASE_ID and const.CASE_ID in df.columns:
+        exc.warn_import_data_ignored(
+            f'A column name conflicts with reserved event attribute `{const.CASE_ID}'
+        )
+    if activity_key != const.ACTIVITY and const.ACTIVITY in df.columns:
+        exc.warn_import_data_ignored(
+            f'A column name conflicts with reserved event attribute `{const.ACTIVITY}'
+        )
+    if timestamp_key != const.TIMESTAMP and const.TIMESTAMP in df.columns:
+        exc.warn_import_data_ignored(
+            f'A column name conflicts with reserved event attribute `{const.TIMESTAMP}'
+        )
+    if start_timestamp_key != const.TIMESTAMP_ST and const.TIMESTAMP_ST in df.columns:
+        exc.warn_import_data_ignored(
+            f'A column name conflicts with reserved event attribute `{const.TIMESTAMP_ST}'
+        )
+    if resource_id != const.RESOURCE and const.RESOURCE in df.columns:
+        exc.warn_import_data_ignored(
+            f'A column name conflicts with reserved event attribute `{const.RESOURCE}'
+        )
 
     print(f'Scanned {len(df)} events from "{filepath}".')
 

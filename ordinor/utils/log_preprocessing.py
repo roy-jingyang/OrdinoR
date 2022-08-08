@@ -72,7 +72,6 @@ def append_case_duration(el):
         An event log.
     """
     el = check_convert_input_log(el)
-    print(el)
     l_case_duration = [float('nan')] * len(el)
     for case_id, trace in el.groupby(const.CASE_ID):
         start_time = trace.iloc[0][const.TIMESTAMP]
