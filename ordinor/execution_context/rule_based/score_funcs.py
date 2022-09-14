@@ -2,8 +2,10 @@
 Calculate quality measures using internal representation instead of a set
 of execution contexts and an event log. 
 
-This calculation is designed to be more efficient, so that iterative
-learning procedures guided by dispersal and impurity can be boosted.
+This calculation is designed to be efficient, so that iterative learning
+procedures guided by dispersal and impurity can be boosted. As such, the
+expected inputs are data structures that capture the internal
+representation of a derived resource log. 
 """
 
 from math import comb
@@ -15,7 +17,7 @@ import pandas as pd
 
 def impurity(m_event_co, m_event_r):
     """
-    Calculate impurity by considering resource ids as groundtruth and
+    Calculate impurity by considering resource ids as ground-truth and
     execution context labels as predicted labels.
 
     Parameters
@@ -90,7 +92,7 @@ def impurity(m_event_co, m_event_r):
 def dispersal(m_co_t, m_event_co, m_event_r):
     """
     Calculate dispersal based on event pairwise distance, using
-    "execution context" pairwise distance as proxy for improved
+    "execution context pairwise distance" as proxy for improved
     computational efficiency.
 
     Parameters

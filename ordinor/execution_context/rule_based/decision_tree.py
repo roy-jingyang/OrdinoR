@@ -16,12 +16,12 @@ from .score_funcs import dispersal, impurity
 from .rule_generators import NumericRuleGenerator, CategoricalRuleGenerator
 
 class ODTMiner(BaseMiner):
-    def __init__(self, el, spec, eps, trace_history=False):
-        self._init_miner(el, spec, eps, trace_history)
+    def __init__(self, el, spec, eps=None, max_height=-1, trace_history=False):
+        self._init_miner(el, spec, eps, max_height, trace_history)
         self.fit_decision_tree()
         super().__init__(el)
 
-    def _init_miner(self, el, spec, eps, trace_history):
+    def _init_miner(self, el, spec, eps, max_height, trace_history):
         if el is not None:
             el = check_convert_input_log(el)
         self._log = el
@@ -36,6 +36,9 @@ class ODTMiner(BaseMiner):
 
         # Set epsilon
         self.eps = eps
+
+        # Set max. tree height
+        self.max_height = max_height
 
         # Set tracing option
         self.trace_history = trace_history
@@ -56,6 +59,7 @@ class ODTMiner(BaseMiner):
         # Init node dict
         self._root = None
         self._leaves = dict()
+        self._height = -1
 
         # Init score recorders
         self.val_dis = None
@@ -71,7 +75,6 @@ class ODTMiner(BaseMiner):
             return ValueError('missing required data')
 
         # check the partition constraint of event attributes
-        # TODO: does it have to be a func. mapping from each attr. to types?
         is_partition_constraint_fulfilled = True
         for row in spec['cand_attrs']:
             if row['attr_dim'] == 'CT':
@@ -82,14 +85,13 @@ class ODTMiner(BaseMiner):
                 corr_attr = const.TIMESTAMP
             else:
                 raise ValueError(f"`{row}` has invalid corresponding type")
-
-            visited_corr_attr_vals = list()
-            for grouped, _ in self._log.groupby([row['attr'], corr_attr]):
-                u, v = grouped[0], grouped[1]
-                visited_corr_attr_vals.append(v)
             
+            # each value of the related core attr. must be mapped to exactly one candidate attr. value
+            n_covered_instances = self._log.value_counts([row['attr'], corr_attr], sort=False).size
+            n_all_instances = self._log[corr_attr].nunique()
+
             is_partition_constraint_fulfilled = (
-                len(visited_corr_attr_vals) == len(pd.unique(self._log[corr_attr]))
+                n_covered_instances == n_all_instances
             )
             if not is_partition_constraint_fulfilled:
                 raise ValueError(f"Attribute `{row['attr']}` does not satisfy partition constraint")
@@ -188,6 +190,9 @@ class ODTMiner(BaseMiner):
         # set tree root
         self._root = root
 
+        # set tree height
+        self._height = 0
+
         # also, init scores as per root node status
         self.val_dis = 0.0
         self.val_imp = impurity(self._m_event_node, self._m_event_r)
@@ -198,17 +203,14 @@ class ODTMiner(BaseMiner):
     
     def print_scores(self):
         print('Dis. = {:.6f}'.format(self.val_dis), end=', ')
-        print('Imp. = {:.6f}'.format(self.val_imp), end=', ')
+        print('Imp. = {:.6f}'.format(self.val_imp), end =', ')
+        hm = 2 * self.val_dis * self.val_imp / (self.val_dis + self.val_imp)
+        print('Harmonic Mean. = {:.6f}'.format(hm), end=', ')
+        print('*' * 3 + f' Tree has {len(self._leaves)} leaf node(s). ' + '*' * 3)
     
     def print_tree(self):
         print('*' * 80)
         print('=' * 30 + ' TREE SUMMARY ' + '=' * 30)
-
-        '''
-        # TODO
-        l_all_nodes = list(self.traverse_tree())
-        print(f"Number of nodes:\t{len(l_all_nodes)}")
-        '''
 
         print('Current scores:', end='\t')
         self.print_scores()
@@ -305,8 +307,12 @@ class ODTMiner(BaseMiner):
         l_history = []
 
         # iterative tree induction
-        print(f'Start to fit decision tree with epsilon = {self.eps}')
+        print(f'Start to fit decision tree with max. height = {self.max_height}')
         while True:
+            if self._height == self.max_height:
+                # exit search
+                break
+
             # find the next best split
             ret = self._find_attr_split()
             if ret is None:
@@ -322,7 +328,7 @@ class ODTMiner(BaseMiner):
                 )
 
             if self._decide_stopping(target):
-                print('The target value ({:.6f}) is too insignificant.'.format(
+                print('Target value ({:.6f}) meets the set criterion.'.format(
                     target
                 ))
                 # exit search
@@ -419,16 +425,35 @@ class ODTMiner(BaseMiner):
                     'dispersal': self.val_dis,
                     'impurity': self.val_imp,
                     'target': self.val_target,
+                    'score': self._func_solution_score(),
 
                     'solution': deepcopy(self._leaves)
                 })
 
+                # update tree height
+                self._height += 1
+
                 print('\t', end='')
                 self.print_scores()
 
-        # print tree
-        print('Procedure stopped with final scores:')
+        # select sub-tree as output
+        l_delta_score = [
+            l_history[i]['score'] - l_history[i - 1]['score']
+            for i, result in enumerate(l_history) if i > 0
+        ]
+        i_max_delta_score = np.argmax(l_delta_score)
+        i_selected = i_max_delta_score + 1 + 1
+        i_selected = i_selected if i_selected < len(l_history) - 1 else len(l_history) - 1
+        self._leaves.clear()
+        self._leaves = l_history[i_selected]['solution']
+        print(f'Sub-tree at step {i_selected + 1} is selected as the final solution:', end=' ')
+        print('dispersal = {:.6f}, impurity = {:.6f}'.format(
+            l_history[i_selected]['dispersal'], l_history[i_selected]['impurity']
+        ))
+
         self.print_tree()
+
+        # output history, if demanded
         if self.trace_history:
             ts_now = pd.Timestamp.now()
             fname_prefix = 'ODTMiner_{}_'.format(
@@ -443,69 +468,62 @@ class ODTMiner(BaseMiner):
                     # output stats
                     fout_st.write(
                         '{},{:.6f},{:.6f},{:.6f}\n'.format(
-                            step, 
+                            step + 1, 
                             result['dispersal'], result['impurity'],
-                            result['target']
+                            result['target'],
+                            result['score']
                         )
                     )
                     # output solution
                     fout_so.write('\n')
                     fout_so.write('=' * 79)
-                    fout_so.write(f"\nStep\t[{step}]\n")
+                    fout_so.write(f"\nStep\t[{step + 1}]\n")
                     for node_label, node in result['solution'].items():
                         fout_so.write('\n')
                         fout_so.write('-' * 79)
                         fout_so.write('\n')
                         fout_so.write(str(node))
                     fout_so.write('\n')
-
+            print('Procedure history is written to files.')
+        
     def _func_target(self, delta_dis, old_dis, delta_imp, old_imp):
-        # target value is expected to be maximized
-        '''
-        # Undirected Reduction Ratio
-        if old_dis == 0:
-            # division-by-zero
-            rr_dis = 1
-        else:
-            rr_dis = delta_dis / old_dis
-        rr_imp = delta_imp / old_imp
-        v = np.abs(rr_dis) + np.abs(rr_imp)
-        '''
-        '''
-        # Directed Reduction Ratio
-        if old_dis == 0:
-            # division-by-zero
-            rr_dis = 1
-        else:
-            rr_dis = delta_dis / old_dis
-        rr_imp = delta_imp / old_imp
-        v = -1 * (rr_dis + rr_imp)
-        '''
-        '''
-        # Dispersal only
-        v = -1 * (delta_dis + old_dis)
-        '''
-        '''
-        # Change of Dispersal
-        v = np.abs(delta_dis)
-        '''
-        # Harmonic Mean
         dis = delta_dis + old_dis
         imp = delta_imp + old_imp
+        # target value is expected to be maximized
+        '''
+        # 1. Directed Reduction Ratio (Dicing Gain)
+        if old_dis == 0:
+            # first split that attracts dispersal should be penalized
+            rr_dis = 1.0
+        else:
+            rr_dis = delta_dis / old_dis
+        rr_imp = delta_imp / old_imp
+        v = (-1 * rr_dis) + (-1 * rr_imp)
+        '''
+        '''
+        '''
+        '''
+        # 2. Negated Dispersal
+        v = -1 * dis
+        '''
+        '''
+        # 3. Absolute Change of Dispersal
+        v = np.abs(delta_dis)
+        '''
+        # 4. Negated Harmonic Mean
         v = -1 * 2 * dis * imp / (dis + imp)
 
         return v
     
-    def _func_score(self, dis, imp):
-        # harmonic mean (with conditions on the extremes)
-        if dis == 0 or imp == 0.0:
-            return 1.0
-        return 2 * dis * imp / (dis + imp)
-
+    def _func_solution_score(self):
+        # Harmonic mean of dispersal and impurity
+        return 2 * self.val_dis * self.val_imp / (self.val_dis + self.val_imp)
+    
     def _decide_stopping(self, val_target):
-        #return val_target < self.eps
         # run until no more split could be performed
-        return False
+        stop = False
+
+        return stop
     
     def _find_attr_split(self):
         l_cand_ret = []
@@ -550,7 +568,7 @@ class ODTMiner(BaseMiner):
                         l_cand_cat_rules = []
                         cand_rules = CategoricalRuleGenerator.RandomTwoSubsetPartition(
                             attr, attr_dim, self._log.loc[par], 
-                            n_sample=None, max_n_sample=2048
+                            n_sample=None, max_n_sample=100
                         )
                         for rules in cand_rules:
                             dis, imp = self._evaluate_split(rules, attr_dim)
