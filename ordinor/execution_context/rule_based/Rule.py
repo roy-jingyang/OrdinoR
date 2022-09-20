@@ -28,7 +28,7 @@ class Rule(object):
         if self.is_null:
             return str(self.ars[0])
         else:
-            return ' ∧ '.join(
+            return ' \u2227 '.join(
                 f'({ar})' for ar in 
                 sorted(self.ars, key=lambda _ar: _ar.attr)
                 if not ar.is_null
@@ -61,7 +61,7 @@ class Rule(object):
                     if other.ars[idx] == ar:
                         has_eq = True
                         break
-                if has_eq == True:
+                if has_eq:
                     idx_other_ars.remove(idx)
                 has_eq_ar.append(has_eq)
             return np.all([has_eq_ar])

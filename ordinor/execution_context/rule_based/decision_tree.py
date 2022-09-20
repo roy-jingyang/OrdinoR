@@ -14,31 +14,46 @@ from ordinor.execution_context.base import BaseMiner
 from .TreeNode import Node
 from .score_funcs import dispersal, impurity
 from .rule_generators import NumericRuleGenerator, CategoricalRuleGenerator
+from .Rule import Rule
+from .AtomicRule import AtomicRule
 
 class ODTMiner(BaseMiner):
-    def __init__(self, el, spec, eps=None, max_height=-1, trace_history=False):
-        self._init_miner(el, spec, eps, max_height, trace_history)
+    def __init__(self, el, attr_spec, eps=None, max_height=-1, use_ohe=True, trace_history=False):
+        self._init_miner(el, attr_spec, eps, max_height, use_ohe, trace_history)
         self.fit_decision_tree()
         super().__init__(el)
 
-    def _init_miner(self, el, spec, eps, max_height, trace_history):
+    def _init_miner(self, el, spec, eps, max_height, use_ohe, trace_history):
         if el is not None:
             el = check_convert_input_log(el)
         self._log = el
 
         # Parse specification
-        spec_checked = self._check_spec(spec)
-        if spec_checked:
-            self.cand_attr_pool = spec['cand_attrs']
+        if self._check_spec(spec):
+            self.cand_attr_pool = spec['type_def_attrs'].copy()
             # TODO: model given rules from the specification
-        else:
-            raise ValueError('Invalid spec given')
 
         # Set epsilon
         self.eps = eps
 
         # Set max. tree height
         self.max_height = max_height
+
+        # Set using One-Hot-Encoding to process categorical attributes
+        self.use_ohe = use_ohe
+
+        # Init dicts to track One-Hot-Encoding results (both ways)
+        if self.use_ohe:
+            # prefix separator for creating encoded columns
+            self._ohe_prefix_sep = '_@_'
+            # map original columns to derived OHE columns
+            self._ohe_encoded = defaultdict(lambda: set())
+            # map original columns to attribute values
+            self._ohe_original_attr_vals = dict()
+            # map derived OHE columns to original columns
+            self._ohe_decoded = dict()
+            # map derived OHE columns to original attribute values
+            self._ohe_decoded_val = dict()
 
         # Set tracing option
         self.trace_history = trace_history
@@ -65,36 +80,37 @@ class ODTMiner(BaseMiner):
         self.val_dis = None
         self.val_imp = None
         self.val_target = None
-    
+
+
     def _check_spec(self, spec):
-        # check if the required data is presented
-        has_required_data = (
-            'cand_attrs' in spec 
-        )
+        # check if type-defining attributes are in the spec
+        has_required_data = 'type_def_attrs' in spec
+        if has_required_data:
+            for attr_name, properties in spec['type_def_attrs'].items():
+                if ('attr_type' in properties and properties['attr_type'] in ['numeric', 'categorical'] and
+                    'attr_dim' in properties and properties['attr_dim'] in ['CT', 'AT', 'TT']):
+                    pass
+                else:
+                    has_required_data is False
+                    break
+
         if not has_required_data:
-            return ValueError('missing required data')
+            raise ValueError('invalid spec: missing required type-defining attributes or their descriptions')
 
         # check the partition constraint of event attributes
         is_partition_constraint_fulfilled = True
-        for row in spec['cand_attrs']:
-            if row['attr_dim'] == 'CT':
-                corr_attr = const.CASE_ID
-            elif row['attr_dim'] == 'AT':
-                corr_attr = const.ACTIVITY
-            elif row['attr_dim'] == 'TT':
-                corr_attr = const.TIMESTAMP
-            else:
-                raise ValueError(f"`{row}` has invalid corresponding type")
-            
+        CORR_CORE_ATTRS = {'CT': const.CASE_ID, 'AT': const.ACTIVITY, 'TT': const.TIMESTAMP}
+        for attr_name, properties in spec['type_def_attrs'].items():
+            corr_attr = CORR_CORE_ATTRS[properties['attr_dim']]
             # each value of the related core attr. must be mapped to exactly one candidate attr. value
-            n_covered_instances = self._log.value_counts([row['attr'], corr_attr], sort=False).size
+            n_covered_instances = self._log.value_counts([attr_name, corr_attr], sort=False).size
             n_all_instances = self._log[corr_attr].nunique()
 
             is_partition_constraint_fulfilled = (
                 n_covered_instances == n_all_instances
             )
             if not is_partition_constraint_fulfilled:
-                raise ValueError(f"Attribute `{row['attr']}` does not satisfy partition constraint")
+                raise ValueError(f"Attribute `{attr_name}` does not satisfy partition constraint on dimension `{properties['attr_dim']}`")
 
         return (
             is_partition_constraint_fulfilled
@@ -105,9 +121,11 @@ class ODTMiner(BaseMiner):
         self._ctypes = dict()
         for node_label, node in self._leaves.items():
             rule_ct, _, _ = node.composite_rule.to_types()
+            if self.use_ohe:
+                rule_ct = self._translate_ohe_rule(rule_ct)
             ct = node.ct_label
             sublog = rule_ct.apply(el)
-            for case_id in set(sublog[const.CASE_ID]):
+            for case_id in sublog[const.CASE_ID].unique():
                 if case_id in self._ctypes and self._ctypes[case_id] != 'CT.{}'.format(ct):
                     raise exc.InvalidParameterError(
                         param='case_attr_name',
@@ -116,31 +134,38 @@ class ODTMiner(BaseMiner):
                 else:
                     self._ctypes[case_id] = 'CT.{}'.format(ct)
         self.is_ctypes_verified = self._verify_partition(
-            set(el[const.CASE_ID]), self._ctypes)
+            set(el[const.CASE_ID].unique()), self._ctypes
+        )
 
     def _build_atypes(self, el, **kwargs):
         el = check_convert_input_log(el)
         self._atypes = dict()
         for node_label, node in self._leaves.items():
             _, rule_at, _ = node.composite_rule.to_types()
+            if self.use_ohe:
+                rule_at = self._translate_ohe_rule(rule_at)
             at = node.at_label
             sublog = rule_at.apply(el)
-            for activity_label in set(sublog[const.ACTIVITY]):
+            for activity_label in sublog[const.ACTIVITY].unique():
                 self._atypes[activity_label] = 'AT.{}'.format(at)
         self.is_atypes_verified = self._verify_partition(
-            set(el[const.ACTIVITY]), self._atypes)
+            set(el[const.ACTIVITY].unique()), self._atypes
+        )
 
     def _build_ttypes(self, el, **kwargs):
         el = check_convert_input_log(el)
         self._ttypes = dict()
         for node_label, node in self._leaves.items():
             _, _, rule_tt = node.composite_rule.to_types()
+            if self.use_ohe:
+                rule_tt = self._translate_ohe_rule(rule_tt)
             tt = node.tt_label
             sublog = rule_tt.apply(el)
-            for timestamp in set(sublog[const.TIMESTAMP]):
+            for timestamp in sublog[const.TIMESTAMP].unique():
                 self._ttypes[timestamp] = 'TT.{}'.format(tt)
         self.is_ttypes_verified = self._verify_partition(
-            set(el[const.TIMESTAMP]), self._ttypes)
+            set(el[const.TIMESTAMP].unique()), self._ttypes
+        )
 
     def _init_label_generators(self):
         # Init label generators for nodes creation (
@@ -210,9 +235,9 @@ class ODTMiner(BaseMiner):
     
     def print_tree(self):
         print('*' * 80)
-        print('=' * 30 + ' TREE SUMMARY ' + '=' * 30)
 
-        print('Current scores:', end='\t')
+        print('=' * 30 + ' TREE SUMMARY ' + '=' * 30)
+        print('Score of the current tree:', end='\t')
         self.print_scores()
 
         print('=' * 30 + ' LEAF NODES ' + '=' * 30)
@@ -222,36 +247,17 @@ class ODTMiner(BaseMiner):
         else:
             print(f"The fitted tree is invalid: {len(self._leaves)} nodes contain {n_total_events} events ({n_total_events} != {len(self._log)})")
             return
+        '''
         for node_label, node in self._leaves.items():
             print(node)
+        '''
         
         print('=' * 25 + ' ENCODING TYPES WITH RULES ' + '=' * 25)
-        l_rules_ct = []
-        l_rules_at = []
-        l_rules_tt = []
-        for node_label, node in self._leaves.items():
-            rule_ct, rule_at, rule_tt = node.composite_rule.to_types()
-            has_eq_rule_ct = False
-            for rule in l_rules_ct:
-                if rule == rule_ct:
-                    has_eq_rule_ct = True
-                    break
-            has_eq_rule_at = False
-            for rule in l_rules_at:
-                if rule == rule_at:
-                    has_eq_rule_at = True
-                    break
-            has_eq_rule_tt = False
-            for rule in l_rules_tt:
-                if rule == rule_tt:
-                    has_eq_rule_tt = True
-                    break
-            if not has_eq_rule_ct:
-                l_rules_ct.append(rule_ct)
-            if not has_eq_rule_at:
-                l_rules_at.append(rule_at)
-            if not has_eq_rule_tt:
-                l_rules_tt.append(rule_tt)
+        l_rules_ct, l_rules_at, l_rules_tt = self._parse_rules_from_leaves(self._leaves)
+        if self.use_ohe:
+            l_rules_ct = list(map(self._translate_ohe_rule, l_rules_ct))
+            l_rules_at = list(map(self._translate_ohe_rule, l_rules_at))
+            l_rules_tt = list(map(self._translate_ohe_rule, l_rules_tt))
         print('Rules for Case Types:')
         for r in l_rules_ct:
             print(f"\t{r}")
@@ -265,7 +271,8 @@ class ODTMiner(BaseMiner):
         print('*' * 80)
 
     def _revise_leaf_labels(self, d_leaves):
-        # revise node data and keep unique type labels based on rules
+        # revise node data to keep unique type labels based on rules
+        # TODO: based on the rule semantics or based on results?
         node_labels = sorted(d_leaves.keys())
         for i in range(len(node_labels) - 1):
             ref_label = node_labels[i]
@@ -279,22 +286,109 @@ class ODTMiner(BaseMiner):
                     cmp_node.at_label = ref_node.at_label
                 if cmp_node.tt_rule == ref_node.tt_rule:
                     cmp_node.tt_label = ref_node.tt_label
-
         return d_leaves
 
-    def traverse_tree(self):
-        l_all_nodes = []
-        i = 0
-        l_all_nodes.append(self._root)
-        while i < len(l_all_nodes):
-            curr_node = l_all_nodes[i]
-            l_all_nodes.extend(curr_node.children)
-            i += 1
-        
-        for node in l_all_nodes:
-            yield node
+    def _parse_rules_from_leaves(self, d_leaves):
+        # parse rules from (leaf) node data
+        l_rules_ct = []
+        l_rules_at = []
+        l_rules_tt = []
+        for node_label, node in d_leaves.items():
+            rule_ct, rule_at, rule_tt = node.composite_rule.to_types()
+            if not rule_ct in l_rules_ct:
+                l_rules_ct.append(rule_ct)
+            if not rule_at in l_rules_at:
+                l_rules_at.append(rule_at)
+            if not rule_tt in l_rules_tt:
+                l_rules_tt.append(rule_tt)
+        return l_rules_ct, l_rules_at, l_rules_tt
     
+    def _translate_ohe_rule(self, rule):
+        # translate a rule that involves One-Hot-Encoding
+        if self.use_ohe:
+            rule_attrs = rule.get_attrs()
+            used_enc_attrs = rule_attrs.intersection(set(self._ohe_decoded.keys()))
+            visited = set()
+            l_cat_ars = []
+            for enc_attr in used_enc_attrs:
+                if enc_attr in visited:
+                    # skip if processed
+                    pass
+                else:
+                    old_attr = self._ohe_decoded[enc_attr]
+                    related_enc_attrs = self._ohe_encoded[old_attr].intersection(used_enc_attrs)
+                    cat_ar_attr_vals = set()
+                    old_attr_dim = None
+                    for x in related_enc_attrs:
+                        bool_ar = rule.subrule(x).ars[0]
+                        old_attr_dim = bool_ar.attr_dim
+                        # parse boolean rule meaning
+                        val = {self._ohe_decoded_val[x.split(self._ohe_prefix_sep)[1]]}
+                        attr_vals = (
+                            val if bool_ar.attr_vals
+                            else self._ohe_original_attr_vals[old_attr].difference(val)
+                        )
+                        if len(cat_ar_attr_vals.intersection(attr_vals)) == 0:
+                            # use the union set
+                            cat_ar_attr_vals.update(
+                                attr_vals
+                            )
+                        else:
+                            # use the intersection set
+                            cat_ar_attr_vals = cat_ar_attr_vals.intersection(
+                                attr_vals
+                            )
+                    cat_ar = AtomicRule(
+                        attr=old_attr, attr_type='categorical',
+                        attr_vals=cat_ar_attr_vals, attr_dim=old_attr_dim
+                    )
+                    l_cat_ars.append(cat_ar)
+                    # mark as processed
+                    visited.update(related_enc_attrs)
+            if len(l_cat_ars) == 0:
+                return Rule([AtomicRule(None)])
+            else:
+                return Rule(l_cat_ars)
+        else:
+            return rule
+
     def fit_decision_tree(self):
+        # preprocess event log: applying One-Hot-Encoding if demanded
+        if self.use_ohe is True:
+            # identify categorical attributes as given in the spec
+            original_cat_attrs = [attr for attr, prop in self.cand_attr_pool.items() if prop['attr_type'] == 'categorical']
+            # record possible values of the categorical attributes
+            for attr in original_cat_attrs:
+                self._ohe_original_attr_vals[attr] = set(self._log[attr].unique())
+                self._ohe_decoded_val.update({
+                    (str(val), val) for val in self._log[attr].unique()
+                })
+            # encode data applying OHE, with original columns preserved in data
+            enc_columns = pd.get_dummies(
+                data=self._log, 
+                columns=original_cat_attrs,
+                prefix_sep=self._ohe_prefix_sep,
+                dtype=bool
+            )
+            self._log = pd.concat([self._log, enc_columns], axis=1)
+            
+            # record encoding results both ways (old->enc, enc->old)
+            for old_attr in original_cat_attrs:
+                for col in self._log.columns:
+                    if col.startswith(f'{old_attr}{self._ohe_prefix_sep}'):
+                        self._ohe_encoded[old_attr].add(col)
+                        self._ohe_decoded[col] = old_attr
+            print('One-Hot-Encoding applied to preprocess the following categorical attributes:')
+            print('\t{}'.format(sorted(self._ohe_encoded.keys())))
+            # update candidate attribute pool
+            for old_attr, enc_attrs in self._ohe_encoded.items():
+                for attr in enc_attrs:
+                    self.cand_attr_pool[attr] = {
+                        'attr_type': 'boolean',
+                        'attr_dim': self.cand_attr_pool[old_attr]['attr_dim']
+                    }
+                del self.cand_attr_pool[old_attr]
+
         # main procedure
         # initialize
         self._init_params()
@@ -320,12 +414,14 @@ class ODTMiner(BaseMiner):
                 # exit search
                 break
             else:
-                attr = ret['attr']
-                attr_dim = ret['attr_dim']
+                attr, attr_type, attr_dim = ret['attr'], ret['attr_type'], ret['attr_dim']
                 split_rules = ret['split_rules']
                 delta_dis, delta_imp, target = (
                     ret['delta_dis'], ret['delta_imp'], ret['target']
                 )
+                # remove used attribute to update candidate attribute pool
+                if attr_type == 'boolean':
+                    del self.cand_attr_pool[attr]
 
             if self._decide_stopping(target):
                 print('Target value ({:.6f}) meets the set criterion.'.format(
@@ -444,6 +540,9 @@ class ODTMiner(BaseMiner):
         i_max_delta_score = np.argmax(l_delta_score)
         i_selected = i_max_delta_score + 1 + 1
         i_selected = i_selected if i_selected < len(l_history) - 1 else len(l_history) - 1
+        self.val_dis = l_history[i_selected]['dispersal']
+        self.val_imp = l_history[i_selected]['impurity']
+        self.val_target = l_history[i_selected]['target']
         self._leaves.clear()
         self._leaves = l_history[i_selected]['solution']
         print(f'Sub-tree at step {i_selected + 1} is selected as the final solution:', end=' ')
@@ -530,13 +629,12 @@ class ODTMiner(BaseMiner):
         # loop over all candidate attributes in the pool
         # and also the possible splits for each of them
         # a candidate to evaluate is identified by (attr, split_rules)
-        for row in self.cand_attr_pool:
+        for attr in self.cand_attr_pool.keys():
             result = dict()
 
             # copy descriptive info
-            attr = row['attr']
-            attr_type = row['attr_type']
-            attr_dim = row['attr_dim']
+            attr_type = self.cand_attr_pool[attr]['attr_type']
+            attr_dim = self.cand_attr_pool[attr]['attr_dim']
 
             l_idx_sublog = []
             # split should be found from existing partitions on
@@ -561,10 +659,10 @@ class ODTMiner(BaseMiner):
                         best_rules = NumericRuleGenerator.HistogramSplit(
                             attr, attr_dim, self._log.loc[par], bins='fd'
                         )
-                    else:
+                    elif attr_type == 'categorical':
                         # use two subset partitioning if attribute is categorical
                         # evaluate and select from over a sample of all possibilities
-                        # i.e., out of [2^(N-1) - 1] partitions
+                        # i.e., out of [2^(n-1) - 1] partitions
                         l_cand_cat_rules = []
                         cand_rules = CategoricalRuleGenerator.RandomTwoSubsetPartition(
                             attr, attr_dim, self._log.loc[par], 
@@ -578,11 +676,16 @@ class ODTMiner(BaseMiner):
                                 delta_dis, self.val_dis, delta_imp, self.val_imp
                             )
                             l_cand_cat_rules.append((rules, target))
-                        
                         if len(l_cand_cat_rules) > 0:
                             best_rules = max(l_cand_cat_rules, key=lambda x: x[1])[0]
                         else:
                             best_rules = []
+                    elif attr_type == 'boolean':
+                        best_rules = CategoricalRuleGenerator.BooleanPartition(
+                            attr, attr_dim, self._log.loc[par], 
+                        )
+                    else:
+                        raise ValueError
 
                     if len(best_rules) > 0:
                         # evalute the derived split rules by applying them
@@ -591,6 +694,7 @@ class ODTMiner(BaseMiner):
                         # record results related to the derived rules
                         result['attr'] = attr
                         result['attr_dim'] = attr_dim
+                        result['attr_type'] = attr_type
                         result['split_rules'] = best_rules
                         # 
                         delta_dis = dis - self.val_dis

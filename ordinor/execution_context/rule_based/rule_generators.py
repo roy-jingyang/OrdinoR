@@ -71,6 +71,48 @@ class NumericRuleGenerator:
 
 class CategoricalRuleGenerator:
     @classmethod
+    def BooleanPartition(cls, attr, attr_dim, el):
+        """
+        Generate rules for a given Boolean-valued (True/False) attribute
+        by splitting the input event log into binary partitions. 
+
+        Parameters
+        ----------
+        attr : str
+            The name of an event attribute.
+        attr_dim: str
+            The process dimension of an event attribute, denoted by one
+            of the types. Can be one of {'CT', 'AT', 'TT'}.
+        el : pandas.DataFrame, or pm4py EventLog
+            An event log to which the atomic rule will be applied.
+
+        
+        Returns
+        -------
+        generator, or a list of rules
+            List of rules generated for the binary partitioning. 
+        """
+        el = check_convert_input_log(el)
+        unique_attr_vals = set(el[attr].unique())
+        n_unique_attr_vals = len(unique_attr_vals)
+        is_boolean_valued = unique_attr_vals <= {True, False} and n_unique_attr_vals > 0
+        if is_boolean_valued:
+            if n_unique_attr_vals == 2:
+                ar_left = AtomicRule(
+                    attr=attr, attr_type='boolean', 
+                    attr_vals=True, attr_dim=attr_dim
+                )
+                ar_right = AtomicRule(
+                    attr=attr, attr_type='boolean', 
+                    attr_vals=False, attr_dim=attr_dim
+                )
+                return [Rule(ars=[ar_left]), Rule(ars=[ar_right])]
+            else:
+                return []
+        else:
+            raise ValueError
+
+    @classmethod
     def RandomTwoSubsetPartition(cls, attr, attr_dim, el, n_sample=1, max_n_sample=100, from_population=True):
         """
         Generate rules for a given categorical attribute by performing a
@@ -129,7 +171,7 @@ class CategoricalRuleGenerator:
 
         """
         el = check_convert_input_log(el)
-        unique_attr_vals = set(el[attr])
+        unique_attr_vals = list(el[attr].unique())
 
         # calculate the number of all possibilities
         N_partitions = 2 ** (len(unique_attr_vals) - 1) - 1

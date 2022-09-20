@@ -7,6 +7,7 @@ A Boolean formula that concerns only a single event attribute.
 `
 """
 
+import numpy as np
 import pandas as pd
 
 from ordinor.utils.validation import check_convert_input_log
@@ -25,12 +26,13 @@ class AtomicRule(object):
             AtomicRule is constructed.
         attr_type: str
             The data type of an event attribute. Can be one of
-            {'numeric', 'categorical'}.
-        attr_vals: set
+            {'numeric', 'categorical', 'boolean'}.
+        attr_vals: set, pandas.Interval, or bool
             The attribute values of an event attribute. If the attribute
             is categorical, then a set of strings or numbers is expected;
             if the attribute is numeric, then a pandas.Interval (of
-            numbers) is expected.
+            numbers) is expected; if the attribute is boolean, then a
+            bool value is expected. 
         attr_dim: str
             The process dimension of an event attribute, denoted by one
             of the types. Can be one of {'CT', 'AT', 'TT'}.
@@ -39,20 +41,26 @@ class AtomicRule(object):
             self.attr = ''
         else:
             self.attr = attr
-            if attr_type in {'numeric', 'categorical'}:
+            if attr_type in {'numeric', 'categorical', 'boolean'}:
                 self.attr_type = attr_type
             else:
-                raise ValueError("`attr_type` must be one of {'numeric', 'categorical'}")
+                raise ValueError("`attr_type` must be one of {'numeric', 'categorical', 'boolean'}")
             if self.attr_type == 'numeric':
                 if type(attr_vals) is pd.Interval:
                     self.attr_vals = attr_vals
                 else:
                     raise ValueError("`attr_vals` must be of type `pd.Interval`")
-            else:
+            elif self.attr_type == 'categorical':
                 if type(attr_vals) is set:
                     self.attr_vals = attr_vals
                 else:
                     raise ValueError("`attr_vals` must be of type `set`")
+            else:
+                if type(attr_vals) is bool:
+                    self.attr_vals = attr_vals
+                else:
+                    raise ValueError("`attr_vals` must be of type `bool`")
+
             if attr_dim in {'CT', 'AT', 'TT'}:
                 self.attr_dim = attr_dim
             else:
@@ -64,11 +72,16 @@ class AtomicRule(object):
     
     def __repr__(self) -> str:
         if self.is_null:
-            return '⊥ (null)'
+            return '\u22a5 (null)'
         elif self.attr_type == 'categorical':
-            return f'`{self.attr}` ∈ {set(sorted(self.attr_vals))}'
+            # categorical: show sorted set elements 
+            return f'`{self.attr}` \u2208 ' + '{' + str(sorted(self.attr_vals))[1:-1] + '}'
+        elif self.attr_type == 'numeric':
+            # numeric: show intervals
+            return f'`{self.attr}` \u2208 {self.attr_vals}'
         else:
-            return f'`{self.attr}` ∈ {self.attr_vals}'
+            # boolean: show formula directly
+            return f'`{self.attr}` == {self.attr_vals}'
 
     def is_same_attr(self, other) -> bool:
         if self.is_null and other.is_null:
@@ -85,13 +98,14 @@ class AtomicRule(object):
             return True
         elif self.is_same_attr(other):
             if self.attr_type == 'categorical':
-                # set equality
+                # categorical: set equality
                 return (
                     self.attr_vals >= other.attr_vals and 
                     self.attr_vals <= other.attr_vals
                 )
             else:
-                # interval equality
+                # numeric: interval equality
+                # boolean: truth value equality
                 return self.attr_vals == other.attr_vals
         else:
             return False
@@ -105,10 +119,10 @@ class AtomicRule(object):
 
         if self.is_same_attr(other):
             if self.attr_type == 'categorical':
-                # self is a superset
+                # categorical: self is a superset
                 return self.attr_vals > other.attr_vals
-            else:
-                # self has a larger interval that contains other's
+            elif self.attr_type == 'numeric':
+                # numeric: self has a larger interval that contains other's
                 m, n = self.attr_vals.left, self.attr_vals.right
                 a, b = other.attr_vals.left, other.attr_vals.right
                 if m <= a and b <= n:
@@ -120,11 +134,14 @@ class AtomicRule(object):
                             )
                     else:
                         return True
+            else:
+                # boolean: not implemented
+                return NotImplemented
         else:
             return NotImplemented
     
     def __le__(self, other) -> bool:
-        return self < other or self == other
+        return self == other or self < other
 
     # (self) stronger rule > (other) weaker rule > null
     def __gt__(self, other) -> bool:
@@ -135,10 +152,10 @@ class AtomicRule(object):
 
         if self.is_same_attr(other):
             if self.attr_type == 'categorical':
-                # self is a subset
+                # categorical: self is a subset
                 return self.attr_vals < other.attr_vals
-            else:
-                # self has a smaller interval inside other's
+            elif self.attr_type == 'numeric':
+                # numeric: self has a smaller interval inside other's
                 a, b = self.attr_vals.left, self.attr_vals.right
                 m, n = other.attr_vals.left, other.attr_vals.right
                 if m <= a and b <= n:
@@ -150,40 +167,20 @@ class AtomicRule(object):
                             )
                     else:
                         return True
+            else:
+                # boolean: not implemented
+                return NotImplemented
         else:
             return NotImplemented
 
     def __ge__(self, other) -> bool:
-        return self > other or self == other
+        return self == other or self > other
     
-    def selector(self, el):
-        """
-        Generate from an atomic rule a boolean mask to select rows in an
-        event log.
-
-        Parameters
-        ----------
-        el : pandas.DataFrame, or pm4py EventLog
-            An event log to which the atomic rule will be applied.
-
-        Returns
-        -------
-        mask : pandas.Series
-            Series (a boolean vector) representing the elements selected
-            based on applying the atomic rule to the corresponding column.
-        """
-        el = check_convert_input_log(el)
-        if self.is_null:
-            mask = [True] * len(el)
-        elif self.attr_type == 'categorical':
-            mask = el[self.attr].isin(self.attr_vals)
+    def __neg__(self):
+        if self.attr_type == 'boolean':
+            return AtomicRule(attr=self.attr, attr_type=self.attr_type, attr_vals=(not self.attr_vals), attr_dim=self.attr_dim)
         else:
-            mask = el[self.attr].between(
-                left=self.attr_vals.left,
-                right=self.attr_vals.right,
-                inclusive=self.attr_vals.closed
-            )
-        return mask
+            return NotImplemented
     
     def apply(self, el, index_only=False):
         """
@@ -203,7 +200,24 @@ class AtomicRule(object):
             A subset of the input event log after applying the rule.
         """
         el = check_convert_input_log(el)
-        sublog = el[self.selector(el)]
+        if self.is_null:
+            sublog = el
+        elif self.attr_type == 'categorical':
+            # categorical: .isin()
+            sublog = el[el[self.attr].isin(self.attr_vals)]
+        elif self.attr_type == 'numeric':
+            # numeric: .between()
+            sublog = el[
+                el[self.attr].between(
+                    left=self.attr_vals.left,
+                    right=self.attr_vals.right,
+                    inclusive=self.attr_vals.closed
+                )
+            ]
+        else:
+            # boolean: direct evaluation
+            sublog = el[el[self.attr] == self.attr_vals]
+
         if index_only:
             return sublog.index
         else:
