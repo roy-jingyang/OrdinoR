@@ -365,7 +365,7 @@ class ODTMiner(BaseMiner):
                 })
             # encode data applying OHE, with original columns preserved in data
             enc_columns = pd.get_dummies(
-                data=self._log, 
+                data=self._log[original_cat_attrs], 
                 columns=original_cat_attrs,
                 prefix_sep=self._ohe_prefix_sep,
                 dtype=bool
@@ -388,7 +388,7 @@ class ODTMiner(BaseMiner):
                         'attr_dim': self.cand_attr_pool[old_attr]['attr_dim']
                     }
                 del self.cand_attr_pool[old_attr]
-
+            
         # main procedure
         # initialize
         self._init_params()

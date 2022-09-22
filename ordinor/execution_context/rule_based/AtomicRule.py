@@ -206,7 +206,7 @@ class AtomicRule(object):
             # categorical: .isin()
             sublog = el[el[self.attr].isin(self.attr_vals)]
         elif self.attr_type == 'numeric':
-            # numeric: .between()
+            # numeric: Series.between()
             sublog = el[
                 el[self.attr].between(
                     left=self.attr_vals.left,
