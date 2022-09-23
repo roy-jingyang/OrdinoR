@@ -18,7 +18,7 @@ from .Rule import Rule
 from .AtomicRule import AtomicRule
 
 class ODTMiner(BaseMiner):
-    def __init__(self, el, attr_spec, eps=None, max_height=-1, use_ohe=True, trace_history=False):
+    def __init__(self, el, attr_spec, eps=None, max_height=-1, use_ohe=False, trace_history=False):
         self._init_miner(el, attr_spec, eps, max_height, use_ohe, trace_history)
         self.fit_decision_tree()
         super().__init__(el)
