@@ -666,7 +666,7 @@ class ODTMiner(BaseMiner):
                         l_cand_cat_rules = []
                         cand_rules = CategoricalRuleGenerator.RandomTwoSubsetPartition(
                             attr, attr_dim, self._log.loc[par], 
-                            n_sample=None, max_n_sample=100
+                            n_sample=None, max_n_sample=50
                         )
                         for rules in cand_rules:
                             dis, imp = self._evaluate_split(rules, attr_dim)

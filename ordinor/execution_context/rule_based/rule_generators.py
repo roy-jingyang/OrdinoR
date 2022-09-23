@@ -113,7 +113,7 @@ class CategoricalRuleGenerator:
             raise ValueError
 
     @classmethod
-    def RandomTwoSubsetPartition(cls, attr, attr_dim, el, n_sample=1, max_n_sample=100, from_population=True):
+    def RandomTwoSubsetPartition(cls, attr, attr_dim, el, n_sample=1, max_n_sample=100):
         """
         Generate rules for a given categorical attribute by performing a
         two-subset partitioning on all unique attribute values in the
@@ -142,21 +142,10 @@ class CategoricalRuleGenerator:
             smaller or equal to the total possible number of partitions.
             Defaults to `100`, i.e., sample size will be at most 100.
         
-        from_population : bool, optional
-            Whether to randomly sample from all possibilities (the
-            population). Depending on the total number of unique values
-            of the given attribute, the process of random sampling can
-            take a long time. See the note on the total possible number
-            of partitions.
-            Note that `from_population=False` is only in effect when
-            `n_sample=1`.
-
         Returns
         -------
-        generator, or a list of rules
-            List of rules generated for the two-subset partitioning. A
-            list is returned only when `n_sample=1` and
-            `from_population=False`.
+        generator
+            List of rules generated for the two-subset partitioning.
         
         Notes
         -----
@@ -165,16 +154,14 @@ class CategoricalRuleGenerator:
           the Stirling number of the second kind, with k=2.
         * If `n_sample` is given as a valid float number, it is
           considered a percentage of the population.
-        * When the sample size is 1, and `from_population` is specified
-          as `False`, generate a two-subset partition randomly without
-          using the population.
 
         """
         el = check_convert_input_log(el)
-        unique_attr_vals = list(el[attr].unique())
+        unique_attr_vals = np.array(sorted(el[attr].unique()))
+        n_unique_attr_vals = len(unique_attr_vals)
 
         # calculate the number of all possibilities
-        N_partitions = 2 ** (len(unique_attr_vals) - 1) - 1
+        N_partitions = 2 ** (n_unique_attr_vals - 1) - 1
 
         if n_sample is None:
             n_sample = max_n_sample
@@ -190,63 +177,29 @@ class CategoricalRuleGenerator:
         if n_sample > max_n_sample:
             n_sample = max_n_sample
 
-        if n_sample == 1 and from_population is False:
-            # TODO: return a single instance of rule list
-            unique_attr_vals = list(unique_attr_vals)
-            par = [set(), set()]
-            start = True
-            if len(unique_attr_vals) == 1:
-                return []
-
-            if len(unique_attr_vals) == 2:
-                par[0].add(unique_attr_vals[0])
-                par[1].add(unique_attr_vals[1])
-            else:
-                while len(unique_attr_vals) > 0:
-                    if start:
-                        shuffle(unique_attr_vals)
-                        first = unique_attr_vals.pop()
-                        shuffle(unique_attr_vals)
-                        second = unique_attr_vals.pop()
-                        par[0].add(first)
-                        par[1].add(second)
-                        start = False
-                    shuffle(unique_attr_vals)
-                    which_par = choice([0, 1])
-                    x = unique_attr_vals.pop()
-                    par[which_par].add(x)
+        # indices start from 1 to enable binary representation
+        if n_sample >= N_partitions:
+            # use entire population, if allowed
+            indices = list(range(1, N_partitions + 1))
+        else:
+            # otherwise, sample uniformly
+            indices = sample(range(1, N_partitions + 1), n_sample)
+        
+        for int_index in indices:
+            # convert to binary representation
+            binary_index = np.array(
+                [int(c) for c in f'{int_index:0{n_unique_attr_vals}b}'], 
+                dtype=bool
+            )
+            # apply binary to select elements to form a partition
             ar_left = AtomicRule(
                 attr=attr, attr_type='categorical', 
-                attr_vals=par[0], attr_dim=attr_dim
+                attr_vals=set(unique_attr_vals[binary_index]), 
+                attr_dim=attr_dim
             )
             ar_right = AtomicRule(
                 attr=attr, attr_type='categorical', 
-                attr_vals=par[1], attr_dim=attr_dim
+                attr_vals=set(unique_attr_vals[~binary_index]), 
+                attr_dim=attr_dim
             )
-            return [Rule(ars=[ar_left]), Rule(ars=[ar_right])]
-        else:
-            if n_sample >= N_partitions:
-                # use entire population, if allowed
-                indices = list(range(N_partitions))
-            else:
-                # otherwise, sample uniformly
-                indices = sorted(sample(range(N_partitions), n_sample))
-            
-            j = 0
-            for i, par in enumerate(unique_k_partitions(unique_attr_vals, k=2)):
-                if j == len(indices):
-                    break
-                
-                if i == indices[j]:
-                    j += 1
-                    ar_left = AtomicRule(
-                        attr=attr, attr_type='categorical', 
-                        attr_vals=par[0], attr_dim=attr_dim
-                    )
-                    ar_right = AtomicRule(
-                        attr=attr, attr_type='categorical', 
-                        attr_vals=par[1], attr_dim=attr_dim
-                    )
-                    yield [Rule(ars=[ar_left]), Rule(ars=[ar_right])]
-                else:
-                    pass
+            yield [Rule(ars=[ar_left]), Rule(ars=[ar_right])]
