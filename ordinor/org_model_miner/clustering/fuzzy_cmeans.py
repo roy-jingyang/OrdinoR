@@ -89,7 +89,7 @@ class FCM:
             # random init, constraint: row sum = 1.0
             w = list()
             for i in range(shape[0]):
-                weights = np.randint(1, 10, shape[1]) 
+                weights = np.random.randint(1, 10, shape[1]) 
                 weights = weights / sum(weights)
                 w.append(weights)
             l_rand_w.append(np.array(w))
