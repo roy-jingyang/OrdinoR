@@ -272,7 +272,7 @@ class ODTMiner(BaseMiner):
 
     def _revise_leaf_labels(self, d_leaves):
         # revise node data to keep unique type labels based on rules
-        # TODO: based on the rule semantics or based on results?
+        # NOTE: based on the rule semantics
         node_labels = sorted(d_leaves.keys())
         for i in range(len(node_labels) - 1):
             ref_label = node_labels[i]
