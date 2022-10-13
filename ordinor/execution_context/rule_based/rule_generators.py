@@ -194,12 +194,12 @@ class CategoricalRuleGenerator:
             # apply binary to select elements to form a partition
             ar_left = AtomicRule(
                 attr=attr, attr_type='categorical', 
-                attr_vals=set(unique_attr_vals[binary_index]), 
+                attr_vals=frozenset(unique_attr_vals[binary_index]), 
                 attr_dim=attr_dim
             )
             ar_right = AtomicRule(
                 attr=attr, attr_type='categorical', 
-                attr_vals=set(unique_attr_vals[~binary_index]), 
+                attr_vals=frozenset(unique_attr_vals[~binary_index]), 
                 attr_dim=attr_dim
             )
             yield [Rule(ars=[ar_left]), Rule(ars=[ar_right])]

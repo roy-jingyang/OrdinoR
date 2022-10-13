@@ -273,6 +273,30 @@ class ODTMiner(BaseMiner):
     def _revise_leaf_labels(self, d_leaves):
         # revise node data to keep unique type labels based on rules
         # NOTE: based on the rule semantics
+        visited_ct = dict()
+        visited_at = dict()
+        visited_tt = dict()
+        for label in sorted(d_leaves.keys()):
+            node_ct_rule = d_leaves[label].ct_rule
+            node_at_rule = d_leaves[label].at_rule
+            node_tt_rule = d_leaves[label].tt_rule
+
+            if node_ct_rule not in visited_ct:
+                visited_ct[node_ct_rule] = d_leaves[label].ct_label
+            else:
+                d_leaves[label].ct_label = visited_ct[node_ct_rule]
+
+            if node_at_rule not in visited_at:
+                visited_at[node_at_rule] = d_leaves[label].at_label
+            else:
+                d_leaves[label].at_label = visited_at[node_at_rule]
+
+            if node_tt_rule not in visited_tt:
+                visited_tt[node_tt_rule] = d_leaves[label].tt_label
+            else:
+                d_leaves[label].tt_label = visited_tt[node_tt_rule]
+
+        '''
         node_labels = sorted(d_leaves.keys())
         for i in range(len(node_labels) - 1):
             ref_label = node_labels[i]
@@ -286,6 +310,7 @@ class ODTMiner(BaseMiner):
                     cmp_node.at_label = ref_node.at_label
                 if cmp_node.tt_rule == ref_node.tt_rule:
                     cmp_node.tt_label = ref_node.tt_label
+        '''
         return d_leaves
 
     def _parse_rules_from_leaves(self, d_leaves):

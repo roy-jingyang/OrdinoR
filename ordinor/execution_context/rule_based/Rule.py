@@ -22,11 +22,15 @@ class Rule(object):
     
     @property
     def is_null(self) -> bool:
-        return len(self.ars) == 1 and self.ars[0].is_null
+        all_null = True
+        for ar in self.ars:
+            if not ar.is_null:
+                return False
+        return all_null
     
     def __repr__(self) -> str:
         if self.is_null:
-            return str(self.ars[0])
+            return str(AtomicRule(attr=None))
         else:
             return ' \u2227 '.join(
                 f'({ar})' for ar in 

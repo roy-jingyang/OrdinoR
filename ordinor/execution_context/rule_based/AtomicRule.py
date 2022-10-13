@@ -6,13 +6,9 @@ A Boolean formula that concerns only a single event attribute.
     {\pi_{attr}(e)} \in {attr\_vals}
 `
 """
-
-import numpy as np
 import pandas as pd
 
 from ordinor.utils.validation import check_convert_input_log
-import ordinor.exceptions as exc
-import ordinor.constants as const
 
 # Boolean formula that concerns only a single event attribute:
 # Pi_attr (e) \in attr_vals
@@ -29,7 +25,8 @@ class AtomicRule(object):
             {'numeric', 'categorical', 'boolean'}.
         attr_vals: set, pandas.Interval, or bool
             The attribute values of an event attribute. If the attribute
-            is categorical, then a set of strings or numbers is expected;
+            is categorical, then a frozenset of strings or numbers is
+            expected;
             if the attribute is numeric, then a pandas.Interval (of
             numbers) is expected; if the attribute is boolean, then a
             bool value is expected. 
@@ -38,7 +35,10 @@ class AtomicRule(object):
             of the types. Can be one of {'CT', 'AT', 'TT'}.
         """
         if attr is None or attr == '':
-            self.attr = ''
+            self.attr = None
+            self.attr_type = None
+            self.attr_vals = None
+            self.attr_dim = None
         else:
             self.attr = attr
             if attr_type in {'numeric', 'categorical', 'boolean'}:
@@ -51,10 +51,10 @@ class AtomicRule(object):
                 else:
                     raise ValueError("`attr_vals` must be of type `pd.Interval`")
             elif self.attr_type == 'categorical':
-                if type(attr_vals) is set:
+                if type(attr_vals) is frozenset:
                     self.attr_vals = attr_vals
                 else:
-                    raise ValueError("`attr_vals` must be of type `set`")
+                    raise ValueError("`attr_vals` must be of type `frozenset`")
             else:
                 if type(attr_vals) is bool:
                     self.attr_vals = attr_vals
@@ -68,7 +68,7 @@ class AtomicRule(object):
     
     @property
     def is_null(self) -> bool:
-        return self.attr == ''
+        return self.attr is None
     
     def __repr__(self) -> str:
         if self.is_null:
@@ -92,6 +92,14 @@ class AtomicRule(object):
                 self.attr_type == other.attr_type and
                 self.attr_dim == other.attr_dim
             )
+        
+    def __hash__(self) -> int:
+        if self.is_null:
+            return 0
+        else:
+            return hash(tuple(
+                (self.attr, self.attr_type, self.attr_dim, self.attr_vals)
+            ))
     
     def __eq__(self, other) -> bool:
         if self.is_null and other.is_null:
