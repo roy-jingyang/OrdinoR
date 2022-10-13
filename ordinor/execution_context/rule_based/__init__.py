@@ -13,4 +13,3 @@ from .rule_generators import NumericRuleGenerator, CategoricalRuleGenerator
 from .score_funcs import impurity, dispersal
 
 from .decision_tree import ODTMiner
-from .decision_tree_heuristics import ODTSAMiner
