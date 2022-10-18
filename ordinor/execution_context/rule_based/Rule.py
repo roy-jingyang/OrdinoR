@@ -7,7 +7,6 @@ A conjunction of atomic rules.
 from copy import deepcopy
 import numpy as np
 
-from ordinor.utils.validation import check_convert_input_log
 from .AtomicRule import AtomicRule
 
 class Rule(object):
@@ -45,10 +44,8 @@ class Rule(object):
         return len([ar for ar in self.ars if not ar.is_null])
     
     def __hash__(self) -> int:
-        tuple_ars = deepcopy(self.ars)
-        tuple_ars = sorted(tuple_ars, key=lambda ar: ar.attr)
-        tuple_ars = tuple(tuple_ars)
-        return tuple_ars.__hash__()
+        tuple_ars = tuple(sorted(self.ars, key=lambda ar: ar.attr))
+        return hash(tuple_ars)
     
     def __eq__(self, other) -> bool:
         if self.is_null and other.is_null:
@@ -132,7 +129,7 @@ class Rule(object):
         sublog : pandas.DataFrame
             A subset of the input event log after applying the rule.
         """
-        sublog = check_convert_input_log(el)
+        sublog = el
         # iteratively apply to the sublog
         for ar in self.ars:
             sublog = ar.apply(sublog, index_only=False)

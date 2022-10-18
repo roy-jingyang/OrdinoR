@@ -50,7 +50,6 @@ class NumericRuleGenerator:
             Function to calculate only the edges of the bins used by the
             histogram function.
         """
-        el = check_convert_input_log(el)
         rules = []
 
         arr = el[attr]
@@ -92,7 +91,6 @@ class CategoricalRuleGenerator:
         generator, or a list of rules
             List of rules generated for the binary partitioning. 
         """
-        el = check_convert_input_log(el)
         unique_attr_vals = set(el[attr].unique())
         n_unique_attr_vals = len(unique_attr_vals)
         is_boolean_valued = unique_attr_vals <= {True, False} and n_unique_attr_vals > 0
@@ -156,7 +154,6 @@ class CategoricalRuleGenerator:
           considered a percentage of the population.
 
         """
-        el = check_convert_input_log(el)
         unique_attr_vals = np.array(sorted(el[attr].unique()))
         n_unique_attr_vals = len(unique_attr_vals)
 

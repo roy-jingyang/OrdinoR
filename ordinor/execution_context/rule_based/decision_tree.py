@@ -18,12 +18,12 @@ from .Rule import Rule
 from .AtomicRule import AtomicRule
 
 class ODTMiner(BaseMiner):
-    def __init__(self, el, attr_spec, eps=None, max_height=-1, use_ohe=False, trace_history=False):
-        self._init_miner(el, attr_spec, eps, max_height, use_ohe, trace_history)
+    def __init__(self, el, attr_spec, max_height=-1, use_ohe=False, trace_history=False):
+        self._init_miner(el, attr_spec, max_height, use_ohe, trace_history)
         self.fit_decision_tree()
         super().__init__(el)
 
-    def _init_miner(self, el, spec, eps, max_height, use_ohe, trace_history):
+    def _init_miner(self, el, spec, max_height, use_ohe, trace_history):
         if el is not None:
             el = check_convert_input_log(el)
         self._log = el
@@ -32,9 +32,20 @@ class ODTMiner(BaseMiner):
         if self._check_spec(spec):
             self.cand_attr_pool = spec['type_def_attrs'].copy()
             # TODO: model given rules from the specification
+        
+        # Filter log and keep only the relevant columns as specified
+        included_cols = set({
+            const.CASE_ID, const.ACTIVITY, const.TIMESTAMP, const.RESOURCE
+        })
+        for type_def_attr in spec['type_def_attrs'].keys():
+            included_cols.add(type_def_attr)
+        self._log = el[included_cols]
 
-        # Set epsilon
-        self.eps = eps
+        # Cast data type to categorical as indicated (to boost performance)
+        self._log[const.RESOURCE] = self._log[const.RESOURCE].astype('category')
+        for attr, spec in spec['type_def_attrs'].items():
+            if spec['attr_type'] == 'categorical':
+                self._log[type_def_attr] = self._log[type_def_attr].astype('category')
 
         # Set max. tree height
         self.max_height = max_height
@@ -86,6 +97,8 @@ class ODTMiner(BaseMiner):
         # check if type-defining attributes are in the spec
         has_required_data = 'type_def_attrs' in spec
         if has_required_data:
+            # check specification of type-defining attributes
+            # NOTE: attribute names are considered unique
             for attr_name, properties in spec['type_def_attrs'].items():
                 if ('attr_type' in properties and properties['attr_type'] in ['numeric', 'categorical'] and
                     'attr_dim' in properties and properties['attr_dim'] in ['CT', 'AT', 'TT']):
@@ -117,7 +130,6 @@ class ODTMiner(BaseMiner):
         )
 
     def _build_ctypes(self, el, **kwargs):
-        el = check_convert_input_log(el)
         self._ctypes = dict()
         for node_label, node in self._leaves.items():
             rule_ct, _, _ = node.composite_rule.to_types()
@@ -138,7 +150,6 @@ class ODTMiner(BaseMiner):
         )
 
     def _build_atypes(self, el, **kwargs):
-        el = check_convert_input_log(el)
         self._atypes = dict()
         for node_label, node in self._leaves.items():
             _, rule_at, _ = node.composite_rule.to_types()
@@ -153,7 +164,6 @@ class ODTMiner(BaseMiner):
         )
 
     def _build_ttypes(self, el, **kwargs):
-        el = check_convert_input_log(el)
         self._ttypes = dict()
         for node_label, node in self._leaves.items():
             _, _, rule_tt = node.composite_rule.to_types()
@@ -691,7 +701,7 @@ class ODTMiner(BaseMiner):
                         l_cand_cat_rules = []
                         cand_rules = CategoricalRuleGenerator.RandomTwoSubsetPartition(
                             attr, attr_dim, self._log.loc[par], 
-                            n_sample=None
+                            n_sample=100
                         )
                         for rules in cand_rules:
                             dis, imp = self._evaluate_split(rules, attr_dim)

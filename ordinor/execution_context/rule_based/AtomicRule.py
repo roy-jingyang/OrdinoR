@@ -8,8 +8,6 @@ A Boolean formula that concerns only a single event attribute.
 """
 import pandas as pd
 
-from ordinor.utils.validation import check_convert_input_log
-
 # Boolean formula that concerns only a single event attribute:
 # Pi_attr (e) \in attr_vals
 class AtomicRule(object):
@@ -97,9 +95,7 @@ class AtomicRule(object):
         if self.is_null:
             return 0
         else:
-            return hash(tuple(
-                (self.attr, self.attr_type, self.attr_dim, self.attr_vals)
-            ))
+            return hash(tuple((self.attr, self.attr_vals)))
     
     def __eq__(self, other) -> bool:
         if self.is_null and other.is_null:
@@ -207,7 +203,6 @@ class AtomicRule(object):
         sublog : pandas.DataFrame
             A subset of the input event log after applying the rule.
         """
-        el = check_convert_input_log(el)
         if self.is_null:
             sublog = el
         elif self.attr_type == 'categorical':

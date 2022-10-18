@@ -138,7 +138,7 @@ def dispersal(m_co_t, m_event_co, m_event_r):
         count_co_events = rows['_co'].value_counts()
         wt =  n_rows / N_events
         # find all involved execution contexts
-        co_ids = set(m_event_co.loc[rows.index])
+        co_ids = m_event_co.loc[rows.index].unique()
         if len(co_ids) < 2:
             avg_event_pdist = 0
         else:
