@@ -57,3 +57,19 @@ class Node:
 
     def append_child(self, child_node):
         self.children.append(child_node)
+
+
+class Node2:
+    def __init__(self, arr, events, resource_counts):
+        self.arr = arr
+        self.events = events
+        self.resource_counts = resource_counts
+
+    def __repr__(self) -> str:
+        return f'''
+            ********
+            \tArray: {self.arr}
+            \tEvents: {len(self.events)}
+            \tResources: {self.resource_counts}
+            ********
+        '''
