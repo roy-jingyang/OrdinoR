@@ -147,7 +147,7 @@ class SearchMiner(BaseMiner):
                 return ValueError('log columns after encoding does not conform to the saved ordering')
 
             # convert the log to a numpy array
-            self._log = self._log.to_numpy(dtype=np.uintc)
+            self._log = self._log.to_numpy(dtype=np.intc)
 
             # set random number generator
             self._rng = (
@@ -219,7 +219,7 @@ class SearchMiner(BaseMiner):
         self._ctypes = dict()
         #print(ctype_arr_tda)
         for i, k_arr_case in enumerate(ctype_arr_tda):
-            arr_case = np.array(k_arr_case, dtype=np.uintc)
+            arr_case = np.array(k_arr_case, dtype=np.intc)
             ct_label = i
             # translate to rules and save
             ct_rules = []
@@ -257,7 +257,7 @@ class SearchMiner(BaseMiner):
         self._atypes = dict()
         #print(atype_arr_tda)
         for i, k_arr_act in enumerate(atype_arr_tda):
-            arr_act = np.array(k_arr_act, dtype=np.uintc)
+            arr_act = np.array(k_arr_act, dtype=np.intc)
             at_label = i
             # translate to rules and save
             at_rules = []
@@ -289,7 +289,7 @@ class SearchMiner(BaseMiner):
         self._ttypes = dict()
         #print(ttype_arr_tda)
         for i, k_arr_time in enumerate(ttype_arr_tda):
-            arr_time = np.array(k_arr_time, dtype=np.uintc)
+            arr_time = np.array(k_arr_time, dtype=np.intc)
             tt_label = i
             # translate to rules and save
             tt_rules = []
@@ -326,21 +326,21 @@ class SearchMiner(BaseMiner):
                 attr_parts = []
                 n = len(self._tdav[attr])
                 if n == 1:
-                    self._par[attr] = np.array([[1]], dtype=np.uintc)
-                    attr_parts.append(np.array([1], dtype=np.uintc))
+                    self._par[attr] = np.array([[1]], dtype=np.intc)
+                    attr_parts.append(np.array([1], dtype=np.intc))
                 else:
                     if init_method == 'zero':
-                        self._par[attr] = np.zeros((n, n), dtype=np.uintc)
+                        self._par[attr] = np.zeros((n, n), dtype=np.intc)
                         # apply no partition to all attributes (one-holds-all)
                         self._par[attr][:,0] = 1
                         attr_parts.append(self._par[attr][:,0])
                     elif init_method == 'full_split':
                         # create a singleton for each value
-                        self._par[attr] = np.eye(n, dtype=np.uintc)
+                        self._par[attr] = np.eye(n, dtype=np.intc)
                         for j in range(n):
                             attr_parts.append(self._par[attr][:,j])
                     elif init_method == 'random':
-                        self._par[attr] = np.zeros((n, n), dtype=np.uintc)
+                        self._par[attr] = np.zeros((n, n), dtype=np.intc)
                         # select a part for each attribute value randomly
                         for i in range(n):
                             i_part = self._rng.choice(n)
@@ -368,19 +368,20 @@ class SearchMiner(BaseMiner):
             print(len(all_arr_joined))
             print('start to stack arrays')
             all_arr_joined = np.stack(all_arr_joined)
-            print(all_arr_joined.shape)
+            print(all_arr_joined)
+            print('nodes matrix shape: {}'.format(all_arr_joined.shape))
             print('start to locate events')
-            print(self._log.shape)
-            print(self._log.dtype)
-            print(all_arr_joined.T.shape)
-            print(all_arr_joined.T.dtype)
+            print(self._log)
+            print('log matrix shape: {}'.format(self._log.shape))
             print('start to do dot product')
             mask = np.matmul(self._log, all_arr_joined.T) 
-            print(mask.shape)
+            print(mask)
+            print('result matrix shape: {}'.format(mask.shape))
             print('start to do value comparison')
-            mask = mask == self._n_tda
+            mask = mask >= self._n_tda
+            print(np.unique(np.nonzero(mask)[0]))
+            print(np.unique(np.nonzero(mask)[1]))
             print(mask.shape)
-            exit(1)
             for j in np.unique(np.nonzero(mask)[1]):
                 arr_joined = all_arr_joined[j,:]
                 events = np.nonzero(mask[:,j])[0]
@@ -585,11 +586,10 @@ class SearchMiner(BaseMiner):
         return self.T0 - alpha * k
 
     def _search(self):
-        self._init_state(init_method='random')
+        self._init_state(init_method='zero')
         self._init_system()
         print('Init finished')
 
-        '''
         T = self.T0
         E = self._evaluate(self._nodes)
         E_best = E
@@ -617,7 +617,7 @@ class SearchMiner(BaseMiner):
                         attr_parts = []
                         n = len(self._tdav[attr])
                         if n == 1:
-                            attr_parts.append(np.array([1], dtype=np.uintc))
+                            attr_parts.append(np.array([1], dtype=np.intc))
                         else:
                             for j in np.unique(np.nonzero(new_pars[attr])[1]):
                                 attr_parts.append(new_pars[attr][:,j])
@@ -626,6 +626,18 @@ class SearchMiner(BaseMiner):
                         comb_i.append(np.concatenate(prod))
                     comb.append(comb_i)
 
+                all_arr_joined = [np.concatenate(prod) for prod in product(*comb)]
+                all_arr_joined = np.stack(all_arr_joined)
+                mask = np.matmul(self._log, all_arr_joined.T) 
+                mask = mask >= self._n_tda
+                for j in np.unique(np.nonzero(mask)[1]):
+                    arr_joined = all_arr_joined[j,:]
+                    events = np.nonzero(mask[:,j])[0]
+                    resource_counts = self._apply_get_resource_counts(events)
+                    node = Node2(arr_joined, events, resource_counts)
+                    nodes_next.append(node)
+
+                '''
                 for prod in product(*comb):
                     arr_joined = np.concatenate(prod)
                     events = self._apply_to_all(arr_joined)
@@ -633,6 +645,7 @@ class SearchMiner(BaseMiner):
                         resource_counts = self._apply_get_resource_counts(events)
                         node = Node2(arr_joined, events, resource_counts)
                         nodes_next.append(node)
+                '''
                 # TODO end
 
                 E_next = self._evaluate(nodes_next)
@@ -663,7 +676,6 @@ class SearchMiner(BaseMiner):
         
         del self._nodes[:]
         self._nodes = nodes_best
-        '''
 
         # TODO: verify the calculation of dispersal and impurity
         start = datetime.now()
