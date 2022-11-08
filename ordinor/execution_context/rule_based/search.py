@@ -51,8 +51,10 @@ class SearchMiner(BaseMiner):
                         self._tda_case.append(attr)
                     elif spec['attr_dim'] == 'AT':
                         self._tda_act.append(attr)
-                    else:
+                    elif spec['attr_dim'] == 'TT':
                         self._tda_time.append(attr)
+                    else:
+                        raise ValueError(f'Unrecognized attribute dimension `{spec["attr_dim"]}`')
             # sort to preserve fixed ordering
             self._tda_case.sort()
             self._tda_act.sort()
@@ -147,7 +149,7 @@ class SearchMiner(BaseMiner):
                 return ValueError('log columns after encoding does not conform to the saved ordering')
 
             # convert the log to a numpy array
-            self._log = self._log.to_numpy(dtype=np.intc)
+            self._log = self._log.to_numpy(dtype=bool)
 
             # set random number generator
             self._rng = (
@@ -219,7 +221,7 @@ class SearchMiner(BaseMiner):
         self._ctypes = dict()
         #print(ctype_arr_tda)
         for i, k_arr_case in enumerate(ctype_arr_tda):
-            arr_case = np.array(k_arr_case, dtype=np.intc)
+            arr_case = np.array(k_arr_case, dtype=np.bool)
             ct_label = i
             # translate to rules and save
             ct_rules = []
@@ -257,7 +259,7 @@ class SearchMiner(BaseMiner):
         self._atypes = dict()
         #print(atype_arr_tda)
         for i, k_arr_act in enumerate(atype_arr_tda):
-            arr_act = np.array(k_arr_act, dtype=np.intc)
+            arr_act = np.array(k_arr_act, dtype=np.bool)
             at_label = i
             # translate to rules and save
             at_rules = []
@@ -289,7 +291,7 @@ class SearchMiner(BaseMiner):
         self._ttypes = dict()
         #print(ttype_arr_tda)
         for i, k_arr_time in enumerate(ttype_arr_tda):
-            arr_time = np.array(k_arr_time, dtype=np.intc)
+            arr_time = np.array(k_arr_time, dtype=np.bool)
             tt_label = i
             # translate to rules and save
             tt_rules = []
@@ -317,6 +319,7 @@ class SearchMiner(BaseMiner):
         # initialize partitions on all attributes
         # initialize nodes correspondingly
         comb = []
+        total_comb_size = 1
         for i, tda in enumerate([self._tda_case, self._tda_act, self._tda_time]):
             tda_i = []
             comb_i = []
@@ -326,21 +329,21 @@ class SearchMiner(BaseMiner):
                 attr_parts = []
                 n = len(self._tdav[attr])
                 if n == 1:
-                    self._par[attr] = np.array([[1]], dtype=np.intc)
-                    attr_parts.append(np.array([1], dtype=np.intc))
+                    self._par[attr] = np.array([[1]], dtype=bool)
+                    attr_parts.append(np.array([1], dtype=bool))
                 else:
                     if init_method == 'zero':
-                        self._par[attr] = np.zeros((n, n), dtype=np.intc)
+                        self._par[attr] = np.zeros((n, n), dtype=bool)
                         # apply no partition to all attributes (one-holds-all)
                         self._par[attr][:,0] = 1
                         attr_parts.append(self._par[attr][:,0])
                     elif init_method == 'full_split':
                         # create a singleton for each value
-                        self._par[attr] = np.eye(n, dtype=np.intc)
+                        self._par[attr] = np.eye(n, dtype=bool)
                         for j in range(n):
                             attr_parts.append(self._par[attr][:,j])
                     elif init_method == 'random':
-                        self._par[attr] = np.zeros((n, n), dtype=np.intc)
+                        self._par[attr] = np.zeros((n, n), dtype=bool)
                         # select a part for each attribute value randomly
                         for i in range(n):
                             i_part = self._rng.choice(n)
@@ -356,10 +359,11 @@ class SearchMiner(BaseMiner):
             for prod in product(*tda_i):
                 comb_i.append(np.concatenate(prod))
             comb.append(comb_i)
+            total_comb_size *= len(comb_i)
         
-        if init_method == 'full_split':
+        if total_comb_size > self._n_E_res or init_method == 'full_split':
             # TODO: need to start from existing combinations instead of enumeration
-            raise NotImplementedError
+            raise NotImplementedError('TBD: develop a mechanism to include only observed combinations')
         else:
             # TODO: optimize the creation of nodes
             # TODO: verify
@@ -374,14 +378,11 @@ class SearchMiner(BaseMiner):
             print(self._log)
             print('log matrix shape: {}'.format(self._log.shape))
             print('start to do dot product')
-            mask = np.matmul(self._log, all_arr_joined.T) 
+            mask = np.matmul(self._log, all_arr_joined.T, dtype=int) >= self._n_tda
             print(mask)
             print('result matrix shape: {}'.format(mask.shape))
-            print('start to do value comparison')
-            mask = mask >= self._n_tda
             print(np.unique(np.nonzero(mask)[0]))
             print(np.unique(np.nonzero(mask)[1]))
-            print(mask.shape)
             for j in np.unique(np.nonzero(mask)[1]):
                 arr_joined = all_arr_joined[j,:]
                 events = np.nonzero(mask[:,j])[0]
@@ -401,11 +402,11 @@ class SearchMiner(BaseMiner):
     def _apply_to_part(self, arr, n_attrs, rows=None, cols=None):
         # res: |E| x 1
         if rows is None:
-            mask = np.matmul(self._log[:,cols], arr.T) == n_attrs
+            mask = np.matmul(self._log[:,cols], arr.T, dtype=int) == n_attrs
         elif cols is None:
-            mask = np.matmul(self._log[rows,:], arr.T) == n_attrs
+            mask = np.matmul(self._log[rows,:], arr.T, dtype=int) == n_attrs
         else:
-            mask = np.matmul(self._log[rows,cols], arr.T) == n_attrs
+            mask = np.matmul(self._log[rows,cols], arr.T, dtype=int) == n_attrs
 
         if np.any(mask):
             return np.nonzero(mask)[0]
@@ -414,7 +415,7 @@ class SearchMiner(BaseMiner):
     
     def _apply_to_all(self, arr):
         # res: |E| x 1
-        mask = np.matmul(self._log, arr.T) == self._n_tda
+        mask = np.matmul(self._log, arr.T, dtype=int) == self._n_tda
         if np.any(mask):
             return np.nonzero(mask)[0]
         else:
@@ -430,7 +431,8 @@ class SearchMiner(BaseMiner):
             Must return a 4-tuple, or None:
                 (attr_name, par, [input part arr], [output part arr]) 
         '''
-        i = self._rng.choice(2)
+        #i = self._rng.choice(2)
+        i = 0
         if i == 0:
             return self._neighbor_split(), 'split'
         elif i == 1:
@@ -461,10 +463,8 @@ class SearchMiner(BaseMiner):
                 original_col = par[:,col].copy()
                 par[rows_nonzero[i_bar:],col] = 0
                 par[rows_nonzero[i_bar:],first_col_allzero] = 1
-                '''
                 return (
-                    attr, 
-                    par,
+                    attr, par,
                     [original_col],
                     [par[:,col], par[:,first_col_allzero]]
                 )
@@ -472,6 +472,7 @@ class SearchMiner(BaseMiner):
                 return (
                     attr, par
                 )
+                '''
 
     def _neighbor_merge(self):
         '''
@@ -586,7 +587,7 @@ class SearchMiner(BaseMiner):
         return self.T0 - alpha * k
 
     def _search(self):
-        self._init_state(init_method='zero')
+        self._init_state(init_method='random')
         self._init_system()
         print('Init finished')
 
@@ -601,10 +602,52 @@ class SearchMiner(BaseMiner):
             if move is None:
                 pass
             else:
+                # TODO: change to the new way of peeking
+                attr, new_par, original_cols, new_cols = move
+                attr_dim = self._tda_dim[attr]
+                if attr_dim == 'CT':
+                    attr_abs_index = tuple((
+                        self._index_tda_case[attr][0] + self._index_case[0],
+                        self._index_tda_case[attr][1] + self._index_case[0],
+                    ))
+                elif attr_dim == 'AT':
+                    attr_abs_index = tuple((
+                        self._index_tda_act[attr][0] + self._index_act[0],
+                        self._index_tda_act[attr][1] + self._index_act[0],
+                    ))
+                else:
+                    attr_abs_index = tuple((
+                        self._index_tda_time[attr][0] + self._index_time[0],
+                        self._index_tda_time[attr][1] + self._index_time[0],
+                    ))
+
+                nodes_next = []
+                #print(attr)
+                #print(attr_dim)
+                #print(new_par)
+                #print(original_cols)
+                #print(new_cols)
+
+                # stack the arrays of nodes
+                all_arr_joined = np.stack([node.arr for node in self._nodes])
+
+                if action == 'split':
+                    # split: 1 original -> 2 new
+                    index_nodes_to_split = np.nonzero(np.dot(
+                        all_arr_joined[:,slice(*attr_abs_index)],
+                        original_cols[0].T
+                    ))[0]
+                    for i_node in index_nodes_to_split:
+                        pass
+                else:
+                    # merge: 2 original -> 1 new
+                    index_nodes_to_merge = ...
+                    pass
+
+                '''
                 attr, new_par = move[0], move[1]
 
                 # TODO: how to efficiently peek?
-                nodes_next = []
                 new_pars = self._par.copy()
                 new_pars[move[0]] = new_par
                 comb = []
@@ -617,7 +660,7 @@ class SearchMiner(BaseMiner):
                         attr_parts = []
                         n = len(self._tdav[attr])
                         if n == 1:
-                            attr_parts.append(np.array([1], dtype=np.intc))
+                            attr_parts.append(np.array([1], dtype=bool))
                         else:
                             for j in np.unique(np.nonzero(new_pars[attr])[1]):
                                 attr_parts.append(new_pars[attr][:,j])
@@ -628,7 +671,7 @@ class SearchMiner(BaseMiner):
 
                 all_arr_joined = [np.concatenate(prod) for prod in product(*comb)]
                 all_arr_joined = np.stack(all_arr_joined)
-                mask = np.matmul(self._log, all_arr_joined.T) 
+                mask = np.matmul(self._log, all_arr_joined.T, dtype=int) 
                 mask = mask >= self._n_tda
                 for j in np.unique(np.nonzero(mask)[1]):
                     arr_joined = all_arr_joined[j,:]
@@ -636,6 +679,7 @@ class SearchMiner(BaseMiner):
                     resource_counts = self._apply_get_resource_counts(events)
                     node = Node2(arr_joined, events, resource_counts)
                     nodes_next.append(node)
+                '''
 
                 '''
                 for prod in product(*comb):
