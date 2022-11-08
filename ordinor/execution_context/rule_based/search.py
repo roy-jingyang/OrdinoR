@@ -367,22 +367,22 @@ class SearchMiner(BaseMiner):
         else:
             # TODO: optimize the creation of nodes
             # TODO: verify
-            print('start to construct list of arrays')
+            #print('start to construct list of arrays')
             all_arr_joined = [np.concatenate(prod) for prod in product(*comb)]
-            print(len(all_arr_joined))
-            print('start to stack arrays')
+            #print(len(all_arr_joined))
+            #print('start to stack arrays')
             all_arr_joined = np.stack(all_arr_joined)
-            print(all_arr_joined)
-            print('nodes matrix shape: {}'.format(all_arr_joined.shape))
-            print('start to locate events')
-            print(self._log)
-            print('log matrix shape: {}'.format(self._log.shape))
-            print('start to do dot product')
+            #print(all_arr_joined)
+            #print('nodes matrix shape: {}'.format(all_arr_joined.shape))
+            #print('start to locate events')
+            #print(self._log)
+            #print('log matrix shape: {}'.format(self._log.shape))
+            #print('start to do dot product')
             mask = np.matmul(self._log, all_arr_joined.T, dtype=int) >= self._n_tda
-            print(mask)
-            print('result matrix shape: {}'.format(mask.shape))
-            print(np.unique(np.nonzero(mask)[0]))
-            print(np.unique(np.nonzero(mask)[1]))
+            #print(mask)
+            #print('result matrix shape: {}'.format(mask.shape))
+            #print(np.unique(np.nonzero(mask)[0]))
+            #print(np.unique(np.nonzero(mask)[1]))
             for j in np.unique(np.nonzero(mask)[1]):
                 arr_joined = all_arr_joined[j,:]
                 events = np.nonzero(mask[:,j])[0]
@@ -622,22 +622,44 @@ class SearchMiner(BaseMiner):
                     ))
 
                 nodes_next = []
-                #print(attr)
-                #print(attr_dim)
-                #print(new_par)
-                #print(original_cols)
-                #print(new_cols)
+                print(attr)
+                print(attr_dim)
+                print(new_par)
+                print(original_cols)
+                print(new_cols)
 
                 # stack the arrays of nodes
                 all_arr_joined = np.stack([node.arr for node in self._nodes])
 
                 if action == 'split':
                     # split: 1 original -> 2 new
-                    index_nodes_to_split = np.nonzero(np.dot(
+                    index_nodes_to_split = np.dot(
                         all_arr_joined[:,slice(*attr_abs_index)],
                         original_cols[0].T
-                    ))[0]
-                    for i_node in index_nodes_to_split:
+                    )
+                    print(index_nodes_to_split)
+                    for i, node in enumerate(self._nodes):
+                        if index_nodes_to_split[i]:
+                            arr_left = node.arr.copy()
+                            arr_left[slice(*attr_abs_index)] = new_cols[0]
+                            events_left = self._apply_to_part(
+                                arr=new_cols[0], n_attrs=1, 
+                                rows=node.events, cols=slice(*attr_abs_index)
+                            )
+                            if len(events_left) > 0:
+                                rc_left = self._apply_get_resource_counts(events_left)
+                                nodes_next.append(Node2(arr_left, events_left, rc_left))
+                            arr_right = node.arr.copy()
+                            arr_right[slice(*attr_abs_index)] = new_cols[1]
+                            events_right = self._apply_to_part(
+                                arr=new_cols[1], n_attrs=1, 
+                                rows=node.events, cols=slice(*attr_abs_index)
+                            )
+                            if len(events_right) > 0:
+                                rc_right = self._apply_get_resource_counts(events_right)
+                                nodes_next.append(Node2(arr_right, events_right, rc_right))
+                        else:
+                            nodes_next.append(node)
                         pass
                 else:
                     # merge: 2 original -> 1 new
@@ -692,6 +714,7 @@ class SearchMiner(BaseMiner):
                 '''
                 # TODO end
 
+                print(nodes_next)
                 E_next = self._evaluate(nodes_next)
 
                 print(f'Step [{k}]\t{action} on {move[0]}')
