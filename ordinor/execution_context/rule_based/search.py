@@ -365,9 +365,18 @@ class SearchMiner(BaseMiner):
             # TODO: need to start from existing combinations instead of enumeration
             raise NotImplementedError('TBD: develop a mechanism to include only observed combinations')
         else:
+            '''
+            # Solution 1.1 (fallback): enumerate and test all combinations
+            for prod in product(*comb):
+                arr_joined = np.concatenate(prod)
+                events = self._apply_to_all(arr_joined)
+                if len(events) > 0:
+                    resource_counts = self._apply_get_resource_counts(events)
+                    node = Node2(arr_joined, events, resource_counts)
+                    self._nodes.append(node)
+            '''
             # Solution 1.2: use matrix multiplication to enumerate combinations
             # TODO: optimize the creation of nodes
-            # TODO: verify
             #print('start to construct list of arrays')
             all_arr_joined = [np.concatenate(prod) for prod in product(*comb)]
             #print(len(all_arr_joined))
@@ -390,18 +399,6 @@ class SearchMiner(BaseMiner):
                 resource_counts = self._apply_get_resource_counts(events)
                 node = Node2(arr_joined, events, resource_counts)
                 self._nodes.append(node)
-            '''
-            '''
-            '''
-            # Solution 1.1 (fallback): enumerate and test all combinations
-            for prod in product(*comb):
-                arr_joined = np.concatenate(prod)
-                events = self._apply_to_all(arr_joined)
-                if len(events) > 0:
-                    resource_counts = self._apply_get_resource_counts(events)
-                    node = Node2(arr_joined, events, resource_counts)
-                    self._nodes.append(node)
-            '''
         
     def _apply_to_part(self, arr, n_attrs, rows=None, cols=None):
         # result: |E[rows,cols]| x 1
@@ -437,7 +434,7 @@ class SearchMiner(BaseMiner):
                 (attr_name, par, [input part arr], [output part arr]) 
         '''
         #i = self._rng.choice(2)
-        i = 0
+        i = 1
         if i == 0:
             return self._neighbor_split(), 'split'
         elif i == 1:
@@ -505,15 +502,14 @@ class SearchMiner(BaseMiner):
         merged_col = par[:,sel_cols_nonzero[0]] + par[:,sel_cols_nonzero[1]]
         par[:,sel_cols_nonzero[0]] = merged_col
         par[:,sel_cols_nonzero[1]] = 0
-        '''
         return (
-            attr,
-            par,
+            attr, par,
             [original_col_left, original_col_right],
             [merged_col]
         )
         '''
         return (attr, par)
+        '''
 
     def _evaluate(self, nodes, pars):
         '''
@@ -657,12 +653,12 @@ class SearchMiner(BaseMiner):
 
                 if action == 'split':
                     # split: 1 original -> 2 new
-                    index_nodes_to_split = np.dot(
+                    is_node_to_split = np.dot(
                         all_arr_joined[:,slice(*attr_abs_index)],
                         original_cols[0].T
                     )
                     for i, node in enumerate(self._nodes):
-                        if index_nodes_to_split[i]:
+                        if is_node_to_split[i]:
                             arr_left = node.arr.copy()
                             arr_left[slice(*attr_abs_index)] = new_cols[0]
                             events_left = node.events[self._apply_to_part(
@@ -688,8 +684,36 @@ class SearchMiner(BaseMiner):
                         pass
                 else:
                     # merge: 2 original -> 1 new
-                    index_nodes_to_merge = ...
-                    pass
+                    is_node_to_merge = np.any(np.dot(
+                        all_arr_joined[:,slice(*attr_abs_index)],
+                        np.array(original_cols).T
+                    ), axis=1)
+                    arr_visited = dict()
+                    for i, node in enumerate(self._nodes):
+                        if is_node_to_merge[i]:
+                            # TODO
+                            # extract the pattern
+                            # i.e., node.arr excluding the slice being tested
+                            # if pattern has not been visited:
+                            # arr_visited[pattern] = i;
+                            # else:
+                            # create a new node combining data from pair:
+                            #   self._nodes[arr_visited[pattern]] and
+                            #   node (the current one)
+                            merged_node = ...
+                            # append created node to nodes_next
+                            nodes_next.append(merged_node)
+                            # delete pattern
+                            del arr_visited[patt]
+                        else:
+                            nodes_next.append(
+                                Node2(node.arr, node.events, node.resource_counts.copy())
+                            )
+                    # include solo nodes, i.e., nodes unpaired
+                    for patt, i in arr_visited.items():
+                        nodes_next.append(
+                            Node2(self._nodes[i].arr, self._nodes[i].events, self._nodes[i].resource_counts.copy())
+                        )
 
                 '''
                 '''
@@ -717,7 +741,19 @@ class SearchMiner(BaseMiner):
                     for prod in product(*tda_i):
                         comb_i.append(np.concatenate(prod))
                     comb.append(comb_i)
-
+                '''
+                '''
+                # Solution 1.1 (fallback): enumerate and test all combinations
+                # slow due to loop 
+                for prod in product(*comb):
+                    arr_joined = np.concatenate(prod)
+                    events = self._apply_to_all(arr_joined)
+                    if len(events) > 0:
+                        resource_counts = self._apply_get_resource_counts(events)
+                        node = Node2(arr_joined, events, resource_counts)
+                        nodes_next.append(node)
+                '''
+                '''
                 # Solution 1.2: use matrix multiplication to enumerate combinations
                 # improved speed by trading space 
                 all_arr_joined = [np.concatenate(prod) for prod in product(*comb)]
@@ -730,18 +766,6 @@ class SearchMiner(BaseMiner):
                     resource_counts = self._apply_get_resource_counts(events)
                     node = Node2(arr_joined, events, resource_counts)
                     nodes_next.append(node)
-                '''
-
-                '''
-                # Solution 1.1 (fallback): enumerate and test all combinations
-                # slow due to loop 
-                for prod in product(*comb):
-                    arr_joined = np.concatenate(prod)
-                    events = self._apply_to_all(arr_joined)
-                    if len(events) > 0:
-                        resource_counts = self._apply_get_resource_counts(events)
-                        node = Node2(arr_joined, events, resource_counts)
-                        nodes_next.append(node)
                 '''
                 # TODO end
 
