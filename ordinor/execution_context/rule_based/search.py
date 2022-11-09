@@ -31,6 +31,7 @@ class SearchMiner(BaseMiner):
             self._log = check_convert_input_log(el).copy()
             # only use events with resource information
             self._log = self._log[self._log[const.RESOURCE].notna()]
+            print(f'Use only {len(self._log)} events with resource information recorded.')
         else:
             raise ValueError('invalid log')
 
@@ -46,6 +47,8 @@ class SearchMiner(BaseMiner):
             ]
             # NOTE: set of dimensions included in the specification
             for attr, spec in attr_spec['type_def_attrs'].items():
+                if attr in included_cols:
+                    included_cols.remove(attr)
                 if spec['attr_type'] == 'categorical':
                     if spec['attr_dim'] == 'CT':
                         self._tda_case.append(attr)
@@ -102,10 +105,9 @@ class SearchMiner(BaseMiner):
             self._index_time = tuple((self._index_act[1], self._index_act[1]+self._index_tda_time[self._tda_time[-1]][1]))
 
             # Record log-related constants
-            # NOTE: |E|, log size (after exclusion)
+            # NOTE: |E| == |E_res|, log size (after excluding events with no resource)
             self._n_E = len(self._log)
             # NOTE: absolute frequencies of resources |E_r|
-            #       (over all events with resource information)
             self._p_res = self._log[const.RESOURCE].value_counts(
                 normalize=False, sort=False
             ).to_dict()
@@ -113,19 +115,17 @@ class SearchMiner(BaseMiner):
             self._ncomb_E_res_2 = dict(
                 (r, num_combinations(count_r, 2)) for r, count_r in self._p_res.items()
             )
+            # NOTE: an |E| x 1 array recording originator resources
+            self._arr_event_r = self._log[const.RESOURCE].to_numpy(copy=True)
+
             # normalize the frequencies of resources
-            sum_n_E_res = sum(self._p_res.values())
             for r in self._p_res.keys():
-                self._p_res[r] /= sum_n_E_res
+                self._p_res[r] /= self._n_E
+
             # NOTE: float constant, to be used for calculating impurity
             self._max_impurity = scipy_entropy(
                 np.array(list(self._p_res.values()), dtype=np.double), base=2
             )
-
-            # NOTE: an |E| x 1 array recording originator resources
-            self._arr_event_r = self._log[const.RESOURCE].to_numpy(copy=True, na_value='/')
-            # NOTE: |E_res|, number of events with resource information
-            self._n_E_res = self._n_E - np.sum(self._arr_event_r == '/')
 
             # drop non-type-defining attributes columns
             self._log.drop(columns=included_cols, inplace=True)
@@ -361,11 +361,11 @@ class SearchMiner(BaseMiner):
             comb.append(comb_i)
             total_comb_size *= len(comb_i)
         
-        if total_comb_size > self._n_E_res or init_method == 'full_split':
+        if total_comb_size > self._n_E or init_method == 'full_split':
             # TODO: need to start from existing combinations instead of enumeration
             raise NotImplementedError('TBD: develop a mechanism to include only observed combinations')
         else:
-            '''
+            # Solution 1.2: use matrix multiplication to enumerate combinations
             # TODO: optimize the creation of nodes
             # TODO: verify
             #print('start to construct list of arrays')
@@ -391,6 +391,9 @@ class SearchMiner(BaseMiner):
                 node = Node2(arr_joined, events, resource_counts)
                 self._nodes.append(node)
             '''
+            '''
+            '''
+            # Solution 1.1 (fallback): enumerate and test all combinations
             for prod in product(*comb):
                 arr_joined = np.concatenate(prod)
                 events = self._apply_to_all(arr_joined)
@@ -398,9 +401,11 @@ class SearchMiner(BaseMiner):
                     resource_counts = self._apply_get_resource_counts(events)
                     node = Node2(arr_joined, events, resource_counts)
                     self._nodes.append(node)
+            '''
         
     def _apply_to_part(self, arr, n_attrs, rows=None, cols=None):
-        # res: |E| x 1
+        # result: |E[rows,cols]| x 1
+        # NOTE: the result mask is local to the given rows and columns
         if rows is None:
             mask = np.matmul(self._log[:,cols], arr.T, dtype=int) == n_attrs
         elif cols is None:
@@ -414,7 +419,7 @@ class SearchMiner(BaseMiner):
             return []
     
     def _apply_to_all(self, arr):
-        # res: |E| x 1
+        # result: |E| x 1
         mask = np.matmul(self._log, arr.T, dtype=int) == self._n_tda
         if np.any(mask):
             return np.nonzero(mask)[0]
@@ -451,28 +456,29 @@ class SearchMiner(BaseMiner):
         # create a copy
         par = self._pars[attr].copy()
         if np.all(np.any(par, axis=0)) and np.sum(par) == len(par):
-            # all singletons, no further split allowed
+            # all singletons, no further split allowed 
+            # (i.e., an I matrix after rearrangement)
             return None
         cols_nonzero = np.unique(np.nonzero(par)[1])
         first_col_allzero = np.amin(np.nonzero(np.all(par == 0, axis=0))[0])
+        # select an existing, non-singleton part randomly
         self._rng.shuffle(cols_nonzero)
         for col in cols_nonzero:
             if np.sum(par[:,col]) > 1:
                 rows_nonzero = np.nonzero(par[:,col])[0]
+                # select a separator position randomly
                 i_bar = self._rng.choice(len(rows_nonzero) - 1) + 1
                 original_col = par[:,col].copy()
                 par[rows_nonzero[i_bar:],col] = 0
                 par[rows_nonzero[i_bar:],first_col_allzero] = 1
-                '''
                 return (
                     attr, par,
                     [original_col],
                     [par[:,col], par[:,first_col_allzero]]
                 )
                 '''
-                return (
-                    attr, par
-                )
+                return (attr, par)
+                '''
 
     def _neighbor_merge(self):
         '''
@@ -484,15 +490,18 @@ class SearchMiner(BaseMiner):
         attr = self._rng.choice(list(self._tdav.keys()))
         par = self._pars[attr].copy()
         if np.sum(np.all(par, axis=0)) == 1:
-            # only singleton, no further merge allowed
+            # only one singleton, no further merge allowed
             return None
         cols_nonzero = np.unique(np.nonzero(par)[1])
         if len(cols_nonzero) > 2:
+            # select two parts randomly, if there exist more than two parts
             sel_cols_nonzero = cols_nonzero[self._rng.choice(len(cols_nonzero), size=2, replace=False)]
         else:
+            # merge the only two parts
             sel_cols_nonzero = cols_nonzero[:]
         original_col_left = par[:,sel_cols_nonzero[0]].copy()
         original_col_right = par[:,sel_cols_nonzero[1]].copy()
+        # NOTE: for two boolean arrays, plus (+) refers to logical OR
         merged_col = par[:,sel_cols_nonzero[0]] + par[:,sel_cols_nonzero[1]]
         par[:,sel_cols_nonzero[0]] = merged_col
         par[:,sel_cols_nonzero[1]] = 0
@@ -515,7 +524,8 @@ class SearchMiner(BaseMiner):
         spa = self._calculate_sparsity(nodes, pars)
 
         # arithmetic mean
-        e = 0.5 * (dis + imp)
+        e = (dis + imp) / 2
+        #e = (dis + imp + spa) / 3
         # harmonic mean
         #e = 2 * dis * imp / (dis + imp)
 
@@ -554,13 +564,16 @@ class SearchMiner(BaseMiner):
             for res in (nodes[i].resource_counts.keys() & nodes[j].resource_counts.keys()):
                 # the sum of pairwise event distance
                 if res == 'X':
-                    print(pdist_nodes[i,j])
+                    print(nodes[i])
+                    print(nodes[j])
+                    #print((i, j))
+                    #print(set(nodes[i].events).intersection(set(nodes[j].events)))
+                    #print(pdist_nodes[i,j])
                 dist_r[res] += (
                     pdist_nodes[i,j] *
                     nodes[i].resource_counts[res] * nodes[j].resource_counts[res]
                 )
         # weight by p_r and normalize by C(E_r, 2)
-        print(dist_r)
         for res in dist_r.keys():
             dist_r[res] *= self._p_res[res] * (1 / self._ncomb_E_res_2[res])
         return sum(dist_r.values())
@@ -572,7 +585,7 @@ class SearchMiner(BaseMiner):
 		    # retrieve the contained resources and their counts
             local_p_res = np.array(list(node.resource_counts.values()), dtype=np.double)
             # calculate the ratio of resource-events 
-            ratio_res_events = np.sum(local_p_res) / self._n_E_res
+            ratio_res_events = np.sum(local_p_res) / self._n_E
             # calculate local impurity
             sum_impurity += ratio_res_events * scipy_entropy(local_p_res, base=2)
         return sum_impurity / self._max_impurity
@@ -597,15 +610,18 @@ class SearchMiner(BaseMiner):
         return self.T0 - alpha * k
 
     def _search(self):
-        self._init_state(init_method='zero')
+        self._init_state(init_method='random')
         self._init_system()
         print('Init finished')
 
         T = self.T0
         ret = self._evaluate(self._nodes, self._pars)
-        E = ret[0]
-        E_best = E
+        E, dis, imp, spa = ret[0], ret[1], ret[2], ret[3]
+
+        # keep track of the best state
+        E_best, dis_best, imp_best, spa_best = E, dis, imp, spa
         nodes_best = self._nodes.copy()
+
         k = 0
         while T > self.Tmin:
             k += 1
@@ -614,10 +630,11 @@ class SearchMiner(BaseMiner):
                 pass
             else:
                 nodes_next = []
-                '''
                 # Solution 2: selectively update current node list via copying
                 # TODO: change to the new way of peeking
                 attr, new_par, original_cols, new_cols = move
+                new_pars = self._pars.copy()
+                new_pars[move[0]] = new_par
                 attr_dim = self._tda_dim[attr]
                 if attr_dim == 'CT':
                     attr_abs_index = tuple((
@@ -635,12 +652,6 @@ class SearchMiner(BaseMiner):
                         self._index_tda_time[attr][1] + self._index_time[0],
                     ))
 
-                print(attr)
-                print(attr_dim)
-                print(new_par)
-                print(original_cols)
-                print(new_cols)
-
                 # stack the arrays of nodes
                 all_arr_joined = np.stack([node.arr for node in self._nodes])
 
@@ -650,43 +661,42 @@ class SearchMiner(BaseMiner):
                         all_arr_joined[:,slice(*attr_abs_index)],
                         original_cols[0].T
                     )
-                    print(index_nodes_to_split)
                     for i, node in enumerate(self._nodes):
                         if index_nodes_to_split[i]:
                             arr_left = node.arr.copy()
                             arr_left[slice(*attr_abs_index)] = new_cols[0]
-                            events_left = self._apply_to_part(
+                            events_left = node.events[self._apply_to_part(
                                 arr=new_cols[0], n_attrs=1, 
                                 rows=node.events, cols=slice(*attr_abs_index)
-                            )
+                            )]
                             if len(events_left) > 0:
                                 rc_left = self._apply_get_resource_counts(events_left)
                                 nodes_next.append(Node2(arr_left, events_left, rc_left))
                             arr_right = node.arr.copy()
                             arr_right[slice(*attr_abs_index)] = new_cols[1]
-                            events_right = self._apply_to_part(
+                            events_right = node.events[self._apply_to_part(
                                 arr=new_cols[1], n_attrs=1, 
                                 rows=node.events, cols=slice(*attr_abs_index)
-                            )
+                            )]
                             if len(events_right) > 0:
                                 rc_right = self._apply_get_resource_counts(events_right)
                                 nodes_next.append(Node2(arr_right, events_right, rc_right))
                         else:
-                            nodes_next.append(node)
+                            nodes_next.append(
+                                Node2(node.arr, node.events, node.resource_counts.copy())
+                            )
                         pass
                 else:
                     # merge: 2 original -> 1 new
                     index_nodes_to_merge = ...
                     pass
 
-                n_events = sum(len(node.events) for node in nodes_next)
-                print(n_events)
-                print(self._n_E_res)
+                '''
                 '''
 
+                '''
                 # Solution 1: enumerate combinations of partitions
                 attr, new_par = move[0], move[1]
-                # TODO: how to efficiently peek?
                 new_pars = self._pars.copy()
                 new_pars[move[0]] = new_par
                 comb = []
@@ -708,8 +718,8 @@ class SearchMiner(BaseMiner):
                         comb_i.append(np.concatenate(prod))
                     comb.append(comb_i)
 
-                '''
                 # Solution 1.2: use matrix multiplication to enumerate combinations
+                # improved speed by trading space 
                 all_arr_joined = [np.concatenate(prod) for prod in product(*comb)]
                 all_arr_joined = np.stack(all_arr_joined)
                 mask = np.matmul(self._log, all_arr_joined.T, dtype=int) 
@@ -722,7 +732,9 @@ class SearchMiner(BaseMiner):
                     nodes_next.append(node)
                 '''
 
+                '''
                 # Solution 1.1 (fallback): enumerate and test all combinations
+                # slow due to loop 
                 for prod in product(*comb):
                     arr_joined = np.concatenate(prod)
                     events = self._apply_to_all(arr_joined)
@@ -731,49 +743,50 @@ class SearchMiner(BaseMiner):
                         node = Node2(arr_joined, events, resource_counts)
                         nodes_next.append(node)
                 '''
-                '''
                 # TODO end
 
                 ret_next = self._evaluate(nodes_next, new_pars)
-                E_next = ret_next[0]
+                E_next, dis_next, imp_next, spa_next = ret_next[0], ret_next[1], ret_next[2], ret_next[3]
 
                 print(f'Step [{k}]\t{action} on {move[0]}')
                 print('\tCurrent temperature:\t{:.3f}'.format(T))
                 print('\tCurrent #nodes: {}'.format(len(self._nodes)))
+
                 print('\tCurrent energy: {:.6f}'.format(E))
-                print('\t\t> Current dispersal: {:.6f}'.format(ret_next[1]))
-                print('\t\t> Current impurity: {:.6f}'.format(ret_next[2]))
-                print('\t\t> Current sparsity: {:.6f}'.format(ret_next[3]))
+                print('\t\t> Current dispersal: {:.6f}'.format(dis))
+                print('\t\t> Current impurity: {:.6f}'.format(imp))
+                print('\t\t> Current sparsity: {:.6f}'.format(spa))
+
                 print('\tNeighbor energy: {:.6f}'.format(E_next))
                 print('\tNeighbor #nodes: {}'.format(len(nodes_next)))
                 
-                # decide move to neighbor
+                # decide whether to move to neighbor
                 prob_acceptance = self._prob_acceptance(E, E_next, T)
                 print('\tProbability of moving: {}'.format(prob_acceptance))
                 if self._rng.random() < prob_acceptance:
+                    # move to neighbor state; update
                     print('\t\t\t>>> Moved to neighbor')
                     self._pars[move[0]] = new_par
                     del self._nodes[:]
                     self._nodes = nodes_next
-                    E = E_next
+                    E, dis, imp, spa = E_next, dis_next, imp_next, spa_next
+
+                    # check if better than best state
                     if E < E_best:
-                        E_best = E
+                        E_best, dis_best, imp_best, spa_best = E, dis, imp, spa
                         del nodes_best[:]
-                        nodes_best = nodes_next.copy()
+                        nodes_best = self._nodes.copy()
+                else:
+                    pass
                     
             # cool down system temperature
             T = self._cooling(T, k)
         
-        print(f'Search ended with system temperature:\t{T}')
+        print(f'\nSearch ended with system temperature:\t{T}')
         del self._nodes[:]
         self._nodes = nodes_best
-
-        # TODO: verify the calculation of dispersal and impurity
-        start = datetime.now()
-        print(self._calculate_dispersal(self._nodes))
-        mid = datetime.now()
-        print(mid - start)
-        start2 = datetime.now()
-        print(self._calculate_impurity(self._nodes))
-        end = datetime.now()
-        print(end - start2)
+        print('Best state selected with:')
+        print('\t Energy: {:.6f}'.format(E_best))
+        print('\t\t> dispersal: {:.6f}'.format(dis_best))
+        print('\t\t> impurity: {:.6f}'.format(imp_best))
+        print('\t\t> sparsity: {:.6f}'.format(spa_best))
