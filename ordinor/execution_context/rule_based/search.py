@@ -2,8 +2,6 @@ from collections import defaultdict
 from itertools import product, combinations
 from math import comb as num_combinations
 
-from datetime import datetime
-
 import numpy as np
 from pandas import get_dummies as apply_ohe
 from scipy.stats import entropy as scipy_entropy
@@ -684,36 +682,85 @@ class SearchMiner(BaseMiner):
                         pass
                 else:
                     # merge: 2 original -> 1 new
+                    print(f'\tMerge {original_cols[0]} and {original_cols[1]}')
+                    print(f'\t\tto {new_cols[0]}')
                     is_node_to_merge = np.any(np.dot(
                         all_arr_joined[:,slice(*attr_abs_index)],
                         np.array(original_cols).T
                     ), axis=1)
                     arr_visited = dict()
+                    print(f'#old nodes: {len(self._nodes)}')
+                    n_paired_nodes_left = 0
+                    n_paired_nodes_right = 0
+                    n_other_nodes = 0
                     for i, node in enumerate(self._nodes):
                         if is_node_to_merge[i]:
                             # TODO
-                            # extract the pattern
+                            # extract the pattern (in bytes, so hashable)
                             # i.e., node.arr excluding the slice being tested
-                            # if pattern has not been visited:
-                            # arr_visited[pattern] = i;
-                            # else:
-                            # create a new node combining data from pair:
-                            #   self._nodes[arr_visited[pattern]] and
-                            #   node (the current one)
-                            merged_node = ...
-                            # append created node to nodes_next
-                            nodes_next.append(merged_node)
-                            # delete pattern
-                            del arr_visited[patt]
+                            patt = np.hstack(np.split(node.arr, attr_abs_index)[::2]).tobytes()
+                            if patt in arr_visited:
+                                n_paired_nodes_left += 1
+                                # create a new node combining data from:
+                                #   self._nodes[arr_visited[pattern]] and
+                                #   node (the current one)
+                                node_to_pair = self._nodes[arr_visited[patt]]
+                                events_union = np.union1d(node_to_pair.events, node.events)
+                                # append created node to nodes_next
+                                '''
+                                print(f'Node [{arr_visited[patt]}] retrieved to pair: {node_to_pair.arr}')
+                                print(f'\thaving #events {len(node_to_pair.events)}')
+                                print(f'with Node [{i}]: {node.arr}')
+                                print(f'\thaving #events {len(node.events)}')
+                                merged = Node2(
+                                    node_to_pair.arr + node.arr,
+                                    events_union,
+                                    self._apply_get_resource_counts(events_union)
+                                )
+                                print(f'Result node to append: {merged.arr}')
+                                print(f'\thaving #events {len(merged.events)}')
+                                print('---------------------------------')
+                                nodes_next.append(merged)
+                                '''
+
+                                # NOTE: for two boolean arrays, plus (+) refers to logical OR
+                                nodes_next.append(
+                                    Node2(
+                                        node_to_pair.arr + node.arr,
+                                        events_union,
+                                        self._apply_get_resource_counts(events_union)
+                                    )
+                                )
+                                # delete pattern
+                                del arr_visited[patt]
+                            else:
+                                n_paired_nodes_right += 1
+                                # save node index for pairing
+                                arr_visited[patt] = i
                         else:
+                            n_other_nodes +=1
                             nodes_next.append(
                                 Node2(node.arr, node.events, node.resource_counts.copy())
                             )
+
                     # include solo nodes, i.e., nodes unpaired
-                    for patt, i in arr_visited.items():
+                    n_solo_nodes = 0
+                    for i in arr_visited.values():
+                        print(f'Node[{i}] unpaired')
+                        n_solo_nodes += 1
                         nodes_next.append(
                             Node2(self._nodes[i].arr, self._nodes[i].events, self._nodes[i].resource_counts.copy())
                         )
+                    
+                    print(f'#new nodes: {len(nodes_next)}')
+                    if len(nodes_next) > len(self._nodes):
+                        print('*' * 120)
+                        print('Aagh!')
+                        print(f'\t#paired nodes (left): {n_paired_nodes_left}')
+                        print(f'\t#paired nodes (right): {n_paired_nodes_right}')
+                        print(f'\t#solo nodes: {n_solo_nodes}')
+                        print(f'\t#other nodes: {n_other_nodes}')
+
 
                 '''
                 '''
