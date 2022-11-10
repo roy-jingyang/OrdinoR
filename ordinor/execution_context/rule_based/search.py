@@ -398,6 +398,21 @@ class SearchMiner(BaseMiner):
                 node = Node2(arr_joined, events, resource_counts)
                 self._nodes.append(node)
         
+    def _verify_state(self, nodes):
+        n_events = 0
+        for i in range(len(nodes)):
+            n_events += len(nodes[i].events)
+            if set(nodes[i].events) == set(self._apply_to_all(nodes[i].arr)):
+                pass
+            else:
+                raise ValueError('Node array does not match stored events!')
+            for j in range(i + 1, len(nodes) - 1):
+                if len(set(nodes[i].events).intersection(set(nodes[j].events))) > 0:
+                    raise ValueError('Stored events are not disjoint!')
+        if n_events != self._n_E:
+            raise ValueError('Stored events do not add up to all events!')
+
+    
     def _apply_to_part(self, arr, n_attrs, rows=None, cols=None):
         # result: |E[rows,cols]| x 1
         # NOTE: the result mask is local to the given rows and columns
@@ -431,8 +446,7 @@ class SearchMiner(BaseMiner):
             Must return a 4-tuple, or None:
                 (attr_name, par, [input part arr], [output part arr]) 
         '''
-        #i = self._rng.choice(2)
-        i = 1
+        i = self._rng.choice(2)
         if i == 0:
             return self._neighbor_split(), 'split'
         elif i == 1:
@@ -557,12 +571,6 @@ class SearchMiner(BaseMiner):
             # find the intersection of the sets
             for res in (nodes[i].resource_counts.keys() & nodes[j].resource_counts.keys()):
                 # the sum of pairwise event distance
-                if res == 'X':
-                    print(nodes[i])
-                    print(nodes[j])
-                    #print((i, j))
-                    #print(set(nodes[i].events).intersection(set(nodes[j].events)))
-                    #print(pdist_nodes[i,j])
                 dist_r[res] += (
                     pdist_nodes[i,j] *
                     nodes[i].resource_counts[res] * nodes[j].resource_counts[res]
@@ -608,6 +616,8 @@ class SearchMiner(BaseMiner):
         self._init_system()
         print('Init finished')
 
+        #self._verify_state(self._nodes)
+
         T = self.T0
         ret = self._evaluate(self._nodes, self._pars)
         E, dis, imp, spa = ret[0], ret[1], ret[2], ret[3]
@@ -627,8 +637,6 @@ class SearchMiner(BaseMiner):
                 # Solution 2: selectively update current node list via copying
                 # TODO: change to the new way of peeking
                 attr, new_par, original_cols, new_cols = move
-                new_pars = self._pars.copy()
-                new_pars[move[0]] = new_par
                 attr_dim = self._tda_dim[attr]
                 if attr_dim == 'CT':
                     attr_abs_index = tuple((
@@ -679,19 +687,14 @@ class SearchMiner(BaseMiner):
                             nodes_next.append(
                                 Node2(node.arr, node.events, node.resource_counts.copy())
                             )
-                        pass
                 else:
                     # merge: 2 original -> 1 new
-                    print(f'\tMerge {original_cols[0]} and {original_cols[1]}')
-                    print(f'\t\tto {new_cols[0]}')
                     is_node_to_merge = np.any(np.dot(
                         all_arr_joined[:,slice(*attr_abs_index)],
                         np.array(original_cols).T
                     ), axis=1)
                     arr_visited = dict()
-                    print(f'#old nodes: {len(self._nodes)}')
-                    n_paired_nodes_left = 0
-                    n_paired_nodes_right = 0
+                    n_paired_nodes = 0
                     n_other_nodes = 0
                     for i, node in enumerate(self._nodes):
                         if is_node_to_merge[i]:
@@ -700,29 +703,13 @@ class SearchMiner(BaseMiner):
                             # i.e., node.arr excluding the slice being tested
                             patt = np.hstack(np.split(node.arr, attr_abs_index)[::2]).tobytes()
                             if patt in arr_visited:
-                                n_paired_nodes_left += 1
+                                n_paired_nodes += 1
                                 # create a new node combining data from:
                                 #   self._nodes[arr_visited[pattern]] and
                                 #   node (the current one)
                                 node_to_pair = self._nodes[arr_visited[patt]]
                                 events_union = np.union1d(node_to_pair.events, node.events)
                                 # append created node to nodes_next
-                                '''
-                                print(f'Node [{arr_visited[patt]}] retrieved to pair: {node_to_pair.arr}')
-                                print(f'\thaving #events {len(node_to_pair.events)}')
-                                print(f'with Node [{i}]: {node.arr}')
-                                print(f'\thaving #events {len(node.events)}')
-                                merged = Node2(
-                                    node_to_pair.arr + node.arr,
-                                    events_union,
-                                    self._apply_get_resource_counts(events_union)
-                                )
-                                print(f'Result node to append: {merged.arr}')
-                                print(f'\thaving #events {len(merged.events)}')
-                                print('---------------------------------')
-                                nodes_next.append(merged)
-                                '''
-
                                 # NOTE: for two boolean arrays, plus (+) refers to logical OR
                                 nodes_next.append(
                                     Node2(
@@ -734,7 +721,6 @@ class SearchMiner(BaseMiner):
                                 # delete pattern
                                 del arr_visited[patt]
                             else:
-                                n_paired_nodes_right += 1
                                 # save node index for pairing
                                 arr_visited[patt] = i
                         else:
@@ -746,25 +732,12 @@ class SearchMiner(BaseMiner):
                     # include solo nodes, i.e., nodes unpaired
                     n_solo_nodes = 0
                     for i in arr_visited.values():
-                        print(f'Node[{i}] unpaired')
-                        n_solo_nodes += 1
+                        new_arr = self._nodes[i].arr.copy()
+                        new_arr[slice(*attr_abs_index)] = new_cols[0]
                         nodes_next.append(
-                            Node2(self._nodes[i].arr, self._nodes[i].events, self._nodes[i].resource_counts.copy())
+                            Node2(new_arr, self._nodes[i].events, self._nodes[i].resource_counts.copy())
                         )
                     
-                    print(f'#new nodes: {len(nodes_next)}')
-                    if len(nodes_next) > len(self._nodes):
-                        print('*' * 120)
-                        print('Aagh!')
-                        print(f'\t#paired nodes (left): {n_paired_nodes_left}')
-                        print(f'\t#paired nodes (right): {n_paired_nodes_right}')
-                        print(f'\t#solo nodes: {n_solo_nodes}')
-                        print(f'\t#other nodes: {n_other_nodes}')
-
-
-                '''
-                '''
-
                 '''
                 # Solution 1: enumerate combinations of partitions
                 attr, new_par = move[0], move[1]
@@ -816,7 +789,10 @@ class SearchMiner(BaseMiner):
                 '''
                 # TODO end
 
+                new_pars = self._pars.copy()
+                new_pars[attr] = new_par
                 ret_next = self._evaluate(nodes_next, new_pars)
+                #self._verify_state(nodes_next)
                 E_next, dis_next, imp_next, spa_next = ret_next[0], ret_next[1], ret_next[2], ret_next[3]
 
                 print(f'Step [{k}]\t{action} on {move[0]}')
@@ -830,13 +806,13 @@ class SearchMiner(BaseMiner):
 
                 print('\tNeighbor energy: {:.6f}'.format(E_next))
                 print('\tNeighbor #nodes: {}'.format(len(nodes_next)))
-                
+
                 # decide whether to move to neighbor
                 prob_acceptance = self._prob_acceptance(E, E_next, T)
                 print('\tProbability of moving: {}'.format(prob_acceptance))
                 if self._rng.random() < prob_acceptance:
                     # move to neighbor state; update
-                    print('\t\t\t>>> Moved to neighbor')
+                    print('\t\t\t>>> Move to neighbor')
                     self._pars[move[0]] = new_par
                     del self._nodes[:]
                     self._nodes = nodes_next
@@ -856,8 +832,9 @@ class SearchMiner(BaseMiner):
         print(f'\nSearch ended with system temperature:\t{T}')
         del self._nodes[:]
         self._nodes = nodes_best
-        print('Best state selected with:')
-        print('\t Energy: {:.6f}'.format(E_best))
-        print('\t\t> dispersal: {:.6f}'.format(dis_best))
-        print('\t\t> impurity: {:.6f}'.format(imp_best))
-        print('\t\t> sparsity: {:.6f}'.format(spa_best))
+        print('Select best state with:')
+        print('\t #Nodes:\t{}'.format(len(self._nodes)))
+        print('\t Energy:\t{:.6f}'.format(E_best))
+        print('\t\t> dispersal:\t{:.6f}'.format(dis_best))
+        print('\t\t> impurity:\t{:.6f}'.format(imp_best))
+        print('\t\t> sparsity:\t{:.6f}'.format(spa_best))
