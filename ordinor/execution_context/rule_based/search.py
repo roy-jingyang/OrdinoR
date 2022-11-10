@@ -20,6 +20,7 @@ from .Rule import Rule
 class SearchMiner(BaseMiner):
     def __init__(self, 
         el, attr_spec, 
+        use_sparsity=False,
         init_method='random',
         temp_init=1000,
         temp_min=1,
@@ -177,6 +178,7 @@ class SearchMiner(BaseMiner):
             self.alpha = alpha
 
             # Set flags
+            self.use_sparsity = use_sparsity
             self.print_steps = print_steps
             self.trace_history = trace_history
 
@@ -543,6 +545,8 @@ class SearchMiner(BaseMiner):
         dis = self._calculate_dispersal(nodes)
         imp = self._calculate_impurity(nodes)
         spa = self._calculate_sparsity(nodes, pars)
+
+        # TODO: set use sparsity
 
         # arithmetic mean
         e = (dis + imp) / 2
