@@ -361,7 +361,7 @@ class SearchMiner(BaseMiner):
         
         if total_comb_size > self._n_E or init_method == 'full_split':
             # TODO: need to start from existing combinations instead of enumeration
-            raise NotImplementedError('TBD: develop a mechanism to include only observed combinations')
+            raise NotImplementedError('Potential oversized problem: to develop a mechanism to include only observed combinations')
         else:
             '''
             # Solution 1.1 (fallback): enumerate and test all combinations
@@ -599,7 +599,7 @@ class SearchMiner(BaseMiner):
         return (1.0 - len(nodes) / n_pars_comb)
 
     def _init_system(self):
-        self.T0 = 3000 if self.T0 is None else self.T0
+        self.T0 = 5000 if self.T0 is None else self.T0
         self.Tmin = 1 if self.Tmin is None else self.Tmin
     
     def _prob_acceptance(self, E, E_next, T, **kwarg):
@@ -703,7 +703,6 @@ class SearchMiner(BaseMiner):
                             # i.e., node.arr excluding the slice being tested
                             patt = np.hstack(np.split(node.arr, attr_abs_index)[::2]).tobytes()
                             if patt in arr_visited:
-                                n_paired_nodes += 1
                                 # create a new node combining data from:
                                 #   self._nodes[arr_visited[pattern]] and
                                 #   node (the current one)
@@ -724,7 +723,6 @@ class SearchMiner(BaseMiner):
                                 # save node index for pairing
                                 arr_visited[patt] = i
                         else:
-                            n_other_nodes +=1
                             nodes_next.append(
                                 Node2(node.arr, node.events, node.resource_counts.copy())
                             )
@@ -795,7 +793,7 @@ class SearchMiner(BaseMiner):
                 #self._verify_state(nodes_next)
                 E_next, dis_next, imp_next, spa_next = ret_next[0], ret_next[1], ret_next[2], ret_next[3]
 
-                print(f'Step [{k}]\t{action} on {move[0]}')
+                print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
                 print('\tCurrent temperature:\t{:.3f}'.format(T))
                 print('\tCurrent #nodes: {}'.format(len(self._nodes)))
 
@@ -803,6 +801,8 @@ class SearchMiner(BaseMiner):
                 print('\t\t> Current dispersal: {:.6f}'.format(dis))
                 print('\t\t> Current impurity: {:.6f}'.format(imp))
                 print('\t\t> Current sparsity: {:.6f}'.format(spa))
+
+                print('\t' + '-' * 40)
 
                 print('\tNeighbor energy: {:.6f}'.format(E_next))
                 print('\tNeighbor #nodes: {}'.format(len(nodes_next)))
@@ -812,7 +812,7 @@ class SearchMiner(BaseMiner):
                 print('\tProbability of moving: {}'.format(prob_acceptance))
                 if self._rng.random() < prob_acceptance:
                     # move to neighbor state; update
-                    print('\t\t\t>>> Move to neighbor')
+                    print('\t\t\t>>> MOVE TO NEIGHBOR')
                     self._pars[move[0]] = new_par
                     del self._nodes[:]
                     self._nodes = nodes_next
