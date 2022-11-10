@@ -20,16 +20,20 @@ from .Rule import Rule
 class SearchMiner(BaseMiner):
     def __init__(self, 
         el, attr_spec, 
-        temp_init=None,
-        temp_min=None,
-        random_number_generator=None
+        init_method='random',
+        temp_init=1000,
+        temp_min=1,
+        alpha=1,
+        random_number_generator=None,
+        print_steps=True,
+        trace_history=False,
     ):
         # Parse log
         if el is not None:
             self._log = check_convert_input_log(el).copy()
             # only use events with resource information
             self._log = self._log[self._log[const.RESOURCE].notna()]
-            print(f'Use only {len(self._log)} events with resource information recorded.')
+            print('Use only {} events with resource information recorded.'.format(len(self._log)))
         else:
             raise ValueError('invalid log')
 
@@ -162,11 +166,20 @@ class SearchMiner(BaseMiner):
             # Record final results
             self.type_dict = dict()
 
-            # Initialize temperature for searching
+            # Initialize system parameters
+            # initialization method
+            self.init_method = init_method
+            # system initial temperature
             self.T0 = temp_init
+            # minimum temperature allowed
             self.Tmin = temp_min
+            # learning rate
+            self.alpha = alpha
 
-            # TODO: Trigger search
+            # Set flags
+            self.print_steps = print_steps
+            self.trace_history = trace_history
+
             # TODO: model user-supplied categorization rules
             self._search()
 
@@ -598,23 +611,18 @@ class SearchMiner(BaseMiner):
             n_pars_comb *= len(np.unique(np.nonzero(pars[attr])[1]))
         return (1.0 - len(nodes) / n_pars_comb)
 
-    def _init_system(self):
-        self.T0 = 5000 if self.T0 is None else self.T0
-        self.Tmin = 1 if self.Tmin is None else self.Tmin
-    
     def _prob_acceptance(self, E, E_next, T, **kwarg):
         pr = np.exp(-1 * 1e4 * (E_next - E) / T)
         #pr = 1 if E_next < E else 0
         return pr
     
     def _cooling(self, T, k):
-        alpha = 1
-        return self.T0 - alpha * k
+        return self.T0 - self.alpha * k
 
     def _search(self):
-        self._init_state(init_method='random')
-        self._init_system()
-        print('Init finished')
+        self._init_state(init_method=self.init_method)
+        print('Initialization completed with method "{}".'.format(self.init_method))
+        print('Start searching with T0={}, Tmin={}, alpha={}:'.format(self.T0, self.Tmin, self.alpha))
 
         #self._verify_state(self._nodes)
 
@@ -626,6 +634,8 @@ class SearchMiner(BaseMiner):
         E_best, dis_best, imp_best, spa_best = E, dis, imp, spa
         nodes_best = self._nodes.copy()
 
+        # TODO: add history tracing
+
         k = 0
         while T > self.Tmin:
             k += 1
@@ -635,7 +645,6 @@ class SearchMiner(BaseMiner):
             else:
                 nodes_next = []
                 # Solution 2: selectively update current node list via copying
-                # TODO: change to the new way of peeking
                 attr, new_par, original_cols, new_cols = move
                 attr_dim = self._tda_dim[attr]
                 if attr_dim == 'CT':
@@ -698,7 +707,6 @@ class SearchMiner(BaseMiner):
                     n_other_nodes = 0
                     for i, node in enumerate(self._nodes):
                         if is_node_to_merge[i]:
-                            # TODO
                             # extract the pattern (in bytes, so hashable)
                             # i.e., node.arr excluding the slice being tested
                             patt = np.hstack(np.split(node.arr, attr_abs_index)[::2]).tobytes()
@@ -785,7 +793,6 @@ class SearchMiner(BaseMiner):
                     node = Node2(arr_joined, events, resource_counts)
                     nodes_next.append(node)
                 '''
-                # TODO end
 
                 new_pars = self._pars.copy()
                 new_pars[attr] = new_par
@@ -793,26 +800,29 @@ class SearchMiner(BaseMiner):
                 #self._verify_state(nodes_next)
                 E_next, dis_next, imp_next, spa_next = ret_next[0], ret_next[1], ret_next[2], ret_next[3]
 
-                print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
-                print('\tCurrent temperature:\t{:.3f}'.format(T))
-                print('\tCurrent #nodes: {}'.format(len(self._nodes)))
+                if self.print_steps:
+                    print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
+                    print('\tCurrent temperature:\t{:.3f}'.format(T))
+                    print('\tCurrent #nodes: {}'.format(len(self._nodes)))
 
-                print('\tCurrent energy: {:.6f}'.format(E))
-                print('\t\t> Current dispersal: {:.6f}'.format(dis))
-                print('\t\t> Current impurity: {:.6f}'.format(imp))
-                print('\t\t> Current sparsity: {:.6f}'.format(spa))
+                    print('\tCurrent energy: {:.6f}'.format(E))
+                    print('\t\t> Current dispersal: {:.6f}'.format(dis))
+                    print('\t\t> Current impurity: {:.6f}'.format(imp))
+                    print('\t\t> Current sparsity: {:.6f}'.format(spa))
 
-                print('\t' + '-' * 40)
+                    print('\t' + '-' * 40)
 
-                print('\tNeighbor energy: {:.6f}'.format(E_next))
-                print('\tNeighbor #nodes: {}'.format(len(nodes_next)))
+                    print('\tNeighbor energy: {:.6f}'.format(E_next))
+                    print('\tNeighbor #nodes: {}'.format(len(nodes_next)))
 
                 # decide whether to move to neighbor
                 prob_acceptance = self._prob_acceptance(E, E_next, T)
-                print('\tProbability of moving: {}'.format(prob_acceptance))
+                if self.print_steps:
+                    print('\tProbability of moving: {}'.format(prob_acceptance))
                 if self._rng.random() < prob_acceptance:
                     # move to neighbor state; update
-                    print('\t\t\t>>> MOVE TO NEIGHBOR')
+                    if self.print_steps:
+                        print('\t\t\t>>> MOVE TO NEIGHBOR')
                     self._pars[move[0]] = new_par
                     del self._nodes[:]
                     self._nodes = nodes_next
@@ -829,7 +839,7 @@ class SearchMiner(BaseMiner):
             # cool down system temperature
             T = self._cooling(T, k)
         
-        print(f'\nSearch ended with system temperature:\t{T}')
+        print(f'\nSearch ended with final system temperature:\t{T}')
         del self._nodes[:]
         self._nodes = nodes_best
         print('Select best state with:')
