@@ -1,5 +1,5 @@
 from collections import defaultdict
-from itertools import product, combinations
+from itertools import product, combinations, islice
 from math import comb as num_combinations
 
 import numpy as np
@@ -22,8 +22,10 @@ class SearchMiner(BaseMiner):
         el, attr_spec, 
         use_sparsity=False,
         init_method='random',
-        temp_init=1000,
-        temp_min=1,
+        init_batch=100,
+        T0=1000,
+        Tmin=1,
+        cooling='linear',
         alpha=1,
         random_number_generator=None,
         print_steps=True,
@@ -170,11 +172,15 @@ class SearchMiner(BaseMiner):
             # Initialize system parameters
             # initialization method
             self.init_method = init_method
+            # batch size to test at initialization, subject to mem size
+            self.init_batch = init_batch
             # system initial temperature
-            self.T0 = temp_init
+            self.T0 = T0
             # minimum temperature allowed
-            self.Tmin = temp_min
-            # learning rate
+            self.Tmin = Tmin
+            # cooling schedule method
+            self.cooling = cooling
+            # set rate for reducing system temperature
             self.alpha = alpha
 
             # Set flags
@@ -390,28 +396,37 @@ class SearchMiner(BaseMiner):
             '''
             # Solution 1.2: use matrix multiplication to enumerate combinations
             # TODO: optimize the creation of nodes
-            #print('start to construct list of arrays')
-            all_arr_joined = [np.concatenate(prod) for prod in product(*comb)]
-            #print(len(all_arr_joined))
-            #print('start to stack arrays')
-            all_arr_joined = np.stack(all_arr_joined)
-            #print(all_arr_joined)
-            #print('nodes matrix shape: {}'.format(all_arr_joined.shape))
-            #print('start to locate events')
-            #print(self._log)
-            #print('log matrix shape: {}'.format(self._log.shape))
-            #print('start to do dot product')
-            mask = np.matmul(self._log, all_arr_joined.T, dtype=int) >= self._n_tda
-            #print(mask)
-            #print('result matrix shape: {}'.format(mask.shape))
-            #print(np.unique(np.nonzero(mask)[0]))
-            #print(np.unique(np.nonzero(mask)[1]))
-            for j in np.unique(np.nonzero(mask)[1]):
-                arr_joined = all_arr_joined[j,:]
-                events = np.nonzero(mask[:,j])[0]
-                resource_counts = self._apply_get_resource_counts(events)
-                node = Node2(arr_joined, events, resource_counts)
-                self._nodes.append(node)
+            # use batch processing to avoid memory overuse
+            product_combs = product(*comb)
+            while True:
+                #print('start to construct list of arrays')
+                #all_arr_joined = [np.concatenate(prod) for prod in product(*comb)]
+                batch_product_combs = list(islice(product_combs, self.init_batch))
+                # TODO
+                if len(batch_product_combs) == 0:
+                    return
+
+                all_arr_joined = [np.concatenate(prod) for prod in batch_product_combs]
+                #print(len(all_arr_joined))
+                #print('start to stack arrays')
+                all_arr_joined = np.stack(all_arr_joined)
+                #print(all_arr_joined)
+                #print('nodes matrix shape: {}'.format(all_arr_joined.shape))
+                #print('start to locate events')
+                #print(self._log)
+                #print('log matrix shape: {}'.format(self._log.shape))
+                #print('start to do dot product')
+                mask = np.matmul(self._log, all_arr_joined.T, dtype=int) >= self._n_tda
+                #print(mask)
+                #print('result matrix shape: {}'.format(mask.shape))
+                #print(np.unique(np.nonzero(mask)[0]))
+                #print(np.unique(np.nonzero(mask)[1]))
+                for j in np.unique(np.nonzero(mask)[1]):
+                    arr_joined = all_arr_joined[j,:]
+                    events = np.nonzero(mask[:,j])[0]
+                    resource_counts = self._apply_get_resource_counts(events)
+                    node = Node2(arr_joined, events, resource_counts)
+                    self._nodes.append(node)
         
     def _verify_state(self, nodes):
         n_events = 0
@@ -622,12 +637,22 @@ class SearchMiner(BaseMiner):
         return (1.0 - len(nodes) / n_pars_comb)
 
     def _prob_acceptance(self, E, E_next, T, **kwarg):
-        pr = np.exp(-1 * 1e4 * (E_next - E) / T)
+        # NOTE: allow pr > 1 if E_next < E, to avoid if clause for capping
+        pr = np.exp(-1 * self.T0 * (E_next - E) / T)
         #pr = 1 if E_next < E else 0
         return pr
     
-    def _cooling(self, T, k):
-        return self.T0 - self.alpha * k
+    def _cooling(self, k):
+        if self.cooling == 'linear':
+            return self.T0 - self.alpha * k
+        elif self.cooling == 'exp':
+            return self.T0 * (self.alpha ** k)
+        elif self.cooling == 'log':
+            return self.T0 / (1 + self.alpha * np.log(k + 1))
+        elif self.cooling == 'quad':
+            return self.T0 / (1 + self.alpha * k * k)
+        else:
+            raise ValueError
 
     def _search(self):
         self._init_state(init_method=self.init_method)
@@ -648,8 +673,10 @@ class SearchMiner(BaseMiner):
         k = 0
         # keep track of history, if required
         if self.trace_history:
-            # Step, Action, Attribute, Probability, Dispersal, Impurity, Sparsity, Energy
-            history = [(0, self.init_method, None, None, dis, imp, spa, E)]
+            # Step, Action, Attribute, 
+            # Probability of acceptance, System temperature, 
+            # Dispersal, Impurity, Sparsity, Energy
+            history = [(0, self.init_method, None, None, T, dis, imp, spa, E)]
         while T > self.Tmin:
             k += 1
             move, action = self._neighbor()
@@ -716,8 +743,6 @@ class SearchMiner(BaseMiner):
                         np.array(original_cols).T
                     ), axis=1)
                     arr_visited = dict()
-                    n_paired_nodes = 0
-                    n_other_nodes = 0
                     for i, node in enumerate(self._nodes):
                         if is_node_to_merge[i]:
                             # extract the pattern (in bytes, so hashable)
@@ -749,7 +774,6 @@ class SearchMiner(BaseMiner):
                             )
 
                     # include solo nodes, i.e., nodes unpaired
-                    n_solo_nodes = 0
                     for i in arr_visited.values():
                         new_arr = self._nodes[i].arr.copy()
                         new_arr[slice(*attr_abs_index)] = new_cols[0]
@@ -851,15 +875,16 @@ class SearchMiner(BaseMiner):
                     pass
 
             if self.trace_history:
+                # Step, Action, Attribute, 
+                # Probability of acceptance, System temperature, 
+                # Dispersal, Impurity, Sparsity, Energy
                 history.append((
-                    k, 
-                    None if move is None else action, 
-                    None if move is None else move[0],
-                    0.0 if move is None else prob_acceptance,
+                    k, None if move is None else action, None if move is None else move[0],
+                    0.0 if move is None else prob_acceptance, T,
                     dis, imp, spa, E
                 ))
             # cool down system temperature
-            T = self._cooling(T, k)
+            T = self._cooling(k)
         
         print(f'\nSearch ended with final system temperature:\t{T}')
         del self._nodes[:]
@@ -875,8 +900,14 @@ class SearchMiner(BaseMiner):
         if self.trace_history:
             df_history = pd.DataFrame(
                 data=history, 
-                # Step, Action, Attribute, Probability, Dispersal, Impurity, Sparsity, Energy
-                columns=['step', 'action', 'attribute', 'move_probability', 'dispersal', 'impurity', 'sparsity', 'energy']
+                # Step, Action, Attribute, 
+                # Probability of acceptance, System temperature, 
+                # Dispersal, Impurity, Sparsity, Energy
+                columns=[
+                    'step', 'action', 'attribute', 
+                    'prob_acceptance', 'temp',
+                    'dispersal', 'impurity', 'sparsity', 'energy'
+                ]
             )
             df_history.to_csv(
                 'SearchMiner_{}_stats.out'.format(pd.Timestamp.now().strftime('%Y%m%d-%H%M%S')),
