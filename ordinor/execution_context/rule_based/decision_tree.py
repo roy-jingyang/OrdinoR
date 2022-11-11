@@ -618,7 +618,7 @@ class ODTMiner(BaseMiner):
                         fout_so.write('\n')
                         fout_so.write(str(node))
                     fout_so.write('\n')
-            print('Procedure history is written to files.')
+            print('Procedure history has been written to files.')
         
     def _func_target(self, delta_dis, old_dis, delta_imp, old_imp):
         dis = delta_dis + old_dis

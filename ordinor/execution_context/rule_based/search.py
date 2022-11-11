@@ -3,7 +3,7 @@ from itertools import product, combinations
 from math import comb as num_combinations
 
 import numpy as np
-from pandas import get_dummies as apply_ohe
+import pandas as pd
 from scipy.stats import entropy as scipy_entropy
 from scipy.spatial.distance import pdist, squareform
 
@@ -135,7 +135,7 @@ class SearchMiner(BaseMiner):
             # apply One-Hot-Encoding to the log (pandas.get_dummies)
             # NOTE: use consistent prefix separator
             self._ohe_prefix_sep = '^^@^^'
-            self._log = apply_ohe(
+            self._log = pd.get_dummies(
                 self._log, columns=self._log.columns, 
                 prefix_sep=self._ohe_prefix_sep,
                 sparse=True
@@ -546,13 +546,19 @@ class SearchMiner(BaseMiner):
         imp = self._calculate_impurity(nodes)
         spa = self._calculate_sparsity(nodes, pars)
 
-        # TODO: set use sparsity
-
         # arithmetic mean
-        e = (dis + imp) / 2
-        #e = (dis + imp + spa) / 3
+        if self.use_sparsity:
+            e = (dis + imp + spa) / 3 
+        else:
+            e = (dis + imp) / 2
+
+        '''
         # harmonic mean
-        #e = 2 * dis * imp / (dis + imp)
+        if self.use_sparsity:
+            e = 3 * dis * imp * spa / (dis * imp + dis * spa + imp * spa)
+        else:
+            e = 2 * dis * imp / (dis + imp)
+        '''
 
         return e, dis, imp, spa
 
@@ -635,12 +641,15 @@ class SearchMiner(BaseMiner):
         E, dis, imp, spa = ret[0], ret[1], ret[2], ret[3]
 
         # keep track of the best state
+        step_best = 0
         E_best, dis_best, imp_best, spa_best = E, dis, imp, spa
         nodes_best = self._nodes.copy()
 
-        # TODO: add history tracing
-
         k = 0
+        # keep track of history, if required
+        if self.trace_history:
+            # Step, Action, Attribute, Probability, Dispersal, Impurity, Sparsity, Energy
+            history = [(0, self.init_method, None, None, dis, imp, spa, E)]
         while T > self.Tmin:
             k += 1
             move, action = self._neighbor()
@@ -834,21 +843,46 @@ class SearchMiner(BaseMiner):
 
                     # check if better than best state
                     if E < E_best:
+                        step_best = k
                         E_best, dis_best, imp_best, spa_best = E, dis, imp, spa
                         del nodes_best[:]
                         nodes_best = self._nodes.copy()
                 else:
                     pass
-                    
+
+            if self.trace_history:
+                history.append((
+                    k, 
+                    None if move is None else action, 
+                    None if move is None else move[0],
+                    0.0 if move is None else prob_acceptance,
+                    dis, imp, spa, E
+                ))
             # cool down system temperature
             T = self._cooling(T, k)
         
         print(f'\nSearch ended with final system temperature:\t{T}')
         del self._nodes[:]
         self._nodes = nodes_best
-        print('Select best state with:')
+        print('Select best state at step [{}] with:'.format(step_best))
         print('\t #Nodes:\t{}'.format(len(self._nodes)))
         print('\t Energy:\t{:.6f}'.format(E_best))
         print('\t\t> dispersal:\t{:.6f}'.format(dis_best))
         print('\t\t> impurity:\t{:.6f}'.format(imp_best))
         print('\t\t> sparsity:\t{:.6f}'.format(spa_best))
+
+        # output history
+        if self.trace_history:
+            df_history = pd.DataFrame(
+                data=history, 
+                # Step, Action, Attribute, Probability, Dispersal, Impurity, Sparsity, Energy
+                columns=['step', 'action', 'attribute', 'move_probability', 'dispersal', 'impurity', 'sparsity', 'energy']
+            )
+            df_history.to_csv(
+                'SearchMiner_{}_stats.out'.format(pd.Timestamp.now().strftime('%Y%m%d-%H%M%S')),
+                sep=',',
+                na_rep='None',
+                float_format='%.6f',
+                index=False
+            )
+            print('Procedure history has been written to file.')
