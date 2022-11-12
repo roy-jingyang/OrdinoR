@@ -418,7 +418,7 @@ class SearchMiner(BaseMiner):
                 #print(self._log)
                 #print('log matrix shape: {}'.format(self._log.shape))
                 #print('start to do dot product')
-                mask = np.matmul(self._log, all_arr_joined.T, dtype=int) >= self._n_tda
+                mask = np.matmul(self._log, all_arr_joined.T, dtype=int) == self._n_tda
                 #print(mask)
                 #print('result matrix shape: {}'.format(mask.shape))
                 #print(np.unique(np.nonzero(mask)[0]))
