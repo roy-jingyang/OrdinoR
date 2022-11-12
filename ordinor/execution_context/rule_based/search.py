@@ -22,10 +22,9 @@ class SearchMiner(BaseMiner):
         el, attr_spec, 
         use_sparsity=False,
         init_method='random',
-        init_batch=100,
+        init_batch=1000,
         T0=1000,
         Tmin=1,
-        cooling='linear',
         alpha=1,
         random_number_generator=None,
         print_steps=True,
@@ -178,8 +177,6 @@ class SearchMiner(BaseMiner):
             self.T0 = T0
             # minimum temperature allowed
             self.Tmin = Tmin
-            # cooling schedule method
-            self.cooling = cooling
             # set rate for reducing system temperature
             self.alpha = alpha
 
@@ -380,7 +377,7 @@ class SearchMiner(BaseMiner):
             comb.append(comb_i)
             total_comb_size *= len(comb_i)
         
-        if total_comb_size > self._n_E or init_method == 'full_split':
+        if init_method == 'full_split':
             # TODO: need to start from existing combinations instead of enumeration
             raise NotImplementedError('Potential oversized problem: to develop a mechanism to include only observed combinations')
         else:
@@ -398,13 +395,19 @@ class SearchMiner(BaseMiner):
             # TODO: optimize the creation of nodes
             # use batch processing to avoid memory overuse
             product_combs = product(*comb)
+            print('Initialize using method `{}`... '.format(init_method), end='')
+            print('Testing {:,} combinations'.format(total_comb_size))
+            tested_comb_size = 0
             while True:
                 #print('start to construct list of arrays')
                 #all_arr_joined = [np.concatenate(prod) for prod in product(*comb)]
                 batch_product_combs = list(islice(product_combs, self.init_batch))
-                # TODO
                 if len(batch_product_combs) == 0:
                     return
+                else:
+                    tested_comb_size += len(batch_product_combs)
+                
+                print('\t{:.0%} tested.'.format(tested_comb_size / total_comb_size))
 
                 all_arr_joined = [np.concatenate(prod) for prod in batch_product_combs]
                 #print(len(all_arr_joined))
@@ -643,16 +646,7 @@ class SearchMiner(BaseMiner):
         return pr
     
     def _cooling(self, k):
-        if self.cooling == 'linear':
-            return self.T0 - self.alpha * k
-        elif self.cooling == 'exp':
-            return self.T0 * (self.alpha ** k)
-        elif self.cooling == 'log':
-            return self.T0 / (1 + self.alpha * np.log(k + 1))
-        elif self.cooling == 'quad':
-            return self.T0 / (1 + self.alpha * k * k)
-        else:
-            raise ValueError
+        return self.T0 - self.alpha * k
 
     def _search(self):
         self._init_state(init_method=self.init_method)
@@ -898,6 +892,7 @@ class SearchMiner(BaseMiner):
 
         # output history
         if self.trace_history:
+            fnout = 'SearchMiner_{}_stats.out'.format(pd.Timestamp.now().strftime('%Y%m%d-%H%M%S'))
             df_history = pd.DataFrame(
                 data=history, 
                 # Step, Action, Attribute, 
@@ -910,10 +905,10 @@ class SearchMiner(BaseMiner):
                 ]
             )
             df_history.to_csv(
-                'SearchMiner_{}_stats.out'.format(pd.Timestamp.now().strftime('%Y%m%d-%H%M%S')),
+                fnout,
                 sep=',',
                 na_rep='None',
                 float_format='%.6f',
                 index=False
             )
-            print('Procedure history has been written to file.')
+            print('Procedure history has been written to file "{}".'.format(fnout))
