@@ -398,6 +398,7 @@ class SearchMiner(BaseMiner):
             print('Initialize using method `{}`... '.format(init_method), end='')
             print('Testing {:,} combinations'.format(total_comb_size))
             tested_comb_size = 0
+            n_events_covered = 0
             while True:
                 #print('start to construct list of arrays')
                 #all_arr_joined = [np.concatenate(prod) for prod in product(*comb)]
@@ -406,8 +407,6 @@ class SearchMiner(BaseMiner):
                     return
                 else:
                     tested_comb_size += len(batch_product_combs)
-                
-                print('\t{:.0%} tested.'.format(tested_comb_size / total_comb_size))
 
                 all_arr_joined = [np.concatenate(prod) for prod in batch_product_combs]
                 #print(len(all_arr_joined))
@@ -430,6 +429,14 @@ class SearchMiner(BaseMiner):
                     resource_counts = self._apply_get_resource_counts(events)
                     node = Node2(arr_joined, events, resource_counts)
                     self._nodes.append(node)
+                    n_events_covered += len(events)
+                print('\t{:.0%} tested, covering {:.0%} events.'.format(
+                    tested_comb_size / total_comb_size,
+                    n_events_covered / self._n_E
+                ))
+                if n_events_covered >= self._n_E:
+                    # stop early if all events have been covered
+                    return
         
     def _verify_state(self, nodes):
         n_events = 0
