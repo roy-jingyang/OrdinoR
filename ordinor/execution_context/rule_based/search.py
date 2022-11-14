@@ -1,4 +1,10 @@
-from collections import defaultdict
+'''
+Hybridized search
+    - Simulated annealing
+    - Tabu list
+'''
+
+from collections import defaultdict, deque
 from itertools import product, combinations, islice
 from math import comb as num_combinations
 
@@ -20,7 +26,8 @@ from .Rule import Rule
 class SearchMiner(BaseMiner):
     def __init__(self, 
         el, attr_spec, 
-        use_sparsity=False,
+        greedy=False,
+        tabu_size=0,
         init_method='random',
         init_batch=1000,
         T0=1000,
@@ -181,8 +188,26 @@ class SearchMiner(BaseMiner):
             self.alpha = alpha
 
             # Set flags
-            self.use_sparsity = use_sparsity
+            # whether to apply the greedy variant (baseline)
+            # NOTE: the greedy variant always starts from the zero initialization
+            self.greedy = greedy
+            if self.greedy:
+                self.init_method = 'zero'
+            # the size of the tabu list 
+            # NOTE: Default to 0, i.e., not using tabu list. 
+            self.tabu_size = tabu_size
+            if self.tabu_size > 0:
+                self.use_tabu = True
+                self._tabu_list = deque(maxlen=self.tabu_size)
+            else:
+                self.use_tabu = False
+                self._tabu_list = None
+
+            # whether to include sparsity in search
+            #self.use_sparsity = use_sparsity
+            # whether to print the search procedure
             self.print_steps = print_steps
+            # whether to record the history of intermediate stats
             self.trace_history = trace_history
 
             # TODO: model user-supplied categorization rules
@@ -244,9 +269,11 @@ class SearchMiner(BaseMiner):
             for attr in self._tda_case:
                 arr_case_attr = arr_case[slice(*self._index_tda_case[attr])]
                 sel_attr_values = frozenset(self._tdav[attr][i] for i in np.nonzero(arr_case_attr)[0])
-                ct_rules.append(
-                    AtomicRule(attr=attr, attr_type='categorical', attr_vals=sel_attr_values, attr_dim='CT')
-                )
+                if len(sel_attr_values) < len(self._tdav[attr]):
+                    # only save rules if they evaluate to partitions
+                    ct_rules.append(
+                        AtomicRule(attr=attr, attr_type='categorical', attr_vals=sel_attr_values, attr_dim='CT')
+                    )
             ct_rules = Rule(ars=ct_rules)
 
             sel_events = self._apply_to_part(
@@ -282,9 +309,11 @@ class SearchMiner(BaseMiner):
             for attr in self._tda_act:
                 arr_act_attr = arr_act[slice(*self._index_tda_act[attr])]
                 sel_attr_values = frozenset(self._tdav[attr][i] for i in np.nonzero(arr_act_attr)[0])
-                at_rules.append(
-                    AtomicRule(attr=attr, attr_type='categorical', attr_vals=sel_attr_values, attr_dim='AT')
-                )
+                if len(sel_attr_values) < len(self._tdav[attr]):
+                    # only save rules if they evaluate to partitions
+                    at_rules.append(
+                        AtomicRule(attr=attr, attr_type='categorical', attr_vals=sel_attr_values, attr_dim='AT')
+                    )
             at_rules = Rule(ars=at_rules)
 
             sel_events = self._apply_to_part(
@@ -314,9 +343,11 @@ class SearchMiner(BaseMiner):
             for attr in self._tda_time:
                 arr_time_attr = arr_time[slice(*self._index_tda_time[attr])]
                 sel_attr_values = frozenset(self._tdav[attr][i] for i in np.nonzero(arr_time_attr)[0])
-                tt_rules.append(
-                    AtomicRule(attr=attr, attr_type='categorical', attr_vals=sel_attr_values, attr_dim='TT')
-                )
+                if len(sel_attr_values) < len(self._tdav[attr]):
+                    # only save rules if they evaluate to partitions
+                    tt_rules.append(
+                        AtomicRule(attr=attr, attr_type='categorical', attr_vals=sel_attr_values, attr_dim='TT')
+                    )
             tt_rules = Rule(ars=tt_rules)
 
             sel_events = self._apply_to_part(
@@ -437,7 +468,12 @@ class SearchMiner(BaseMiner):
                 if n_events_covered >= self._n_E:
                     # stop early if all events have been covered
                     return
-        
+    
+    def _hash_state(self, pars):
+        # TODO: eliminate ordering of columns in the partitions
+        id_state = [pars[tda].tobytes() for tda in self._tda_case + self._tda_act + self._tda_time]
+        return b''.join(id_state)
+
     def _verify_state(self, nodes):
         n_events = 0
         for i in range(len(nodes)):
@@ -569,23 +605,13 @@ class SearchMiner(BaseMiner):
         '''
         dis = self._calculate_dispersal(nodes)
         imp = self._calculate_impurity(nodes)
-        spa = self._calculate_sparsity(nodes, pars)
 
         # arithmetic mean
-        if self.use_sparsity:
-            e = (dis + imp + spa) / 3 
-        else:
-            e = (dis + imp) / 2
-
-        '''
+        #e = (dis + imp) / 2
         # harmonic mean
-        if self.use_sparsity:
-            e = 3 * dis * imp * spa / (dis * imp + dis * spa + imp * spa)
-        else:
-            e = 2 * dis * imp / (dis + imp)
-        '''
+        e = np.inf if dis == 0 or imp == 0 else 2 * dis * imp / (dis + imp)
 
-        return e, dis, imp, spa
+        return e, dis, imp
 
     def _calculate_dispersal(self, nodes):
 		# calculate the pairwise execution context distance using the "tda_*_par" sequences
@@ -647,9 +673,11 @@ class SearchMiner(BaseMiner):
         return (1.0 - len(nodes) / n_pars_comb)
 
     def _prob_acceptance(self, E, E_next, T, **kwarg):
-        # NOTE: allow pr > 1 if E_next < E, to avoid if clause for capping
-        pr = np.exp(-1 * self.T0 * (E_next - E) / T)
-        #pr = 1 if E_next < E else 0
+        if self.greedy:
+            pr = 1 if E_next < E else 0
+        else:
+            # NOTE: allow pr > 1 if E_next < E, to avoid if clause for capping
+            pr = np.exp(-1 * self.T0 * (E_next - E) / T)
         return pr
     
     def _cooling(self, k):
@@ -662,13 +690,16 @@ class SearchMiner(BaseMiner):
 
         #self._verify_state(self._nodes)
 
+        if self.use_tabu:
+            self._tabu_list.append(self._hash_state(self._pars))
+
         T = self.T0
         ret = self._evaluate(self._nodes, self._pars)
-        E, dis, imp, spa = ret[0], ret[1], ret[2], ret[3]
+        E, dis, imp = ret[0], ret[1], ret[2]
 
         # keep track of the best state
         step_best = 0
-        E_best, dis_best, imp_best, spa_best = E, dis, imp, spa
+        E_best, dis_best, imp_best = E, dis, imp
         nodes_best = self._nodes.copy()
 
         k = 0
@@ -676,8 +707,8 @@ class SearchMiner(BaseMiner):
         if self.trace_history:
             # Step, Action, Attribute, 
             # Probability of acceptance, System temperature, 
-            # Dispersal, Impurity, Sparsity, Energy
-            history = [(0, self.init_method, None, None, T, dis, imp, spa, E)]
+            # Dispersal, Impurity, Energy
+            history = [(0, self.init_method, None, None, T, dis, imp, E)]
         while T > self.Tmin:
             k += 1
             move, action = self._neighbor()
@@ -836,7 +867,7 @@ class SearchMiner(BaseMiner):
                 new_pars[attr] = new_par
                 ret_next = self._evaluate(nodes_next, new_pars)
                 #self._verify_state(nodes_next)
-                E_next, dis_next, imp_next, spa_next = ret_next[0], ret_next[1], ret_next[2], ret_next[3]
+                E_next, dis_next, imp_next = ret_next[0], ret_next[1], ret_next[2]
 
                 if self.print_steps:
                     print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
@@ -846,7 +877,6 @@ class SearchMiner(BaseMiner):
                     print('\tCurrent energy: {:.6f}'.format(E))
                     print('\t\t> Current dispersal: {:.6f}'.format(dis))
                     print('\t\t> Current impurity: {:.6f}'.format(imp))
-                    print('\t\t> Current sparsity: {:.6f}'.format(spa))
 
                     print('\t' + '-' * 40)
 
@@ -858,31 +888,40 @@ class SearchMiner(BaseMiner):
                 if self.print_steps:
                     print('\tProbability of moving: {}'.format(prob_acceptance))
                 if self._rng.random() < prob_acceptance:
-                    # move to neighbor state; update
-                    if self.print_steps:
-                        print('\t\t\t>>> MOVE TO NEIGHBOR')
-                    self._pars[move[0]] = new_par
-                    del self._nodes[:]
-                    self._nodes = nodes_next
-                    E, dis, imp, spa = E_next, dis_next, imp_next, spa_next
+                    move_to_neighbor = True
+                    if self.use_tabu:
+                        next_state_id = self._hash_state(new_pars)
+                        if next_state_id in self._tabu_list:
+                            move_to_neighbor = False
+                        else:
+                            self._tabu_list.append(next_state_id)
+                    
+                    if move_to_neighbor:
+                        # move to neighbor state; update
+                        if self.print_steps:
+                            print('\t\t\t>>> MOVE TO NEIGHBOR')
+                        self._pars[move[0]] = new_par
+                        del self._nodes[:]
+                        self._nodes = nodes_next
+                        E, dis, imp = E_next, dis_next, imp_next 
 
-                    # check if better than best state
-                    if E < E_best:
-                        step_best = k
-                        E_best, dis_best, imp_best, spa_best = E, dis, imp, spa
-                        del nodes_best[:]
-                        nodes_best = self._nodes.copy()
+                        # check if better than best state
+                        if E < E_best:
+                            step_best = k
+                            E_best, dis_best, imp_best = E, dis, imp
+                            del nodes_best[:]
+                            nodes_best = self._nodes.copy()
                 else:
                     pass
 
             if self.trace_history:
                 # Step, Action, Attribute, 
                 # Probability of acceptance, System temperature, 
-                # Dispersal, Impurity, Sparsity, Energy
+                # Dispersal, Impurity, Energy
                 history.append((
                     k, None if move is None else action, None if move is None else move[0],
                     0.0 if move is None else prob_acceptance, T,
-                    dis, imp, spa, E
+                    dis, imp, E
                 ))
             # cool down system temperature
             T = self._cooling(k)
@@ -895,7 +934,6 @@ class SearchMiner(BaseMiner):
         print('\t Energy:\t{:.6f}'.format(E_best))
         print('\t\t> dispersal:\t{:.6f}'.format(dis_best))
         print('\t\t> impurity:\t{:.6f}'.format(imp_best))
-        print('\t\t> sparsity:\t{:.6f}'.format(spa_best))
 
         # output history
         if self.trace_history:
@@ -904,11 +942,11 @@ class SearchMiner(BaseMiner):
                 data=history, 
                 # Step, Action, Attribute, 
                 # Probability of acceptance, System temperature, 
-                # Dispersal, Impurity, Sparsity, Energy
+                # Dispersal, Impurity, Energy
                 columns=[
                     'step', 'action', 'attribute', 
                     'prob_acceptance', 'temp',
-                    'dispersal', 'impurity', 'sparsity', 'energy'
+                    'dispersal', 'impurity', 'energy'
                 ]
             )
             df_history.to_csv(
