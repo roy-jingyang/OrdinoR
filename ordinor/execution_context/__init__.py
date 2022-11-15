@@ -4,7 +4,7 @@ Execution contexts learning and other related utilities
 
 from .direct_attribute import ATonlyMiner, FullMiner
 from .proxy import TraceClusteringFullMiner
-from .rule_based import ODTMiner, SearchMiner
+from .rule_based import ODTMiner, GreedySearchMiner, SASearchMiner
 from .quality import impurity, dispersal
 
 __all__ = [
@@ -12,7 +12,8 @@ __all__ = [
     'FullMiner',
     'TraceClusteringFullMiner',
     'ODTMiner',
-    'SearchMiner',
+    'GreedySearchMiner',
+    'SASearchMiner',
     'impurity',
     'dispersal'
 ]

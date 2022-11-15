@@ -1,7 +1,8 @@
 '''
-Hybridized search
-    - Simulated annealing
-    - Tabu list
+A series of search-based solutions:
+    - greedy descent
+    - tabu search
+    - simulated annealing
 '''
 
 from collections import defaultdict, deque
@@ -23,16 +24,11 @@ from .TreeNode import Node2
 from .AtomicRule import AtomicRule
 from .Rule import Rule
 
-class SearchMiner(BaseMiner):
+class BaseSearchMiner(BaseMiner):
     def __init__(self, 
         el, attr_spec, 
-        greedy=False,
-        tabu_size=0,
         init_method='random',
         init_batch=1000,
-        T0=1000,
-        Tmin=1,
-        alpha=1,
         random_number_generator=None,
         print_steps=True,
         trace_history=False,
@@ -175,34 +171,11 @@ class SearchMiner(BaseMiner):
             # Record final results
             self.type_dict = dict()
 
-            # Initialize system parameters
-            # initialization method
+            # Set init method
             self.init_method = init_method
-            # batch size to test at initialization, subject to mem size
             self.init_batch = init_batch
-            # system initial temperature
-            self.T0 = T0
-            # minimum temperature allowed
-            self.Tmin = Tmin
-            # set rate for reducing system temperature
-            self.alpha = alpha
 
             # Set flags
-            # whether to apply the greedy variant (baseline)
-            # NOTE: the greedy variant always starts from the zero initialization
-            self.greedy = greedy
-            if self.greedy:
-                self.init_method = 'zero'
-            # the size of the tabu list 
-            # NOTE: Default to 0, i.e., not using tabu list. 
-            self.tabu_size = tabu_size
-            if self.tabu_size > 0:
-                self.use_tabu = True
-                self._tabu_list = deque(maxlen=self.tabu_size)
-            else:
-                self.use_tabu = False
-                self._tabu_list = None
-
             # whether to include sparsity in search
             #self.use_sparsity = use_sparsity
             # whether to print the search procedure
@@ -211,11 +184,10 @@ class SearchMiner(BaseMiner):
             self.trace_history = trace_history
 
             # TODO: model user-supplied categorization rules
+            self._init_state(init_method=self.init_method)
             self._search()
 
             super().__init__(el)
-        else:
-            raise ValueError('invalid attribute specification')
 
     def _check_spec(self, spec):
         # check if type-defining attributes are in the spec
@@ -362,7 +334,7 @@ class SearchMiner(BaseMiner):
             set(el[const.TIMESTAMP].unique()), self._ttypes
         )
 
-    def _init_state(self, init_method='zero', **kwargs):
+    def _init_state(self, **kwargs):
         # initialize partitions on all attributes
         # initialize nodes correspondingly
         comb = []
@@ -379,17 +351,17 @@ class SearchMiner(BaseMiner):
                     self._pars[attr] = np.array([[1]], dtype=bool)
                     attr_parts.append(np.array([1], dtype=bool))
                 else:
-                    if init_method == 'zero':
+                    if self.init_method == 'zero':
                         self._pars[attr] = np.zeros((n, n), dtype=bool)
                         # apply no partition to all attributes (one-holds-all)
                         self._pars[attr][:,0] = 1
                         attr_parts.append(self._pars[attr][:,0])
-                    elif init_method == 'full_split':
+                    elif self.init_method == 'full_split':
                         # create a singleton for each value
                         self._pars[attr] = np.eye(n, dtype=bool)
                         for j in range(n):
                             attr_parts.append(self._pars[attr][:,j])
-                    elif init_method == 'random':
+                    elif self.init_method == 'random':
                         self._pars[attr] = np.zeros((n, n), dtype=bool)
                         # select a part for each attribute value randomly
                         for i in range(n):
@@ -408,7 +380,7 @@ class SearchMiner(BaseMiner):
             comb.append(comb_i)
             total_comb_size *= len(comb_i)
         
-        if init_method == 'full_split':
+        if self.init_method == 'full_split':
             # TODO: need to start from existing combinations instead of enumeration
             raise NotImplementedError('Potential oversized problem: to develop a mechanism to include only observed combinations')
         else:
@@ -426,7 +398,7 @@ class SearchMiner(BaseMiner):
             # TODO: optimize the creation of nodes
             # use batch processing to avoid memory overuse
             product_combs = product(*comb)
-            print('Initialize using method `{}`... '.format(init_method), end='')
+            print('Initialize using method `{}`... '.format(self.init_method), end='')
             print('Testing {:,} combinations'.format(total_comb_size))
             tested_comb_size = 0
             n_events_covered = 0
@@ -467,11 +439,18 @@ class SearchMiner(BaseMiner):
                 ))
                 if n_events_covered >= self._n_E:
                     # stop early if all events have been covered
-                    return
+                    break
+        print('Initialization completed with method "{}".'.format(self.init_method))
     
     def _hash_state(self, pars):
-        # TODO: eliminate ordering of columns in the partitions
-        id_state = [pars[tda].tobytes() for tda in self._tda_case + self._tda_act + self._tda_time]
+        id_state = []
+        for tda in (self._tda_case + self._tda_act + self._tda_time):
+            arr_int_from_bin = np.dot(
+                np.array([2 ** x for x in range(len(pars[tda]))]),
+                pars[tda]
+            )
+            # NOTE: numpy.unique() returns unique elements in sorted order
+            id_state.append(np.unique(arr_int_from_bin).tobytes()) 
         return b''.join(id_state)
 
     def _verify_state(self, nodes):
@@ -488,7 +467,6 @@ class SearchMiner(BaseMiner):
         if n_events != self._n_E:
             raise ValueError('Stored events do not add up to all events!')
 
-    
     def _apply_to_part(self, arr, n_attrs, rows=None, cols=None):
         # result: |E[rows,cols]| x 1
         # NOTE: the result mask is local to the given rows and columns
@@ -516,25 +494,19 @@ class SearchMiner(BaseMiner):
         uniq_res, counts = np.unique(self._arr_event_r[events], return_counts=True)
         resource_counts = dict(zip(uniq_res, counts))
         return resource_counts
-
-    def _neighbor(self):
+    
+    def _neighbors(self):
         '''
-            Must return a 4-tuple, or None:
-                (attr_name, par, [input part arr], [output part arr]) 
+        Must return a list of 4-tuples:
+            [(attr_name, par, [input part arr], [output part arr])]
         '''
-        i = self._rng.choice(2)
-        if i == 0:
-            return self._neighbor_split(), 'split'
-        elif i == 1:
-            return self._neighbor_merge(), 'merge'
-        else:
-            raise ValueError('undefined move to neighboring states')
-
+        raise NotImplementedError('Abstract class. Use a child class implementing this method.')
+    
     def _neighbor_split(self):
         '''
-            Must return a 4-tuple, or None:
-                (attr_name, par, [input part arr], [output part arr]) 
-                                    len=1               len=2 
+        Must return a 4-tuple:
+            (attr_name, par, [input part arr], [output part arr]) 
+                                len=1               len=2 
         '''
         # select an attribute randomly
         attr = self._rng.choice(list(self._tdav.keys()))
@@ -556,20 +528,72 @@ class SearchMiner(BaseMiner):
                 original_col = par[:,col].copy()
                 par[rows_nonzero[i_bar:],col] = 0
                 par[rows_nonzero[i_bar:],first_col_allzero] = 1
-                return (
+                return tuple((
                     attr, par,
                     [original_col],
                     [par[:,col], par[:,first_col_allzero]]
+                ))
+    
+    def _generate_nodes_split(self, attr, original_cols, new_cols):
+        # split: 1 original -> 2 new
+        nodes_next = []
+        # Solution 2: selectively update current node list via copying
+        attr_dim = self._tda_dim[attr]
+        if attr_dim == 'CT':
+            attr_abs_index = tuple((
+                self._index_tda_case[attr][0] + self._index_case[0],
+                self._index_tda_case[attr][1] + self._index_case[0],
+            ))
+        elif attr_dim == 'AT':
+            attr_abs_index = tuple((
+                self._index_tda_act[attr][0] + self._index_act[0],
+                self._index_tda_act[attr][1] + self._index_act[0],
+            ))
+        else:
+            attr_abs_index = tuple((
+                self._index_tda_time[attr][0] + self._index_time[0],
+                self._index_tda_time[attr][1] + self._index_time[0],
+            ))
+
+        # stack the arrays of nodes
+        all_arr_joined = np.stack([node.arr for node in self._nodes])
+
+        # generate nodes from split
+        is_node_to_split = np.dot(
+            all_arr_joined[:,slice(*attr_abs_index)],
+            original_cols[0].T
+        )
+        for i, node in enumerate(self._nodes):
+            if is_node_to_split[i]:
+                arr_left = node.arr.copy()
+                arr_left[slice(*attr_abs_index)] = new_cols[0]
+                events_left = node.events[self._apply_to_part(
+                    arr=new_cols[0], n_attrs=1, 
+                    rows=node.events, cols=slice(*attr_abs_index)
+                )]
+                if len(events_left) > 0:
+                    rc_left = self._apply_get_resource_counts(events_left)
+                    nodes_next.append(Node2(arr_left, events_left, rc_left))
+                arr_right = node.arr.copy()
+                arr_right[slice(*attr_abs_index)] = new_cols[1]
+                events_right = node.events[self._apply_to_part(
+                    arr=new_cols[1], n_attrs=1, 
+                    rows=node.events, cols=slice(*attr_abs_index)
+                )]
+                if len(events_right) > 0:
+                    rc_right = self._apply_get_resource_counts(events_right)
+                    nodes_next.append(Node2(arr_right, events_right, rc_right))
+            else:
+                nodes_next.append(
+                    Node2(node.arr, node.events, node.resource_counts.copy())
                 )
-                '''
-                return (attr, par)
-                '''
+        return nodes_next
 
     def _neighbor_merge(self):
         '''
-            Must return a 4-tuple, or None:
-                (attr_name, par, [input part arr], [output part arr]) 
-                                    len=2               len=1 
+        Must return a 4-tuple:
+            (attr_name, par, [input part arr], [output part arr]) 
+                                len=2               len=1 
         '''
         # select an attribute randomly
         attr = self._rng.choice(list(self._tdav.keys()))
@@ -590,14 +614,79 @@ class SearchMiner(BaseMiner):
         merged_col = par[:,sel_cols_nonzero[0]] + par[:,sel_cols_nonzero[1]]
         par[:,sel_cols_nonzero[0]] = merged_col
         par[:,sel_cols_nonzero[1]] = 0
-        return (
+        return tuple((
             attr, par,
             [original_col_left, original_col_right],
             [merged_col]
-        )
-        '''
-        return (attr, par)
-        '''
+        ))
+    
+    def _generate_nodes_merge(self, attr, original_cols, new_cols):
+        # merge: 2 original -> 1 new
+        nodes_next = []
+        # Solution 2: selectively update current node list via copying
+        attr_dim = self._tda_dim[attr]
+        if attr_dim == 'CT':
+            attr_abs_index = tuple((
+                self._index_tda_case[attr][0] + self._index_case[0],
+                self._index_tda_case[attr][1] + self._index_case[0],
+            ))
+        elif attr_dim == 'AT':
+            attr_abs_index = tuple((
+                self._index_tda_act[attr][0] + self._index_act[0],
+                self._index_tda_act[attr][1] + self._index_act[0],
+            ))
+        else:
+            attr_abs_index = tuple((
+                self._index_tda_time[attr][0] + self._index_time[0],
+                self._index_tda_time[attr][1] + self._index_time[0],
+            ))
+
+        # stack the arrays of nodes
+        all_arr_joined = np.stack([node.arr for node in self._nodes])
+
+        # generate nodes from merge
+        is_node_to_merge = np.any(np.dot(
+            all_arr_joined[:,slice(*attr_abs_index)],
+            np.array(original_cols).T
+        ), axis=1)
+        arr_visited = dict()
+        for i, node in enumerate(self._nodes):
+            if is_node_to_merge[i]:
+                # extract the pattern (in bytes, so hashable)
+                # i.e., node.arr excluding the slice being tested
+                patt = np.hstack(np.split(node.arr, attr_abs_index)[::2]).tobytes()
+                if patt in arr_visited:
+                    # create a new node combining data from:
+                    #   self._nodes[arr_visited[pattern]] and
+                    #   node (the current one)
+                    node_to_pair = self._nodes[arr_visited[patt]]
+                    events_union = np.union1d(node_to_pair.events, node.events)
+                    # append created node to nodes_next
+                    # NOTE: for two boolean arrays, plus (+) refers to logical OR
+                    nodes_next.append(
+                        Node2(
+                            node_to_pair.arr + node.arr,
+                            events_union,
+                            self._apply_get_resource_counts(events_union)
+                        )
+                    )
+                    # delete pattern
+                    del arr_visited[patt]
+                else:
+                    # save node index for pairing
+                    arr_visited[patt] = i
+            else:
+                nodes_next.append(
+                    Node2(node.arr, node.events, node.resource_counts.copy())
+                )
+        # include solo nodes, i.e., nodes unpaired
+        for i in arr_visited.values():
+            new_arr = self._nodes[i].arr.copy()
+            new_arr[slice(*attr_abs_index)] = new_cols[0]
+            nodes_next.append(
+                Node2(new_arr, self._nodes[i].events, self._nodes[i].resource_counts.copy())
+            )
+        return nodes_next
 
     def _evaluate(self, nodes, pars):
         '''
@@ -607,9 +696,9 @@ class SearchMiner(BaseMiner):
         imp = self._calculate_impurity(nodes)
 
         # arithmetic mean
-        #e = (dis + imp) / 2
-        # harmonic mean
-        e = np.inf if dis == 0 or imp == 0 else 2 * dis * imp / (dis + imp)
+        e = (dis + imp) / 2
+        # harmonic mean (with two extremes disabled)
+        #e = 2 * dis * imp / (dis + imp)
 
         return e, dis, imp
 
@@ -671,27 +760,242 @@ class SearchMiner(BaseMiner):
         for attr in pars.keys():
             n_pars_comb *= len(np.unique(np.nonzero(pars[attr])[1]))
         return (1.0 - len(nodes) / n_pars_comb)
+    
+    def _search(self):
+        raise NotImplementedError('Abstract class. Use a child class implementing this method.')
+    
+    def _save_history(self, data_history, columns):
+        fnout = 'SearchMiner_{}_stats.out'.format(pd.Timestamp.now().strftime('%Y%m%d-%H%M%S'))
+        df_history = pd.DataFrame(
+            data=data_history, 
+            columns=columns
+        )
+        df_history.to_csv(
+            fnout,
+            sep=',',
+            na_rep='None',
+            float_format='%.6f',
+            index=False
+        )
+        print('Procedure history has been written to file "{}".'.format(fnout))
+
+
+#########################################################################
+
+class GreedySearchMiner(BaseSearchMiner):
+    def __init__(self, 
+        el, attr_spec, 
+        init_method='random', init_batch=1000,
+        random_number_generator=None,
+        print_steps=True,
+        trace_history=False,
+        neighbor_sample_size=100, always_move=False, n_max_move=100
+    ):
+        # Initialize system parameters
+        self.neighbor_sample_size = neighbor_sample_size
+        self.always_move = always_move
+        self.n_max_move = n_max_move
+
+        super().__init__(
+            el=el, attr_spec=attr_spec, 
+            random_number_generator=random_number_generator, 
+            init_method=init_method, init_batch=init_batch,
+            print_steps=print_steps, trace_history=trace_history
+        )
+    
+    def _neighbors(self):
+        # Greedy search generates a few neighbors per iteration
+        size = 0
+        neighbors = []
+        while size < self.neighbor_sample_size:
+            i = self._rng.choice(2)
+            if i == 0:
+                n = self._neighbor_split()
+                if n is not None:
+                    neighbors.append((n, 'split'))
+                    size += 1
+            else:
+                n = self._neighbor_merge()
+                if n is not None:
+                    neighbors.append((n, 'merge'))
+                    size += 1
+        return neighbors
+    
+    def _decide_move(self, E_next, E):
+        if self.always_move:
+            return True
+        else:
+            return E_next < E
+    
+    def _search(self):
+        print('Start greedy search with neighbor_sample_size={}, always_move={}, n_max_move={}'.format(self.neighbor_sample_size, self.always_move, self.n_max_move))
+
+        #self._verify_state(self._nodes)
+
+        ret = self._evaluate(self._nodes, self._pars)
+        E, dis, imp = ret[0], ret[1], ret[2]
+
+        # keep track of the best state
+        step_best = 0
+        E_best, dis_best, imp_best = E, dis, imp
+        nodes_best = self._nodes.copy()
+
+        k = 0
+        # keep track of history, if required
+        if self.trace_history:
+            # Step, Action, Attribute, 
+            # Dispersal, Impurity, Energy
+            history = [(0, self.init_method, None, dis, imp, E)]
+
+        while k < self.n_max_move:
+            k += 1
+            l_neighbors = self._neighbors()
+            i_bn = -1
+            E_bn, dis_bn, imp_bn = np.inf, np.inf, np.inf
+            nodes_neighbor = []
+            for i, neighbor in enumerate(l_neighbors):
+                move, action = neighbor
+                if move is None:
+                    pass
+                else:
+                    attr, new_par, original_cols, new_cols = move
+                    if action == 'split':
+                        nodes_neighbor = self._generate_nodes_split(attr, original_cols, new_cols)
+                    else:
+                        nodes_neighbor = self._generate_nodes_merge(attr, original_cols, new_cols)
+                    new_pars = self._pars.copy()
+                    new_pars[attr] = new_par
+                    ret_next = self._evaluate(nodes_neighbor, new_pars)
+                    self._verify_state(nodes_neighbor)
+                    E_next, dis_next, imp_next = ret_next[0], ret_next[1], ret_next[2]
+
+                    if E_next < E_bn:
+                        E_bn = E_next
+                        i_bn = i
+                        dis_bn = dis_next
+                        imp_bn = imp_next
+            # keep the best neighbor (bn) for testing
+            move_bn, action_bn = l_neighbors[i_bn]
+            if action_bn == 'split':
+                nodes_next = self._generate_nodes_split(move_bn[0], move_bn[2], move_bn[3])
+            else:
+                nodes_next = self._generate_nodes_merge(move_bn[0], move_bn[2], move_bn[3])
+            #self._verify_state(nodes_next)
+            E_next, dis_next, imp_next = E_bn, dis_bn, imp_bn
+
+            if self.print_steps:
+                print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
+                print('\tCurrent #nodes: {}'.format(len(self._nodes)))
+
+                print('\tCurrent energy: {:.6f}'.format(E))
+                print('\t\t> Current dispersal: {:.6f}'.format(dis))
+                print('\t\t> Current impurity: {:.6f}'.format(imp))
+
+                print('\t' + '-' * 40)
+
+                print('\tNeighbor energy: {:.6f}'.format(E_next))
+                print('\tNeighbor #nodes: {}'.format(len(nodes_next)))
+
+            # decide whether to move to neighbor
+            if self._decide_move(E_next, E):
+                # move to neighbor state; update
+                if self.print_steps:
+                    print('\t\t\t>>> MOVE TO NEIGHBOR')
+                self._pars[move_bn[0]] = move_bn[1]
+                del self._nodes[:]
+                self._nodes = nodes_next
+                E, dis, imp = E_next, dis_next, imp_next 
+
+                # check if better than best state
+                if E < E_best:
+                    step_best = k
+                    E_best, dis_best, imp_best = E, dis, imp
+                    del nodes_best[:]
+                    nodes_best = self._nodes.copy()
+
+            if self.trace_history:
+                # Step, Action, Attribute, 
+                # Dispersal, Impurity, Energy
+                history.append((
+                    k, None if move_bn is None else action_bn, None if move_bn is None else move_bn[0],
+                    dis, imp, E
+                ))
+        
+        print(f'\nSearch ended at step:\t{k}')
+        del self._nodes[:]
+        self._nodes = nodes_best
+        print('Select best state at step [{}] with:'.format(step_best))
+        print('\t #Nodes:\t{}'.format(len(self._nodes)))
+        print('\t Energy:\t{:.6f}'.format(E_best))
+        print('\t\t> dispersal:\t{:.6f}'.format(dis_best))
+        print('\t\t> impurity:\t{:.6f}'.format(imp_best))
+
+        # output history
+        if self.trace_history:
+            self._save_history(
+                history, 
+                columns=[
+                    'step', 'action', 'attribute', 
+                    'dispersal', 'impurity', 'energy'
+                ]
+            )
+
+
+class SASearchMiner(BaseSearchMiner):
+    def __init__(self, 
+        el, attr_spec, 
+        init_method='random', init_batch=1000,
+        random_number_generator=None,
+        print_steps=True,
+        trace_history=False,
+        T0=1000, Tmin=1, alpha=1
+    ):
+        # Initialize system parameters
+        # initialization method
+        self.init_method = init_method
+        # batch size to test at initialization, subject to mem size
+        self.init_batch = init_batch
+        # system initial temperature
+        self.T0 = T0
+        # minimum temperature allowed
+        self.Tmin = Tmin
+        # set rate for reducing system temperature
+        self.alpha = alpha
+
+        # Set flags
+        # whether to print the search procedure
+        self.print_steps = print_steps
+        # whether to record the history of intermediate stats
+        self.trace_history = trace_history
+
+        super().__init__(
+            el=el, attr_spec=attr_spec, 
+            random_number_generator=random_number_generator, 
+            init_method=init_method, init_batch=init_batch,
+            print_steps=print_steps, trace_history=trace_history
+        )
+
+    def _neighbor(self):
+        # Simulated Annealing generates one neighbor per iteration
+        i = self._rng.choice(2)
+        if i == 0:
+            return self._neighbor_split(), 'split'
+        elif i == 1:
+            return self._neighbor_merge(), 'merge'
+        else:
+            raise ValueError('undefined move to neighboring states')
 
     def _prob_acceptance(self, E, E_next, T, **kwarg):
-        if self.greedy:
-            pr = 1 if E_next < E else 0
-        else:
-            # NOTE: allow pr > 1 if E_next < E, to avoid if clause for capping
-            pr = np.exp(-1 * self.T0 * (E_next - E) / T)
-        return pr
+        # NOTE: allow pr > 1 if E_next < E, to avoid if clause for capping
+        return np.exp(-1 * self.T0 * (E_next - E) / T)
     
     def _cooling(self, k):
         return self.T0 - self.alpha * k
 
     def _search(self):
-        self._init_state(init_method=self.init_method)
-        print('Initialization completed with method "{}".'.format(self.init_method))
-        print('Start searching with T0={}, Tmin={}, alpha={}:'.format(self.T0, self.Tmin, self.alpha))
+        print('Start simulated annealing search with T0={}, Tmin={}, alpha={}:'.format(self.T0, self.Tmin, self.alpha))
 
         #self._verify_state(self._nodes)
-
-        if self.use_tabu:
-            self._tabu_list.append(self._hash_state(self._pars))
 
         T = self.T0
         ret = self._evaluate(self._nodes, self._pars)
@@ -709,160 +1013,21 @@ class SearchMiner(BaseMiner):
             # Probability of acceptance, System temperature, 
             # Dispersal, Impurity, Energy
             history = [(0, self.init_method, None, None, T, dis, imp, E)]
+
         while T > self.Tmin:
             k += 1
+            # generate one neighbor per iteration
             move, action = self._neighbor()
             if move is None:
                 pass
             else:
-                nodes_next = []
-                # Solution 2: selectively update current node list via copying
                 attr, new_par, original_cols, new_cols = move
-                attr_dim = self._tda_dim[attr]
-                if attr_dim == 'CT':
-                    attr_abs_index = tuple((
-                        self._index_tda_case[attr][0] + self._index_case[0],
-                        self._index_tda_case[attr][1] + self._index_case[0],
-                    ))
-                elif attr_dim == 'AT':
-                    attr_abs_index = tuple((
-                        self._index_tda_act[attr][0] + self._index_act[0],
-                        self._index_tda_act[attr][1] + self._index_act[0],
-                    ))
-                else:
-                    attr_abs_index = tuple((
-                        self._index_tda_time[attr][0] + self._index_time[0],
-                        self._index_tda_time[attr][1] + self._index_time[0],
-                    ))
-
-                # stack the arrays of nodes
-                all_arr_joined = np.stack([node.arr for node in self._nodes])
 
                 if action == 'split':
-                    # split: 1 original -> 2 new
-                    is_node_to_split = np.dot(
-                        all_arr_joined[:,slice(*attr_abs_index)],
-                        original_cols[0].T
-                    )
-                    for i, node in enumerate(self._nodes):
-                        if is_node_to_split[i]:
-                            arr_left = node.arr.copy()
-                            arr_left[slice(*attr_abs_index)] = new_cols[0]
-                            events_left = node.events[self._apply_to_part(
-                                arr=new_cols[0], n_attrs=1, 
-                                rows=node.events, cols=slice(*attr_abs_index)
-                            )]
-                            if len(events_left) > 0:
-                                rc_left = self._apply_get_resource_counts(events_left)
-                                nodes_next.append(Node2(arr_left, events_left, rc_left))
-                            arr_right = node.arr.copy()
-                            arr_right[slice(*attr_abs_index)] = new_cols[1]
-                            events_right = node.events[self._apply_to_part(
-                                arr=new_cols[1], n_attrs=1, 
-                                rows=node.events, cols=slice(*attr_abs_index)
-                            )]
-                            if len(events_right) > 0:
-                                rc_right = self._apply_get_resource_counts(events_right)
-                                nodes_next.append(Node2(arr_right, events_right, rc_right))
-                        else:
-                            nodes_next.append(
-                                Node2(node.arr, node.events, node.resource_counts.copy())
-                            )
+                    nodes_next = self._generate_nodes_split(attr, original_cols, new_cols)
                 else:
-                    # merge: 2 original -> 1 new
-                    is_node_to_merge = np.any(np.dot(
-                        all_arr_joined[:,slice(*attr_abs_index)],
-                        np.array(original_cols).T
-                    ), axis=1)
-                    arr_visited = dict()
-                    for i, node in enumerate(self._nodes):
-                        if is_node_to_merge[i]:
-                            # extract the pattern (in bytes, so hashable)
-                            # i.e., node.arr excluding the slice being tested
-                            patt = np.hstack(np.split(node.arr, attr_abs_index)[::2]).tobytes()
-                            if patt in arr_visited:
-                                # create a new node combining data from:
-                                #   self._nodes[arr_visited[pattern]] and
-                                #   node (the current one)
-                                node_to_pair = self._nodes[arr_visited[patt]]
-                                events_union = np.union1d(node_to_pair.events, node.events)
-                                # append created node to nodes_next
-                                # NOTE: for two boolean arrays, plus (+) refers to logical OR
-                                nodes_next.append(
-                                    Node2(
-                                        node_to_pair.arr + node.arr,
-                                        events_union,
-                                        self._apply_get_resource_counts(events_union)
-                                    )
-                                )
-                                # delete pattern
-                                del arr_visited[patt]
-                            else:
-                                # save node index for pairing
-                                arr_visited[patt] = i
-                        else:
-                            nodes_next.append(
-                                Node2(node.arr, node.events, node.resource_counts.copy())
-                            )
-
-                    # include solo nodes, i.e., nodes unpaired
-                    for i in arr_visited.values():
-                        new_arr = self._nodes[i].arr.copy()
-                        new_arr[slice(*attr_abs_index)] = new_cols[0]
-                        nodes_next.append(
-                            Node2(new_arr, self._nodes[i].events, self._nodes[i].resource_counts.copy())
-                        )
+                    nodes_next = self._generate_nodes_merge(attr, original_cols, new_cols)
                     
-                '''
-                # Solution 1: enumerate combinations of partitions
-                attr, new_par = move[0], move[1]
-                new_pars = self._pars.copy()
-                new_pars[move[0]] = new_par
-                comb = []
-                for i, tda in enumerate([self._tda_case, self._tda_act, self._tda_time]):
-                    tda_i = []
-                    comb_i = []
-                    if len(tda) == 0:
-                        continue
-                    for attr in tda:
-                        attr_parts = []
-                        n = len(self._tdav[attr])
-                        if n == 1:
-                            attr_parts.append(np.array([1], dtype=bool))
-                        else:
-                            for j in np.unique(np.nonzero(new_pars[attr])[1]):
-                                attr_parts.append(new_pars[attr][:,j])
-                        tda_i.append(attr_parts)
-                    for prod in product(*tda_i):
-                        comb_i.append(np.concatenate(prod))
-                    comb.append(comb_i)
-                '''
-                '''
-                # Solution 1.1 (fallback): enumerate and test all combinations
-                # slow due to loop 
-                for prod in product(*comb):
-                    arr_joined = np.concatenate(prod)
-                    events = self._apply_to_all(arr_joined)
-                    if len(events) > 0:
-                        resource_counts = self._apply_get_resource_counts(events)
-                        node = Node2(arr_joined, events, resource_counts)
-                        nodes_next.append(node)
-                '''
-                '''
-                # Solution 1.2: use matrix multiplication to enumerate combinations
-                # improved speed by trading space 
-                all_arr_joined = [np.concatenate(prod) for prod in product(*comb)]
-                all_arr_joined = np.stack(all_arr_joined)
-                mask = np.matmul(self._log, all_arr_joined.T, dtype=int) 
-                mask = mask >= self._n_tda
-                for j in np.unique(np.nonzero(mask)[1]):
-                    arr_joined = all_arr_joined[j,:]
-                    events = np.nonzero(mask[:,j])[0]
-                    resource_counts = self._apply_get_resource_counts(events)
-                    node = Node2(arr_joined, events, resource_counts)
-                    nodes_next.append(node)
-                '''
-
                 new_pars = self._pars.copy()
                 new_pars[attr] = new_par
                 ret_next = self._evaluate(nodes_next, new_pars)
@@ -888,29 +1053,20 @@ class SearchMiner(BaseMiner):
                 if self.print_steps:
                     print('\tProbability of moving: {}'.format(prob_acceptance))
                 if self._rng.random() < prob_acceptance:
-                    move_to_neighbor = True
-                    if self.use_tabu:
-                        next_state_id = self._hash_state(new_pars)
-                        if next_state_id in self._tabu_list:
-                            move_to_neighbor = False
-                        else:
-                            self._tabu_list.append(next_state_id)
-                    
-                    if move_to_neighbor:
-                        # move to neighbor state; update
-                        if self.print_steps:
-                            print('\t\t\t>>> MOVE TO NEIGHBOR')
-                        self._pars[move[0]] = new_par
-                        del self._nodes[:]
-                        self._nodes = nodes_next
-                        E, dis, imp = E_next, dis_next, imp_next 
+                    # move to neighbor state; update
+                    if self.print_steps:
+                        print('\t\t\t>>> MOVE TO NEIGHBOR')
+                    self._pars[attr] = new_par
+                    del self._nodes[:]
+                    self._nodes = nodes_next
+                    E, dis, imp = E_next, dis_next, imp_next 
 
-                        # check if better than best state
-                        if E < E_best:
-                            step_best = k
-                            E_best, dis_best, imp_best = E, dis, imp
-                            del nodes_best[:]
-                            nodes_best = self._nodes.copy()
+                    # check if better than best state
+                    if E < E_best:
+                        step_best = k
+                        E_best, dis_best, imp_best = E, dis, imp
+                        del nodes_best[:]
+                        nodes_best = self._nodes.copy()
                 else:
                     pass
 
@@ -937,23 +1093,11 @@ class SearchMiner(BaseMiner):
 
         # output history
         if self.trace_history:
-            fnout = 'SearchMiner_{}_stats.out'.format(pd.Timestamp.now().strftime('%Y%m%d-%H%M%S'))
-            df_history = pd.DataFrame(
-                data=history, 
-                # Step, Action, Attribute, 
-                # Probability of acceptance, System temperature, 
-                # Dispersal, Impurity, Energy
+            self._save_history(
+                history, 
                 columns=[
                     'step', 'action', 'attribute', 
                     'prob_acceptance', 'temp',
                     'dispersal', 'impurity', 'energy'
                 ]
             )
-            df_history.to_csv(
-                fnout,
-                sep=',',
-                na_rep='None',
-                float_format='%.6f',
-                index=False
-            )
-            print('Procedure history has been written to file "{}".'.format(fnout))
