@@ -696,7 +696,8 @@ class BaseSearchMiner(BaseMiner):
         imp = self._calculate_impurity(nodes)
 
         # arithmetic mean
-        e = (dis + imp) / 2
+        #e = 0.5 * (dis + imp)
+        e = 0.25 * dis + 0.75 * imp
         # harmonic mean (with two extremes disabled)
         #e = 2 * dis * imp / (dis + imp)
 
