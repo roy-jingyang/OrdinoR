@@ -812,12 +812,13 @@ class GreedySearchMiner(BaseSearchMiner):
         # Greedy search generates a few neighbors per iteration
         size = 0
         neighbors = []
-        # TODO: decide the probability of moves based on current state
-        #pr_split = 0.5
+        '''
         curr_n_moves = np.sum(
             np.count_nonzero(np.any(par, axis=0)) for par in self._pars.values()
         ) 
         pr_split = 1.0 - curr_n_moves / self._search_diameter
+        '''
+        pr_split = 0.5
         while size < self.neighbor_sample_size:
             if self._rng.random() < pr_split:
                 n = self._neighbor_split()
@@ -895,7 +896,6 @@ class GreedySearchMiner(BaseSearchMiner):
 
             if self.print_steps:
                 print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
-                print('\tCurrent temperature:\t{:.3f}'.format(T))
                 print('\tCurrent #nodes: {}'.format(len(self._nodes)))
                 print('\tCurrent energy: {:.6f}'.format(E))
                 print('\t\t> Current dispersal: {:.6f}'.format(dis))
@@ -993,12 +993,13 @@ class SASearchMiner(BaseSearchMiner):
 
     def _neighbors(self):
         # Simulated Annealing generates one neighbor per iteration
-        # TODO: decide the probability of moves based on current state
-        #pr_split = 0.5
+        '''
         curr_n_moves = np.sum(
             np.count_nonzero(np.any(par, axis=0)) for par in self._pars.values()
         ) 
         pr_split = 1.0 - curr_n_moves / self._search_diameter
+        '''
+        pr_split = 0.5
         if self._rng.random() < pr_split:
             return self._neighbor_split(), 'split'
         else:
@@ -1009,11 +1010,12 @@ class SASearchMiner(BaseSearchMiner):
         E_best=None, dis_best=None, imp_best=None,
         **kwarg
         ):
+        '''
         # NOTE: allow pr > 1 if E_next < E, to avoid if clause for capping
         # neighbor comparison
-        #pr = np.exp(-1 * self._n_E * (E_next - E) / T)
+        pr = np.exp(-1 * self._n_E * 1e2 * (E_next - E) / T)
         # beacon comparison
-        pr = np.exp(-1 * self._n_E * 1e4 * (E_next - E_best) / T)
+        #pr = np.exp(-1 * self._n_E * (E_best - E) / T)
 
         '''
         # neighbor comparison
@@ -1022,14 +1024,15 @@ class SASearchMiner(BaseSearchMiner):
         else:
             cost_dis = -1 * np.log(dis - dis_next + 1)
         cost_imp = (imp_next - imp)
-        pr = np.exp(-1 * self._n_E * (cost_dis + cost_imp) / T)
+        pr = np.exp(-1 * self._n_E * self.T0 * (cost_dis + cost_imp) / T)
+        '''
         # beacon comparison
         if dis_next - dis_best > 0:
             cost_dis = np.log(dis_best - dis + 1)
         else:
             cost_dis = -1 * np.log(dis - dis_best + 1)
         cost_imp = (imp_next - imp_best)
-        pr = np.exp(-1 * self._n_E * (cost_dis + cost_imp) / T)
+        pr = np.exp(-1 * self._n_E * 1e3 * (cost_dis + cost_imp) / T)
         '''
 
         return pr
