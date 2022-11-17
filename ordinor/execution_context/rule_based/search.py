@@ -134,6 +134,11 @@ class BaseSearchMiner(BaseMiner):
                 np.array(list(self._p_res.values()), dtype=np.double), base=2
             )
 
+            # NOTE: diameter of the search space,
+            #       shortest distance between the farthest states 
+            #       ('zero' and 'full_split'), by #moves
+            self._search_diameter = sum([len(tdav) - 1 for tdav in self._tdav])
+
             # drop non-type-defining attributes columns
             self._log.drop(columns=included_cols, inplace=True)
             # apply One-Hot-Encoding to the log (pandas.get_dummies)
@@ -696,8 +701,7 @@ class BaseSearchMiner(BaseMiner):
         imp = self._calculate_impurity(nodes)
 
         # arithmetic mean
-        #e = 0.5 * (dis + imp)
-        e = 0.25 * dis + 0.75 * imp
+        e = 0.5 * (dis + imp)
         # harmonic mean (with two extremes disabled)
         #e = 2 * dis * imp / (dis + imp)
 
@@ -808,9 +812,14 @@ class GreedySearchMiner(BaseSearchMiner):
         # Greedy search generates a few neighbors per iteration
         size = 0
         neighbors = []
+        # TODO: decide the probability of moves based on current state
+        #pr_split = 0.5
+        curr_n_moves = np.sum(
+            np.count_nonzero(np.any(par, axis=0)) for par in self._pars.values()
+        ) 
+        pr_split = 1.0 - curr_n_moves / self._search_diameter
         while size < self.neighbor_sample_size:
-            i = self._rng.choice(2)
-            if i == 0:
+            if self._rng.random() < pr_split:
                 n = self._neighbor_split()
                 if n is not None:
                     neighbors.append((n, 'split'))
@@ -886,16 +895,22 @@ class GreedySearchMiner(BaseSearchMiner):
 
             if self.print_steps:
                 print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
+                print('\tCurrent temperature:\t{:.3f}'.format(T))
                 print('\tCurrent #nodes: {}'.format(len(self._nodes)))
-
                 print('\tCurrent energy: {:.6f}'.format(E))
                 print('\t\t> Current dispersal: {:.6f}'.format(dis))
                 print('\t\t> Current impurity: {:.6f}'.format(imp))
-
                 print('\t' + '-' * 40)
-
-                print('\tNeighbor energy: {:.6f}'.format(E_next))
                 print('\tNeighbor #nodes: {}'.format(len(nodes_next)))
+                print('\tNeighbor energy: {:.6f}'.format(E_next))
+                print('\t\t> Neighbor dispersal: {:.6f}'.format(dis_next))
+                print('\t\t> Neighbor impurity: {:.6f}'.format(imp_next))
+                print('\t' + '-' * 40)
+                print('\tBest state @ step [{}]'.format(step_best))
+                print('\tBest state #nodes: {}'.format(len(nodes_best)))
+                print('\tBest state energy: {:.6f}'.format(E_best))
+                print('\t\t> Best state dispersal: {:.6f}'.format(dis_best))
+                print('\t\t> Best state impurity: {:.6f}'.format(imp_best))
 
             # decide whether to move to neighbor
             if self._decide_move(E_next, E):
@@ -976,19 +991,48 @@ class SASearchMiner(BaseSearchMiner):
             print_steps=print_steps, trace_history=trace_history
         )
 
-    def _neighbor(self):
+    def _neighbors(self):
         # Simulated Annealing generates one neighbor per iteration
-        i = self._rng.choice(2)
-        if i == 0:
+        # TODO: decide the probability of moves based on current state
+        #pr_split = 0.5
+        curr_n_moves = np.sum(
+            np.count_nonzero(np.any(par, axis=0)) for par in self._pars.values()
+        ) 
+        pr_split = 1.0 - curr_n_moves / self._search_diameter
+        if self._rng.random() < pr_split:
             return self._neighbor_split(), 'split'
-        elif i == 1:
-            return self._neighbor_merge(), 'merge'
         else:
-            raise ValueError('undefined move to neighboring states')
+            return self._neighbor_merge(), 'merge'
 
-    def _prob_acceptance(self, E, E_next, T, **kwarg):
+    def _prob_acceptance(self, E, E_next, T, 
+        dis=None, dis_next=None, imp=None, imp_next=None, 
+        E_best=None, dis_best=None, imp_best=None,
+        **kwarg
+        ):
         # NOTE: allow pr > 1 if E_next < E, to avoid if clause for capping
-        return np.exp(-1 * self.T0 * (E_next - E) / T)
+        # neighbor comparison
+        #pr = np.exp(-1 * self._n_E * (E_next - E) / T)
+        # beacon comparison
+        pr = np.exp(-1 * self._n_E * 1e4 * (E_next - E_best) / T)
+
+        '''
+        # neighbor comparison
+        if dis_next - dis > 0:
+            cost_dis = np.log(dis_next - dis + 1)
+        else:
+            cost_dis = -1 * np.log(dis - dis_next + 1)
+        cost_imp = (imp_next - imp)
+        pr = np.exp(-1 * self._n_E * (cost_dis + cost_imp) / T)
+        # beacon comparison
+        if dis_next - dis_best > 0:
+            cost_dis = np.log(dis_best - dis + 1)
+        else:
+            cost_dis = -1 * np.log(dis - dis_best + 1)
+        cost_imp = (imp_next - imp_best)
+        pr = np.exp(-1 * self._n_E * (cost_dis + cost_imp) / T)
+        '''
+
+        return pr
     
     def _cooling(self, k):
         return self.T0 - self.alpha * k
@@ -1018,7 +1062,7 @@ class SASearchMiner(BaseSearchMiner):
         while T > self.Tmin:
             k += 1
             # generate one neighbor per iteration
-            move, action = self._neighbor()
+            move, action = self._neighbors()
             if move is None:
                 pass
             else:
@@ -1039,18 +1083,27 @@ class SASearchMiner(BaseSearchMiner):
                     print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
                     print('\tCurrent temperature:\t{:.3f}'.format(T))
                     print('\tCurrent #nodes: {}'.format(len(self._nodes)))
-
                     print('\tCurrent energy: {:.6f}'.format(E))
                     print('\t\t> Current dispersal: {:.6f}'.format(dis))
                     print('\t\t> Current impurity: {:.6f}'.format(imp))
-
                     print('\t' + '-' * 40)
-
-                    print('\tNeighbor energy: {:.6f}'.format(E_next))
                     print('\tNeighbor #nodes: {}'.format(len(nodes_next)))
+                    print('\tNeighbor energy: {:.6f}'.format(E_next))
+                    print('\t\t> Neighbor dispersal: {:.6f}'.format(dis_next))
+                    print('\t\t> Neighbor impurity: {:.6f}'.format(imp_next))
+                    print('\t' + '-' * 40)
+                    print('\tBest state @ step [{}]'.format(step_best))
+                    print('\tBest state #nodes: {}'.format(len(nodes_best)))
+                    print('\tBest state energy: {:.6f}'.format(E_best))
+                    print('\t\t> Best state dispersal: {:.6f}'.format(dis_best))
+                    print('\t\t> Best state impurity: {:.6f}'.format(imp_best))
 
                 # decide whether to move to neighbor
-                prob_acceptance = self._prob_acceptance(E, E_next, T)
+                prob_acceptance = self._prob_acceptance(
+                    E=E, E_next=E_next, T=T, 
+                    dis=dis, dis_next=dis_next, imp=imp, imp_next=imp_next, 
+                    E_best=E_best, dis_best=dis_best, imp_best=imp_best
+                )
                 if self.print_steps:
                     print('\tProbability of moving: {}'.format(prob_acceptance))
                 if self._rng.random() < prob_acceptance:
@@ -1086,7 +1139,7 @@ class SASearchMiner(BaseSearchMiner):
         print(f'\nSearch ended with final system temperature:\t{T}')
         del self._nodes[:]
         self._nodes = nodes_best
-        print('Select best state at step [{}] with:'.format(step_best))
+        print('Select best state @ step [{}] with:'.format(step_best))
         print('\t #Nodes:\t{}'.format(len(self._nodes)))
         print('\t Energy:\t{:.6f}'.format(E_best))
         print('\t\t> dispersal:\t{:.6f}'.format(dis_best))
