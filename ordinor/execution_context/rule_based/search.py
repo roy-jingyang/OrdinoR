@@ -692,6 +692,15 @@ class BaseSearchMiner(BaseMiner):
                 Node2(new_arr, self._nodes[i].events, self._nodes[i].resource_counts.copy())
             )
         return nodes_next
+    
+    def _dist_from_zero(self, pars, normalized=True):
+        curr_n_moves = np.sum(
+            np.count_nonzero(np.any(par, axis=0)) for par in pars.values()
+        ) 
+        if normalized:
+            return curr_n_moves / self._search_diameter
+        else:
+            return curr_n_moves
 
     def _evaluate(self, nodes, pars):
         '''
@@ -812,12 +821,6 @@ class GreedySearchMiner(BaseSearchMiner):
         # Greedy search generates a few neighbors per iteration
         size = 0
         neighbors = []
-        '''
-        curr_n_moves = np.sum(
-            np.count_nonzero(np.any(par, axis=0)) for par in self._pars.values()
-        ) 
-        pr_split = 1.0 - curr_n_moves / self._search_diameter
-        '''
         pr_split = 0.5
         while size < self.neighbor_sample_size:
             if self._rng.random() < pr_split:
@@ -993,12 +996,6 @@ class SASearchMiner(BaseSearchMiner):
 
     def _neighbors(self):
         # Simulated Annealing generates one neighbor per iteration
-        '''
-        curr_n_moves = np.sum(
-            np.count_nonzero(np.any(par, axis=0)) for par in self._pars.values()
-        ) 
-        pr_split = 1.0 - curr_n_moves / self._search_diameter
-        '''
         pr_split = 0.5
         if self._rng.random() < pr_split:
             return self._neighbor_split(), 'split'
@@ -1010,13 +1007,9 @@ class SASearchMiner(BaseSearchMiner):
         E_best=None, dis_best=None, imp_best=None,
         **kwarg
         ):
-        '''
         # NOTE: allow pr > 1 if E_next < E, to avoid if clause for capping
         # neighbor comparison
-        pr = np.exp(-1 * self._n_E * 1e2 * (E_next - E) / T)
-        # beacon comparison
-        #pr = np.exp(-1 * self._n_E * (E_best - E) / T)
-
+        pr = np.exp(-1 * self._n_E * 1e3 * (E_next - E) / T)
         '''
         # neighbor comparison
         if dis_next - dis > 0:
@@ -1026,15 +1019,6 @@ class SASearchMiner(BaseSearchMiner):
         cost_imp = (imp_next - imp)
         pr = np.exp(-1 * self._n_E * self.T0 * (cost_dis + cost_imp) / T)
         '''
-        # beacon comparison
-        if dis_next - dis_best > 0:
-            cost_dis = np.log(dis_best - dis + 1)
-        else:
-            cost_dis = -1 * np.log(dis - dis_best + 1)
-        cost_imp = (imp_next - imp_best)
-        pr = np.exp(-1 * self._n_E * 1e3 * (cost_dis + cost_imp) / T)
-        '''
-
         return pr
     
     def _cooling(self, k):
