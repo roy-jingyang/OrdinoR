@@ -803,10 +803,10 @@ class GreedySearchMiner(BaseSearchMiner):
         random_number_generator=None,
         print_steps=True,
         trace_history=False,
-        neighbor_sample_size=10, always_move=False, n_max_move=1000
+        n_sample=10, always_move=False, n_max_move=1000
     ):
         # Initialize system parameters
-        self.neighbor_sample_size = neighbor_sample_size
+        self.n_sample = n_sample
         self.always_move = always_move
         self.n_max_move = n_max_move
 
@@ -822,7 +822,7 @@ class GreedySearchMiner(BaseSearchMiner):
         size = 0
         neighbors = []
         pr_split = 0.5
-        while size < self.neighbor_sample_size:
+        while size < self.n_sample:
             if self._rng.random() < pr_split:
                 n = self._neighbor_split()
                 if n is not None:
@@ -842,7 +842,7 @@ class GreedySearchMiner(BaseSearchMiner):
             return E_next < E
     
     def _search(self):
-        print('Start greedy search with neighbor_sample_size={}, always_move={}, n_max_move={}'.format(self.neighbor_sample_size, self.always_move, self.n_max_move))
+        print('Start greedy search with n_sample={}, always_move={}, n_max_move={}'.format(self.n_sample, self.always_move, self.n_max_move))
 
         #self._verify_state(self._nodes)
 
@@ -967,7 +967,7 @@ class SASearchMiner(BaseSearchMiner):
         random_number_generator=None,
         print_steps=True,
         trace_history=False,
-        neighbor_sample_size=10, T0=1000, Tmin=1, alpha=1
+        n_sample=10, T0=1000, Tmin=1, alpha=1
     ):
         # Initialize system parameters
         # initialization method
@@ -975,7 +975,7 @@ class SASearchMiner(BaseSearchMiner):
         # batch size to test at initialization, subject to mem size
         self.init_batch = init_batch
         # size of neighborhood
-        self.neighbor_sample_size = neighbor_sample_size
+        self.n_sample = n_sample
         # system initial temperature
         self.T0 = T0
         # minimum temperature allowed
@@ -997,21 +997,12 @@ class SASearchMiner(BaseSearchMiner):
         )
 
     def _neighbors(self):
-        size = 0
-        neighbors = []
+        # Simulated annealing makes single perturbation sequentially
         pr_split = 0.5
-        while size < self.neighbor_sample_size:
-            if self._rng.random() < pr_split:
-                n = self._neighbor_split()
-                if n is not None:
-                    neighbors.append((n, 'split'))
-                    size += 1
-            else:
-                n = self._neighbor_merge()
-                if n is not None:
-                    neighbors.append((n, 'merge'))
-                    size += 1
-        return neighbors
+        if self._rng.random() < pr_split:
+            return self._neighbor_split(), 'split'
+        else:
+            return self._neighbor_merge(), 'merge'
 
     def _prob_acceptance(self, E, E_next, T, 
         dis=None, dis_next=None, imp=None, imp_next=None, 
@@ -1060,8 +1051,8 @@ class SASearchMiner(BaseSearchMiner):
         while T > self.Tmin:
             k += 1
             # generate neighbors
-            for i, neighbor in enumerate(self._neighbors()):
-                move, action = neighbor[0], neighbor[1]
+            for i in range(self.n_sample):
+                move, action = self._neighbors()
                 if move is None:
                     pass
                 else:
@@ -1124,15 +1115,15 @@ class SASearchMiner(BaseSearchMiner):
                     else:
                         pass
 
-            if self.trace_history:
-                # Step, Action, Attribute, 
-                # Probability of acceptance, System temperature, 
-                # Dispersal, Impurity, Energy
-                history.append((
-                    k, None if move is None else action, None if move is None else move[0],
-                    0.0 if move is None else prob_acceptance, T,
-                    dis, imp, E
-                ))
+                if self.trace_history:
+                    # Step, Action, Attribute, 
+                    # Probability of acceptance, System temperature, 
+                    # Dispersal, Impurity, Energy
+                    history.append((
+                        k, None if move is None else action, None if move is None else move[0],
+                        0.0 if move is None else prob_acceptance, T,
+                        dis, imp, E
+                    ))
             # cool down system temperature
             T = self._cooling(k)
         
