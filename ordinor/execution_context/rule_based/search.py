@@ -803,7 +803,7 @@ class GreedySearchMiner(BaseSearchMiner):
         random_number_generator=None,
         print_steps=True,
         trace_history=False,
-        neighbor_sample_size=100, always_move=False, n_max_move=100
+        neighbor_sample_size=10, always_move=False, n_max_move=1000
     ):
         # Initialize system parameters
         self.neighbor_sample_size = neighbor_sample_size
@@ -967,13 +967,15 @@ class SASearchMiner(BaseSearchMiner):
         random_number_generator=None,
         print_steps=True,
         trace_history=False,
-        T0=1000, Tmin=1, alpha=1
+        neighbor_sample_size=10, T0=1000, Tmin=1, alpha=1
     ):
         # Initialize system parameters
         # initialization method
         self.init_method = init_method
         # batch size to test at initialization, subject to mem size
         self.init_batch = init_batch
+        # size of neighborhood
+        self.neighbor_sample_size = neighbor_sample_size
         # system initial temperature
         self.T0 = T0
         # minimum temperature allowed
@@ -995,12 +997,21 @@ class SASearchMiner(BaseSearchMiner):
         )
 
     def _neighbors(self):
-        # Simulated Annealing generates one neighbor per iteration
+        size = 0
+        neighbors = []
         pr_split = 0.5
-        if self._rng.random() < pr_split:
-            return self._neighbor_split(), 'split'
-        else:
-            return self._neighbor_merge(), 'merge'
+        while size < self.neighbor_sample_size:
+            if self._rng.random() < pr_split:
+                n = self._neighbor_split()
+                if n is not None:
+                    neighbors.append((n, 'split'))
+                    size += 1
+            else:
+                n = self._neighbor_merge()
+                if n is not None:
+                    neighbors.append((n, 'merge'))
+                    size += 1
+        return neighbors
 
     def _prob_acceptance(self, E, E_next, T, 
         dis=None, dis_next=None, imp=None, imp_next=None, 
@@ -1009,7 +1020,7 @@ class SASearchMiner(BaseSearchMiner):
         ):
         # NOTE: allow pr > 1 if E_next < E, to avoid if clause for capping
         # neighbor comparison
-        pr = np.exp(-1 * self._n_E * 1e3 * (E_next - E) / T)
+        pr = np.exp(-1 * self._n_E * (E_next - E) / T)
         '''
         # neighbor comparison
         if dis_next - dis > 0:
@@ -1048,68 +1059,70 @@ class SASearchMiner(BaseSearchMiner):
 
         while T > self.Tmin:
             k += 1
-            # generate one neighbor per iteration
-            move, action = self._neighbors()
-            if move is None:
-                pass
-            else:
-                attr, new_par, original_cols, new_cols = move
-
-                if action == 'split':
-                    nodes_next = self._generate_nodes_split(attr, original_cols, new_cols)
-                else:
-                    nodes_next = self._generate_nodes_merge(attr, original_cols, new_cols)
-                    
-                new_pars = self._pars.copy()
-                new_pars[attr] = new_par
-                ret_next = self._evaluate(nodes_next, new_pars)
-                #self._verify_state(nodes_next)
-                E_next, dis_next, imp_next = ret_next[0], ret_next[1], ret_next[2]
-
-                if self.print_steps:
-                    print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
-                    print('\tCurrent temperature:\t{:.3f}'.format(T))
-                    print('\tCurrent #nodes: {}'.format(len(self._nodes)))
-                    print('\tCurrent energy: {:.6f}'.format(E))
-                    print('\t\t> Current dispersal: {:.6f}'.format(dis))
-                    print('\t\t> Current impurity: {:.6f}'.format(imp))
-                    print('\t' + '-' * 40)
-                    print('\tNeighbor #nodes: {}'.format(len(nodes_next)))
-                    print('\tNeighbor energy: {:.6f}'.format(E_next))
-                    print('\t\t> Neighbor dispersal: {:.6f}'.format(dis_next))
-                    print('\t\t> Neighbor impurity: {:.6f}'.format(imp_next))
-                    print('\t' + '-' * 40)
-                    print('\tBest state @ step [{}]'.format(step_best))
-                    print('\tBest state #nodes: {}'.format(len(nodes_best)))
-                    print('\tBest state energy: {:.6f}'.format(E_best))
-                    print('\t\t> Best state dispersal: {:.6f}'.format(dis_best))
-                    print('\t\t> Best state impurity: {:.6f}'.format(imp_best))
-
-                # decide whether to move to neighbor
-                prob_acceptance = self._prob_acceptance(
-                    E=E, E_next=E_next, T=T, 
-                    dis=dis, dis_next=dis_next, imp=imp, imp_next=imp_next, 
-                    E_best=E_best, dis_best=dis_best, imp_best=imp_best
-                )
-                if self.print_steps:
-                    print('\tProbability of moving: {}'.format(prob_acceptance))
-                if self._rng.random() < prob_acceptance:
-                    # move to neighbor state; update
-                    if self.print_steps:
-                        print('\t\t\t>>> MOVE TO NEIGHBOR')
-                    self._pars[attr] = new_par
-                    del self._nodes[:]
-                    self._nodes = nodes_next
-                    E, dis, imp = E_next, dis_next, imp_next 
-
-                    # check if better than best state
-                    if E < E_best:
-                        step_best = k
-                        E_best, dis_best, imp_best = E, dis, imp
-                        del nodes_best[:]
-                        nodes_best = self._nodes.copy()
-                else:
+            # generate neighbors
+            for i, neighbor in enumerate(self._neighbors()):
+                move, action = neighbor[0], neighbor[1]
+                if move is None:
                     pass
+                else:
+                    attr, new_par, original_cols, new_cols = move
+
+                    if action == 'split':
+                        nodes_next = self._generate_nodes_split(attr, original_cols, new_cols)
+                    else:
+                        nodes_next = self._generate_nodes_merge(attr, original_cols, new_cols)
+                        
+                    new_pars = self._pars.copy()
+                    new_pars[attr] = new_par
+                    ret_next = self._evaluate(nodes_next, new_pars)
+                    #self._verify_state(nodes_next)
+                    E_next, dis_next, imp_next = ret_next[0], ret_next[1], ret_next[2]
+
+                    if self.print_steps:
+                        print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
+                        print('\tCurrent temperature:\t{:.3f}'.format(T))
+                        print('\tCurrent #nodes: {}'.format(len(self._nodes)))
+                        print('\tCurrent energy: {:.6f}'.format(E))
+                        print('\t\t> Current dispersal: {:.6f}'.format(dis))
+                        print('\t\t> Current impurity: {:.6f}'.format(imp))
+                        print('\t' + '-' * 40)
+                        print('\tNeighbor #nodes: {}'.format(len(nodes_next)))
+                        print('\tNeighbor energy: {:.6f}'.format(E_next))
+                        print('\t\t> Neighbor dispersal: {:.6f}'.format(dis_next))
+                        print('\t\t> Neighbor impurity: {:.6f}'.format(imp_next))
+                        print('\t' + '-' * 40)
+                        print('\tBest state @ step [{}]'.format(step_best))
+                        print('\tBest state #nodes: {}'.format(len(nodes_best)))
+                        print('\tBest state energy: {:.6f}'.format(E_best))
+                        print('\t\t> Best state dispersal: {:.6f}'.format(dis_best))
+                        print('\t\t> Best state impurity: {:.6f}'.format(imp_best))
+
+                    # decide whether to move to neighbor
+                    prob_acceptance = self._prob_acceptance(
+                        E=E, E_next=E_next, T=T, 
+                        dis=dis, dis_next=dis_next, imp=imp, imp_next=imp_next, 
+                        E_best=E_best, dis_best=dis_best, imp_best=imp_best
+                    )
+                    if self.print_steps:
+                        print('\tProbability of moving: {}'.format(prob_acceptance))
+
+                    if self._rng.random() < prob_acceptance:
+                        # move to neighbor state; update
+                        if self.print_steps:
+                            print('\t\t\t>>> MOVE TO NEIGHBOR')
+                        self._pars[attr] = new_par
+                        del self._nodes[:]
+                        self._nodes = nodes_next
+                        E, dis, imp = E_next, dis_next, imp_next 
+
+                        # check if better than best state
+                        if E < E_best:
+                            step_best = k
+                            E_best, dis_best, imp_best = E, dis, imp
+                            del nodes_best[:]
+                            nodes_best = self._nodes.copy()
+                    else:
+                        pass
 
             if self.trace_history:
                 # Step, Action, Attribute, 
