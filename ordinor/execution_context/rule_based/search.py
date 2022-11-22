@@ -6,6 +6,7 @@ A series of search-based solutions:
 
 from collections import deque
 import numpy as np
+from scipy.stats import median_abs_deviation as mad
 
 from .BaseSearch import BaseSearchMiner
 
@@ -20,12 +21,16 @@ class GreedySearchMiner(BaseSearchMiner):
         random_number_generator=None,
         print_steps=True,
         trace_history=False,
-        n_iter=10, always_move=False, n_max_move=1000
+        n_iter=10, n_max_move=1000
     ):
         # Initialize system parameters
         self.n_iter = n_iter
-        self.always_move = always_move
         self.n_max_move = n_max_move
+
+        # Initialize additional data structures (tracking visited states)
+        self._visited_states = deque()
+        self._l_dispersal = deque()
+        self._l_impurity = deque()
 
         super().__init__(
             el=el, attr_spec=attr_spec, 
@@ -52,19 +57,23 @@ class GreedySearchMiner(BaseSearchMiner):
                     size += 1
         return neighbors
     
-    def _decide_move(self, E_next, E):
-        if self.always_move:
-            return True
-        else:
-            return E_next < E
-    
+    def _decide_move(self, 
+        E_next=None, E_curr=None,
+        dis_next=None, dis_curr=None, imp_next=None, imp_curr=None
+    ):
+        return (E_next - E_curr) < 0
+
     def _search(self):
-        print('Start greedy search with n_iter={}, always_move={}, n_max_move={}'.format(self.n_iter, self.always_move, self.n_max_move))
+        print('Start greedy search with n_iter={}, n_max_move={}'.format(self.n_iter, self.n_max_move))
 
         #self._verify_state(self._nodes)
 
         ret = self._evaluate(self._nodes, self._pars)
         E, dis, imp = ret[0], ret[1], ret[2]
+
+        self._visited_states.append(self._hash_state(self._pars))
+        self._l_dispersal.append(dis)
+        self._l_impurity.append(imp)
 
         # keep track of the best state
         step_best = 0
@@ -82,7 +91,7 @@ class GreedySearchMiner(BaseSearchMiner):
             k += 1
             l_neighbors = self._neighbors()
             i_bn = -1
-            E_bn, dis_bn, imp_bn = np.inf, np.inf, np.inf
+            E_bn, dis_bn, imp_bn = None, None, None
             nodes_neighbor = []
             for i, neighbor in enumerate(l_neighbors):
                 move, action = neighbor
@@ -97,10 +106,18 @@ class GreedySearchMiner(BaseSearchMiner):
                     new_pars = self._pars.copy()
                     new_pars[attr] = new_par
                     ret_next = self._evaluate(nodes_neighbor, new_pars)
-                    self._verify_state(nodes_neighbor)
+                    #self._verify_state(nodes_neighbor)
                     E_next, dis_next, imp_next = ret_next[0], ret_next[1], ret_next[2]
 
-                    if E_next < E_bn:
+                    id_state_next = self._hash_state(new_pars)
+                    if id_state_next not in self._visited_states:
+                        self._visited_states.append(id_state_next)
+                        self._l_dispersal.append(dis_next)
+                        self._l_impurity.append(imp_next)
+                    else:
+                        pass
+
+                    if i == 0 or self._decide_move(E_next=E_next, E_curr=E_bn):
                         E_bn = E_next
                         i_bn = i
                         dis_bn = dis_next
@@ -133,7 +150,7 @@ class GreedySearchMiner(BaseSearchMiner):
                 print('\t\t> Best state impurity: {:.6f}'.format(imp_best))
 
             # decide whether to move to neighbor
-            if self._decide_move(E_next, E):
+            if self._decide_move(E_next=E_next, E_curr=E):
                 # move to neighbor state; update
                 if self.print_steps:
                     print('\t\t\t>>> MOVE TO NEIGHBOR')
@@ -143,7 +160,9 @@ class GreedySearchMiner(BaseSearchMiner):
                 E, dis, imp = E_next, dis_next, imp_next 
 
                 # check if better than best state
-                if E < E_best:
+                has_new_best = E < E_best
+
+                if has_new_best:
                     step_best = k
                     E_best, dis_best, imp_best = E, dis, imp
                     del nodes_best[:]
@@ -201,9 +220,9 @@ class SASearchMiner(BaseSearchMiner):
         self.alpha = alpha
 
         # Initialize additional data structures (tracking visited states)
-        self._visited_states = deque(maxlen=100)
-        self._l_dispersal = deque(maxlen=100)
-        self._l_impurity = deque(maxlen=100)
+        self._visited_states = deque()
+        self._l_dispersal = deque()
+        self._l_impurity = deque()
 
         # Set flags
         # whether to print the search procedure
@@ -226,52 +245,17 @@ class SASearchMiner(BaseSearchMiner):
         else:
             return self._neighbor_merge(), 'merge'
 
-    def _prob_acceptance(self, E, E_next, T, 
-        dis=None, dis_next=None, imp=None, imp_next=None, 
-        E_best=None, dis_best=None, imp_best=None,
-        **kwarg
+    def _decide_move(self, 
+        T,
+        E_next=None, E_curr=None,
+        dis_next=None, dis_curr=None, imp_next=None, imp_curr=None, 
+        **kwargs
     ):
-        # NOTE: allow pr > 1 if E_next < E, to avoid the need for capping
-        
-        # Composite function: arithmetic mean of the same cost function
-        '''
-        pr = np.exp(-1 * self.T0 * 1e4 * (E_next - E) / T)
-        '''
-
-        # Composite: sum of different cost functions
-        '''
-        if dis_next - dis > 0:
-            cost_dis = np.log(dis_next - dis + 1)
+        delta_E = E_next - E_curr
+        if delta_E <= 0:
+            return 1.0
         else:
-            cost_dis = -1 * np.log(dis - dis_next + 1)
-        cost_imp = (imp_next - imp)
-        pr = np.exp(-1 * self.T0 * (cost_dis + cost_imp) / T)
-        '''
-
-        # Lexicographical: hierarchical comparison
-        delta_dis = dis_next - dis
-        delta_imp = imp_next - imp
-        if delta_dis <= 0 and delta_imp <= 0:
-            # next '>' current
-            pr = 1
-        elif delta_dis > 0 and delta_imp > 0:
-            # next '<' current
-            pr = np.exp(-1 * self.T0 * (E_next - E) / T)
-        else:
-            # non-dominating pair
-            theta_imp = np.abs(np.std(self._l_impurity, ddof=1))
-            theta_dis = np.abs(np.std(self._l_dispersal, ddof=1))
-            if np.abs(delta_imp) >= theta_imp:
-                # change on impurity is significant
-                pr = 1 if delta_imp <= 0 else np.exp(-1 * self.T0 * delta_imp / T)
-            elif np.abs(delta_dis) >= theta_dis:
-                # change on dispersal is significant
-                pr = 1 if delta_dis <= 0 else np.exp(-1 * self.T0 * delta_dis / T)
-            else:
-                # neither changes are significant
-                pr = T / self.T0
-
-        return pr
+            return np.exp(-1 * self.T0 * delta_E / T)
     
     def _cooling(self, T0, k):
         return T0 - self.alpha * k
@@ -285,7 +269,6 @@ class SASearchMiner(BaseSearchMiner):
         ret = self._evaluate(self._nodes, self._pars)
         E, dis, imp = ret[0], ret[1], ret[2]
 
-        # TODO:
         self._visited_states.append(self._hash_state(self._pars))
         self._l_dispersal.append(dis)
         self._l_impurity.append(imp)
@@ -343,22 +326,21 @@ class SASearchMiner(BaseSearchMiner):
                         print('\t\t> Best state dispersal: {:.6f}'.format(dis_best))
                         print('\t\t> Best state impurity: {:.6f}'.format(imp_best))
 
-                    # TODO: save visited states
                     id_state_next = self._hash_state(new_pars)
                     if id_state_next not in self._visited_states:
                         self._visited_states.append(id_state_next)
-                        print('-' * 30 + f'{len(self._visited_states)} visited' + '-' * 30)
                         self._l_dispersal.append(dis_next)
                         self._l_impurity.append(imp_next)
                     else:
+                        pass
+                        '''
                         # Tabu: prevent moving into visited states
                         continue
+                        '''
 
                     # decide whether to move to neighbor
-                    prob_acceptance = self._prob_acceptance(
-                        E=E, E_next=E_next, T=T, 
-                        dis=dis, dis_next=dis_next, imp=imp, imp_next=imp_next, 
-                        E_best=E_best, dis_best=dis_best, imp_best=imp_best
+                    prob_acceptance = self._decide_move(
+                        T=T, E_next=E_next, E_curr=E
                     )
                     if self.print_steps:
                         print('\tProbability of moving: {}'.format(prob_acceptance))
@@ -373,26 +355,7 @@ class SASearchMiner(BaseSearchMiner):
                         E, dis, imp = E_next, dis_next, imp_next 
 
                         # check if better than best state
-                        '''
                         has_new_best = E < E_best
-                        '''
-                        delta_dis = dis - dis_best
-                        delta_imp = imp - imp_best
-                        if delta_dis <= 0 and delta_imp <= 0:
-                            # current '>' best
-                            has_new_best = True
-                        elif delta_dis > 0 and delta_imp > 0:
-                            # current '<' best
-                            has_new_best = False
-                        else:
-                            theta_imp = np.abs(np.std(self._l_impurity, ddof=1))
-                            theta_dis = np.abs(np.std(self._l_dispersal, ddof=1))
-                            if np.abs(delta_imp) >= theta_imp:
-                                has_new_best = delta_imp <= 0
-                            elif np.abs(delta_dis) >= theta_dis:
-                                has_new_best = delta_dis < 0
-                            else:
-                                has_new_best = False
 
                         if has_new_best:
                             step_best = k

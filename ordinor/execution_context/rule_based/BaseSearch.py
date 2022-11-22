@@ -703,9 +703,13 @@ class BaseSearchMiner(BaseMiner):
         imp = self._calculate_impurity(nodes)
 
         # arithmetic mean
-        e = 0.5 * (dis + imp)
+        #e = 0.5 * (dis + imp)
         # harmonic mean (with two extremes disabled)
         #e = 2 * dis * imp / (dis + imp)
+
+        # weighted mean based on distance from zero
+        wt_dis = self._dist_from_zero(pars)
+        e = wt_dis * dis + (1.0 - wt_dis) * imp
 
         return e, dis, imp
 
