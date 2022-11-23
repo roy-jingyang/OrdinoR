@@ -19,12 +19,16 @@ from .Rule import Rule
 
 class BaseSearchMiner(BaseMiner):
     def __init__(self, 
+        # inputs
         el, attr_spec, 
-        init_method='random',
-        init_batch=1000,
+        # weight to be assigned to dispersal in the composite function
+        weight_dispersal=None,
+        # initialization method
+        init_method='random', init_batch=1000,
+        # random number generator (seed control)
         random_number_generator=None,
-        print_steps=True,
-        trace_history=False,
+        # output control
+        print_steps=True, trace_history=False
     ):
         # Parse log
         if el is not None:
@@ -169,13 +173,14 @@ class BaseSearchMiner(BaseMiner):
             # Record final results
             self.type_dict = dict()
 
+            # Set objective function
+            self.weight_dispersal = weight_dispersal
+
             # Set init method
             self.init_method = init_method
             self.init_batch = init_batch
 
             # Set flags
-            # whether to include sparsity in search
-            #self.use_sparsity = use_sparsity
             # whether to print the search procedure
             self.print_steps = print_steps
             # whether to record the history of intermediate stats
@@ -382,16 +387,6 @@ class BaseSearchMiner(BaseMiner):
             # TODO: need to start from existing combinations instead of enumeration
             raise NotImplementedError('Potential oversized problem: to develop a mechanism to include only observed combinations')
         else:
-            '''
-            # Solution 1.1 (fallback): enumerate and test all combinations
-            for prod in product(*comb):
-                arr_joined = np.concatenate(prod)
-                events = self._apply_to_all(arr_joined)
-                if len(events) > 0:
-                    resource_counts = self._apply_get_resource_counts(events)
-                    node = Node2(arr_joined, events, resource_counts)
-                    self._nodes.append(node)
-            '''
             # Solution 1.2: use matrix multiplication to enumerate combinations
             # TODO: optimize the creation of nodes
             # use batch processing to avoid memory overuse
@@ -500,14 +495,15 @@ class BaseSearchMiner(BaseMiner):
         '''
         raise NotImplementedError('Abstract class. Use a child class implementing this method.')
     
-    def _neighbor_split(self):
+    def _neighbor_split(self, attr=None):
         '''
         Must return a 4-tuple:
             (attr_name, par, [input part arr], [output part arr]) 
                                 len=1               len=2 
         '''
-        # select an attribute randomly
-        attr = self._rng.choice(list(self._tdav.keys()))
+        # select an attribute randomly, if not given
+        if attr is None:
+            attr = self._rng.choice(list(self._tdav.keys()))
         # create a copy
         par = self._pars[attr].copy()
         if np.all(np.any(par, axis=0)) and np.sum(par) == len(par):
@@ -587,14 +583,15 @@ class BaseSearchMiner(BaseMiner):
                 )
         return nodes_next
 
-    def _neighbor_merge(self):
+    def _neighbor_merge(self, attr=None):
         '''
         Must return a 4-tuple:
             (attr_name, par, [input part arr], [output part arr]) 
                                 len=2               len=1 
         '''
-        # select an attribute randomly
-        attr = self._rng.choice(list(self._tdav.keys()))
+        # select an attribute randomly, if not given
+        if attr is None:
+            attr = self._rng.choice(list(self._tdav.keys()))
         par = self._pars[attr].copy()
         if np.sum(np.all(par, axis=0)) == 1:
             # only one singleton, no further merge allowed
@@ -702,14 +699,10 @@ class BaseSearchMiner(BaseMiner):
         dis = self._calculate_dispersal(nodes)
         imp = self._calculate_impurity(nodes)
 
-        # arithmetic mean
-        #e = 0.5 * (dis + imp)
-        # harmonic mean (with two extremes disabled)
-        #e = 2 * dis * imp / (dis + imp)
-
         # weighted mean based on distance from zero
-        wt_dis = self._dist_from_zero(pars)
-        e = wt_dis * dis + (1.0 - wt_dis) * imp
+        wt = self.weight_dispersal if self.weight_dispersal else self._dist_from_zero(pars)
+        # TODO: sum up to 1.0 - is this necessary?
+        e = wt * dis + (1.0 - wt) * imp
 
         return e, dis, imp
 
@@ -772,20 +765,43 @@ class BaseSearchMiner(BaseMiner):
             n_pars_comb *= len(np.unique(np.nonzero(pars[attr])[1]))
         return (1.0 - len(nodes) / n_pars_comb)
     
+    def _decide_move(self, E_next=None, E_curr=None, dis_next=None, dis_curr=None, imp_next=None, imp_curr=None):
+        raise NotImplementedError('Abstract class. Use a child class implementing this method.')
+
     def _search(self):
         raise NotImplementedError('Abstract class. Use a child class implementing this method.')
     
-    def _save_history(self, data_history, columns):
-        fnout = 'SearchMiner_{}_stats.out'.format(pd.Timestamp.now().strftime('%Y%m%d-%H%M%S'))
-        df_history = pd.DataFrame(
-            data=data_history, 
+    def _save_history(self, search_history, columns, l_dispersal, l_impurity):
+        fnout_prefix = '{}_{}_'.format(
+            self.__class__.__name__,
+            pd.Timestamp.now().strftime('%Y%m%d-%H%M%S')
+        )
+        # search history
+        df_search_history = pd.DataFrame(
+            data=search_history, 
             columns=columns
         )
-        df_history.to_csv(
-            fnout,
+        fnout_search_history = '{}_search.out'.format(fnout_prefix)
+        df_search_history.to_csv(
+            fnout_search_history,
             sep=',',
             na_rep='None',
             float_format='%.6f',
             index=False
         )
-        print('Procedure history has been written to file "{}".'.format(fnout))
+        print('Search history is written to file "{}".'.format(fnout_search_history))
+
+        # unique states visited by search
+        df_states_history = pd.DataFrame(
+            data=list(zip(l_dispersal, l_impurity)), 
+            columns=['dispersal', 'impurity']
+        )
+        fnout_states_history = '{}_states.out'.format(fnout_prefix)
+        df_states_history.to_csv(
+            fnout_states_history,
+            sep=',',
+            na_rep='None',
+            float_format='%.6f',
+            index=False
+        )
+        print('Unique states history is written to file "{}".'.format(fnout_states_history))

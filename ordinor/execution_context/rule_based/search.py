@@ -4,12 +4,10 @@ A series of search-based solutions:
     - simulated annealing
 '''
 
-from collections import deque
 import numpy as np
 from scipy.stats import median_abs_deviation as mad
 
 from .BaseSearch import BaseSearchMiner
-
 
 class ExactSearchMiner(BaseSearchMiner):
     ...
@@ -17,6 +15,7 @@ class ExactSearchMiner(BaseSearchMiner):
 class GreedySearchMiner(BaseSearchMiner):
     def __init__(self, 
         el, attr_spec, 
+        weight_dispersal=None,
         init_method='random', init_batch=1000,
         random_number_generator=None,
         print_steps=True,
@@ -28,12 +27,13 @@ class GreedySearchMiner(BaseSearchMiner):
         self.n_max_move = n_max_move
 
         # Initialize additional data structures (tracking visited states)
-        self._visited_states = deque()
-        self._l_dispersal = deque()
-        self._l_impurity = deque()
+        self._visited_states = set()
+        self._l_dispersal = []
+        self._l_impurity = []
 
         super().__init__(
             el=el, attr_spec=attr_spec, 
+            weight_dispersal=weight_dispersal,
             random_number_generator=random_number_generator, 
             init_method=init_method, init_batch=init_batch,
             print_steps=print_steps, trace_history=trace_history
@@ -44,6 +44,7 @@ class GreedySearchMiner(BaseSearchMiner):
         size = 0
         neighbors = []
         pr_split = 0.5
+        # fill in non-empty choices of neighbors
         while size < self.n_iter:
             if self._rng.random() < pr_split:
                 n = self._neighbor_split()
@@ -71,7 +72,7 @@ class GreedySearchMiner(BaseSearchMiner):
         ret = self._evaluate(self._nodes, self._pars)
         E, dis, imp = ret[0], ret[1], ret[2]
 
-        self._visited_states.append(self._hash_state(self._pars))
+        self._visited_states.add(self._hash_state(self._pars))
         self._l_dispersal.append(dis)
         self._l_impurity.append(imp)
 
@@ -90,7 +91,8 @@ class GreedySearchMiner(BaseSearchMiner):
         while k < self.n_max_move:
             k += 1
             l_neighbors = self._neighbors()
-            i_bn = -1
+            # bn: Best Neighbor
+            i_bn = None
             E_bn, dis_bn, imp_bn = None, None, None
             nodes_neighbor = []
             for i, neighbor in enumerate(l_neighbors):
@@ -109,20 +111,22 @@ class GreedySearchMiner(BaseSearchMiner):
                     #self._verify_state(nodes_neighbor)
                     E_next, dis_next, imp_next = ret_next[0], ret_next[1], ret_next[2]
 
+                    # record unique states visited
                     id_state_next = self._hash_state(new_pars)
                     if id_state_next not in self._visited_states:
-                        self._visited_states.append(id_state_next)
+                        self._visited_states.add(id_state_next)
                         self._l_dispersal.append(dis_next)
                         self._l_impurity.append(imp_next)
                     else:
                         pass
 
-                    if i == 0 or self._decide_move(E_next=E_next, E_curr=E_bn):
+                    if i_bn is None or self._decide_move(E_next=E_next, E_curr=E_bn):
                         E_bn = E_next
                         i_bn = i
                         dis_bn = dis_next
                         imp_bn = imp_next
-            # keep the best neighbor (bn) for testing
+                    
+            # keep only the best neighbor (bn) for testing
             move_bn, action_bn = l_neighbors[i_bn]
             if action_bn == 'split':
                 nodes_next = self._generate_nodes_split(move_bn[0], move_bn[2], move_bn[3])
@@ -151,13 +155,21 @@ class GreedySearchMiner(BaseSearchMiner):
 
             # decide whether to move to neighbor
             if self._decide_move(E_next=E_next, E_curr=E):
-                # move to neighbor state; update
+                # move to best neighboring state; update
                 if self.print_steps:
                     print('\t\t\t>>> MOVE TO NEIGHBOR')
                 self._pars[move_bn[0]] = move_bn[1]
                 del self._nodes[:]
                 self._nodes = nodes_next
                 E, dis, imp = E_next, dis_next, imp_next 
+
+                if self.trace_history:
+                    # Step, Action, Attribute, 
+                    # Dispersal, Impurity, Energy
+                    history.append((
+                        k, action_bn, move_bn[0],
+                        dis, imp, E
+                    ))
 
                 # check if better than best state
                 has_new_best = E < E_best
@@ -167,15 +179,16 @@ class GreedySearchMiner(BaseSearchMiner):
                     E_best, dis_best, imp_best = E, dis, imp
                     del nodes_best[:]
                     nodes_best = self._nodes.copy()
+            else:
+                # best neighbor is worse; no move
+                if self.trace_history:
+                    # Step, Action, Attribute, 
+                    # Dispersal, Impurity, Energy
+                    history.append((
+                        k, None, None,
+                        dis, imp, E
+                    ))
 
-            if self.trace_history:
-                # Step, Action, Attribute, 
-                # Dispersal, Impurity, Energy
-                history.append((
-                    k, None if move_bn is None else action_bn, None if move_bn is None else move_bn[0],
-                    dis, imp, E
-                ))
-        
         print(f'\nSearch ended at step:\t{k}')
         del self._nodes[:]
         self._nodes = nodes_best
@@ -188,22 +201,24 @@ class GreedySearchMiner(BaseSearchMiner):
         # output history
         if self.trace_history:
             self._save_history(
-                history, 
+                search_history=history, 
                 columns=[
                     'step', 'action', 'attribute', 
                     'dispersal', 'impurity', 'energy'
-                ]
+                ],
+                l_dispersal=self._l_dispersal, l_impurity=self._l_impurity
             )
 
 
 class SASearchMiner(BaseSearchMiner):
     def __init__(self, 
         el, attr_spec, 
+        weight_dispersal=None,
         init_method='random', init_batch=1000,
         random_number_generator=None,
         print_steps=True,
         trace_history=False,
-        n_iter=10, T0=1000, Tmin=1, alpha=1
+        n_iter=10, T0=1000, Tmin=1, alpha=1, restart_interval=10,
     ):
         # Initialize system parameters
         # initialization method
@@ -218,11 +233,13 @@ class SASearchMiner(BaseSearchMiner):
         self.Tmin = Tmin
         # set rate for reducing system temperature
         self.alpha = alpha
+        # set restart interval by number of steps 
+        self.restart_interval = restart_interval
 
         # Initialize additional data structures (tracking visited states)
-        self._visited_states = deque()
-        self._l_dispersal = deque()
-        self._l_impurity = deque()
+        self._visited_states = set()
+        self._l_dispersal = []
+        self._l_impurity = []
 
         # Set flags
         # whether to print the search procedure
@@ -232,6 +249,7 @@ class SASearchMiner(BaseSearchMiner):
 
         super().__init__(
             el=el, attr_spec=attr_spec, 
+            weight_dispersal=weight_dispersal,
             random_number_generator=random_number_generator, 
             init_method=init_method, init_batch=init_batch,
             print_steps=print_steps, trace_history=trace_history
@@ -255,13 +273,13 @@ class SASearchMiner(BaseSearchMiner):
         if delta_E <= 0:
             return 1.0
         else:
-            return np.exp(-1 * self.T0 * delta_E / T)
+            return np.exp(-1 * self.T0 * 1e4 * delta_E / T)
     
     def _cooling(self, T0, k):
         return T0 - self.alpha * k
 
     def _search(self):
-        print('Start simulated annealing search with T0={}, Tmin={}, alpha={}:'.format(self.T0, self.Tmin, self.alpha))
+        print('Start simulated annealing search with T0={}, Tmin={}, alpha={}, restart_interal={}:'.format(self.T0, self.Tmin, self.alpha, self.restart_interval))
 
         #self._verify_state(self._nodes)
 
@@ -269,7 +287,7 @@ class SASearchMiner(BaseSearchMiner):
         ret = self._evaluate(self._nodes, self._pars)
         E, dis, imp = ret[0], ret[1], ret[2]
 
-        self._visited_states.append(self._hash_state(self._pars))
+        self._visited_states.add(self._hash_state(self._pars))
         self._l_dispersal.append(dis)
         self._l_impurity.append(imp)
 
@@ -277,8 +295,10 @@ class SASearchMiner(BaseSearchMiner):
         step_best = 0
         E_best, dis_best, imp_best = E, dis, imp
         nodes_best = self._nodes.copy()
+        pars_best = self._pars.copy()
 
         k = 0
+        cnt_restart = 0
         # keep track of history, if required
         if self.trace_history:
             # Step, Action, Attribute, 
@@ -288,7 +308,18 @@ class SASearchMiner(BaseSearchMiner):
 
         while T > self.Tmin:
             k += 1
-            # generate neighbors
+            cnt_restart += 1
+            # restart if best has not been updated after specified interval
+            if cnt_restart == self.restart_interval:
+                cnt_restart = 0
+                print(f'Restart search at step [{k}], using best state found at step [{step_best}]')
+                del self._nodes[:]
+                self._nodes = nodes_best.copy()
+                del self._pars
+                self._pars = pars_best.copy()
+                E, dis, imp = E_best, dis_best, imp_best
+
+            # generate neighbors and visit them sequentially
             for i in range(self.n_iter):
                 move, action = self._neighbors()
                 if move is None:
@@ -328,7 +359,7 @@ class SASearchMiner(BaseSearchMiner):
 
                     id_state_next = self._hash_state(new_pars)
                     if id_state_next not in self._visited_states:
-                        self._visited_states.append(id_state_next)
+                        self._visited_states.add(id_state_next)
                         self._l_dispersal.append(dis_next)
                         self._l_impurity.append(imp_next)
                     else:
@@ -362,6 +393,10 @@ class SASearchMiner(BaseSearchMiner):
                             E_best, dis_best, imp_best = E, dis, imp
                             del nodes_best[:]
                             nodes_best = self._nodes.copy()
+                            del pars_best
+                            pars_best = self._pars.copy()
+                            # reset restart counter
+                            cnt_restart = 0
                     else:
                         pass
 
@@ -389,39 +424,11 @@ class SASearchMiner(BaseSearchMiner):
         # output history
         if self.trace_history:
             self._save_history(
-                history, 
+                search_history=history, 
                 columns=[
                     'step', 'action', 'attribute', 
                     'prob_acceptance', 'temp',
                     'dispersal', 'impurity', 'energy'
-                ]
+                ],
+                l_dispersal=self._l_dispersal, l_impurity=self._l_impurity
             )
-
-class MTSASearchMiner(SASearchMiner):
-    # TODO: Multi-Objective Simulated Annealing using different temperatures
-    def __init__(self,
-        el, attr_spec,
-        init_method='random', init_batch=1000,
-        random_number_generator=None,
-        print_steps=True,
-        trace_history=False,
-        n_iter=10, alpha=1,
-        T0_dis=500, Tmin_dis=1,
-        T0_imp=1000, Tmin_imp=1
-    ): 
-        pass
-    
-    def _prob_acceptance(self, E, E_next, 
-        T_dis, T_imp,
-        dis=None, dis_next=None, imp=None, imp_next=None, 
-        E_best=None, dis_best=None, imp_best=None,
-        **kwarg
-    ):
-        pass
-
-    def _search(self):
-        print('Start simulated annealing search with ', end='')
-        print('T0 (dispersal)={}, Tmin (dispersal)={}, '.format(self.T0_dis, self.Tmin_dis), end='')
-        print('T0 (impurity)={}, Tmin (impurity)={}, '.format(self.T0_imp, self.Tmin_imp), end='')
-        print('alpha={}:'.format(self.alpha))
-        pass
