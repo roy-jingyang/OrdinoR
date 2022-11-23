@@ -684,9 +684,11 @@ class BaseSearchMiner(BaseMiner):
         return nodes_next
     
     def _dist_from_zero(self, pars, normalized=True):
-        curr_n_moves = np.sum(
-            np.count_nonzero(np.any(par, axis=0)) for par in pars.values()
-        ) 
+        curr_n_moves = (
+            np.sum(np.count_nonzero(np.any(par, axis=0)) for par in pars.values()) 
+            - 
+            self._n_tda
+        )
         if normalized:
             return curr_n_moves / self._search_diameter
         else:
