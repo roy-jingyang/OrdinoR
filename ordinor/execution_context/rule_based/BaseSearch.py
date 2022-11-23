@@ -780,7 +780,7 @@ class BaseSearchMiner(BaseMiner):
             data=search_history, 
             columns=columns
         )
-        fnout_search_history = '{}_search.out'.format(fnout_prefix)
+        fnout_search_history = '{}_search.csv'.format(fnout_prefix)
         df_search_history.to_csv(
             fnout_search_history,
             sep=',',
@@ -795,7 +795,7 @@ class BaseSearchMiner(BaseMiner):
             data=list(zip(l_dispersal, l_impurity)), 
             columns=['dispersal', 'impurity']
         )
-        fnout_states_history = '{}_states.out'.format(fnout_prefix)
+        fnout_states_history = '{}_states.csv'.format(fnout_prefix)
         df_states_history.to_csv(
             fnout_states_history,
             sep=',',
