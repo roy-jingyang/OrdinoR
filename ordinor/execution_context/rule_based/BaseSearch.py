@@ -701,7 +701,6 @@ class BaseSearchMiner(BaseMiner):
 
         # weighted mean based on distance from zero
         wt = self.weight_dispersal if self.weight_dispersal else self._dist_from_zero(pars)
-        # TODO: sum up to 1.0 - is this necessary?
         e = wt * dis + (1.0 - wt) * imp
 
         return e, dis, imp
