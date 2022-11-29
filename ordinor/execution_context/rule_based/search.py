@@ -9,22 +9,24 @@ from scipy.stats import median_abs_deviation as mad
 
 from .BaseSearch import BaseSearchMiner
 
-class ExactSearchMiner(BaseSearchMiner):
+class RandomWalkSearchMiner(BaseSearchMiner):
+    # TODO: for testing purpose
     ...
 
 class GreedySearchMiner(BaseSearchMiner):
     def __init__(self, 
         el, attr_spec, 
-        weight_dispersal=None,
         init_method='random', init_batch=1000,
         random_number_generator=None,
         print_steps=True,
         trace_history=False,
-        n_iter=10, n_max_move=1000
+        size_neighborhood=None, max_iter=1000
     ):
         # Initialize system parameters
-        self.n_iter = n_iter
-        self.n_max_move = n_max_move
+        # size of neighborhood per iteration
+        self.size_neighborhood = size_neighborhood
+        # maximum number of iterations allowed
+        self.max_iter = max_iter
 
         # Initialize additional data structures (tracking visited states)
         self._visited_states = set()
@@ -33,7 +35,6 @@ class GreedySearchMiner(BaseSearchMiner):
 
         super().__init__(
             el=el, attr_spec=attr_spec, 
-            weight_dispersal=weight_dispersal,
             random_number_generator=random_number_generator, 
             init_method=init_method, init_batch=init_batch,
             print_steps=print_steps, trace_history=trace_history
@@ -45,7 +46,7 @@ class GreedySearchMiner(BaseSearchMiner):
         neighbors = []
         pr_split = 0.5
         # fill in non-empty choices of neighbors
-        while size < self.n_iter:
+        while size < self.size_neighborhood:
             if self._rng.random() < pr_split:
                 n = self._neighbor_split()
                 if n is not None:
@@ -65,7 +66,11 @@ class GreedySearchMiner(BaseSearchMiner):
         return (E_next - E_curr) < 0
 
     def _search(self):
-        print('Start greedy search with n_iter={}, n_max_move={}'.format(self.n_iter, self.n_max_move))
+        # determine size of neighborhood, if needed
+        if self.size_neighborhood is None:
+            self.size_neighborhood = self._n_tda
+
+        print('Start greedy search with size_neighborhood={}, max_iter={}'.format(self.size_neighborhood, self.max_iter))
 
         #self._verify_state(self._nodes)
 
@@ -88,7 +93,7 @@ class GreedySearchMiner(BaseSearchMiner):
             # Dispersal, Impurity, Energy
             history = [(0, self.init_method, None, dis, imp, E)]
 
-        while k < self.n_max_move:
+        while k < self.max_iter:
             k += 1
             l_neighbors = self._neighbors()
             # bn: Best Neighbor
@@ -213,20 +218,19 @@ class GreedySearchMiner(BaseSearchMiner):
 class SASearchMiner(BaseSearchMiner):
     def __init__(self, 
         el, attr_spec, 
-        weight_dispersal=None,
         init_method='random', init_batch=1000,
         random_number_generator=None,
         print_steps=True,
         trace_history=False,
-        n_iter=10, T0=1000, Tmin=1, alpha=1, restart_interval=10,
+        size_neighborhood=None, T0=1000, Tmin=1e-3, alpha=0.95, restart_interval=10,
     ):
         # Initialize system parameters
         # initialization method
         self.init_method = init_method
         # batch size to test at initialization, subject to mem size
         self.init_batch = init_batch
-        # number of iterations per temperature, i.e., size of neighborhood
-        self.n_iter = n_iter
+        # size of neighborhood per temperature
+        self.size_neighborhood = size_neighborhood
         # system initial temperature
         self.T0 = T0
         # minimum temperature allowed
@@ -249,7 +253,6 @@ class SASearchMiner(BaseSearchMiner):
 
         super().__init__(
             el=el, attr_spec=attr_spec, 
-            weight_dispersal=weight_dispersal,
             random_number_generator=random_number_generator, 
             init_method=init_method, init_batch=init_batch,
             print_steps=print_steps, trace_history=trace_history
@@ -275,12 +278,15 @@ class SASearchMiner(BaseSearchMiner):
         else:
             return np.exp(-1 * delta_E / T)
     
-    def _cooling(self, T0, k):
-        #return T0 - self.alpha * k
-        return T0 * 0.95 ** k
+    def _cooling(self, k):
+        return self.T0 * self.alpha ** k
 
     def _search(self):
-        print('Start simulated annealing search with T0={}, Tmin={}, alpha={}, restart_interval={}:'.format(self.T0, self.Tmin, self.alpha, self.restart_interval))
+        # determine size of neighborhood, if needed
+        if self.size_neighborhood is None:
+            self.size_neighborhood = self._n_tda
+
+        print('Start simulated annealing search with size_neighborhood={}, T0={}, Tmin={}, alpha={}, restart_interval={}:'.format(self.size_neighborhood, self.T0, self.Tmin, self.alpha, self.restart_interval))
 
         #self._verify_state(self._nodes)
 
@@ -321,7 +327,7 @@ class SASearchMiner(BaseSearchMiner):
                 E, dis, imp = E_best, dis_best, imp_best
 
             # generate neighbors and visit them sequentially
-            for i in range(self.n_iter):
+            for i in range(self.size_neighborhood):
                 move, action = self._neighbors()
                 if move is None:
                     pass
@@ -411,7 +417,7 @@ class SASearchMiner(BaseSearchMiner):
                         dis, imp, E
                     ))
             # cool down system temperature
-            T = self._cooling(self.T0, k)
+            T = self._cooling(k)
         
         print(f'\nSearch ended with final system temperature:\t{T}')
         del self._nodes[:]

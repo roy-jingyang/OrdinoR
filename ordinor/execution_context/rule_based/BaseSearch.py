@@ -21,8 +21,6 @@ class BaseSearchMiner(BaseMiner):
     def __init__(self, 
         # inputs
         el, attr_spec, 
-        # weight to be assigned to dispersal in the composite function
-        weight_dispersal=None,
         # initialization method
         init_method='random', init_batch=1000,
         # random number generator (seed control)
@@ -172,9 +170,6 @@ class BaseSearchMiner(BaseMiner):
 
             # Record final results
             self.type_dict = dict()
-
-            # Set objective function
-            self.weight_dispersal = weight_dispersal
 
             # Set init method
             self.init_method = init_method
@@ -701,9 +696,8 @@ class BaseSearchMiner(BaseMiner):
         dis = self._calculate_dispersal(nodes)
         imp = self._calculate_impurity(nodes)
 
-        # weighted mean
-        wt = self.weight_dispersal if self.weight_dispersal else self._dist_from_zero(pars)
-        e = wt * dis + (1.0 - wt) * imp
+        # arithmetic mean
+        e = 0.5 * (dis + imp)
 
         return e, dis, imp
 
