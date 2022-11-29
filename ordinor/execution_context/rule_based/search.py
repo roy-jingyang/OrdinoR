@@ -273,10 +273,11 @@ class SASearchMiner(BaseSearchMiner):
         if delta_E <= 0:
             return 1.0
         else:
-            return np.exp(-1 * self.T0 * delta_E / T)
+            return np.exp(-1 * delta_E / T)
     
     def _cooling(self, T0, k):
-        return T0 - self.alpha * k
+        #return T0 - self.alpha * k
+        return T0 * 0.95 ** k
 
     def _search(self):
         print('Start simulated annealing search with T0={}, Tmin={}, alpha={}, restart_interval={}:'.format(self.T0, self.Tmin, self.alpha, self.restart_interval))

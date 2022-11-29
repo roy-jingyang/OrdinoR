@@ -701,7 +701,7 @@ class BaseSearchMiner(BaseMiner):
         dis = self._calculate_dispersal(nodes)
         imp = self._calculate_impurity(nodes)
 
-        # weighted mean based on distance from zero
+        # weighted mean
         wt = self.weight_dispersal if self.weight_dispersal else self._dist_from_zero(pars)
         e = wt * dis + (1.0 - wt) * imp
 
