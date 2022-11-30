@@ -84,6 +84,7 @@ class GreedySearchMiner(BaseSearchMiner):
         # keep track of the best state 
         # (excl. start state, if init_method is `zero` or `full_split`)
         if self.init_method in ['zero' or 'full_split']:
+            id_state_excl = self._hash_state(self._pars)
             step_best = None
             E_best, dis_best, imp_best = None, None, None
             nodes_best = None
@@ -158,11 +159,12 @@ class GreedySearchMiner(BaseSearchMiner):
                 print('\t\t> Neighbor dispersal: {:.6f}'.format(dis_next))
                 print('\t\t> Neighbor impurity: {:.6f}'.format(imp_next))
                 print('\t' + '-' * 40)
-                print('\tBest state @ step [{}]'.format(step_best))
-                print('\tBest state #nodes: {}'.format(len(nodes_best)))
-                print('\tBest state energy: {:.6f}'.format(E_best))
-                print('\t\t> Best state dispersal: {:.6f}'.format(dis_best))
-                print('\t\t> Best state impurity: {:.6f}'.format(imp_best))
+                if E_best:
+                    print('\tBest state @ step [{}]'.format(step_best))
+                    print('\tBest state #nodes: {}'.format(len(nodes_best)))
+                    print('\tBest state energy: {:.6f}'.format(E_best))
+                    print('\t\t> Best state dispersal: {:.6f}'.format(dis_best))
+                    print('\t\t> Best state impurity: {:.6f}'.format(imp_best))
 
             # decide whether to move to neighbor
             if self._decide_move(E_next=E_next, E_curr=E):
@@ -183,12 +185,16 @@ class GreedySearchMiner(BaseSearchMiner):
                     ))
 
                 # check if better than best state
-                has_new_best = E_best is None or E < E_best
+                has_new_best = (
+                    E_best is None or 
+                    id_state_next != id_state_excl and E < E_best
+                )
 
                 if has_new_best:
                     step_best = k
                     E_best, dis_best, imp_best = E, dis, imp
-                    del nodes_best[:]
+                    if nodes_best:
+                        del nodes_best[:]
                     nodes_best = self._nodes.copy()
             else:
                 # best neighbor is worse; no move
@@ -305,6 +311,7 @@ class SASearchMiner(BaseSearchMiner):
         # keep track of the best state 
         # (excl. start state, if init_method is `zero` or `full_split`)
         if self.init_method in ['zero' or 'full_split']:
+            id_state_excl = self._hash_state(self._pars)
             step_best = None
             E_best, dis_best, imp_best = None, None, None
             nodes_best = None
@@ -369,23 +376,18 @@ class SASearchMiner(BaseSearchMiner):
                         print('\t\t> Neighbor dispersal: {:.6f}'.format(dis_next))
                         print('\t\t> Neighbor impurity: {:.6f}'.format(imp_next))
                         print('\t' + '-' * 40)
-                        print('\tBest state @ step [{}]'.format(step_best))
-                        print('\tBest state #nodes: {}'.format(len(nodes_best)))
-                        print('\tBest state energy: {:.6f}'.format(E_best))
-                        print('\t\t> Best state dispersal: {:.6f}'.format(dis_best))
-                        print('\t\t> Best state impurity: {:.6f}'.format(imp_best))
+                        if E_best:
+                            print('\tBest state @ step [{}]'.format(step_best))
+                            print('\tBest state #nodes: {}'.format(len(nodes_best)))
+                            print('\tBest state energy: {:.6f}'.format(E_best))
+                            print('\t\t> Best state dispersal: {:.6f}'.format(dis_best))
+                            print('\t\t> Best state impurity: {:.6f}'.format(imp_best))
 
                     id_state_next = self._hash_state(new_pars)
                     if id_state_next not in self._visited_states:
                         self._visited_states.add(id_state_next)
                         self._l_dispersal.append(dis_next)
                         self._l_impurity.append(imp_next)
-                    else:
-                        pass
-                        '''
-                        # Tabu: prevent moving into visited states
-                        continue
-                        '''
 
                     # decide whether to move to neighbor
                     prob_acceptance = self._decide_move(
@@ -404,14 +406,19 @@ class SASearchMiner(BaseSearchMiner):
                         E, dis, imp = E_next, dis_next, imp_next 
 
                         # check if better than best state
-                        has_new_best = E_best is None or E < E_best
+                        has_new_best = (
+                            E_best is None or 
+                            id_state_next != id_state_excl and E < E_best
+                        )
 
                         if has_new_best:
                             step_best = k
                             E_best, dis_best, imp_best = E, dis, imp
-                            del nodes_best[:]
+                            if nodes_best:
+                                del nodes_best[:]
                             nodes_best = self._nodes.copy()
-                            del pars_best
+                            if pars_best:
+                                del pars_best
                             pars_best = self._pars.copy()
                             # reset restart counter
                             cnt_restart = 0
