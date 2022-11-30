@@ -59,9 +59,9 @@ class GreedySearchMiner(BaseSearchMiner):
                     size += 1
         return neighbors
     
-    def _decide_move(self, 
+    def _decide_move(
+        self, 
         E_next=None, E_curr=None,
-        dis_next=None, dis_curr=None, imp_next=None, imp_curr=None
     ):
         return (E_next - E_curr) < 0
 
@@ -81,10 +81,16 @@ class GreedySearchMiner(BaseSearchMiner):
         self._l_dispersal.append(dis)
         self._l_impurity.append(imp)
 
-        # keep track of the best state
-        step_best = 0
-        E_best, dis_best, imp_best = E, dis, imp
-        nodes_best = self._nodes.copy()
+        # keep track of the best state 
+        # (excl. start state, if init_method is `zero` or `full_split`)
+        if self.init_method in ['zero' or 'full_split']:
+            step_best = None
+            E_best, dis_best, imp_best = None, None, None
+            nodes_best = None
+        else:
+            step_best = 0
+            E_best, dis_best, imp_best = E, dis, imp
+            nodes_best = self._nodes.copy()
 
         k = 0
         # keep track of history, if required
@@ -177,7 +183,7 @@ class GreedySearchMiner(BaseSearchMiner):
                     ))
 
                 # check if better than best state
-                has_new_best = E < E_best
+                has_new_best = E_best is None or E < E_best
 
                 if has_new_best:
                     step_best = k
@@ -266,11 +272,9 @@ class SASearchMiner(BaseSearchMiner):
         else:
             return self._neighbor_merge(), 'merge'
 
-    def _decide_move(self, 
-        T,
-        E_next=None, E_curr=None,
-        dis_next=None, dis_curr=None, imp_next=None, imp_curr=None, 
-        **kwargs
+    def _decide_move(
+        self, 
+        T, E_next=None, E_curr=None,
     ):
         delta_E = E_next - E_curr
         if delta_E <= 0:
@@ -298,11 +302,18 @@ class SASearchMiner(BaseSearchMiner):
         self._l_dispersal.append(dis)
         self._l_impurity.append(imp)
 
-        # keep track of the best state
-        step_best = 0
-        E_best, dis_best, imp_best = E, dis, imp
-        nodes_best = self._nodes.copy()
-        pars_best = self._pars.copy()
+        # keep track of the best state 
+        # (excl. start state, if init_method is `zero` or `full_split`)
+        if self.init_method in ['zero' or 'full_split']:
+            step_best = None
+            E_best, dis_best, imp_best = None, None, None
+            nodes_best = None
+            pars_best = None
+        else:
+            step_best = 0
+            E_best, dis_best, imp_best = E, dis, imp
+            nodes_best = self._nodes.copy()
+            pars_best = self._pars.copy()
 
         k = 0
         cnt_restart = 0
@@ -393,7 +404,7 @@ class SASearchMiner(BaseSearchMiner):
                         E, dis, imp = E_next, dis_next, imp_next 
 
                         # check if better than best state
-                        has_new_best = E < E_best
+                        has_new_best = E_best is None or E < E_best
 
                         if has_new_best:
                             step_best = k
