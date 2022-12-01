@@ -234,7 +234,7 @@ class SASearchMiner(BaseSearchMiner):
         random_number_generator=None,
         print_steps=True,
         trace_history=False,
-        size_neighborhood=None, T0=1000, Tmin=1e-3, alpha=0.95, restart_interval=10,
+        size_neighborhood=None, T0=1000, Tmin=1e-4, alpha=0.99, restart_interval=100,
     ):
         # Initialize system parameters
         # initialization method
@@ -289,6 +289,7 @@ class SASearchMiner(BaseSearchMiner):
             return np.exp(-1 * delta_E / T)
     
     def _cooling(self, k):
+        # exponential multiplicative cooling 
         return self.T0 * self.alpha ** k
 
     def _search(self):
