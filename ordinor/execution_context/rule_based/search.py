@@ -67,7 +67,7 @@ class GreedySearchMiner(BaseSearchMiner):
     def _search(self):
         # determine size of neighborhood, if needed
         if self.size_neighborhood is None:
-            self.size_neighborhood = self._n_tda
+            self.size_neighborhood = 2 * self._n_tda
 
         print('Start greedy search with size_neighborhood={}, max_iter={}'.format(self.size_neighborhood, self.max_iter))
 
@@ -221,7 +221,7 @@ class SASearchMiner(BaseSearchMiner):
         random_number_generator=None,
         print_steps=True,
         trace_history=False,
-        size_neighborhood=None, T0=1000, Tmin=1e-4, alpha=0.99, restart_interval=100,
+        size_neighborhood=None, T0=1000, Tmin=1e-4, alpha=0.99, restart_interval=10,
     ):
         # Initialize system parameters
         # initialization method
@@ -288,7 +288,7 @@ class SASearchMiner(BaseSearchMiner):
     def _search(self):
         # determine size of neighborhood, if needed
         if self.size_neighborhood is None:
-            self.size_neighborhood = self._n_tda
+            self.size_neighborhood = 2 * self._n_tda
 
         print('Start simulated annealing search with size_neighborhood={}, T0={}, Tmin={}, alpha={}, restart_interval={}:'.format(self.size_neighborhood, self.T0, self.Tmin, self.alpha, self.restart_interval))
 
