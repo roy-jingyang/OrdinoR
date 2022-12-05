@@ -410,7 +410,6 @@ class SASearchMiner(BaseSearchMiner):
                     ))
 
                 # check if a new best state is found
-                id_state = self._hash_state(self._pars)
                 has_new_best = (
                     E_best is None or 
                     E < E_best and self._hash_state(self._pars) != id_state_excl
