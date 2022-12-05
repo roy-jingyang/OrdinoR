@@ -184,7 +184,7 @@ class GreedySearchMiner(BaseSearchMiner):
             # check if a new best state is found
             has_new_best = (
                 E_best is None or 
-                id_state_next != id_state_excl and E < E_best
+                E < E_best and self._hash_state(self._pars) != id_state_excl
             )
             if has_new_best:
                 step_best = k
@@ -410,9 +410,10 @@ class SASearchMiner(BaseSearchMiner):
                     ))
 
                 # check if a new best state is found
+                id_state = self._hash_state(self._pars)
                 has_new_best = (
                     E_best is None or 
-                    id_state_next != id_state_excl and E < E_best
+                    E < E_best and self._hash_state(self._pars) != id_state_excl
                 )
                 if has_new_best:
                     step_best = k
