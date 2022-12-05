@@ -42,21 +42,20 @@ class GreedySearchMiner(BaseSearchMiner):
     
     def _neighbors(self):
         # Greedy search generates a few neighbors per iteration
-        size = 0
+        # NOTE: only use feasible neighbors, i.e., non-"empty"
         neighbors = []
         pr_split = 0.5
-        # fill in non-empty choices of neighbors
-        while size < self.size_neighborhood:
+        i = 0
+        while i < self.size_neighborhood:
             if self._rng.random() < pr_split:
                 n = self._neighbor_split()
-                if n is not None:
-                    neighbors.append((n, 'split'))
-                    size += 1
+                action = 'split'
             else:
                 n = self._neighbor_merge()
-                if n is not None:
-                    neighbors.append((n, 'merge'))
-                    size += 1
+                action = 'merge'
+            if n:
+                neighbors.append((n, action))
+                i += 1
         return neighbors
     
     def _decide_move(
@@ -109,35 +108,30 @@ class GreedySearchMiner(BaseSearchMiner):
             nodes_neighbor = []
             for i, neighbor in enumerate(l_neighbors):
                 move, action = neighbor
-                if move is None:
-                    pass
+                attr, new_par, original_cols, new_cols = move
+                if action == 'split':
+                    nodes_neighbor = self._generate_nodes_split(attr, original_cols, new_cols)
                 else:
-                    attr, new_par, original_cols, new_cols = move
-                    if action == 'split':
-                        nodes_neighbor = self._generate_nodes_split(attr, original_cols, new_cols)
-                    else:
-                        nodes_neighbor = self._generate_nodes_merge(attr, original_cols, new_cols)
-                    new_pars = self._pars.copy()
-                    new_pars[attr] = new_par
-                    ret_next = self._evaluate(nodes_neighbor, new_pars)
-                    #self._verify_state(nodes_neighbor)
-                    E_next, dis_next, imp_next = ret_next[0], ret_next[1], ret_next[2]
+                    nodes_neighbor = self._generate_nodes_merge(attr, original_cols, new_cols)
+                new_pars = self._pars.copy()
+                new_pars[attr] = new_par
+                ret_next = self._evaluate(nodes_neighbor, new_pars)
+                #self._verify_state(nodes_neighbor)
+                E_next, dis_next, imp_next = ret_next[0], ret_next[1], ret_next[2]
 
-                    # record unique states visited
-                    id_state_next = self._hash_state(new_pars)
-                    if id_state_next not in self._visited_states:
-                        self._visited_states.add(id_state_next)
-                        self._l_dispersal.append(dis_next)
-                        self._l_impurity.append(imp_next)
-                    else:
-                        pass
+                # record unique states visited
+                id_state_next = self._hash_state(new_pars)
+                if id_state_next not in self._visited_states:
+                    self._visited_states.add(id_state_next)
+                    self._l_dispersal.append(dis_next)
+                    self._l_impurity.append(imp_next)
 
-                    if i_bn is None or self._decide_move(E_next=E_next, E_curr=E_bn):
-                        E_bn = E_next
-                        i_bn = i
-                        dis_bn = dis_next
-                        imp_bn = imp_next
-                    
+                if i_bn is None or self._decide_move(E_next=E_next, E_curr=E_bn):
+                    E_bn = E_next
+                    i_bn = i
+                    dis_bn = dis_next
+                    imp_bn = imp_next
+            
             # keep only the best neighbor (bn) for testing
             move_bn, action_bn = l_neighbors[i_bn]
             if action_bn == 'split':
@@ -148,7 +142,7 @@ class GreedySearchMiner(BaseSearchMiner):
             E_next, dis_next, imp_next = E_bn, dis_bn, imp_bn
 
             if self.print_steps:
-                print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
+                print(f'Step [{k}]\tpropose "{action}" on `{move_bn[0]}`')
                 print('\tCurrent #nodes: {}'.format(len(self._nodes)))
                 print('\tCurrent energy: {:.6f}'.format(E))
                 print('\t\t> Current dispersal: {:.6f}'.format(dis))
@@ -160,14 +154,16 @@ class GreedySearchMiner(BaseSearchMiner):
                 print('\t\t> Neighbor impurity: {:.6f}'.format(imp_next))
                 print('\t' + '-' * 40)
                 if E_best:
-                    print('\tBest state @ step [{}]'.format(step_best))
-                    print('\tBest state #nodes: {}'.format(len(nodes_best)))
-                    print('\tBest state energy: {:.6f}'.format(E_best))
-                    print('\t\t> Best state dispersal: {:.6f}'.format(dis_best))
-                    print('\t\t> Best state impurity: {:.6f}'.format(imp_best))
+                    print('\tCurrent best state @ step [{}]'.format(step_best))
+                    print('\tCurrent best state #nodes: {}'.format(len(nodes_best)))
+                    print('\tCurrent best state energy: {:.6f}'.format(E_best))
+                    print('\t\t> Current best state dispersal: {:.6f}'.format(dis_best))
+                    print('\t\t> Current best state impurity: {:.6f}'.format(imp_best))
 
             # decide whether to move to neighbor
+            is_moved = False
             if self._decide_move(E_next=E_next, E_curr=E):
+                is_moved = True
                 # move to best neighboring state; update
                 if self.print_steps:
                     print('\t\t\t>>> MOVE TO NEIGHBOR')
@@ -176,35 +172,26 @@ class GreedySearchMiner(BaseSearchMiner):
                 self._nodes = nodes_next
                 E, dis, imp = E_next, dis_next, imp_next 
 
-                if self.trace_history:
-                    # Step, Action, Attribute, 
-                    # Dispersal, Impurity, Energy
-                    history.append((
-                        k, action_bn, move_bn[0],
-                        dis, imp, E
-                    ))
+            # record step history
+            if self.trace_history:
+                # Step, Action, Attribute, 
+                # Dispersal, Impurity, Energy
+                history.append((
+                    k, action_bn if is_moved else None, move_bn[0] if is_moved else None,
+                    dis, imp, E
+                ))
 
-                # check if better than best state
-                has_new_best = (
-                    E_best is None or 
-                    id_state_next != id_state_excl and E < E_best
-                )
-
-                if has_new_best:
-                    step_best = k
-                    E_best, dis_best, imp_best = E, dis, imp
-                    if nodes_best:
-                        del nodes_best[:]
-                    nodes_best = self._nodes.copy()
-            else:
-                # best neighbor is worse; no move
-                if self.trace_history:
-                    # Step, Action, Attribute, 
-                    # Dispersal, Impurity, Energy
-                    history.append((
-                        k, None, None,
-                        dis, imp, E
-                    ))
+            # check if a new best state is found
+            has_new_best = (
+                E_best is None or 
+                id_state_next != id_state_excl and E < E_best
+            )
+            if has_new_best:
+                step_best = k
+                E_best, dis_best, imp_best = E, dis, imp
+                if nodes_best:
+                    del nodes_best[:]
+                nodes_best = self._nodes.copy()
 
         print(f'\nSearch ended at step:\t{k}')
         del self._nodes[:]
@@ -272,11 +259,17 @@ class SASearchMiner(BaseSearchMiner):
 
     def _neighbors(self):
         # Simulated annealing makes single perturbation sequentially
+        # NOTE: only use feasible neighbors, i.e., non-"empty"
         pr_split = 0.5
-        if self._rng.random() < pr_split:
-            return self._neighbor_split(), 'split'
-        else:
-            return self._neighbor_merge(), 'merge'
+        while True:
+            if self._rng.random() < pr_split:
+                n = self._neighbor_split()
+                action = 'split'
+            else:
+                n = self._neighbor_merge()
+                action = 'merge'
+            if n:
+                return n, action
 
     def _decide_move(
         self, 
@@ -348,93 +341,91 @@ class SASearchMiner(BaseSearchMiner):
             # generate neighbors and visit them sequentially
             for i in range(self.size_neighborhood):
                 move, action = self._neighbors()
-                if move is None:
-                    pass
+                attr, new_par, original_cols, new_cols = move
+
+                if action == 'split':
+                    nodes_next = self._generate_nodes_split(attr, original_cols, new_cols)
                 else:
-                    attr, new_par, original_cols, new_cols = move
+                    nodes_next = self._generate_nodes_merge(attr, original_cols, new_cols)
+                    
+                new_pars = self._pars.copy()
+                new_pars[attr] = new_par
+                ret_next = self._evaluate(nodes_next, new_pars)
+                #self._verify_state(nodes_next)
+                E_next, dis_next, imp_next = ret_next[0], ret_next[1], ret_next[2]
 
-                    if action == 'split':
-                        nodes_next = self._generate_nodes_split(attr, original_cols, new_cols)
-                    else:
-                        nodes_next = self._generate_nodes_merge(attr, original_cols, new_cols)
-                        
-                    new_pars = self._pars.copy()
-                    new_pars[attr] = new_par
-                    ret_next = self._evaluate(nodes_next, new_pars)
-                    #self._verify_state(nodes_next)
-                    E_next, dis_next, imp_next = ret_next[0], ret_next[1], ret_next[2]
+                if self.print_steps:
+                    print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
+                    print('\tCurrent temperature:\t{:.3f}'.format(T))
+                    print('\tCurrent #nodes: {}'.format(len(self._nodes)))
+                    print('\tCurrent energy: {:.6f}'.format(E))
+                    print('\t\t> Current dispersal: {:.6f}'.format(dis))
+                    print('\t\t> Current impurity: {:.6f}'.format(imp))
+                    print('\t' + '-' * 40)
+                    print('\tNeighbor #nodes: {}'.format(len(nodes_next)))
+                    print('\tNeighbor energy: {:.6f}'.format(E_next))
+                    print('\t\t> Neighbor dispersal: {:.6f}'.format(dis_next))
+                    print('\t\t> Neighbor impurity: {:.6f}'.format(imp_next))
+                    print('\t' + '-' * 40)
+                    if E_best:
+                        print('\tCurrent best state @ step [{}]'.format(step_best))
+                        print('\tCurrent best state #nodes: {}'.format(len(nodes_best)))
+                        print('\tCurrent best state energy: {:.6f}'.format(E_best))
+                        print('\t\t> Current best state dispersal: {:.6f}'.format(dis_best))
+                        print('\t\t> Current best state impurity: {:.6f}'.format(imp_best))
 
+                # record unique states visited
+                id_state_next = self._hash_state(new_pars)
+                if id_state_next not in self._visited_states:
+                    self._visited_states.add(id_state_next)
+                    self._l_dispersal.append(dis_next)
+                    self._l_impurity.append(imp_next)
+
+                # decide whether to move to neighbor
+                prob_acceptance = self._decide_move(
+                    T=T, E_next=E_next, E_curr=E
+                )
+                if self.print_steps:
+                    print('\tProbability of moving: {}'.format(prob_acceptance))
+                is_moved = False
+                if self._rng.random() < prob_acceptance:
+                    is_moved = True
+                    # move to neighbor state; update
                     if self.print_steps:
-                        print(f'Step [{k}]\tpropose "{action}" on `{move[0]}`')
-                        print('\tCurrent temperature:\t{:.3f}'.format(T))
-                        print('\tCurrent #nodes: {}'.format(len(self._nodes)))
-                        print('\tCurrent energy: {:.6f}'.format(E))
-                        print('\t\t> Current dispersal: {:.6f}'.format(dis))
-                        print('\t\t> Current impurity: {:.6f}'.format(imp))
-                        print('\t' + '-' * 40)
-                        print('\tNeighbor #nodes: {}'.format(len(nodes_next)))
-                        print('\tNeighbor energy: {:.6f}'.format(E_next))
-                        print('\t\t> Neighbor dispersal: {:.6f}'.format(dis_next))
-                        print('\t\t> Neighbor impurity: {:.6f}'.format(imp_next))
-                        print('\t' + '-' * 40)
-                        if E_best:
-                            print('\tBest state @ step [{}]'.format(step_best))
-                            print('\tBest state #nodes: {}'.format(len(nodes_best)))
-                            print('\tBest state energy: {:.6f}'.format(E_best))
-                            print('\t\t> Best state dispersal: {:.6f}'.format(dis_best))
-                            print('\t\t> Best state impurity: {:.6f}'.format(imp_best))
-
-                    id_state_next = self._hash_state(new_pars)
-                    if id_state_next not in self._visited_states:
-                        self._visited_states.add(id_state_next)
-                        self._l_dispersal.append(dis_next)
-                        self._l_impurity.append(imp_next)
-
-                    # decide whether to move to neighbor
-                    prob_acceptance = self._decide_move(
-                        T=T, E_next=E_next, E_curr=E
-                    )
-                    if self.print_steps:
-                        print('\tProbability of moving: {}'.format(prob_acceptance))
-
-                    if self._rng.random() < prob_acceptance:
-                        # move to neighbor state; update
-                        if self.print_steps:
-                            print('\t\t\t>>> MOVE TO NEIGHBOR')
-                        self._pars[attr] = new_par
-                        del self._nodes[:]
-                        self._nodes = nodes_next
-                        E, dis, imp = E_next, dis_next, imp_next 
-
-                        # check if better than best state
-                        has_new_best = (
-                            E_best is None or 
-                            id_state_next != id_state_excl and E < E_best
-                        )
-
-                        if has_new_best:
-                            step_best = k
-                            E_best, dis_best, imp_best = E, dis, imp
-                            if nodes_best:
-                                del nodes_best[:]
-                            nodes_best = self._nodes.copy()
-                            if pars_best:
-                                del pars_best
-                            pars_best = self._pars.copy()
-                            # reset restart counter
-                            cnt_restart = 0
-                    else:
-                        pass
-
+                        print('\t\t\t>>> MOVE TO NEIGHBOR')
+                    self._pars[attr] = new_par
+                    del self._nodes[:]
+                    self._nodes = nodes_next
+                    E, dis, imp = E_next, dis_next, imp_next 
+                
+                # record step history
                 if self.trace_history:
                     # Step, Action, Attribute, 
                     # Probability of acceptance, System temperature, 
                     # Dispersal, Impurity, Energy
                     history.append((
-                        k, None if move is None else action, None if move is None else move[0],
-                        0.0 if move is None else prob_acceptance, T,
+                        k, action if is_moved else None, move[0] if is_moved else None,
+                        prob_acceptance, T,
                         dis, imp, E
                     ))
+
+                # check if a new best state is found
+                has_new_best = (
+                    E_best is None or 
+                    id_state_next != id_state_excl and E < E_best
+                )
+                if has_new_best:
+                    step_best = k
+                    E_best, dis_best, imp_best = E, dis, imp
+                    if nodes_best:
+                        del nodes_best[:]
+                    nodes_best = self._nodes.copy()
+                    if pars_best:
+                        del pars_best
+                    pars_best = self._pars.copy()
+                    # reset restart counter
+                    cnt_restart = 0
+
             # cool down system temperature
             T = self._cooling(k)
         
