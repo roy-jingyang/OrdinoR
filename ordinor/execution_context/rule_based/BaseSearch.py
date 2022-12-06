@@ -769,7 +769,7 @@ class BaseSearchMiner(BaseMiner):
     def _save_history(self, search_history, columns, l_dispersal, l_impurity):
         fnout_prefix = '{}_{}_'.format(
             self.__class__.__name__,
-            pd.Timestamp.now().strftime('%Y%m%d-%H%M%S')
+            pd.Timestamp.now().strftime('%Y%m%d-%H%M%S.%f')
         )
         # search history
         df_search_history = pd.DataFrame(
