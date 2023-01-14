@@ -692,13 +692,19 @@ class BaseSearchMiner(BaseMiner):
     def _evaluate(self, nodes, pars):
         '''
             Energy function: Combine dispersal and impurity
+                             Objective to be *minimized* (negative quality)
         '''
         dis = self._calculate_dispersal(nodes)
         imp = self._calculate_impurity(nodes)
 
-        # arithmetic mean
-        e = 0.5 * (dis + imp)
+        # quality based on arithmetic mean
+        # q = 1 - 0.5 * (dis + imp)
 
+        # quality based on harmonic mean
+        q = 2 * (1 - dis) * (1 - imp) / (2 - (dis + imp))
+
+        # minimizing energy = maximizing quality
+        e = -1 * q
         return e, dis, imp
 
     def _calculate_dispersal(self, nodes):
