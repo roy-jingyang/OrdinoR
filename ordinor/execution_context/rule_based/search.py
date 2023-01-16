@@ -214,7 +214,6 @@ class GreedyODTMiner(GreedySearchMiner):
     '''This class implements the ODT-based method using the search framework.
     To do so, configure the Greedy Search as follows:
         * always initialize from the zero state (all events in one cube)
-        * always move until fully-split (regardless of if neighbors are better)
         * always use the full-size neighborhood
         * use only the split move (i.e., no backtracking)
         * use `max_iter` as the maximum tree height allowed
@@ -255,9 +254,6 @@ class GreedyODTMiner(GreedySearchMiner):
                 neighbors.append((n, action))
                 i += 1
         return neighbors
-    
-    def _decide_move(self, E_next=None, E_curr=None):
-        return True
     
 class SASearchMiner(BaseSearchMiner):
     def __init__(self, 
