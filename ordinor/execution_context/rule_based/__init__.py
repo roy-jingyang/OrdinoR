@@ -13,4 +13,4 @@ from .rule_generators import NumericRuleGenerator, CategoricalRuleGenerator
 from .score_funcs import impurity, dispersal
 
 from .decision_tree import ODTMiner
-from .search import GreedySearchMiner, SASearchMiner
+from .search import GreedySearchMiner, GreedyODTMiner, SASearchMiner

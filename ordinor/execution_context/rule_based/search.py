@@ -1,6 +1,7 @@
 '''
 A series of search-based solutions:
-    - greedy descent
+    - greedy
+    - greedy to implement the ODT-based method
     - simulated annealing
 '''
 
@@ -8,10 +9,6 @@ import numpy as np
 from scipy.stats import median_abs_deviation as mad
 
 from .BaseSearch import BaseSearchMiner
-
-class RandomWalkSearchMiner(BaseSearchMiner):
-    # TODO: for testing purpose
-    ...
 
 class GreedySearchMiner(BaseSearchMiner):
     def __init__(self, 
@@ -213,7 +210,55 @@ class GreedySearchMiner(BaseSearchMiner):
                 l_dispersal=self._l_dispersal, l_impurity=self._l_impurity
             )
 
+class GreedyODTMiner(GreedySearchMiner):
+    '''This class implements the ODT-based method using the search framework.
+    To do so, configure the Greedy Search as follows:
+        * always initialize from the zero state (all events in one cube)
+        * always move until fully-split (regardless of if neighbors are better)
+        * always use the full-size neighborhood
+        * use only the split move (i.e., no backtracking)
+        * use `max_iter` as the maximum tree height allowed
+    '''
+    def __init__(self,
+        el, attr_spec,
+        random_number_generator=None,
+        print_steps=True,
+        trace_history=False,
+        max_iter=1000
+    ):
+        # Initialize system parameters
+        # size of neighborhood per iteration: probe all attributes
+        self.size_neighborhood = None
+        # maximum number of iterations allowed
+        self.max_iter = max_iter
 
+        # Initialize additional data structures (tracking visited states)
+        self._visited_states = set()
+        self._l_dispersal = []
+        self._l_impurity = []
+
+        super().__init__(
+            el=el, attr_spec=attr_spec, 
+            random_number_generator=random_number_generator, 
+            init_method='zero', init_batch=1,
+            print_steps=print_steps, trace_history=trace_history
+        )
+    
+    def _neighbors(self):
+        # NOTE: only use feasible neighbors, i.e., non-"empty"
+        neighbors = []
+        i = 0
+        while i < self.size_neighborhood:
+            n = self._neighbor_split()
+            action = 'split'
+            if n:
+                neighbors.append((n, action))
+                i += 1
+        return neighbors
+    
+    def _decide_move(self, E_next=None, E_curr=None):
+        return True
+    
 class SASearchMiner(BaseSearchMiner):
     def __init__(self, 
         el, attr_spec, 
