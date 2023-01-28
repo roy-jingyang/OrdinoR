@@ -214,7 +214,7 @@ class GreedyODTMiner(GreedySearchMiner):
     '''This class implements the ODT-based method using the search framework.
     To do so, configure the Greedy Search as follows:
         * always initialize from the zero state (all events in one cube)
-        * always use the full-size neighborhood
+        * neighborhood size is specified per attribute, not per iteration
         * use only the split move (i.e., no backtracking)
         * use `max_iter` as the maximum tree height allowed
     '''
@@ -223,11 +223,12 @@ class GreedyODTMiner(GreedySearchMiner):
         random_number_generator=None,
         print_steps=True,
         trace_history=False,
-        max_iter=1000
+        size_neighborhood=1,
+        max_iter=10
     ):
         # Initialize system parameters
-        # size of neighborhood per iteration: probe all attributes
-        self.size_neighborhood = None
+        # size of neighborhood is per attribute, not per iteration
+        self.size_neighborhood = size_neighborhood
         # maximum number of iterations allowed
         self.max_iter = max_iter
 
@@ -246,15 +247,18 @@ class GreedyODTMiner(GreedySearchMiner):
     def _neighbors(self):
         # NOTE: only use feasible neighbors, i.e., non-"empty"
         neighbors = []
-        i = 0
-        while i < self.size_neighborhood:
-            n = self._neighbor_split()
-            action = 'split'
-            if n:
-                neighbors.append((n, action))
-                i += 1
+        # ODT-based method always loops over all attributes
+        for attr in self._tdav.keys():
+            i = 0
+            # size of neighborhood is per attribute, not per iteration
+            while i < self.size_neighborhood:
+                n = self._neighbor_split(attr=attr)
+                action = 'split'
+                if n:
+                    neighbors.append((n, action))
+                    i += 1
         return neighbors
-    
+
 class SASearchMiner(BaseSearchMiner):
     def __init__(self, 
         el, attr_spec, 
