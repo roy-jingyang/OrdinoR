@@ -258,6 +258,9 @@ class GreedyODTMiner(GreedySearchMiner):
                 if n:
                     neighbors.append((n, action))
                     i += 1
+                else:
+                    # ignore attribute, if fully-split
+                    break
         return neighbors
 
 class SASearchMiner(BaseSearchMiner):
