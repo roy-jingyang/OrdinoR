@@ -241,7 +241,8 @@ class GreedyODTMiner(GreedySearchMiner):
             el=el, attr_spec=attr_spec, 
             random_number_generator=random_number_generator, 
             init_method='zero', init_batch=1,
-            print_steps=print_steps, trace_history=trace_history
+            print_steps=print_steps, trace_history=trace_history,
+            size_neighborhood=self.size_neighborhood, max_iter=self.max_iter
         )
     
     def _neighbors(self):
