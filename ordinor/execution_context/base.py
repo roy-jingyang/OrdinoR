@@ -349,15 +349,15 @@ class BaseMiner:
             print('-' * 80)
             print('Count of Types in the current {}:'.format(
                 self.__class__.__name__))
-            n_ctypes = len(set(self._ctypes_values()))
+            n_ctypes = len(set(self._ctypes.values()))
             print('Number of C Types:\t\t{}'.format(
                 n_ctypes if n_ctypes > 0 else 'n/a (1)'
             ))
-            n_atypes = len(set(self._atypes_values()))
+            n_atypes = len(set(self._atypes.values()))
             print('Number of A Types:\t\t{}'.format(
                 n_atypes if n_atypes > 0 else 'n/a (1)'
             ))
-            n_ttypes = len(set(self._ttypes_values()))
+            n_ttypes = len(set(self._ttypes.values()))
             print('Number of T Types:\t\t{}'.format(
                 n_ttypes if n_ttypes > 0 else 'n/a (1)'
             ))
