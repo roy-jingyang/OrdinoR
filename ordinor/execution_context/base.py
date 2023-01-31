@@ -9,8 +9,8 @@ import ordinor.constants as const
 
 class BaseMiner:
     """
-    This class should be used as an interface base class for 
-    implementing any approach for learning execution contexts.
+    This class should be used as an interface base class for implementing any
+    approach for learning execution contexts.
 
     Parameters
     ----------
@@ -22,36 +22,35 @@ class BaseMiner:
     is_ctypes_verified : bool
         A Boolean flag indicating whether the case types are verified.
     is_atypes_verified : bool
-        A Boolean flag indicating whether the activity types are
-        verified.
+        A Boolean flag indicating whether the activity types are verified.
     is_ttypes_verified : bool
         A Boolean flag indicating whether the time types are verified.
 
     Methods
     -------
     derive_resource_log(el)
-        Derive a resource log given the original event log, after the 
-        execution contexts have been discovered and verified (which is
-        done the moment when an object is instantiated).
+        Derive a resource log given the original event log, after the execution
+        contexts have been discovered and verified (which is done the moment
+        when an object is instantiated).
     get_type_by_value(value)
-        Query the corresponding type given a value (of either an activity
-        label, a case id, or a timestamp).
+        Query the corresponding type given a value (of either an activity label,
+        a case id, or a timestamp).
     get_values_by_type(type_name)
-        Query the original values (of activity labels, case ids, or 
-        timestamps) given a type name.
+        Query the original values (of activity labels, case ids, or timestamps)
+        given a type name.
 
     Notes
     -----
-    The docstrings for this class and its methods provide the guidelines 
-    for any child class that implements a specific way of learning 
-    execution contexts by overwriting the following three methods:
+    The docstrings for this class and its methods provide the guidelines for any
+    child class that implements a specific way of learning execution contexts by
+    overwriting the following three methods:
 
         - `self._build_ctypes`
         - `self._build_atypes`
         - `self._build_ttypes`
     
-    Any child class should inherit from class `BaseMiner` and enables 
-    the learning and storing of the following mappings:
+    Any child class should inherit from class `BaseMiner` and enables the
+    learning and storing of the following mappings:
 
     - from case ids to Case Types,
 
@@ -67,12 +66,11 @@ class BaseMiner:
 
     These mappings should be built as python dicts of strings.
 
-    Note that, any learning approach inherited from class `BaseMiner` and
-    must ensure that the derived types form a partitioning of the
-    original values.
+    Note that, any learning approach inherited from class `BaseMiner` must
+    ensure that the derived types form a partitioning of the original values.
 
-    For example, a learning approach must map each case captured in the 
-    event log to one case type and one case type only.
+    For example, a learning approach must map each case captured in the event
+    log to one case type and one case type only.
     """
 
     _ctypes = None
@@ -351,15 +349,18 @@ class BaseMiner:
             print('-' * 80)
             print('Count of Types in the current {}:'.format(
                 self.__class__.__name__))
+            n_ctypes = len(set(self._ctypes_values()))
             print('Number of C Types:\t\t{}'.format(
-                len(set(self._ctypes.values())) 
-                if self._ctypes is not None else 'n/a (1)'))
+                n_ctypes if n_ctypes > 0 else 'n/a (1)'
+            ))
+            n_atypes = len(set(self._atypes_values()))
             print('Number of A Types:\t\t{}'.format(
-                len(set(self._atypes.values()))
-                if self._atypes is not None else 'n/a (1)'))
+                n_atypes if n_atypes > 0 else 'n/a (1)'
+            ))
+            n_ttypes = len(set(self._ttypes_values()))
             print('Number of T Types:\t\t{}'.format(
-                len(set(self._ttypes.values()))
-                if self._ttypes is not None else 'n/a (1)'))
+                n_ttypes if n_ttypes > 0 else 'n/a (1)'
+            ))
             print('-' * 80)
         else:
             print('C Types:\t{}'.format(
