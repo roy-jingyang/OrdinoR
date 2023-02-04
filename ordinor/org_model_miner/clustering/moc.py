@@ -107,12 +107,12 @@ class MOC:
                 M = np.zeros(shape)
                 if self._is_disjoint:
                     for row in M:
-                        row[np.randint(self._n_components)] = 1 # only 1
+                        row[np.random.randint(self._n_components)] = 1 # only 1
                 else:
                     for row in M:
-                        row[np.choice(
+                        row[np.random.choice(
                             range(shape[1]),
-                            size=np.randint(1, shape[1] + 1),
+                            size=np.random.randint(1, shape[1] + 1),
                             replace=False)
                         ] = 1
 
