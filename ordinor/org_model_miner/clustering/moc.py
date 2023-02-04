@@ -258,7 +258,10 @@ class MOC:
         MA = np.dot(M, A)
         for i in range(X.shape[0]): # n_components
             for j in range(X.shape[1]): # n_features
-                score_divergence += sqeuclidean(X[i,j], MA[i,j])
+                score_divergence += sqeuclidean(
+                    np.atleast_1d(X[i,j]), 
+                    np.atleast_1d(MA[i,j])
+                )
 
         score = score_alpha - score_divergence
         #print('{:.4f}'.format(score))
