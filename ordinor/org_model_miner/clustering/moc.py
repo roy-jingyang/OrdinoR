@@ -376,7 +376,7 @@ class MOC:
         return m_best
 
 
-def _moc(profiles, n_groups, init='random', n_init=100):
+def _moc(profiles, n_groups, init='random', n_init=100, tol=1e-6, max_iter=1000):
     print('Applying overlapping clustering-based MOC:')
     # step 0. Perform specific initialization method (if given)
     if init in ['mja', 'ahc', 'kmeans', 'plain']:
@@ -411,9 +411,15 @@ def _moc(profiles, n_groups, init='random', n_init=100):
 
     # step 1. Train the model
     if warm_start:
-        moc_model = MOC(n_components=n_groups, M_init=m.values, n_init=1)
+        moc_model = MOC(
+            n_components=n_groups, M_init=m.values, n_init=1,
+            tol=tol, max_iter=max_iter
+        )
     else:
-        moc_model = MOC(n_components=n_groups, n_init=n_init)
+        moc_model = MOC(
+            n_components=n_groups, n_init=n_init,
+            tol=tol, max_iter=max_iter
+        )
 
     # step 2. Derive the clusters as the end result
     mat_membership = moc_model.fit_predict(profiles.values)
@@ -435,7 +441,7 @@ def _moc(profiles, n_groups, init='random', n_init=100):
     return [frozenset(g) for g in groups.values()]
 
 
-def moc(profiles, n_groups, init='random', n_init=100,
+def moc(profiles, n_groups, init='random', n_init=100, tol=1e-6, max_iter=1000,
     search_only=False):
     """Apply the Model-based Overlapping Clustering (MOC) to discover 
     resource groups [1]_.
@@ -472,6 +478,10 @@ def moc(profiles, n_groups, init='random', n_init=100,
     n_init : int, optional, default 100
         Number of times of random initialization (if specified) performs
         before training the clustering model.
+    tol : float, optional, default 1e-6
+        The convergence threshold.
+    max_iter : int, optional, default 1000
+        Number of iterative alternating updates to run.
     search_only : bool, optional, default False
         A Boolean flag indicating whether to search for the number of
         groups only or to perform group discovery based on the search
