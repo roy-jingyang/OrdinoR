@@ -52,7 +52,7 @@ class OrganizationalModel:
         Query the capable execution contexts given a group identified by 
         its id.
     find_all_execution_contexts()
-        Return all execution contexts involved in the model.
+        Return all unique execution contexts involved in the model.
     to_file_csv(f)
         Export the organizational model to an external CSV file (with no 
         header line).
@@ -281,13 +281,13 @@ class OrganizationalModel:
 
         Returns
         -------
-        list of 3-tuples
-            Execution contexts.
+        frozenset
+            Set of execution contexts as 3-tuples.
         """
-        all_ctxs = list()
+        all_ctxs = set()
         for contexts in self._cap.values():
-            all_ctxs.extend(contexts)
-        return all_ctxs
+            all_ctxs.add(contexts)
+        return frozenset(all_ctxs)
     
 
     def to_file_csv(self, f):
