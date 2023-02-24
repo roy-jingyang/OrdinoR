@@ -286,7 +286,8 @@ class OrganizationalModel:
         """
         all_ctxs = set()
         for contexts in self._cap.values():
-            all_ctxs.add(contexts)
+            for c in contexts:
+                all_ctxs.add(c)
         return frozenset(all_ctxs)
     
 
