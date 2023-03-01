@@ -72,14 +72,17 @@ def append_case_duration(el):
         An event log.
     """
     el = check_convert_input_log(el)
-    l_case_duration = [float('nan')] * len(el)
+    # sort events by timestamps
+    el = el.sort_values(by=const.TIMESTAMP)
+    d_case_duration = dict()
     for case_id, trace in el.groupby(const.CASE_ID):
         start_time = trace.iloc[0][const.TIMESTAMP]
         complete_time = trace.iloc[-1][const.TIMESTAMP]
         duration_seconds = (complete_time - start_time).total_seconds()
-        for event_index in trace.index:
-            l_case_duration[event_index] = duration_seconds
-
-    el[const.CASE_DURATION] = l_case_duration
+        d_case_duration[case_id] = duration_seconds
+    for case_id in el[const.CASE_ID].unique():
+        el.loc[el[const.CASE_ID] == case_id, const.CASE_DURATION] = (
+            d_case_duration[case_id]
+        )
     return el
 
