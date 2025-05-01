@@ -99,6 +99,10 @@ class GreedySearchMiner(BaseSearchMiner):
         while k < self.max_iter:
             k += 1
             l_neighbors = self._neighbors()
+            # if no neighbor exits, exit
+            if len(l_neighbors) == 0:
+                break
+
             # bn: Best Neighbor
             i_bn = None
             E_bn, dis_bn, imp_bn = None, None, None
