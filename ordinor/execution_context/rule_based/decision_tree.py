@@ -34,11 +34,11 @@ class ODTMiner(BaseMiner):
             # TODO: model given rules from the specification
         
         # Filter log and keep only the relevant columns as specified
-        included_cols = set({
+        included_cols = [
             const.CASE_ID, const.ACTIVITY, const.TIMESTAMP, const.RESOURCE
-        })
+        ]
         for type_def_attr in spec['type_def_attrs'].keys():
-            included_cols.add(type_def_attr)
+            included_cols.append(type_def_attr)
         self._log = el[included_cols]
 
         # Cast data type to categorical as indicated (to boost performance)

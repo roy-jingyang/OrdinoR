@@ -232,7 +232,7 @@ class BaseSearchMiner(BaseMiner):
         self._ctypes = dict()
         #print(ctype_arr_tda)
         for i, k_arr_case in enumerate(ctype_arr_tda):
-            arr_case = np.array(k_arr_case, dtype=np.bool)
+            arr_case = np.array(k_arr_case, dtype=bool)
             ct_label = i
             # translate to rules and save
             ct_rules = []
@@ -272,7 +272,7 @@ class BaseSearchMiner(BaseMiner):
         self._atypes = dict()
         #print(atype_arr_tda)
         for i, k_arr_act in enumerate(atype_arr_tda):
-            arr_act = np.array(k_arr_act, dtype=np.bool)
+            arr_act = np.array(k_arr_act, dtype=bool)
             at_label = i
             # translate to rules and save
             at_rules = []
@@ -306,7 +306,7 @@ class BaseSearchMiner(BaseMiner):
         self._ttypes = dict()
         #print(ttype_arr_tda)
         for i, k_arr_time in enumerate(ttype_arr_tda):
-            arr_time = np.array(k_arr_time, dtype=np.bool)
+            arr_time = np.array(k_arr_time, dtype=bool)
             tt_label = i
             # translate to rules and save
             tt_rules = []

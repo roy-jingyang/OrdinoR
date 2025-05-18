@@ -41,7 +41,7 @@ classifier      = [
 
 # Package information
 name                = 'ordinor'
-version             = '0.1.0rc14'
+version             = '0.2.0'
 python_requires     = '>=3.7'
 
 packages            = [

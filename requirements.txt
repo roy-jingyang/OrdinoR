@@ -1,9 +1,9 @@
-numpy>=1.21.2,<2.0
-scipy>=1.9.3,<2.0
-scikit-learn>=0.24.2,<1.0
-scikit-fuzzy>=0.4.2,<1.0
-pandas>=1.5.1,<2.0
-networkx>=2.6.2,<3.0
+numpy>=1.21.2
+scipy>=1.9.3
+scikit-learn>=0.24.2
+scikit-fuzzy>=0.4.2
+pandas>=1.5.1
+networkx>=2.6.2
 pm4py>=1.2.4
 
 # webapp requirements
