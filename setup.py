@@ -41,24 +41,25 @@ classifier      = [
 
 # Package information
 name                = 'ordinor'
-version             = '0.2.0'
+version             = '0.2.1'
 python_requires     = '>=3.7'
 
-packages            = [
-    'ordinor',
-    'ordinor.analysis',
-    'ordinor.analysis.group_profiles',
-    'ordinor.analysis.m2m',
-    'ordinor.conformance',
-    'ordinor.execution_context',
-    'ordinor.io',
-    'ordinor.org_model_miner',
-    'ordinor.org_model_miner.clustering',
-    'ordinor.org_model_miner.community',
-    'ordinor.org_model_miner.models',
-    'ordinor.social_network_miner',
-    'ordinor.utils',
-]
+from setuptools import find_packages
+# packages            = [
+#     'ordinor',
+#     'ordinor.analysis',
+#     'ordinor.analysis.group_profiles',
+#     'ordinor.analysis.m2m',
+#     'ordinor.conformance',
+#     'ordinor.execution_context',
+#     'ordinor.io',
+#     'ordinor.org_model_miner',
+#     'ordinor.org_model_miner.clustering',
+#     'ordinor.org_model_miner.community',
+#     'ordinor.org_model_miner.models',
+#     'ordinor.social_network_miner',
+#     'ordinor.utils',
+# ]
 
 def parse_requirements_file(filename):
     with open(filename) as f:
@@ -97,5 +98,5 @@ if __name__ == '__main__':
         python_requires=python_requires,
         install_requires=install_requires,
         extras_require=extras_require,
-        packages=packages,
+        packages=find_packages(),
     )
